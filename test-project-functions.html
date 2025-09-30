@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Project Functions</title>
+    <script>
+        // Test if functions are accessible
+        function testProjectFunctions() {
+            const results = [];
+            
+            // Open browser console to see these logs
+            console.log('=== TESTING PROJECT FUNCTIONS ===');
+            
+            // Check if project store is loaded
+            if (window.useProjectStore) {
+                results.push('✅ Project store loaded');
+                const store = window.useProjectStore();
+                console.log('Store functions:', Object.keys(store));
+            } else {
+                results.push('❌ Project store not found');
+            }
+            
+            // Check localStorage for any cached data
+            console.log('LocalStorage keys:', Object.keys(localStorage));
+            
+            // Check sessionStorage
+            console.log('SessionStorage keys:', Object.keys(sessionStorage));
+            
+            // Display results
+            document.getElementById('results').innerHTML = results.join('<br>');
+        }
+        
+        window.onload = testProjectFunctions;
+    </script>
+</head>
+<body>
+    <h1>Testing Project Functions</h1>
+    <p>Open browser console (F12) to see detailed logs</p>
+    <div id="results"></div>
+    
+    <h2>Instructions:</h2>
+    <ol>
+        <li>Press F12 to open browser console</li>
+        <li>Go to http://localhost:5174/projects</li>
+        <li>Click on a project</li>
+        <li>Try to add a task or comment</li>
+        <li>Check console for any errors</li>
+    </ol>
+</body>
+</html>
