@@ -479,7 +479,8 @@ const ReceiptCapture: React.FC<ReceiptCaptureProps> = ({ onSave, projects }) => 
                     <div className="border-t pt-4">
                       <h4 className="text-sm font-medium text-gray-700 mb-3">📦 Line Items ({lineItems.length})</h4>
                       <div className="bg-gray-50 rounded-md p-3 max-h-48 overflow-y-auto">
-                        <table className="min-w-full text-xs">
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full text-xs">
                           <thead className="sticky top-0 bg-gray-100">
                             <tr>
                               <th className="text-left py-2 px-2 font-medium">Item</th>
@@ -499,6 +500,7 @@ const ReceiptCapture: React.FC<ReceiptCaptureProps> = ({ onSave, projects }) => 
                             ))}
                           </tbody>
                         </table>
+                        </div>
                       </div>
                       <p className="text-xs text-gray-500 mt-2">Individual items extracted from receipt</p>
                     </div>

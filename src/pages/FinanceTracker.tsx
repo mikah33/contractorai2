@@ -100,27 +100,27 @@ const FinanceTracker = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 px-4 sm:px-6 lg:px-0">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Finance Tracker</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Finance Tracker</h1>
           <p className="mt-1 text-sm text-gray-600">
             Manage receipts, track expenses, and monitor your financial health
           </p>
         </div>
-        
-        <div className="flex space-x-2">
-          <button className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-            <Download className="h-4 w-4 mr-2" />
-            Export
+
+        <div className="flex flex-col sm:flex-row gap-2">
+          <button className="inline-flex items-center justify-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            <Download className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Export</span>
           </button>
-          <button 
+          <button
             onClick={handleRefresh}
             disabled={isLoading}
-            className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-            {isLoading ? 'Syncing...' : 'Sync'}
+            <RefreshCw className={`h-4 w-4 sm:mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">{isLoading ? 'Syncing...' : 'Sync'}</span>
           </button>
         </div>
       </div>
@@ -133,100 +133,100 @@ const FinanceTracker = () => {
       )}
 
       <div className="bg-white rounded-lg shadow">
-        <div className="border-b border-gray-200">
-          <nav className="flex space-x-8 px-6" aria-label="Tabs">
+        <div className="border-b border-gray-200 overflow-x-auto">
+          <nav className="flex space-x-4 md:space-x-8 px-4 sm:px-6 min-w-max md:min-w-0" aria-label="Tabs">
             <button
               onClick={() => setActiveTab('dashboard')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center ${
+              className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center whitespace-nowrap ${
                 activeTab === 'dashboard'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              <BarChart2 className="w-4 h-4 mr-2" />
-              Dashboard
+              <BarChart2 className="w-4 h-4 md:mr-2" />
+              <span className="hidden md:inline">Dashboard</span>
             </button>
             <button
               onClick={() => setActiveTab('revenue')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center ${
+              className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center whitespace-nowrap ${
                 activeTab === 'revenue'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              <DollarSign className="w-4 h-4 mr-2" />
-              Revenue
+              <DollarSign className="w-4 h-4 md:mr-2" />
+              <span className="hidden md:inline">Revenue</span>
             </button>
             <button
               onClick={() => setActiveTab('expenses')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center ${
+              className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center whitespace-nowrap ${
                 activeTab === 'expenses'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              <Receipt className="w-4 h-4 mr-2" />
-              Expenses
+              <Receipt className="w-4 h-4 md:mr-2" />
+              <span className="hidden md:inline">Expenses</span>
             </button>
             <button
               onClick={() => setActiveTab('payments')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center ${
+              className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center whitespace-nowrap ${
                 activeTab === 'payments'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              <DollarSign className="w-4 h-4 mr-2" />
-              Payments
+              <DollarSign className="w-4 h-4 md:mr-2" />
+              <span className="hidden md:inline">Payments</span>
             </button>
             <button
               onClick={() => setActiveTab('invoices')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center ${
+              className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center whitespace-nowrap ${
                 activeTab === 'invoices'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              <FileText className="w-4 h-4 mr-2" />
-              Invoices
+              <FileText className="w-4 h-4 md:mr-2" />
+              <span className="hidden md:inline">Invoices</span>
             </button>
             <button
               onClick={() => setActiveTab('recurring')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center ${
+              className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center whitespace-nowrap ${
                 activeTab === 'recurring'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              <Calendar className="w-4 h-4 mr-2" />
-              Recurring
+              <Calendar className="w-4 h-4 md:mr-2" />
+              <span className="hidden md:inline">Recurring</span>
             </button>
             <button
               onClick={() => setActiveTab('budget')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center ${
+              className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center whitespace-nowrap ${
                 activeTab === 'budget'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              <DollarSign className="w-4 h-4 mr-2" />
-              Budget
+              <DollarSign className="w-4 h-4 md:mr-2" />
+              <span className="hidden md:inline">Budget</span>
             </button>
             <button
               onClick={() => setActiveTab('reports')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center ${
+              className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center whitespace-nowrap ${
                 activeTab === 'reports'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              <FileText className="w-4 h-4 mr-2" />
-              Reports
+              <FileText className="w-4 h-4 md:mr-2" />
+              <span className="hidden md:inline">Reports</span>
             </button>
           </nav>
         </div>
 
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {activeTab === 'dashboard' && (
             <FinanceDashboard
               summary={financialSummary}
