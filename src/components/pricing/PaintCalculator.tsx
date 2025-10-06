@@ -108,27 +108,27 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     const paintInfo = getPaintPrice();
     const totalCoats = coats;
     const coveragePerGallon = paintInfo.coverage;
-    
+
     // Adjust coverage based on surface condition
     const conditionFactors = { good: 1, fair: 0.9, poor: 0.8 };
-    const averageConditionFactor = surfaces.reduce((sum, surface) => 
+    const averageConditionFactor = surfaces.reduce((sum, surface) =>
       sum + conditionFactors[surface.condition], 0) / surfaces.length;
-    
+
     const effectiveCoverage = coveragePerGallon * averageConditionFactor;
     const gallonsNeeded = Math.ceil((areaWithWaste * totalCoats) / effectiveCoverage);
-    
+
     const paintCost = gallonsNeeded * paintInfo.gallon;
 
     const results: CalculationResult[] = [
       {
-        label: 'Total Wall Area',
+        label: t('calculators.paint.totalWallArea'),
         value: Number(totalArea.toFixed(2)),
-        unit: 'square feet'
+        unit: t('calculators.paint.squareFeet')
       },
       {
-        label: `Paint Needed (${paintType}, ${paintFinish})`,
+        label: `${t('calculators.paint.paintNeeded')} (${t(`calculators.paint.paintType.${paintType}`)}, ${t(`calculators.paint.paintFinish.${paintFinish}`)})`,
         value: gallonsNeeded,
-        unit: 'gallons',
+        unit: t('calculators.paint.gallons'),
         cost: paintCost
       }
     ];
@@ -136,11 +136,11 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     if (includePrimer) {
       const primerGallons = Math.ceil(areaWithWaste / 400); // Primer typically covers 400 sq ft
       const primerCost = primerGallons * getPrimerPrice();
-      
+
       results.push({
-        label: 'Primer Needed',
+        label: t('calculators.paint.primerNeeded'),
         value: primerGallons,
-        unit: 'gallons',
+        unit: t('calculators.paint.gallons'),
         cost: primerCost
       });
     }
@@ -148,28 +148,28 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     // Add supplies
     const suppliesCost = Math.ceil(totalArea / 400) * 25; // Basic supplies per 400 sq ft
     results.push({
-      label: 'Painting Supplies',
+      label: t('calculators.paint.paintingSupplies'),
       value: 1,
-      unit: 'set',
+      unit: t('calculators.paint.set'),
       cost: suppliesCost
     });
 
     // Calculate total cost
     const totalCost = results.reduce((sum, item) => sum + (item.cost || 0), 0);
     results.push({
-      label: 'Total Cost',
+      label: t('calculators.paint.totalCost'),
       value: Number(totalCost.toFixed(2)),
-      unit: 'USD',
+      unit: t('calculators.paint.usd'),
       isTotal: true
     });
 
     onCalculate(results);
   };
 
-  const isFormValid = surfaces.every(surface => 
-    typeof surface.length === 'number' && 
-    surface.length > 0 && 
-    typeof surface.height === 'number' && 
+  const isFormValid = surfaces.every(surface =>
+    typeof surface.length === 'number' &&
+    surface.length > 0 &&
+    typeof surface.height === 'number' &&
     surface.height > 0
   );
 
@@ -179,7 +179,7 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         <Paintbrush className="h-6 w-6 text-orange-500 mr-2" />
         <h2 className="text-xl font-bold text-slate-800">{t('calculators.paint.title')}</h2>
       </div>
-      
+
       <div className="mb-4">
         <div className="flex justify-between mb-4">
           <div className="inline-flex rounded-md shadow-sm">
@@ -192,7 +192,7 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               } border border-slate-300`}
               onClick={() => setPaintLocation('interior')}
             >
-              Interior
+              {t('calculators.paint.interior')}
             </button>
             <button
               type="button"
@@ -203,7 +203,7 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               } border border-slate-300`}
               onClick={() => setPaintLocation('exterior')}
             >
-              Exterior
+              {t('calculators.paint.exterior')}
             </button>
           </div>
 
@@ -217,7 +217,7 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               } border border-slate-300`}
               onClick={() => setUnit('imperial')}
             >
-              Imperial
+              {t('calculators.paint.imperial')}
             </button>
             <button
               type="button"
@@ -228,19 +228,19 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               } border border-slate-300`}
               onClick={() => setUnit('metric')}
             >
-              Metric
+              {t('calculators.paint.metric')}
             </button>
           </div>
         </div>
 
         <div className="border-t border-slate-200 pt-6 mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium text-slate-800">Surfaces to Paint</h3>
+            <h3 className="text-lg font-medium text-slate-800">{t('calculators.paint.surfacesToPaint')}</h3>
             <button
               onClick={addSurface}
               className="px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors"
             >
-              Add Surface
+              {t('calculators.paint.addSurface')}
             </button>
           </div>
 
@@ -249,7 +249,7 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Length ({unit === 'imperial' ? 'feet' : 'meters'})
+                    {t('calculators.paint.length')} ({unit === 'imperial' ? t('calculators.paint.feet') : t('calculators.paint.meters')})
                   </label>
                   <input
                     type="number"
@@ -262,7 +262,7 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Height ({unit === 'imperial' ? 'feet' : 'meters'})
+                    {t('calculators.paint.height')} ({unit === 'imperial' ? t('calculators.paint.feet') : t('calculators.paint.meters')})
                   </label>
                   <input
                     type="number"
@@ -275,16 +275,16 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Surface Condition
+                    {t('calculators.paint.surfaceCondition')}
                   </label>
                   <select
                     value={surface.condition}
                     onChange={(e) => updateSurface(index, 'condition', e.target.value as 'good' | 'fair' | 'poor')}
                     className="w-full p-2 border border-slate-300 rounded-md"
                   >
-                    <option value="good">Good - Smooth, clean surface</option>
-                    <option value="fair">Fair - Minor repairs needed</option>
-                    <option value="poor">Poor - Significant prep required</option>
+                    <option value="good">{t('calculators.paint.conditionGood')}</option>
+                    <option value="fair">{t('calculators.paint.conditionFair')}</option>
+                    <option value="poor">{t('calculators.paint.conditionPoor')}</option>
                   </select>
                 </div>
               </div>
@@ -293,7 +293,7 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   onClick={() => removeSurface(index)}
                   className="mt-2 text-red-500 hover:text-red-600"
                 >
-                  Remove Surface
+                  {t('calculators.paint.removeSurface')}
                 </button>
               )}
             </div>
@@ -304,31 +304,31 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                Paint Type
+                {t('calculators.paint.paintTypeLabel')}
               </label>
               <select
                 value={paintType}
                 onChange={(e) => setPaintType(e.target.value as typeof paintType)}
                 className="w-full p-2 border border-slate-300 rounded-md"
               >
-                <option value="economy">Economy Grade</option>
-                <option value="standard">Standard Grade</option>
-                <option value="premium">Premium Grade</option>
+                <option value="economy">{t('calculators.paint.paintType.economy')}</option>
+                <option value="standard">{t('calculators.paint.paintType.standard')}</option>
+                <option value="premium">{t('calculators.paint.paintType.premium')}</option>
               </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                Paint Finish
+                {t('calculators.paint.paintFinishLabel')}
               </label>
               <select
                 value={paintFinish}
                 onChange={(e) => setPaintFinish(e.target.value as typeof paintFinish)}
                 className="w-full p-2 border border-slate-300 rounded-md"
               >
-                <option value="flat">Flat</option>
-                <option value="eggshell">Eggshell</option>
-                <option value="satin">Satin</option>
-                <option value="semi-gloss">Semi-Gloss</option>
+                <option value="flat">{t('calculators.paint.paintFinish.flat')}</option>
+                <option value="eggshell">{t('calculators.paint.paintFinish.eggshell')}</option>
+                <option value="satin">{t('calculators.paint.paintFinish.satin')}</option>
+                <option value="semi-gloss">{t('calculators.paint.paintFinish.semiGloss')}</option>
               </select>
             </div>
           </div>
@@ -338,15 +338,15 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                Number of Coats
+                {t('calculators.paint.numberOfCoats')}
               </label>
               <select
                 value={coats}
                 onChange={(e) => setCoats(Number(e.target.value) as 1 | 2)}
                 className="w-full p-2 border border-slate-300 rounded-md"
               >
-                <option value={1}>Single Coat</option>
-                <option value={2}>Two Coats</option>
+                <option value={1}>{t('calculators.paint.singleCoat')}</option>
+                <option value={2}>{t('calculators.paint.twoCoats')}</option>
               </select>
             </div>
             <div className="flex items-center">
@@ -358,7 +358,7 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
               />
               <label htmlFor="includePrimer" className="ml-2 block text-sm font-medium text-slate-700">
-                Include Primer
+                {t('calculators.paint.includePrimer')}
               </label>
             </div>
           </div>
@@ -374,14 +374,14 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
             />
             <label htmlFor="includeWaste" className="ml-2 block text-sm font-medium text-slate-700">
-              Include Waste Factor
+              {t('calculators.paint.includeWasteFactor')}
             </label>
           </div>
 
           {includeWaste && (
             <div>
               <label htmlFor="wasteFactor" className="block text-sm font-medium text-slate-700 mb-1">
-                Waste Factor Percentage
+                {t('calculators.paint.wasteFactorPercentage')}
               </label>
               <select
                 id="wasteFactor"
@@ -389,15 +389,15 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 onChange={(e) => setWasteFactor(Number(e.target.value) as 5 | 10 | 15)}
                 className="w-full p-2 border border-slate-300 rounded-md"
               >
-                <option value={5}>5% - Simple room, few cuts</option>
-                <option value={10}>10% - Average complexity</option>
-                <option value={15}>15% - Complex layout, many cuts</option>
+                <option value={5}>{t('calculators.paint.wasteFactor5')}</option>
+                <option value={10}>{t('calculators.paint.wasteFactor10')}</option>
+                <option value={15}>{t('calculators.paint.wasteFactor15')}</option>
               </select>
             </div>
           )}
         </div>
       </div>
-      
+
       <button
         onClick={handleCalculate}
         disabled={!isFormValid}

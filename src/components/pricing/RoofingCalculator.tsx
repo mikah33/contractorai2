@@ -68,7 +68,7 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
   const handleCalculate = () => {
     if (!roofArea || roofArea <= 0) {
-      alert('Please enter roof area in square feet');
+      alert(t('calculators.roofing.alerts.enterRoofArea'));
       return;
     }
 
@@ -78,27 +78,27 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
     // 1. Roof Area
     results.push({
-      label: 'Roof Area',
+      label: t('calculators.roofing.results.roofArea'),
       value: area,
-      unit: 'sqft',
+      unit: t('calculators.roofing.units.sqft'),
       cost: 0
     });
 
     // 2. Roofing Material
     const materialCost = squares * materialPrices[material];
     results.push({
-      label: `${getMaterialName(material)}`,
+      label: getMaterialName(material),
       value: squares,
-      unit: 'squares',
+      unit: t('calculators.roofing.units.squares'),
       cost: materialCost
     });
 
     // 3. Underlayment
     const underlaymentCost = squares * 26;
     results.push({
-      label: 'Synthetic Underlayment',
+      label: t('calculators.roofing.results.syntheticUnderlayment'),
       value: squares,
-      unit: 'squares',
+      unit: t('calculators.roofing.units.squares'),
       cost: underlaymentCost
     });
 
@@ -106,9 +106,9 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     if (includeIceShield) {
       const rolls = Math.ceil(area / 200);
       results.push({
-        label: 'Ice & Water Shield',
+        label: t('calculators.roofing.results.iceWaterShield'),
         value: rolls,
-        unit: 'rolls',
+        unit: t('calculators.roofing.units.rolls'),
         cost: rolls * 70
       });
     }
@@ -116,44 +116,44 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     // 5. Ridge Cap (estimate 10% of area as linear feet)
     const ridgeFeet = area * 0.1;
     results.push({
-      label: 'Ridge Cap Shingles',
+      label: t('calculators.roofing.results.ridgeCapShingles'),
       value: ridgeFeet,
-      unit: 'linear feet',
+      unit: t('calculators.roofing.units.linearFeet'),
       cost: ridgeFeet * 3.25
     });
 
     // 6. Drip Edge (estimate perimeter)
     const dripEdgeFeet = Math.sqrt(area) * 4; // Rough perimeter estimate
     results.push({
-      label: 'Drip Edge',
+      label: t('calculators.roofing.results.dripEdge'),
       value: dripEdgeFeet,
-      unit: 'linear feet',
+      unit: t('calculators.roofing.units.linearFeet'),
       cost: dripEdgeFeet * 2.5
     });
 
     // 7. Starter Strips
     const starterBundles = Math.ceil(dripEdgeFeet / 90);
     results.push({
-      label: 'Starter Strips',
+      label: t('calculators.roofing.results.starterStrips'),
       value: starterBundles,
-      unit: 'bundles',
+      unit: t('calculators.roofing.units.bundles'),
       cost: starterBundles * 37
     });
 
     // 8. Pipe Boots (estimate 2-4 based on area)
     const pipeBoots = area > 2000 ? 4 : 2;
     results.push({
-      label: 'Pipe Boots',
+      label: t('calculators.roofing.results.pipeBoots'),
       value: pipeBoots,
-      unit: 'each',
+      unit: t('calculators.roofing.units.each'),
       cost: pipeBoots * 12
     });
 
     // 9. Nails & Fasteners
     results.push({
-      label: 'Nails & Fasteners',
+      label: t('calculators.roofing.results.nailsFasteners'),
       value: squares,
-      unit: 'squares',
+      unit: t('calculators.roofing.units.squares'),
       cost: squares * 32
     });
 
@@ -167,9 +167,9 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     const laborRate = 85;
 
     results.push({
-      label: 'Installation Labor',
+      label: t('calculators.roofing.results.installationLabor'),
       value: installHours,
-      unit: 'hours',
+      unit: t('calculators.roofing.units.hours'),
       cost: installHours * laborRate
     });
 
@@ -178,9 +178,12 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       const tearOffHoursPerSquare = 1.2;
       const tearOffHours = squares * tearOffHoursPerSquare * Number(layers) * pitchMult * storyMult;
       results.push({
-        label: `Tear-Off Labor (${layers} layer${layers > 1 ? 's' : ''})`,
+        label: t('calculators.roofing.results.tearOffLabor', {
+          count: layers,
+          layers: layers
+        }),
         value: tearOffHours,
-        unit: 'hours',
+        unit: t('calculators.roofing.units.hours'),
         cost: tearOffHours * laborRate
       });
     }
@@ -189,9 +192,9 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     if (chimneys && chimneys > 0) {
       const chimneyHours = 3 * Number(chimneys);
       results.push({
-        label: 'Chimney Flashing',
+        label: t('calculators.roofing.results.chimneyFlashing'),
         value: Number(chimneys),
-        unit: chimneys > 1 ? 'chimneys' : 'chimney',
+        unit: t('calculators.roofing.units.chimneys', { count: chimneys }),
         cost: chimneyHours * laborRate
       });
     }
@@ -200,9 +203,9 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     if (skylights && skylights > 0) {
       const skylightHours = 2 * Number(skylights);
       results.push({
-        label: 'Skylight Flashing',
+        label: t('calculators.roofing.results.skylightFlashing'),
         value: Number(skylights),
-        unit: skylights > 1 ? 'skylights' : 'skylight',
+        unit: t('calculators.roofing.units.skylights', { count: skylights }),
         cost: skylightHours * laborRate
       });
     }
@@ -211,9 +214,9 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     if (valleys && valleys > 0) {
       const valleyFeet = Number(valleys) * 20; // Estimate 20 LF per valley
       results.push({
-        label: 'Valley Flashing',
+        label: t('calculators.roofing.results.valleyFlashing'),
         value: valleyFeet,
-        unit: 'linear feet',
+        unit: t('calculators.roofing.units.linearFeet'),
         cost: valleyFeet * 3.5
       });
     }
@@ -221,9 +224,9 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     // 15. Ventilation System
     if (includeVentilation) {
       results.push({
-        label: 'Ventilation System (Ridge & Soffit)',
+        label: t('calculators.roofing.results.ventilationSystem'),
         value: 1,
-        unit: 'system',
+        unit: t('calculators.roofing.units.system'),
         cost: 625
       });
     }
@@ -231,9 +234,9 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     // 16. Extended Warranty
     if (includeWarranty) {
       results.push({
-        label: 'Extended Manufacturer Warranty',
+        label: t('calculators.roofing.results.extendedWarranty'),
         value: squares,
-        unit: 'squares',
+        unit: t('calculators.roofing.units.squares'),
         cost: squares * 27
       });
     }
@@ -241,9 +244,9 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     // 17. Disposal (if tear-off)
     if (layers && layers > 0) {
       results.push({
-        label: 'Debris Disposal',
+        label: t('calculators.roofing.results.debrisDisposal'),
         value: squares,
-        unit: 'squares',
+        unit: t('calculators.roofing.units.squares'),
         cost: squares * 32
       });
     }
@@ -251,9 +254,9 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     // 18. Total
     const totalCost = results.reduce((sum, item) => sum + item.cost, 0);
     results.push({
-      label: 'Total Estimate',
+      label: t('calculators.roofing.results.totalEstimate'),
       value: 1,
-      unit: 'project',
+      unit: t('calculators.roofing.units.project'),
       cost: totalCost,
       isTotal: true
     });
@@ -262,16 +265,7 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   };
 
   const getMaterialName = (mat: RoofMaterial): string => {
-    const names: Record<RoofMaterial, string> = {
-      asphalt: 'Architectural Shingles',
-      metal: 'Metal Roofing (Standing Seam)',
-      tile: 'Clay/Concrete Tile',
-      slate: 'Natural Slate',
-      tpo: 'TPO Membrane',
-      epdm: 'EPDM Rubber',
-      wood: 'Cedar Wood Shakes'
-    };
-    return names[mat];
+    return t(`calculators.roofing.materials.${mat}`);
   };
 
   return (
@@ -286,13 +280,13 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Roof Area (sq ft) *
+              {t('calculators.roofing.roofArea')}
             </label>
             <input
               type="number"
               value={roofArea}
               onChange={(e) => setRoofArea(e.target.value ? parseFloat(e.target.value) : '')}
-              placeholder="Enter roof square footage"
+              placeholder={t('calculators.roofing.roofAreaPlaceholder')}
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               required
             />
@@ -300,82 +294,82 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Roof Type *
+              {t('calculators.roofing.roofType')}
             </label>
             <select
               value={roofType}
               onChange={(e) => setRoofType(e.target.value as RoofType)}
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             >
-              <option value="gable">Gable</option>
-              <option value="hip">Hip</option>
-              <option value="flat">Flat</option>
-              <option value="mansard">Mansard</option>
-              <option value="gambrel">Gambrel</option>
-              <option value="shed">Shed</option>
+              <option value="gable">{t('calculators.roofing.roofTypes.gable')}</option>
+              <option value="hip">{t('calculators.roofing.roofTypes.hip')}</option>
+              <option value="flat">{t('calculators.roofing.roofTypes.flat')}</option>
+              <option value="mansard">{t('calculators.roofing.roofTypes.mansard')}</option>
+              <option value="gambrel">{t('calculators.roofing.roofTypes.gambrel')}</option>
+              <option value="shed">{t('calculators.roofing.roofTypes.shed')}</option>
             </select>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Roofing Material *
+              {t('calculators.roofing.roofingMaterial')}
             </label>
             <select
               value={material}
               onChange={(e) => setMaterial(e.target.value as RoofMaterial)}
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             >
-              <option value="asphalt">Asphalt Shingles - $130/sq</option>
-              <option value="metal">Metal Roofing - $575/sq</option>
-              <option value="tile">Clay/Concrete Tile - $450/sq</option>
-              <option value="slate">Slate - $800/sq</option>
-              <option value="tpo">TPO (Flat) - $280/sq</option>
-              <option value="epdm">EPDM Rubber - $220/sq</option>
-              <option value="wood">Wood Shakes - $400/sq</option>
+              <option value="asphalt">{t('calculators.roofing.materialOptions.asphalt')}</option>
+              <option value="metal">{t('calculators.roofing.materialOptions.metal')}</option>
+              <option value="tile">{t('calculators.roofing.materialOptions.tile')}</option>
+              <option value="slate">{t('calculators.roofing.materialOptions.slate')}</option>
+              <option value="tpo">{t('calculators.roofing.materialOptions.tpo')}</option>
+              <option value="epdm">{t('calculators.roofing.materialOptions.epdm')}</option>
+              <option value="wood">{t('calculators.roofing.materialOptions.wood')}</option>
             </select>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Roof Pitch *
+              {t('calculators.roofing.roofPitch')}
             </label>
             <select
               value={pitch}
               onChange={(e) => setPitch(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             >
-              <option value="1:12">1:12 (Nearly Flat)</option>
-              <option value="2:12">2:12</option>
-              <option value="3:12">3:12</option>
-              <option value="4:12">4:12 (Low Pitch)</option>
-              <option value="5:12">5:12</option>
-              <option value="6:12">6:12 (Standard)</option>
-              <option value="7:12">7:12</option>
-              <option value="8:12">8:12 (Steep)</option>
-              <option value="9:12">9:12</option>
-              <option value="10:12">10:12</option>
-              <option value="12:12">12:12 (45°)</option>
+              <option value="1:12">{t('calculators.roofing.pitchOptions.1:12')}</option>
+              <option value="2:12">{t('calculators.roofing.pitchOptions.2:12')}</option>
+              <option value="3:12">{t('calculators.roofing.pitchOptions.3:12')}</option>
+              <option value="4:12">{t('calculators.roofing.pitchOptions.4:12')}</option>
+              <option value="5:12">{t('calculators.roofing.pitchOptions.5:12')}</option>
+              <option value="6:12">{t('calculators.roofing.pitchOptions.6:12')}</option>
+              <option value="7:12">{t('calculators.roofing.pitchOptions.7:12')}</option>
+              <option value="8:12">{t('calculators.roofing.pitchOptions.8:12')}</option>
+              <option value="9:12">{t('calculators.roofing.pitchOptions.9:12')}</option>
+              <option value="10:12">{t('calculators.roofing.pitchOptions.10:12')}</option>
+              <option value="12:12">{t('calculators.roofing.pitchOptions.12:12')}</option>
             </select>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Number of Stories
+              {t('calculators.roofing.numberOfStories')}
             </label>
             <select
               value={stories}
               onChange={(e) => setStories(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             >
-              <option value="1">1 Story</option>
-              <option value="2">2 Stories</option>
-              <option value="3">3+ Stories</option>
+              <option value="1">{t('calculators.roofing.storiesOptions.1')}</option>
+              <option value="2">{t('calculators.roofing.storiesOptions.2')}</option>
+              <option value="3">{t('calculators.roofing.storiesOptions.3')}</option>
             </select>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Layers to Remove
+              {t('calculators.roofing.layersToRemove')}
             </label>
             <input
               type="number"
@@ -389,7 +383,7 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Skylights
+              {t('calculators.roofing.skylights')}
             </label>
             <input
               type="number"
@@ -403,7 +397,7 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Chimneys
+              {t('calculators.roofing.chimneys')}
             </label>
             <input
               type="number"
@@ -417,7 +411,7 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Valleys
+              {t('calculators.roofing.valleys')}
             </label>
             <input
               type="number"
@@ -432,7 +426,7 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
         {/* Optional Features */}
         <div className="space-y-3">
-          <h3 className="text-sm font-semibold text-gray-900">Optional Features</h3>
+          <h3 className="text-sm font-semibold text-gray-900">{t('calculators.roofing.optionalFeatures')}</h3>
 
           <label className="flex items-center space-x-3 cursor-pointer">
             <input
@@ -441,7 +435,7 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               onChange={(e) => setIncludeVentilation(e.target.checked)}
               className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
             />
-            <span className="text-sm text-gray-700">Ventilation Upgrade (Ridge & Soffit Vents)</span>
+            <span className="text-sm text-gray-700">{t('calculators.roofing.ventilationUpgrade')}</span>
           </label>
 
           <label className="flex items-center space-x-3 cursor-pointer">
@@ -451,7 +445,7 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               onChange={(e) => setIncludeIceShield(e.target.checked)}
               className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
             />
-            <span className="text-sm text-gray-700">Ice & Water Shield (Recommended)</span>
+            <span className="text-sm text-gray-700">{t('calculators.roofing.iceWaterShieldOption')}</span>
           </label>
 
           <label className="flex items-center space-x-3 cursor-pointer">
@@ -461,7 +455,7 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               onChange={(e) => setIncludeWarranty(e.target.checked)}
               className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
             />
-            <span className="text-sm text-gray-700">Extended Manufacturer Warranty</span>
+            <span className="text-sm text-gray-700">{t('calculators.roofing.extendedWarrantyOption')}</span>
           </label>
         </div>
 
