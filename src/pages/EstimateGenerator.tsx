@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { FileText, Plus, Download, Trash2, Edit2, Image, Copy, Check, X, Settings, Palette, Layout, FileUp, FileDown, Sparkles, DollarSign, Printer, Eye, RefreshCw, Receipt, ArrowLeft } from 'lucide-react';
+import { FileText, Plus, Download, Trash2, Edit2, Image, Copy, Check, X, Settings, Palette, Layout, FileUp, FileDown, Sparkles, DollarSign, Printer, Eye, RefreshCw, Receipt, ArrowLeft, Mail } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -10,6 +10,7 @@ import { useFinanceStore } from '../stores/financeStoreSupabase';
 import EstimateEditor from '../components/estimates/EstimateEditor';
 import EstimatePreview from '../components/estimates/EstimatePreview';
 import AIEstimateAssistant from '../components/estimates/AIEstimateAssistant';
+import SendEstimateModal from '../components/estimates/SendEstimateModal';
 import { Estimate, EstimateItem } from '../types/estimates';
 import { estimateService } from '../services/estimateService';
 import { useData } from '../contexts/DataContext';
@@ -24,6 +25,7 @@ const EstimateGenerator = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showSaveSuccess, setShowSaveSuccess] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const [showSendModal, setShowSendModal] = useState(false);
   const [recentEstimates, setRecentEstimates] = useState<any[]>([]);
   const [loadingEstimates, setLoadingEstimates] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -675,49 +677,78 @@ const EstimateGenerator = () => {
         </div>
         
         {currentEstimate ? (
-          <div className="flex space-x-2">
-            <button 
-              onClick={handleSaveEstimate}
-              disabled={isGenerating}
-              className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          <div className="flex items-center gap-3">
+            {/* Preview Button */}
+            <button
+              onClick={() => setActiveTab('preview')}
+              className="inline-flex items-center px-4 py-2.5 text-sm font-semibold rounded-lg text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 shadow-sm hover:shadow transition-all duration-200 whitespace-nowrap"
             >
-              {isGenerating ? (
-                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <FileDown className="w-4 h-4 mr-2" />
-              )}
-              Save
+              <Eye className="w-4 h-4 mr-2" />
+              <span className="hidden sm:inline">Preview Invoice</span>
+              <span className="sm:hidden">Preview</span>
             </button>
-            
-            
+
+            {/* Primary Action - Send */}
+            <button
+              onClick={() => setShowSendModal(true)}
+              className="inline-flex items-center px-5 py-2.5 text-sm font-semibold rounded-lg text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 whitespace-nowrap"
+            >
+              <Mail className="w-4 h-4 mr-2" />
+              <span className="hidden sm:inline">Send to Customer</span>
+              <span className="sm:hidden">Send</span>
+            </button>
+
+            {/* Actions Dropdown */}
             <div className="relative">
-              <button 
+              <button
                 onClick={() => setShowExportMenu(!showExportMenu)}
-                className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="inline-flex items-center px-4 py-2.5 text-sm font-medium rounded-lg text-gray-700 bg-white border-2 border-gray-200 hover:border-blue-500 hover:text-blue-600 hover:shadow-md transition-all duration-200 whitespace-nowrap"
               >
-                <Download className="w-4 h-4 mr-2" />
-                Export
+                <Settings className="w-4 h-4 mr-2" />
+                <span>Actions</span>
+                <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
               </button>
+
               {showExportMenu && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10">
-                  <div className="py-1">
-                    <button 
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-2xl border border-gray-100 z-50 overflow-hidden">
+                  <div className="py-2">
+                    <button
+                      onClick={handleSaveEstimate}
+                      disabled={isGenerating}
+                      className="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150"
+                    >
+                      {isGenerating ? (
+                        <RefreshCw className="w-5 h-5 mr-3 animate-spin text-blue-500" />
+                      ) : (
+                        <FileDown className="w-5 h-5 mr-3 text-blue-500" />
+                      )}
+                      <span className="font-medium">Save Estimate</span>
+                    </button>
+
+                    <div className="border-t border-gray-100 my-1"></div>
+
+                    <button
                       onClick={() => {
                         handleExportPDF();
                         setShowExportMenu(false);
                       }}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      className="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150"
                     >
-                      Export as PDF
+                      <Download className="w-5 h-5 mr-3 text-green-500" />
+                      <span className="font-medium">Export as PDF</span>
                     </button>
-                    <button 
+
+                    <button
                       onClick={() => {
                         handleExportExcel();
                         setShowExportMenu(false);
                       }}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      className="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150"
                     >
-                      Export as Excel
+                      <FileText className="w-5 h-5 mr-3 text-green-500" />
+                      <span className="font-medium">Export as Excel</span>
                     </button>
                   </div>
                 </div>
@@ -760,38 +791,27 @@ const EstimateGenerator = () => {
             
             {activeTab === 'editor' && (
               <>
-                <button 
-                  onClick={handleAIAssistance}
-                  className={`inline-flex items-center px-3 py-2 border shadow-sm text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-                    showAIAssistant 
-                      ? 'border-blue-500 text-blue-700 bg-blue-50' 
-                      : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'
-                  }`}
-                >
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  AI Assistant
-                </button>
-                
-                <button 
+                <button
                   onClick={() => setActiveTab('preview')}
-                  className="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className="inline-flex items-center px-4 py-2.5 text-sm font-semibold rounded-lg text-white bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 whitespace-nowrap"
                 >
-                  <FileText className="w-4 h-4 mr-2" />
+                  <Eye className="w-4 h-4 mr-2" />
                   Preview
                 </button>
-                
+
                 <button
                   onClick={() => {
-                    // Clear all stored data and reload
-                    localStorage.clear();
-                    sessionStorage.clear();
-                    window.location.href = '/estimates';
+                    if (confirm('Clear all data and start fresh?')) {
+                      localStorage.clear();
+                      sessionStorage.clear();
+                      window.location.href = '/estimates';
+                    }
                   }}
-                  className="inline-flex items-center px-3 py-2 border border-red-300 shadow-sm text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                  className="inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg text-red-600 bg-white border-2 border-red-200 hover:border-red-400 hover:bg-red-50 transition-all duration-200 whitespace-nowrap"
                   title="Clear all cached data and start fresh"
                 >
                   <X className="w-4 h-4 mr-2" />
-                  Clear Data
+                  <span className="hidden sm:inline">Clear Data</span>
                 </button>
               </>
             )}
@@ -978,6 +998,19 @@ const EstimateGenerator = () => {
           </div>
         </div>
       )}
+
+      {/* Send Estimate Modal */}
+      <SendEstimateModal
+        isOpen={showSendModal}
+        onClose={() => setShowSendModal(false)}
+        estimate={currentEstimate}
+        companyInfo={{
+          name: profile?.company_name || profile?.company || profile?.full_name || 'Your Company',
+          email: profile?.email || '',
+          phone: profile?.phone || '',
+          address: profile?.address || ''
+        }}
+      />
     </div>
   );
 };

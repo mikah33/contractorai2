@@ -5,14 +5,14 @@ import { useData } from '../../contexts/DataContext';
 
 interface EstimatePreviewProps {
   estimate: Estimate;
-  clients: { id: string; name: string }[];
-  projects: { id: string; name: string }[];
+  clients: { id: string; name: string; email?: string; phone?: string; address?: string }[];
+  projects: { id: string; name: string; address?: string }[];
 }
 
 const EstimatePreview: React.FC<EstimatePreviewProps> = ({ estimate, clients, projects }) => {
   const { profile } = useData();
-  const client = clients.find(c => c.name === estimate.clientName);
-  const project = projects.find(p => p.name === estimate.projectName);
+  const client = clients.find(c => c.name === estimate.clientName || c.id === estimate.clientId);
+  const project = projects.find(p => p.name === estimate.projectName || p.id === estimate.projectId);
   
   const formatDate = (dateString: string) => {
     try {
@@ -62,14 +62,13 @@ const EstimatePreview: React.FC<EstimatePreviewProps> = ({ estimate, clients, pr
           {client ? (
             <div>
               <p className="font-medium">{client.name}</p>
-              <p className="text-gray-600 text-sm mt-1">client@example.com</p>
-              <p className="text-gray-600 text-sm">555-123-4567</p>
+              {client.email && <p className="text-gray-600 text-sm mt-1">{client.email}</p>}
+              {client.phone && <p className="text-gray-600 text-sm">{client.phone}</p>}
+              {client.address && <p className="text-gray-600 text-sm">{client.address}</p>}
             </div>
-          ) : estimate.clientId ? (
+          ) : estimate.clientName ? (
             <div>
-              <p className="font-medium">{estimate.clientId}</p>
-              <p className="text-gray-600 text-sm mt-1">client@example.com</p>
-              <p className="text-gray-600 text-sm">555-123-4567</p>
+              <p className="font-medium">{estimate.clientName}</p>
             </div>
           ) : (
             <p className="text-gray-500 italic">No client selected</p>
@@ -81,12 +80,11 @@ const EstimatePreview: React.FC<EstimatePreviewProps> = ({ estimate, clients, pr
           {project ? (
             <div>
               <p className="font-medium">{project.name}</p>
-              <p className="text-gray-600 text-sm mt-1">123 Project Address, City, ST 12345</p>
+              {project.address && <p className="text-gray-600 text-sm mt-1">{project.address}</p>}
             </div>
-          ) : estimate.projectId ? (
+          ) : estimate.projectName ? (
             <div>
-              <p className="font-medium">{projects.find(p => p.id === estimate.projectId)?.name || estimate.projectId}</p>
-              <p className="text-gray-600 text-sm mt-1">123 Project Address, City, ST 12345</p>
+              <p className="font-medium">{estimate.projectName}</p>
             </div>
           ) : (
             <p className="text-gray-500 italic">No project selected</p>

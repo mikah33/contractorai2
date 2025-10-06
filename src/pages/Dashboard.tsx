@@ -19,8 +19,18 @@ const Dashboard = () => {
   const { events, fetchEvents } = useCalendarStoreSupabase();
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
+  // Debug: Log when component mounts and data state
+  useEffect(() => {
+    console.log('📊 Dashboard mounted');
+    console.log('  Projects:', projects.length);
+    console.log('  Estimates:', estimates.length);
+    console.log('  Events:', events.length);
+    console.log('  Financial Summary:', financialSummary);
+  }, []);
+
   // Fetch data on component mount (only if not already loaded)
   useEffect(() => {
+    console.log('📊 Dashboard calling fetch methods...');
     fetchProjects(); // Will use cache if already loaded
     fetchEstimates(); // Will use cache if already loaded
     fetchEvents(); // Load calendar events

@@ -237,7 +237,7 @@ interface FinanceState {
   // Other Actions
   setDateRange: (range: 'week' | 'month' | 'quarter' | 'year') => void;
   generateReport: (options: any) => Promise<void>;
-  calculateFinancialSummary: () => void;
+  calculateFinancialSummary: () => Promise<void>;
   
   // AI features
   predictCashFlow: (months: number) => Promise<any>;
@@ -1581,9 +1581,30 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
   },
 
   // Calculate financial summary
-  calculateFinancialSummary: () => {
+  calculateFinancialSummary: async () => {
     const state = get();
     const { receipts, payments, invoices, recurringExpenses } = state;
+
+    // Fetch employee and contractor payments for expense calculation
+    let employeePaymentsTotal = 0;
+    let contractorPaymentsTotal = 0;
+
+    try {
+      const { data: empPayments } = await supabase
+        .from('employee_payments')
+        .select('amount')
+        .eq('status', 'completed');
+
+      const { data: conPayments } = await supabase
+        .from('contractor_payments')
+        .select('amount')
+        .eq('status', 'completed');
+
+      employeePaymentsTotal = (empPayments || []).reduce((sum, p) => sum + (p.amount || 0), 0);
+      contractorPaymentsTotal = (conPayments || []).reduce((sum, p) => sum + (p.amount || 0), 0);
+    } catch (error) {
+      console.error('Error fetching payroll expenses:', error);
+    }
 
     // Calculate monthly recurring cost
     const monthlyRecurringCost = recurringExpenses
@@ -1598,8 +1619,11 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
         }
       }, 0);
 
-    // Calculate totals (include monthly recurring in expenses)
-    const totalExpenses = receipts.reduce((sum, r) => sum + r.amount, 0) + monthlyRecurringCost;
+    // Calculate totals (include monthly recurring, employee, and contractor payments in expenses)
+    const totalExpenses = receipts.reduce((sum, r) => sum + r.amount, 0) +
+                          monthlyRecurringCost +
+                          employeePaymentsTotal +
+                          contractorPaymentsTotal;
     const totalRevenue = payments
       .filter(p => p.status === 'completed')
       .reduce((sum, p) => sum + p.amount, 0);

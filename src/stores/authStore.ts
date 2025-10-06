@@ -197,12 +197,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session) {
-        set({ 
-          user: session.user, 
+        set({
+          user: session.user,
           session,
-          initialized: true 
+          initialized: true
         });
-        
+
         // Fetch user profile
         await get().fetchProfile();
       } else {

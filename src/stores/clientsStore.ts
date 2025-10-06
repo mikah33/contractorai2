@@ -23,9 +23,10 @@ interface ClientsState {
   error: string | null;
   searchTerm: string;
   statusFilter: 'all' | 'active' | 'inactive' | 'prospect';
-  
+  hasLoadedOnce: boolean;
+
   // Actions
-  fetchClients: () => Promise<void>;
+  fetchClients: (force?: boolean) => Promise<void>;
   addClient: (client: Omit<Client, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   updateClient: (id: string, client: Partial<Client>) => Promise<void>;
   deleteClient: (id: string) => Promise<void>;
@@ -55,12 +56,26 @@ export const useClientsStore = create<ClientsState>((set, get) => ({
   error: null,
   searchTerm: '',
   statusFilter: 'all',
+  hasLoadedOnce: false,
 
-  fetchClients: async () => {
+  fetchClients: async (force = false) => {
+    const state = get();
+
+    // Skip if already loaded and not forcing refresh
+    if (state.hasLoadedOnce && !force && state.clients.length > 0) {
+      console.log('✅ Using cached clients data');
+      return;
+    }
+
+    // Skip if currently loading
+    if (state.isLoading) {
+      return;
+    }
+
     set({ isLoading: true, error: null });
     try {
       const userId = await getCurrentUserId();
-      
+
       // Fetch ALL clients - RLS will filter by user automatically
       const { data, error } = await supabase
         .from('clients')
@@ -69,23 +84,24 @@ export const useClientsStore = create<ClientsState>((set, get) => ({
 
       if (error) throw error;
       
-      set({ 
+      set({
         clients: data?.map(client => ({
           id: client.id,
           name: client.name,
           email: client.email || '',
           phone: client.phone || '',
           address: client.address || '',
-          city: '',
-          state: '',
-          zip: '',
-          company: '',
+          city: client.city || '',
+          state: client.state || '',
+          zip: client.zip || '',
+          company: client.company || '',
           notes: client.notes || '',
           status: client.status || 'active',
           createdAt: client.created_at,
           updatedAt: client.updated_at
         })) || [],
-        isLoading: false 
+        isLoading: false,
+        hasLoadedOnce: true
       });
     } catch (error) {
       console.error('Error fetching clients:', error);
@@ -109,6 +125,10 @@ export const useClientsStore = create<ClientsState>((set, get) => ({
           email: clientData.email || null,
           phone: clientData.phone || null,
           address: clientData.address || null,
+          city: clientData.city || null,
+          state: clientData.state || null,
+          zip: clientData.zip || null,
+          company: clientData.company || null,
           status: clientData.status || 'active',
           notes: clientData.notes || null,
           user_id: userId
@@ -124,10 +144,10 @@ export const useClientsStore = create<ClientsState>((set, get) => ({
         email: data.email || '',
         phone: data.phone || '',
         address: data.address || '',
-        city: '',
-        state: '',
-        zip: '',
-        company: '',
+        city: data.city || '',
+        state: data.state || '',
+        zip: data.zip || '',
+        company: data.company || '',
         notes: data.notes || '',
         status: data.status || 'active',
         createdAt: data.created_at,
@@ -171,10 +191,10 @@ export const useClientsStore = create<ClientsState>((set, get) => ({
         email: data.email || '',
         phone: data.phone || '',
         address: data.address || '',
-        city: '',
-        state: '',
-        zip: '',
-        company: '',
+        city: data.city || '',
+        state: data.state || '',
+        zip: data.zip || '',
+        company: data.company || '',
         notes: data.notes || '',
         status: data.status || 'active',
         createdAt: data.created_at,

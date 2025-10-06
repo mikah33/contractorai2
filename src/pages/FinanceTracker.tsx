@@ -65,18 +65,23 @@ const FinanceTracker = () => {
   // Fetch data when component mounts
   useEffect(() => {
     const loadData = async () => {
-      await Promise.all([
-        fetchReceipts(),
-        fetchPayments(),
-        fetchRecurringExpenses(),
-        fetchBudgetItems(),
-        fetchProjects(),
-        fetchClients(),
-        fetchInvoices()
-      ]);
+      try {
+        await Promise.all([
+          fetchReceipts(),
+          fetchPayments(),
+          fetchRecurringExpenses(),
+          fetchBudgetItems(),
+          fetchProjects(),
+          fetchClients(),
+          fetchInvoices()
+        ]);
+      } catch (err) {
+        console.error('Error loading finance data:', err);
+      }
     };
-    
+
     loadData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleExportData = (format: 'csv' | 'pdf') => {

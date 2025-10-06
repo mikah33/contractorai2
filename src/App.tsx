@@ -24,15 +24,23 @@ import { PricingProvider } from './contexts/PricingContext';
 import { ProjectProvider } from './contexts/ProjectContext';
 import { DataProvider } from './contexts/DataContext';
 import { useAuthStore } from './stores/authStore';
+import { useAppInitialization } from './hooks/useAppInitialization';
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, initialized } = useAuthStore();
+  const { isInitialized: dataInitialized, initError } = useAppInitialization();
 
-  if (!initialized) {
+  // Show loading while auth or data initializes
+  if (!initialized || (user && !dataInitialized)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">
+            {!initialized ? 'Checking authentication...' : 'Loading your data...'}
+          </p>
+        </div>
       </div>
     );
   }
