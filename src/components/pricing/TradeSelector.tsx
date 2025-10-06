@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Trade } from '../../types';
 
 interface TradeSelectorProps {
@@ -7,6 +8,7 @@ interface TradeSelectorProps {
 }
 
 const TradeSelector = ({ trades, selectedTrade, onSelectTrade }: TradeSelectorProps) => {
+  const { t } = useTranslation();
   // Group trades by category
   const categories = trades.reduce((acc, trade) => {
     if (!acc[trade.category]) {
@@ -35,7 +37,7 @@ const TradeSelector = ({ trades, selectedTrade, onSelectTrade }: TradeSelectorPr
                 <div className="w-8 h-8 flex items-center justify-center mb-1">
                   {trade.icon}
                 </div>
-                <span className="text-xs font-medium text-center">{trade.name}</span>
+                <span className="text-xs font-medium text-center">{t(trade.name)}</span>
               </button>
             ))}
           </div>

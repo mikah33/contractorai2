@@ -1,4 +1,5 @@
 import { DollarSign, Calendar, User, Briefcase, Check } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Estimate } from '../../types/estimates';
 import { format } from 'date-fns';
 import { useData } from '../../contexts/DataContext';
@@ -10,6 +11,7 @@ interface EstimatePreviewProps {
 }
 
 const EstimatePreview: React.FC<EstimatePreviewProps> = ({ estimate, clients, projects }) => {
+  const { t } = useTranslation();
   const { profile } = useData();
   const client = clients.find(c => c.name === estimate.clientName || c.id === estimate.clientId);
   const project = projects.find(p => p.name === estimate.projectName || p.id === estimate.projectId);
@@ -58,7 +60,7 @@ const EstimatePreview: React.FC<EstimatePreviewProps> = ({ estimate, clients, pr
       {/* Client and Project Info */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
         <div className="border rounded-lg p-4">
-          <h2 className="text-sm font-medium text-gray-500 mb-2">CLIENT</h2>
+          <h2 className="text-sm font-medium text-gray-500 mb-2">{t('clients.client')}</h2>
           {client ? (
             <div>
               <p className="font-medium">{client.name}</p>

@@ -4,7 +4,7 @@ import { Trade } from '../types';
 export const trades: Trade[] = [
   {
     id: 'deck',
-    name: 'Deck',
+    name: 'trades.deck',
     category: 'Exterior',
     icon: <Construction />,
     description: 'Custom deck building and installation',
@@ -85,7 +85,7 @@ export const trades: Trade[] = [
   },
   {
     id: 'siding',
-    name: 'Siding',
+    name: 'trades.siding',
     category: 'Exterior',
     icon: <Home />,
     description: 'Siding installation and replacement',
@@ -130,7 +130,7 @@ export const trades: Trade[] = [
   },
   {
     id: 'concrete',
-    name: 'Concrete',
+    name: 'trades.concrete',
     category: 'Exterior',
     icon: <Maximize />,
     description: 'Concrete slabs, driveways, and patios',
@@ -170,7 +170,7 @@ export const trades: Trade[] = [
   },
   {
     id: 'pavers',
-    name: 'Pavers',
+    name: 'trades.pavers',
     category: 'Exterior',
     icon: <SquareFoot />,
     description: 'Paver patios, walkways, and driveways',
@@ -187,7 +187,7 @@ export const trades: Trade[] = [
   },
   {
     id: 'drywall',
-    name: 'Drywall',
+    name: 'trades.drywall',
     category: 'Interior',
     icon: <WallOff />,
     description: 'Drywall installation and repair',
@@ -204,7 +204,7 @@ export const trades: Trade[] = [
   },
   {
     id: 'paint',
-    name: 'Paint',
+    name: 'trades.paint',
     category: 'Interior',
     icon: <PaintBucket />,
     description: 'Interior and exterior painting',
@@ -231,7 +231,7 @@ export const trades: Trade[] = [
   },
   {
     id: 'framing',
-    name: 'Framing',
+    name: 'trades.framing',
     category: 'Construction',
     icon: <Hammer />,
     description: 'Structural framing for new construction or remodels',
@@ -248,7 +248,7 @@ export const trades: Trade[] = [
   },
   {
     id: 'retaining_walls',
-    name: 'Retaining Walls',
+    name: 'trades.retainingWalls',
     category: 'Exterior',
     icon: <Columns />,
     description: 'Retaining wall construction',
@@ -273,7 +273,7 @@ export const trades: Trade[] = [
   },
   {
     id: 'excavation',
-    name: 'Excavation',
+    name: 'trades.excavation',
     category: 'Site Work',
     icon: <Construction />,
     description: 'Site excavation and grading',
@@ -290,7 +290,7 @@ export const trades: Trade[] = [
   },
   {
     id: 'flooring',
-    name: 'Flooring',
+    name: 'trades.flooring',
     category: 'Interior',
     icon: <Footprints />,
     description: 'Flooring installation including hardwood, tile, carpet, and vinyl',
@@ -320,7 +320,7 @@ export const trades: Trade[] = [
   },
   {
     id: 'tile',
-    name: 'Tile',
+    name: 'trades.tile',
     category: 'Interior',
     icon: <SquareFoot />,
     description: 'Tile installation for floors, walls, showers, and backsplashes',
@@ -349,7 +349,7 @@ export const trades: Trade[] = [
   },
   {
     id: 'electrical',
-    name: 'Electrical',
+    name: 'trades.electrical',
     category: 'Systems',
     icon: <Lightbulb />,
     description: 'Electrical installation and repairs',
@@ -378,7 +378,7 @@ export const trades: Trade[] = [
   },
   {
     id: 'hvac',
-    name: 'HVAC',
+    name: 'trades.hvac',
     category: 'Systems',
     icon: <Thermometer />,
     description: 'Heating, ventilation, and air conditioning',
@@ -407,7 +407,7 @@ export const trades: Trade[] = [
   },
   {
     id: 'plumbing',
-    name: 'Plumbing',
+    name: 'trades.plumbing',
     category: 'Systems',
     icon: <Droplet />,
     description: 'Plumbing installation and repairs',
@@ -428,7 +428,7 @@ export const trades: Trade[] = [
   },
   {
     id: 'doors_windows',
-    name: 'Doors & Windows',
+    name: 'trades.doorsWindows',
     category: 'Exterior',
     icon: <Door />,
     description: 'Door and window installation and replacement',
@@ -457,7 +457,7 @@ export const trades: Trade[] = [
   },
   {
     id: 'fence',
-    name: 'Fence',
+    name: 'trades.fence',
     category: 'Exterior',
     icon: <Layers />,
     description: 'Fence installation and replacement',
@@ -498,7 +498,7 @@ export const trades: Trade[] = [
   },
   {
     id: 'foundation',
-    name: 'Foundation',
+    name: 'trades.foundation',
     category: 'Construction',
     icon: <Foundation />,
     description: 'Foundation construction and repair',
@@ -549,7 +549,7 @@ export const trades: Trade[] = [
   },
   {
     id: 'gutter',
-    name: 'Gutters',
+    name: 'trades.gutters',
     category: 'Exterior',
     icon: <Cloud />,
     description: 'Gutter installation and replacement',
@@ -600,7 +600,7 @@ export const trades: Trade[] = [
   },
   {
     id: 'junk_removal',
-    name: 'Junk Removal',
+    name: 'trades.junkRemoval',
     category: 'Site Work',
     icon: <Trash2 />,
     description: 'Removal and disposal of junk and debris',
@@ -653,7 +653,7 @@ export const trades: Trade[] = [
   },
   {
     id: 'roofing',
-    name: 'Roofing',
+    name: 'trades.roofing',
     category: 'Exterior',
     icon: <Warehouse />,
     description: 'Roof installation, replacement, and repair with AI-powered estimation',

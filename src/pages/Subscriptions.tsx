@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Check, Loader2, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe-js';
@@ -24,6 +25,7 @@ interface Invoice {
 }
 
 const Subscriptions: React.FC = () => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState<string | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
@@ -116,48 +118,48 @@ const Subscriptions: React.FC = () => {
 
   const plans = [
     {
-      name: '1 Month',
+      name: t('subscriptions.plan1Month'),
       price: '$49.99',
       priceId: import.meta.env.VITE_STRIPE_PRICE_1_MONTH || 'price_1SEXGjGcGCTrlHr7KPva7H7c',
-      period: '/month',
+      period: t('subscriptions.perMonth'),
       features: [
-        'Full access to all features',
-        'Pricing calculator',
-        'Finance tracking',
-        'Project management',
-        'Ad analytics',
-        'Email support',
+        t('subscriptions.feature1'),
+        t('subscriptions.feature2'),
+        t('subscriptions.feature3'),
+        t('subscriptions.feature4'),
+        t('subscriptions.feature5'),
+        t('subscriptions.feature6'),
       ],
     },
     {
-      name: '3 Months',
+      name: t('subscriptions.plan3Months'),
       price: '$129.99',
       priceId: import.meta.env.VITE_STRIPE_PRICE_3_MONTHS || 'price_1SEXGiGcGCTrlHr7yE07hREx',
-      period: '/3 months',
+      period: t('subscriptions.per3Months'),
       popular: true,
-      savings: 'Save $19.98',
+      savings: t('subscriptions.save3Months'),
       features: [
-        'Full access to all features',
-        'Pricing calculator',
-        'Finance tracking',
-        'Project management',
-        'Ad analytics',
-        'Email support',
+        t('subscriptions.feature1'),
+        t('subscriptions.feature2'),
+        t('subscriptions.feature3'),
+        t('subscriptions.feature4'),
+        t('subscriptions.feature5'),
+        t('subscriptions.feature6'),
       ],
     },
     {
-      name: '1 Year',
+      name: t('subscriptions.plan1Year'),
       price: '$499.99',
       priceId: import.meta.env.VITE_STRIPE_PRICE_1_YEAR || 'price_1SEY4UGcGCTrlHr7pk0lW6MD',
-      period: '/year',
-      savings: 'Save $99.89',
+      period: t('subscriptions.perYear'),
+      savings: t('subscriptions.save1Year'),
       features: [
-        'Full access to all features',
-        'Pricing calculator',
-        'Finance tracking',
-        'Project management',
-        'Ad analytics',
-        'Email support',
+        t('subscriptions.feature1'),
+        t('subscriptions.feature2'),
+        t('subscriptions.feature3'),
+        t('subscriptions.feature4'),
+        t('subscriptions.feature5'),
+        t('subscriptions.feature6'),
       ],
     },
   ];
@@ -169,7 +171,7 @@ const Subscriptions: React.FC = () => {
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        alert('Please log in to subscribe');
+        alert(t('subscriptions.pleaseLogin'));
         setLoading(null);
         return;
       }
@@ -209,7 +211,7 @@ const Subscriptions: React.FC = () => {
     if (!currentSubscription) return;
 
     const confirmCancel = window.confirm(
-      'Are you sure you want to cancel your subscription? You will still have access until the end of your current billing period.'
+      t('subscriptions.cancelConfirm')
     );
 
     if (!confirmCancel) return;
@@ -219,7 +221,7 @@ const Subscriptions: React.FC = () => {
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        alert('Please log in to cancel subscription');
+        alert(t('subscriptions.pleaseLogin'));
         setLoading(null);
         return;
       }
@@ -233,7 +235,7 @@ const Subscriptions: React.FC = () => {
 
       if (error) throw error;
 
-      alert('Your subscription has been cancelled. You will still have access until the end of your current billing period.');
+      alert(t('subscriptions.cancelSuccess'));
 
       // Refresh subscription data
       await fetchCurrentSubscription();
@@ -270,8 +272,8 @@ const Subscriptions: React.FC = () => {
 
     const action = currentSubscription.cancel_at_period_end ? 'resume' : 'cancel';
     const confirmMessage = currentSubscription.cancel_at_period_end
-      ? 'Resume auto-renewal for your subscription?'
-      : 'Turn off auto-renewal? You will still have access until the end of your current billing period.';
+      ? t('subscriptions.resumeAutoRenewalConfirm')
+      : t('subscriptions.turnOffAutoRenewalConfirm');
 
     if (!window.confirm(confirmMessage)) return;
 
@@ -301,12 +303,12 @@ const Subscriptions: React.FC = () => {
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            {currentSubscription ? 'Your Subscription' : 'Choose Your Plan'}
+            {currentSubscription ? t('subscriptions.yourSubscription') : t('subscriptions.choosePlan')}
           </h1>
           <p className="text-xl text-gray-600">
             {currentSubscription
-              ? 'Manage your subscription details'
-              : 'Select the perfect plan for your contracting business'}
+              ? t('subscriptions.manageDetails')
+              : t('subscriptions.selectPerfectPlan')}
           </p>
         </div>
 
