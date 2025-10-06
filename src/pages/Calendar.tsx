@@ -124,31 +124,35 @@ const Calendar = () => {
         days.push(
           <div
             key={date.toString()}
-            className={`min-h-[120px] p-2 border border-gray-200 cursor-pointer ${
+            className={`min-h-[80px] sm:min-h-[100px] md:min-h-[120px] p-1 sm:p-2 border border-gray-200 cursor-pointer ${
               isToday(date) ? 'bg-blue-50' : ''
-            } ${isSelected ? 'ring-2 ring-blue-500' : ''} hover:bg-gray-50`}
+            } ${isSelected ? 'ring-2 ring-blue-500' : ''} hover:bg-gray-50 transition-colors`}
             onClick={() => handleDateClick(date)}
           >
-            <div className="font-medium text-sm text-gray-900">
+            <div className={`font-medium text-xs sm:text-sm ${
+              isToday(date) ? 'bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center' : 'text-gray-900'
+            }`}>
               {format(date, 'd')}
             </div>
-            <div className="mt-1 space-y-1">
-              {dayEvents.map(event => (
+            <div className="mt-1 space-y-1 overflow-hidden">
+              {dayEvents.slice(0, 2).map(event => (
                 <div
                   key={event.id}
-                  className={`px-2 py-1 text-xs rounded-md border ${getEventColor(event.event_type)} ${
+                  className={`px-1 sm:px-2 py-0.5 sm:py-1 text-xs rounded-md border ${getEventColor(event.event_type)} ${
                     event.auto_generated ? 'border-blue-500' : ''
-                  } hover:opacity-75`}
+                  } hover:opacity-75 truncate`}
                 >
                   <div className="flex items-center">
-                    {getStatusIcon(event.status)}
-                    <span className="ml-1 font-medium">{event.title}</span>
+                    <span className="hidden sm:inline">{getStatusIcon(event.status)}</span>
+                    <span className="ml-0 sm:ml-1 font-medium truncate">{event.title}</span>
                   </div>
-                  {event.description && (
-                    <div className="text-xs opacity-75">{event.description}</div>
-                  )}
                 </div>
               ))}
+              {dayEvents.length > 2 && (
+                <div className="text-xs text-gray-500 px-1 sm:px-2">
+                  +{dayEvents.length - 2} more
+                </div>
+              )}
             </div>
           </div>
         );
@@ -303,26 +307,26 @@ const Calendar = () => {
   ], []);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6 px-4 sm:px-6 lg:px-0">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Project Calendar</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Project Calendar</h1>
           <p className="mt-1 text-sm text-gray-600">
             Manage your project schedules and deadlines
           </p>
         </div>
-        
-        <div className="flex space-x-2">
+
+        <div className="flex flex-col sm:flex-row gap-2">
           <button
             onClick={handleExportClick}
-            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 active:bg-gray-100"
+            className="inline-flex items-center justify-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 active:bg-gray-100 w-full sm:w-auto"
           >
-            <Download className="w-4 h-4 mr-2" />
-            Export
+            <Download className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Export</span>
           </button>
           <button
             onClick={handleAddEvent}
-            className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 active:bg-blue-800"
+            className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 active:bg-blue-800 w-full sm:w-auto"
           >
             <Plus className="w-4 h-4 mr-2" />
             Add Event
@@ -330,85 +334,91 @@ const Calendar = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="p-4 sm:p-6 border-b border-gray-200">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center justify-between sm:justify-start space-x-2 sm:space-x-4">
               <button
                 onClick={() => handleDateChange('prev')}
                 className="p-2 hover:bg-gray-100 active:bg-gray-200 rounded-full"
               >
                 <ChevronLeft className="w-5 h-5 text-gray-600" />
               </button>
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
+                {format(currentDate, 'MMMM yyyy')}
+              </h2>
               <button
                 onClick={() => handleDateChange('next')}
                 className="p-2 hover:bg-gray-100 active:bg-gray-200 rounded-full"
               >
                 <ChevronRight className="w-5 h-5 text-gray-600" />
               </button>
-              <h2 className="text-xl font-semibold text-gray-900">
-                {format(currentDate, 'MMMM yyyy')}
-              </h2>
             </div>
-            
-            <div className="flex items-center space-x-2">
-              <div className="flex border border-gray-300 rounded-md">
+
+            <div className="flex items-center gap-2">
+              <div className="flex border border-gray-300 rounded-md overflow-hidden">
                 <button
                   onClick={() => handleViewChange('month')}
-                  className={`px-4 py-2 text-sm font-medium ${
+                  className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium ${
                     view === 'month'
                       ? 'bg-blue-50 text-blue-600'
                       : 'text-gray-700 hover:bg-gray-50 active:bg-gray-100'
                   }`}
                 >
-                  Month
+                  <Grid className="w-4 h-4 sm:hidden" />
+                  <span className="hidden sm:inline">Month</span>
                 </button>
                 <button
                   onClick={() => handleViewChange('week')}
-                  className={`px-4 py-2 text-sm font-medium ${
+                  className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium ${
                     view === 'week'
                       ? 'bg-blue-50 text-blue-600'
                       : 'text-gray-700 hover:bg-gray-50 active:bg-gray-100'
                   }`}
                 >
-                  Week
+                  <List className="w-4 h-4 sm:hidden" />
+                  <span className="hidden sm:inline">Week</span>
                 </button>
                 <button
                   onClick={() => handleViewChange('day')}
-                  className={`px-4 py-2 text-sm font-medium ${
+                  className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium ${
                     view === 'day'
                       ? 'bg-blue-50 text-blue-600'
                       : 'text-gray-700 hover:bg-gray-50 active:bg-gray-100'
                   }`}
                 >
-                  Day
+                  <CalendarIcon className="w-4 h-4 sm:hidden" />
+                  <span className="hidden sm:inline">Day</span>
                 </button>
               </div>
-              
+
               <button
                 onClick={handleAIInsightsToggle}
-                className={`inline-flex items-center px-3 py-2 border rounded-md text-sm font-medium ${
+                className={`inline-flex items-center justify-center px-3 py-2 border rounded-md text-sm font-medium ${
                   showAIRecommendations
                     ? 'border-blue-500 text-blue-600 bg-blue-50'
                     : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50 active:bg-gray-100'
                 }`}
               >
-                <Sparkles className="w-4 h-4 mr-2" />
-                AI Insights
+                <Sparkles className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">AI Insights</span>
               </button>
             </div>
           </div>
 
-          <div className="grid grid-cols-7 gap-px mt-4">
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-              <div key={day} className="text-center text-sm font-medium text-gray-500">
-                {day}
-              </div>
-            ))}
-          </div>
+          {view === 'month' && (
+            <div className="grid grid-cols-7 gap-px mt-4">
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) => (
+                <div key={day} className="text-center text-xs sm:text-sm font-medium text-gray-500">
+                  <span className="hidden sm:inline">{day}</span>
+                  <span className="sm:hidden">{day.substring(0, 1)}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
-        <div className="p-6">
+        <div className="p-2 sm:p-4 md:p-6">
           {view === 'month' && renderMonthView()}
           {view === 'week' && renderWeekView()}
           {view === 'day' && renderDayView()}
@@ -416,18 +426,18 @@ const Calendar = () => {
       </div>
 
       {showAIRecommendations && (
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium text-gray-900">AI Schedule Recommendations</h3>
+        <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+            <h3 className="text-base sm:text-lg font-medium text-gray-900">AI Schedule Recommendations</h3>
             <button
               onClick={handleGenerateAISchedule}
-              className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 active:bg-blue-800"
+              className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 active:bg-blue-800 w-full sm:w-auto"
             >
               <Sparkles className="w-4 h-4 mr-2" />
               Generate Schedule
             </button>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {aiRecommendations.map((rec, index) => (
               <div
                 key={index}
