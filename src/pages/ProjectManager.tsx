@@ -549,17 +549,6 @@ const ProjectManager: React.FC = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setActiveTab('insights')}
-                  className={`px-3 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
-                    activeTab === 'insights'
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
-                  }`}
-                >
-                  AI Insights
-                </button>
-                <button
-                  type="button"
                   onClick={() => setActiveTab('estimates')}
                   className={`px-3 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
                     activeTab === 'estimates'
