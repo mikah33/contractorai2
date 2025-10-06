@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Grid } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 type DeckingType = {
   id: string;
@@ -178,6 +179,7 @@ interface BoardOption {
 }
 
 const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
+  const { t } = useTranslation();
   const [inputType, setInputType] = useState<'dimensions' | 'area'>('dimensions');
   const [length, setLength] = useState<number | ''>('');
   const [width, setWidth] = useState<number | ''>('');
@@ -471,7 +473,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
       <div className="flex items-center mb-6">
         <Grid className="h-6 w-6 text-orange-500 mr-2" />
-        <h2 className="text-xl font-bold text-slate-800">Deck Calculator</h2>
+        <h2 className="text-xl font-bold text-slate-800">{t('calculators.deck.title')}</h2>
       </div>
       
       <div className="mb-4">
@@ -486,7 +488,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               } border border-slate-300`}
               onClick={() => setInputType('dimensions')}
             >
-              Use Dimensions
+              {t('calculators.deck.useDimensions')}
             </button>
             <button
               type="button"
@@ -497,7 +499,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               } border border-slate-300`}
               onClick={() => setInputType('area')}
             >
-              Use Square Footage
+              {t('calculators.deck.useSquareFootage')}
             </button>
           </div>
         </div>
@@ -506,7 +508,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label htmlFor="length" className="block text-sm font-medium text-slate-700 mb-1">
-                Length (feet)
+                {t('calculators.deck.length')}
               </label>
               <input
                 type="number"
@@ -516,13 +518,13 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 value={length}
                 onChange={(e) => setLength(e.target.value ? Number(e.target.value) : '')}
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                placeholder="Enter length in feet"
+                placeholder={t('calculators.deck.lengthPlaceholder')}
               />
             </div>
-            
+
             <div>
               <label htmlFor="width" className="block text-sm font-medium text-slate-700 mb-1">
-                Width (feet)
+                {t('calculators.deck.width')}
               </label>
               <input
                 type="number"
@@ -532,14 +534,14 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 value={width}
                 onChange={(e) => setWidth(e.target.value ? Number(e.target.value) : '')}
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                placeholder="Enter width in feet"
+                placeholder={t('calculators.deck.widthPlaceholder')}
               />
             </div>
           </div>
         ) : (
           <div>
             <label htmlFor="area" className="block text-sm font-medium text-slate-700 mb-1">
-              Total Area (square feet)
+              {t('calculators.deck.totalArea')}
             </label>
             <input
               type="number"
@@ -549,14 +551,14 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               value={area}
               onChange={(e) => setArea(e.target.value ? Number(e.target.value) : '')}
               className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-              placeholder="Enter total area in square feet"
+              placeholder={t('calculators.deck.totalAreaPlaceholder')}
             />
           </div>
         )}
 
         <div className="mb-6">
           <label htmlFor="deckingType" className="block text-sm font-medium text-slate-700 mb-1">
-            Decking Type
+            {t('calculators.deck.deckingType')}
           </label>
           <select
             id="deckingType"
@@ -606,7 +608,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         )}
 
         <div className="border-t border-slate-200 pt-6 mb-6">
-          <h3 className="text-lg font-medium text-slate-800 mb-4">Framing Details</h3>
+          <h3 className="text-lg font-medium text-slate-800 mb-4">{t('calculators.deck.framingDetails')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div>
               <label htmlFor="joistsSpacing" className="block text-sm font-medium text-slate-700 mb-1">
@@ -890,7 +892,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             : 'bg-slate-300 cursor-not-allowed'
         }`}
       >
-        Calculate Materials
+        {t('calculators.calculateMaterials')}
       </button>
     </div>
   );

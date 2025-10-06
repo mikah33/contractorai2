@@ -367,5 +367,39 @@
     "electrical": "Electrical",
     "hvac": "HVAC",
     "plumbing": "Plumbing"
+  },
+  "calculators": {
+    "calculateMaterials": "Calculate Materials",
+    "deck": {
+      "title": "Deck Calculator",
+      "useDimensions": "Use Dimensions",
+      "useSquareFootage": "Use Square Footage",
+      "length": "Length (feet)",
+      "lengthPlaceholder": "Enter length in feet",
+      "width": "Width (feet)",
+      "widthPlaceholder": "Enter width in feet",
+      "totalArea": "Total Area (square feet)",
+      "totalAreaPlaceholder": "Enter total area in square feet",
+      "deckingType": "Decking Type",
+      "framingDetails": "Framing Details"
+    },
+    "concrete": {
+      "title": "Concrete Calculator"
+    },
+    "drywall": {
+      "title": "Drywall Calculator"
+    },
+    "pavers": {
+      "title": "Pavers Calculator"
+    },
+    "siding": {
+      "title": "Siding Calculator"
+    },
+    "roofing": {
+      "title": "Roofing Calculator"
+    },
+    "paint": {
+      "title": "Paint Calculator"
+    }
   }
 }

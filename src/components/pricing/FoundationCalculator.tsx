@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Radiation as Foundation } from 'lucide-react';
 
@@ -7,6 +8,7 @@ type SoilType = 'sandy' | 'clay' | 'rock';
 type BackfillType = 'native' | 'gravel' | 'sand';
 
 const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
+  const { t } = useTranslation();
   const [foundationType, setFoundationType] = useState<FoundationType>('strip-footing');
   const [isBasement, setIsBasement] = useState(false);
   const [length, setLength] = useState<number | ''>('');
@@ -54,9 +56,9 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       totalCost += footingConcreteCost;
 
       results.push({
-        label: `Footing Concrete (${concreteStrength} PSI)`,
+        label: `${t('calculators.foundation.footingConcrete')} (${concreteStrength} PSI)`,
         value: Number(footingVolume.toFixed(2)),
-        unit: 'cubic yards',
+        unit: t('calculators.foundation.cubicYards'),
         cost: footingConcreteCost
       });
 
@@ -71,9 +73,9 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       totalCost += wallConcreteCost;
 
       results.push({
-        label: `${isBasement ? 'Basement' : 'Stem'} Wall Concrete (${concreteStrength} PSI)`,
+        label: `${isBasement ? t('calculators.foundation.basementWall') : t('calculators.foundation.stemWall')} ${t('calculators.foundation.concrete')} (${concreteStrength} PSI)`,
         value: Number(wallVolume.toFixed(2)),
-        unit: 'cubic yards',
+        unit: t('calculators.foundation.cubicYards'),
         cost: wallConcreteCost
       });
 
@@ -92,9 +94,9 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         totalCost += backfillCost;
 
         results.push({
-          label: `${backfillType.charAt(0).toUpperCase() + backfillType.slice(1)} Backfill`,
+          label: `${t(`calculators.foundation.${backfillType}`)} ${t('calculators.foundation.backfill')}`,
           value: Number(backfillVolume.toFixed(2)),
-          unit: 'cubic yards',
+          unit: t('calculators.foundation.cubicYards'),
           cost: backfillCost
         });
       }
@@ -105,9 +107,9 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       totalCost += gravelBaseCost;
 
       results.push({
-        label: 'Gravel Base',
+        label: t('calculators.foundation.gravelBase'),
         value: Number(gravelBaseVolume.toFixed(2)),
-        unit: 'cubic yards',
+        unit: t('calculators.foundation.cubicYards'),
         cost: gravelBaseCost
       });
 
@@ -122,9 +124,9 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       totalCost += slabConcreteCost;
 
       results.push({
-        label: `${isBasement ? 'Basement Floor' : 'Slab'} Concrete (${concreteStrength} PSI)`,
+        label: `${isBasement ? t('calculators.foundation.basementFloor') : t('calculators.foundation.slab')} ${t('calculators.foundation.concrete')} (${concreteStrength} PSI)`,
         value: Number(slabVolume.toFixed(2)),
-        unit: 'cubic yards',
+        unit: t('calculators.foundation.cubicYards'),
         cost: slabConcreteCost
       });
 
@@ -137,9 +139,9 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         totalCost += footingRebarCost;
 
         results.push({
-          label: 'Footing Rebar',
+          label: t('calculators.foundation.footingRebar'),
           value: footingRebarPieces,
-          unit: '20ft pieces',
+          unit: t('calculators.foundation.pieces20ft'),
           cost: footingRebarCost
         });
 
@@ -153,9 +155,9 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         totalCost += wallRebarCost;
 
         results.push({
-          label: `${isBasement ? 'Basement' : 'Stem'} Wall Rebar`,
+          label: `${isBasement ? t('calculators.foundation.basementWall') : t('calculators.foundation.stemWall')} ${t('calculators.foundation.rebar')}`,
           value: wallVerticalRebarPieces + wallHorizontalRebarPieces,
-          unit: '20ft pieces',
+          unit: t('calculators.foundation.pieces20ft'),
           cost: wallRebarCost
         });
 
@@ -169,9 +171,9 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         totalCost += slabRebarCost;
 
         results.push({
-          label: `${isBasement ? 'Floor' : 'Slab'} Rebar (${rebarSpacing}" o.c.)`,
+          label: `${isBasement ? t('calculators.foundation.floor') : t('calculators.foundation.slab')} ${t('calculators.foundation.rebar')} (${rebarSpacing}" ${t('calculators.foundation.onCenter')})`,
           value: slabRebarPieces,
-          unit: '20ft pieces',
+          unit: t('calculators.foundation.pieces20ft'),
           cost: slabRebarCost
         });
       }
@@ -184,9 +186,9 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         totalCost += vaporBarrierCost;
 
         results.push({
-          label: '10-mil Vapor Barrier',
+          label: t('calculators.foundation.vaporBarrier'),
           value: vaporBarrierRolls,
-          unit: '1000sf rolls',
+          unit: t('calculators.foundation.rolls1000sf'),
           cost: vaporBarrierCost
         });
       }
@@ -199,9 +201,9 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         totalCost += waterproofingCost;
 
         results.push({
-          label: 'Waterproofing Membrane',
+          label: t('calculators.foundation.waterproofing'),
           value: waterproofingGallons,
-          unit: 'gallons',
+          unit: t('calculators.foundation.gallons'),
           cost: waterproofingCost
         });
       }
@@ -214,9 +216,9 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         totalCost += drainPipeCost;
 
         results.push({
-          label: 'Drainage Pipe',
+          label: t('calculators.foundation.drainagePipe'),
           value: drainPipeSections,
-          unit: '10ft sections',
+          unit: t('calculators.foundation.sections10ft'),
           cost: drainPipeCost
         });
 
@@ -225,16 +227,16 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         totalCost += drainageGravelCost;
 
         results.push({
-          label: 'Drainage Gravel',
+          label: t('calculators.foundation.drainageGravel'),
           value: Number(drainageGravelVolume.toFixed(2)),
-          unit: 'cubic yards',
+          unit: t('calculators.foundation.cubicYards'),
           cost: drainageGravelCost
         });
       }
 
       // Add total cost
       results.push({
-        label: 'Total Estimated Cost',
+        label: t('calculators.foundation.totalCost'),
         value: Number(totalCost.toFixed(2)),
         unit: 'USD',
         isTotal: true
@@ -258,7 +260,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
       <div className="flex items-center mb-6">
         <Foundation className="h-6 w-6 text-orange-500 mr-2" />
-        <h2 className="text-xl font-bold text-slate-800">Foundation Calculator</h2>
+        <h2 className="text-xl font-bold text-slate-800">{t('calculators.foundation.title')}</h2>
       </div>
       
       <div className="mb-4">
@@ -273,7 +275,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               } border border-slate-300 rounded-l-lg`}
               onClick={() => setFoundationType('strip-footing')}
             >
-              Strip Footing
+              {t('calculators.foundation.stripFooting')}
             </button>
             <button
               type="button"
@@ -284,7 +286,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               } border-t border-b border-slate-300`}
               onClick={() => setFoundationType('spread-footings')}
             >
-              Spread Footings
+              {t('calculators.foundation.spreadFootings')}
             </button>
             <button
               type="button"
@@ -295,7 +297,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               } border-t border-b border-slate-300`}
               onClick={() => setFoundationType('thickened-edge')}
             >
-              Thickened Edge
+              {t('calculators.foundation.thickenedEdge')}
             </button>
             <button
               type="button"
@@ -306,7 +308,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               } border border-slate-300 rounded-r-lg`}
               onClick={() => setFoundationType('frost-wall')}
             >
-              Frost Wall
+              {t('calculators.foundation.frostWall')}
             </button>
           </div>
         </div>
@@ -321,7 +323,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
             />
             <label htmlFor="isBasement" className="ml-2 block text-sm font-medium text-slate-700">
-              This is a basement foundation
+              {t('calculators.foundation.isBasement')}
             </label>
           </div>
         </div>
@@ -329,7 +331,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div>
             <label htmlFor="length" className="block text-sm font-medium text-slate-700 mb-1">
-              Length (feet)
+              {t('calculators.foundation.length')}
             </label>
             <input
               type="number"
@@ -339,13 +341,13 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               value={length}
               onChange={(e) => setLength(e.target.value ? Number(e.target.value) : '')}
               className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-              placeholder="Enter length in feet"
+              placeholder={t('calculators.foundation.enterLength')}
             />
           </div>
           
           <div>
             <label htmlFor="width" className="block text-sm font-medium text-slate-700 mb-1">
-              Width (feet)
+              {t('calculators.foundation.width')}
             </label>
             <input
               type="number"
@@ -355,17 +357,17 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               value={width}
               onChange={(e) => setWidth(e.target.value ? Number(e.target.value) : '')}
               className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-              placeholder="Enter width in feet"
+              placeholder={t('calculators.foundation.enterWidth')}
             />
           </div>
         </div>
 
         <div className="border-t border-slate-200 pt-6 mb-6">
-          <h3 className="text-lg font-medium text-slate-800 mb-4">Footing Details</h3>
+          <h3 className="text-lg font-medium text-slate-800 mb-4">{t('calculators.foundation.footingDetails')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label htmlFor="footingWidth" className="block text-sm font-medium text-slate-700 mb-1">
-                Footing Width (inches)
+                {t('calculators.foundation.footingWidth')}
               </label>
               <input
                 type="number"
@@ -375,13 +377,13 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 value={footingWidth}
                 onChange={(e) => setFootingWidth(e.target.value ? Number(e.target.value) : '')}
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                placeholder="Enter footing width"
+                placeholder={t('calculators.foundation.enterFootingWidth')}
               />
             </div>
 
             <div>
               <label htmlFor="footingDepth" className="block text-sm font-medium text-slate-700 mb-1">
-                Footing Depth (inches)
+                {t('calculators.foundation.footingDepth')}
               </label>
               <input
                 type="number"
@@ -391,7 +393,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 value={footingDepth}
                 onChange={(e) => setFootingDepth(e.target.value ? Number(e.target.value) : '')}
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                placeholder="Enter footing depth"
+                placeholder={t('calculators.foundation.enterFootingDepth')}
               />
             </div>
           </div>
@@ -399,12 +401,12 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
         <div className="border-t border-slate-200 pt-6 mb-6">
           <h3 className="text-lg font-medium text-slate-800 mb-4">
-            {isBasement ? 'Basement Wall Details' : 'Stem Wall Details'}
+            {isBasement ? t('calculators.foundation.basementWallDetails') : t('calculators.foundation.stemWallDetails')}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label htmlFor="stemWallHeight" className="block text-sm font-medium text-slate-700 mb-1">
-                {isBasement ? 'Wall Height' : 'Stem Wall Height'} (feet)
+                {isBasement ? t('calculators.foundation.wallHeight') : t('calculators.foundation.stemWallHeight')}
               </label>
               <input
                 type="number"
@@ -414,13 +416,13 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 value={stemWallHeight}
                 onChange={(e) => setStemWallHeight(e.target.value ? Number(e.target.value) : '')}
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                placeholder={`Enter ${isBasement ? 'wall' : 'stem wall'} height in feet`}
+                placeholder={isBasement ? t('calculators.foundation.enterWallHeight') : t('calculators.foundation.enterStemWallHeight')}
               />
             </div>
 
             <div>
               <label htmlFor="stemWallThickness" className="block text-sm font-medium text-slate-700 mb-1">
-                Wall Thickness (inches)
+                {t('calculators.foundation.wallThickness')}
               </label>
               <input
                 type="number"
@@ -430,7 +432,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 value={stemWallThickness}
                 onChange={(e) => setStemWallThickness(e.target.value ? Number(e.target.value) : '')}
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                placeholder="Enter wall thickness"
+                placeholder={t('calculators.foundation.enterWallThickness')}
               />
             </div>
           </div>
@@ -438,12 +440,12 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
         <div className="border-t border-slate-200 pt-6 mb-6">
           <h3 className="text-lg font-medium text-slate-800 mb-4">
-            {isBasement ? 'Basement Floor Details' : 'Slab Details'}
+            {isBasement ? t('calculators.foundation.basementFloorDetails') : t('calculators.foundation.slabDetails')}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label htmlFor="slabThickness" className="block text-sm font-medium text-slate-700 mb-1">
-                {isBasement ? 'Floor' : 'Slab'} Thickness (inches)
+                {isBasement ? t('calculators.foundation.floorThickness') : t('calculators.foundation.slabThickness')}
               </label>
               <input
                 type="number"
@@ -453,13 +455,13 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 value={slabThickness}
                 onChange={(e) => setSlabThickness(e.target.value ? Number(e.target.value) : '')}
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                placeholder={`Enter ${isBasement ? 'floor' : 'slab'} thickness`}
+                placeholder={isBasement ? t('calculators.foundation.enterFloorThickness') : t('calculators.foundation.enterSlabThickness')}
               />
             </div>
 
             <div>
               <label htmlFor="gravelBaseDepth" className="block text-sm font-medium text-slate-700 mb-1">
-                Gravel Base Depth (inches)
+                {t('calculators.foundation.gravelBaseDepth')}
               </label>
               <input
                 type="number"
@@ -469,18 +471,18 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 value={gravelBaseDepth}
                 onChange={(e) => setGravelBaseDepth(e.target.value ? Number(e.target.value) : '')}
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                placeholder="Enter gravel base depth"
+                placeholder={t('calculators.foundation.enterGravelBaseDepth')}
               />
             </div>
           </div>
         </div>
 
         <div className="border-t border-slate-200 pt-6 mb-6">
-          <h3 className="text-lg font-medium text-slate-800 mb-4">Site Conditions</h3>
+          <h3 className="text-lg font-medium text-slate-800 mb-4">{t('calculators.foundation.siteConditions')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label htmlFor="soilType" className="block text-sm font-medium text-slate-700 mb-1">
-                Soil Type
+                {t('calculators.foundation.soilType')}
               </label>
               <select
                 id="soilType"
@@ -488,16 +490,16 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 onChange={(e) => setSoilType(e.target.value as SoilType)}
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               >
-                <option value="sandy">Sandy Soil</option>
-                <option value="clay">Clay Soil</option>
-                <option value="rock">Rocky Soil</option>
+                <option value="sandy">{t('calculators.foundation.sandySoil')}</option>
+                <option value="clay">{t('calculators.foundation.claySoil')}</option>
+                <option value="rock">{t('calculators.foundation.rockySoil')}</option>
               </select>
             </div>
 
             {!isBasement && (
               <div>
                 <label htmlFor="backfillType" className="block text-sm font-medium text-slate-700 mb-1">
-                  Backfill Material
+                  {t('calculators.foundation.backfillMaterial')}
                 </label>
                 <select
                   id="backfillType"
@@ -505,16 +507,16 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   onChange={(e) => setBackfillType(e.target.value as BackfillType)}
                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 >
-                  <option value="native">Native Soil</option>
-                  <option value="gravel">Gravel</option>
-                  <option value="sand">Sand</option>
+                  <option value="native">{t('calculators.foundation.native')}</option>
+                  <option value="gravel">{t('calculators.foundation.gravel')}</option>
+                  <option value="sand">{t('calculators.foundation.sand')}</option>
                 </select>
               </div>
             )}
 
             <div>
               <label htmlFor="frostDepth" className="block text-sm font-medium text-slate-700 mb-1">
-                Frost Depth (inches)
+                {t('calculators.foundation.frostDepth')}
               </label>
               <input
                 type="number"
@@ -524,18 +526,18 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 value={frostDepth}
                 onChange={(e) => setFrostDepth(e.target.value ? Number(e.target.value) : '')}
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                placeholder="Enter frost depth"
+                placeholder={t('calculators.foundation.enterFrostDepth')}
               />
             </div>
           </div>
         </div>
 
         <div className="border-t border-slate-200 pt-6 mb-6">
-          <h3 className="text-lg font-medium text-slate-800 mb-4">Concrete & Reinforcement</h3>
+          <h3 className="text-lg font-medium text-slate-800 mb-4">{t('calculators.foundation.concreteReinforcement')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label htmlFor="concreteStrength" className="block text-sm font-medium text-slate-700 mb-1">
-                Concrete Strength
+                {t('calculators.foundation.concreteStrength')}
               </label>
               <select
                 id="concreteStrength"
@@ -559,7 +561,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
               />
               <label htmlFor="includeSteelReinforcement" className="ml-2 block text-sm font-medium text-slate-700">
-                Include Steel Reinforcement
+                {t('calculators.foundation.includeSteelReinforcement')}
               </label>
             </div>
           </div>
@@ -568,7 +570,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
               <div>
                 <label htmlFor="rebarSize" className="block text-sm font-medium text-slate-700 mb-1">
-                  Rebar Size
+                  {t('calculators.foundation.rebarSize')}
                 </label>
                 <select
                   id="rebarSize"
@@ -584,7 +586,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
               <div>
                 <label htmlFor="rebarSpacing" className="block text-sm font-medium text-slate-700 mb-1">
-                  Rebar Spacing
+                  {t('calculators.foundation.rebarSpacing')}
                 </label>
                 <select
                   id="rebarSpacing"
@@ -602,7 +604,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         </div>
 
         <div className="border-t border-slate-200 pt-6">
-          <h3 className="text-lg font-medium text-slate-800 mb-4">Additional Options</h3>
+          <h3 className="text-lg font-medium text-slate-800 mb-4">{t('calculators.foundation.additionalOptions')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="flex items-center">
               <input
@@ -613,7 +615,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
               />
               <label htmlFor="includeVaporBarrier" className="ml-2 block text-sm font-medium text-slate-700">
-                Include Vapor Barrier
+                {t('calculators.foundation.includeVaporBarrier')}
               </label>
             </div>
 
@@ -626,7 +628,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
               />
               <label htmlFor="includeWaterproofing" className="ml-2 block text-sm font-medium text-slate-700">
-                Include Waterproofing
+                {t('calculators.foundation.includeWaterproofing')}
               </label>
             </div>
 
@@ -639,7 +641,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
               />
               <label htmlFor="includeDrainage" className="ml-2 block text-sm font-medium text-slate-700">
-                Include Drainage System
+                {t('calculators.foundation.includeDrainage')}
               </label>
             </div>
           </div>
@@ -655,7 +657,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             : 'bg-slate-300 cursor-not-allowed'
         }`}
       >
-        Calculate Materials
+        {t('calculators.foundation.calculateMaterials')}
       </button>
     </div>
   );

@@ -367,5 +367,39 @@
     "electrical": "Eléctrico",
     "hvac": "HVAC",
     "plumbing": "Plomería"
+  },
+  "calculators": {
+    "calculateMaterials": "Calcular Materiales",
+    "deck": {
+      "title": "Calculadora de Terrazas",
+      "useDimensions": "Usar Dimensiones",
+      "useSquareFootage": "Usar Pies Cuadrados",
+      "length": "Longitud (pies)",
+      "lengthPlaceholder": "Ingrese la longitud en pies",
+      "width": "Ancho (pies)",
+      "widthPlaceholder": "Ingrese el ancho en pies",
+      "totalArea": "Área Total (pies cuadrados)",
+      "totalAreaPlaceholder": "Ingrese el área total en pies cuadrados",
+      "deckingType": "Tipo de Entarimado",
+      "framingDetails": "Detalles del Enmarcado"
+    },
+    "concrete": {
+      "title": "Calculadora de Concreto"
+    },
+    "drywall": {
+      "title": "Calculadora de Paneles de Yeso"
+    },
+    "pavers": {
+      "title": "Calculadora de Adoquines"
+    },
+    "siding": {
+      "title": "Calculadora de Revestimiento"
+    },
+    "roofing": {
+      "title": "Calculadora de Techado"
+    },
+    "paint": {
+      "title": "Calculadora de Pintura"
+    }
   }
 }

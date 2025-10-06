@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Square, DoorClosed, AppWindow as Window } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface Opening {
   width: number;
@@ -8,6 +9,7 @@ interface Opening {
 }
 
 const DrywallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
+  const { t } = useTranslation();
   const [surfaceType, setSurfaceType] = useState<'wall' | 'ceiling'>('wall');
   const [length, setLength] = useState<number | ''>('');
   const [height, setHeight] = useState<number | ''>('');
@@ -121,7 +123,7 @@ const DrywallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
       <div className="flex items-center mb-6">
         <Square className="h-6 w-6 text-orange-500 mr-2" />
-        <h2 className="text-xl font-bold text-slate-800">Drywall Calculator</h2>
+        <h2 className="text-xl font-bold text-slate-800">{t('calculators.drywall.title')}</h2>
       </div>
       
       <div className="mb-4">
@@ -360,7 +362,7 @@ const DrywallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             : 'bg-slate-300 cursor-not-allowed'
         }`}
       >
-        Calculate Materials
+        {t('calculators.calculateMaterials')}
       </button>
     </div>
   );

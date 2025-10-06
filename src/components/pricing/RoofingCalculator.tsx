@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Warehouse } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 type RoofMaterial = 'asphalt' | 'metal' | 'tile' | 'slate' | 'tpo' | 'epdm' | 'wood';
 type RoofType = 'gable' | 'hip' | 'flat' | 'mansard' | 'gambrel' | 'shed';
 
 const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
+  const { t } = useTranslation();
   // State management
   const [roofArea, setRoofArea] = useState<number | ''>('');
   const [roofType, setRoofType] = useState<RoofType>('gable');
@@ -276,7 +278,7 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     <div className="bg-white p-6 rounded-lg shadow-md">
       <div className="flex items-center mb-6">
         <Warehouse className="h-6 w-6 text-orange-600 mr-2" />
-        <h2 className="text-xl font-bold text-gray-900">Roofing Calculator</h2>
+        <h2 className="text-xl font-bold text-gray-900">{t('calculators.roofing.title')}</h2>
       </div>
 
       <div className="space-y-6">
@@ -467,7 +469,7 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
           onClick={handleCalculate}
           className="w-full py-3 px-4 border border-transparent text-base font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors"
         >
-          Calculate Roofing Materials & Labor
+          {t('calculators.calculateMaterials')}
         </button>
       </div>
     </div>

@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Calculator } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
+  const { t } = useTranslation();
   const [concreteType, setConcreteType] = useState<'wall' | 'flatwork'>('flatwork');
   const [length, setLength] = useState<number | ''>('');
   const [width, setWidth] = useState<number | ''>('');
@@ -126,7 +128,7 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
       <div className="flex items-center mb-6">
         <Calculator className="h-6 w-6 text-orange-500 mr-2" />
-        <h2 className="text-xl font-bold text-slate-800">Concrete Calculator</h2>
+        <h2 className="text-xl font-bold text-slate-800">{t('calculators.concrete.title')}</h2>
       </div>
       
       <div className="mb-4">
@@ -336,7 +338,7 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             : 'bg-slate-300 cursor-not-allowed'
         }`}
       >
-        Calculate Materials
+        {t('calculators.calculateMaterials')}
       </button>
     </div>
   );

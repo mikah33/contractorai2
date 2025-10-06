@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Grid } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 type FlooringType = 'hardwood' | 'laminate' | 'vinyl' | 'carpet' | 'engineered';
 type InstallPattern = 'straight' | 'diagonal' | 'herringbone';
@@ -187,6 +188,7 @@ const underlaymentOptions = {
 };
 
 const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
+  const { t } = useTranslation();
   const [inputType, setInputType] = useState<'dimensions' | 'area'>('dimensions');
   const [length, setLength] = useState<number | ''>('');
   const [width, setWidth] = useState<number | ''>('');
@@ -316,7 +318,7 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
       <div className="flex items-center mb-6">
         <Grid className="h-6 w-6 text-orange-500 mr-2" />
-        <h2 className="text-xl font-bold text-slate-800">Flooring Calculator</h2>
+        <h2 className="text-xl font-bold text-slate-800">{t('calculators.flooring.title')}</h2>
       </div>
       
       <div className="mb-4">
@@ -331,7 +333,7 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               } border border-slate-300`}
               onClick={() => setInputType('dimensions')}
             >
-              Use Dimensions
+              {t('calculators.flooring.useDimensions')}
             </button>
             <button
               type="button"
@@ -342,7 +344,7 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               } border border-slate-300`}
               onClick={() => setInputType('area')}
             >
-              Use Square Footage
+              {t('calculators.flooring.useSquareFootage')}
             </button>
           </div>
         </div>
@@ -351,7 +353,7 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label htmlFor="length" className="block text-sm font-medium text-slate-700 mb-1">
-                Length (feet)
+                {t('calculators.flooring.length')}
               </label>
               <input
                 type="number"
@@ -361,13 +363,13 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 value={length}
                 onChange={(e) => setLength(e.target.value ? Number(e.target.value) : '')}
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                placeholder="Enter length in feet"
+                placeholder={t('calculators.flooring.lengthPlaceholder')}
               />
             </div>
-            
+
             <div>
               <label htmlFor="width" className="block text-sm font-medium text-slate-700 mb-1">
-                Width (feet)
+                {t('calculators.flooring.width')}
               </label>
               <input
                 type="number"
@@ -377,14 +379,14 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 value={width}
                 onChange={(e) => setWidth(e.target.value ? Number(e.target.value) : '')}
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                placeholder="Enter width in feet"
+                placeholder={t('calculators.flooring.widthPlaceholder')}
               />
             </div>
           </div>
         ) : (
           <div>
             <label htmlFor="area" className="block text-sm font-medium text-slate-700 mb-1">
-              Total Area (square feet)
+              {t('calculators.flooring.totalArea')}
             </label>
             <input
               type="number"
@@ -394,13 +396,13 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               value={area}
               onChange={(e) => setArea(e.target.value ? Number(e.target.value) : '')}
               className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-              placeholder="Enter total area in square feet"
+              placeholder={t('calculators.flooring.totalAreaPlaceholder')}
             />
           </div>
         )}
 
         <div className="border-t border-slate-200 pt-6 mb-6">
-          <h3 className="text-lg font-medium text-slate-800 mb-4">Flooring Selection</h3>
+          <h3 className="text-lg font-medium text-slate-800 mb-4">{t('calculators.flooring.flooringSelection')}</h3>
           <div>
             <label htmlFor="flooringType" className="block text-sm font-medium text-slate-700 mb-1">
               Flooring Type
@@ -622,7 +624,7 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             : 'bg-slate-300 cursor-not-allowed'
         }`}
       >
-        Calculate Materials
+        {t('calculators.common.calculateMaterials')}
       </button>
     </div>
   );
