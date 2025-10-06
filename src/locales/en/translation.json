@@ -159,7 +159,8 @@
     "amount": "Amount"
   },
   "finance": {
-    "title": "Finance",
+    "title": "Finance Tracker",
+    "subtitle": "Track expenses, revenue, and manage your finances",
     "addExpense": "Add Expense",
     "addIncome": "Add Income",
     "type": "Type",
@@ -177,7 +178,17 @@
     "materials": "Materials",
     "labor": "Labor",
     "equipment": "Equipment",
-    "other": "Other"
+    "other": "Other",
+    "dashboard": "Dashboard",
+    "revenue": "Revenue",
+    "expenses": "Expenses",
+    "payments": "Payments",
+    "invoices": "Invoices",
+    "recurring": "Recurring",
+    "budget": "Budget",
+    "reports": "Reports",
+    "sync": "Sync",
+    "syncing": "Syncing..."
   },
   "tasks": {
     "title": "Tasks",
@@ -210,5 +221,21 @@
     "status": "Status",
     "active": "Active",
     "inactive": "Inactive"
+  },
+  "calculator": {
+    "title": "Pricing Calculator",
+    "subtitle": "Get accurate, AI-powered pricing estimates for your construction projects",
+    "exportPDF": "Export PDF",
+    "copyToEstimate": "Copy to Estimate",
+    "selectTrade": "Select Trade",
+    "projectSpecifications": "Project Specifications",
+    "calculating": "Calculating...",
+    "calculatePricing": "Calculate Pricing",
+    "selectTradeToBegin": "Select a Trade to Begin",
+    "selectTradeDescription": "Choose from 20+ trades to get accurate, AI-powered pricing for your project. We'll analyze current material and labor costs to provide you with detailed estimates.",
+    "calculatingPricing": "Calculating Pricing...",
+    "readyToCalculate": "Ready to Calculate",
+    "aiAnalyzing": "Our AI is analyzing current material and labor costs for your project...",
+    "fillSpecifications": "Fill in the project specifications and click \"Calculate Pricing\" to get your detailed estimate."
   }
 }

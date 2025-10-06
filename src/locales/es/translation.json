@@ -159,7 +159,8 @@
     "amount": "Cantidad"
   },
   "finance": {
-    "title": "Finanzas",
+    "title": "Rastreador de Finanzas",
+    "subtitle": "Seguimiento de gastos, ingresos y gestión de finanzas",
     "addExpense": "Agregar Gasto",
     "addIncome": "Agregar Ingreso",
     "type": "Tipo",
@@ -177,7 +178,17 @@
     "materials": "Materiales",
     "labor": "Mano de Obra",
     "equipment": "Equipo",
-    "other": "Otro"
+    "other": "Otro",
+    "dashboard": "Panel",
+    "revenue": "Ingresos",
+    "expenses": "Gastos",
+    "payments": "Pagos",
+    "invoices": "Facturas",
+    "recurring": "Recurrente",
+    "budget": "Presupuesto",
+    "reports": "Informes",
+    "sync": "Sincronizar",
+    "syncing": "Sincronizando..."
   },
   "tasks": {
     "title": "Tareas",
@@ -210,5 +221,21 @@
     "status": "Estado",
     "active": "Activo",
     "inactive": "Inactivo"
+  },
+  "calculator": {
+    "title": "Calculadora de Precios",
+    "subtitle": "Obtenga estimaciones de precios precisas impulsadas por IA para sus proyectos de construcción",
+    "exportPDF": "Exportar PDF",
+    "copyToEstimate": "Copiar a Presupuesto",
+    "selectTrade": "Seleccionar Oficio",
+    "projectSpecifications": "Especificaciones del Proyecto",
+    "calculating": "Calculando...",
+    "calculatePricing": "Calcular Precio",
+    "selectTradeToBegin": "Seleccione un Oficio para Comenzar",
+    "selectTradeDescription": "Elija entre más de 20 oficios para obtener precios precisos impulsados por IA para su proyecto. Analizaremos los costos actuales de materiales y mano de obra para proporcionarle estimaciones detalladas.",
+    "calculatingPricing": "Calculando Precio...",
+    "readyToCalculate": "Listo para Calcular",
+    "aiAnalyzing": "Nuestra IA está analizando los costos actuales de materiales y mano de obra para su proyecto...",
+    "fillSpecifications": "Complete las especificaciones del proyecto y haga clic en \"Calcular Precio\" para obtener su estimación detallada."
   }
 }
