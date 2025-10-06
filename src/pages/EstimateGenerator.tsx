@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { FileText, Plus, Download, Trash2, Edit2, Image, Copy, Check, X, Settings, Palette, Layout, FileUp, FileDown, Sparkles, DollarSign, Printer, Eye, RefreshCw, Receipt, ArrowLeft, Mail } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import jsPDF from 'jspdf';
@@ -198,14 +198,16 @@ const EstimateGenerator = () => {
     console.log('Clients loaded:', clientsData);
     console.log('Number of clients:', clientsData.length);
   }, [projects, clientsData]);
-  
+
   // Map clients from clientsStore to the format needed for the component
-  const clients = clientsData.map(client => ({
-    id: client.id,    // Use actual client ID
-    name: client.name  // Use actual client name
-  }));
-  
-  console.log('Clients for dropdown:', clients);
+  // Use useMemo to prevent infinite re-render loop
+  const clients = useMemo(() => {
+    return clientsData.map(client => ({
+      id: client.id,    // Use actual client ID
+      name: client.name  // Use actual client name
+    }));
+  }, [clientsData]);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleTemplateSelect = () => {

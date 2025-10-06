@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
+import { getCachedClients } from '../lib/storeQueryBridge';
 
 export interface Client {
   id: string;
@@ -59,11 +60,23 @@ export const useClientsStore = create<ClientsState>((set, get) => ({
   hasLoadedOnce: false,
 
   fetchClients: async (force = false) => {
+    // **FIRST: Check React Query cache**
+    const cachedClients = getCachedClients();
+    if (cachedClients && !force) {
+      set({
+        clients: cachedClients,
+        isLoading: false,
+        hasLoadedOnce: true,
+        error: null
+      });
+      return;
+    }
+
     const state = get();
 
     // Skip if already loaded and not forcing refresh
     if (state.hasLoadedOnce && !force && state.clients.length > 0) {
-      console.log('✅ Using cached clients data');
+      console.log('✅ Using Zustand cached clients data');
       return;
     }
 
@@ -113,30 +126,39 @@ export const useClientsStore = create<ClientsState>((set, get) => ({
   },
 
   addClient: async (clientData) => {
+    console.log('🔵 addClient called with:', clientData);
     set({ isLoading: true, error: null });
     try {
       const userId = await getCurrentUserId();
-      
+      console.log('🔐 User ID:', userId);
+
+      const insertData = {
+        name: clientData.name,
+        email: clientData.email || null,
+        phone: clientData.phone || null,
+        address: clientData.address || null,
+        city: clientData.city || null,
+        state: clientData.state || null,
+        zip: clientData.zip || null,
+        company: clientData.company || null,
+        status: clientData.status || 'active',
+        notes: clientData.notes || null,
+        user_id: userId
+      };
+      console.log('📤 Sending to Supabase:', insertData);
+
       // Insert client with user_id matching SQL structure exactly
       const { data, error } = await supabase
         .from('clients')
-        .insert({
-          name: clientData.name,
-          email: clientData.email || null,
-          phone: clientData.phone || null,
-          address: clientData.address || null,
-          city: clientData.city || null,
-          state: clientData.state || null,
-          zip: clientData.zip || null,
-          company: clientData.company || null,
-          status: clientData.status || 'active',
-          notes: clientData.notes || null,
-          user_id: userId
-        })
+        .insert(insertData)
         .select()
         .single();
 
-      if (error) throw error;
+      console.log('📥 Supabase response:', { data, error });
+      if (error) {
+        console.error('❌ Supabase error:', error);
+        throw error;
+      }
 
       const newClient: Client = {
         id: data.id,
@@ -158,12 +180,16 @@ export const useClientsStore = create<ClientsState>((set, get) => ({
         clients: [newClient, ...state.clients],
         isLoading: false
       }));
+      console.log('✅ Client added successfully:', newClient);
+      alert('Client saved successfully!');
     } catch (error) {
-      console.error('Error adding client:', error);
-      set({ 
+      console.error('❌ Error adding client:', error);
+      alert(`Failed to save client: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      set({
         error: error instanceof Error ? error.message : 'Failed to add client',
-        isLoading: false 
+        isLoading: false
       });
+      throw error;
     }
   },
 

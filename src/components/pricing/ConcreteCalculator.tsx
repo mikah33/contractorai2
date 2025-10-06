@@ -130,7 +130,7 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       </div>
       
       <div className="mb-4">
-        <div className="flex justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:justify-between gap-3 mb-4">
           <div className="inline-flex rounded-md shadow-sm">
             <button
               type="button"
@@ -184,7 +184,7 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
           <div className="inline-flex rounded-md shadow-sm">
             <button
               type="button"
-              className={`px-4 py-2 text-sm font-medium rounded-l-lg ${
+              className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 text-sm font-medium rounded-l-lg ${
                 deliveryMethod === 'bags'
                   ? 'bg-orange-500 text-white'
                   : 'bg-white text-slate-700 hover:bg-slate-100'
@@ -195,14 +195,15 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             </button>
             <button
               type="button"
-              className={`px-4 py-2 text-sm font-medium rounded-r-lg ${
+              className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 text-sm font-medium rounded-r-lg ${
                 deliveryMethod === 'truck'
                   ? 'bg-orange-500 text-white'
                   : 'bg-white text-slate-700 hover:bg-slate-100'
               } border border-slate-300`}
               onClick={() => setDeliveryMethod('truck')}
             >
-              Ready-Mix Truck
+              <span className="hidden sm:inline">Ready-Mix Truck</span>
+              <span className="sm:hidden">Truck</span>
             </button>
           </div>
         </div>

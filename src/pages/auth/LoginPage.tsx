@@ -214,12 +214,14 @@ const LoginPage = () => {
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
                 Don't have an account?{' '}
-                <Link
-                  to="/auth/signup"
+                <a
+                  href="https://contractorai.work"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="font-bold text-blue-600 hover:text-blue-700 transition-colors"
                 >
-                  Create one now
-                </Link>
+                  Create one at contractorai.work
+                </a>
               </p>
             </div>
           </form>

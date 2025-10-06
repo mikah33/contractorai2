@@ -422,7 +422,7 @@ const ProjectManager: React.FC = () => {
                   <div className="flex items-center gap-2 mt-4">
                     <Users className="w-4 h-4 text-gray-400" />
                     <div className="flex -space-x-2">
-                      {project.team.slice(0, 3).map((member, index) => (
+                      {(project.team || []).slice(0, 3).map((member, index) => (
                         <div
                           key={index}
                           className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-xs text-white border-2 border-white"
@@ -430,9 +430,9 @@ const ProjectManager: React.FC = () => {
                           {member.split(' ').map(n => n[0]).join('')}
                         </div>
                       ))}
-                      {project.team.length > 3 && (
+                      {(project.team || []).length > 3 && (
                         <div className="w-6 h-6 bg-gray-400 rounded-full flex items-center justify-center text-xs text-white border-2 border-white">
-                          +{project.team.length - 3}
+                          +{(project.team || []).length - 3}
                         </div>
                       )}
                     </div>
@@ -605,7 +605,7 @@ const ProjectManager: React.FC = () => {
                   <div className="mb-6">
                     <h3 className="font-medium text-gray-900 mb-2">Team</h3>
                     <div className="space-y-2">
-                      {selectedProject.team.map((member, index) => (
+                      {(selectedProject.team || []).map((member, index) => (
                         <div key={index} className="flex items-center gap-3">
                           <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-sm text-white">
                             {member.split(' ').map(n => n[0]).join('')}
@@ -661,7 +661,7 @@ const ProjectManager: React.FC = () => {
                   <div>
                     <h3 className="font-medium text-gray-900 mb-3">Comments</h3>
                     <div className="space-y-4 mb-4">
-                      {selectedProject.comments.map((comment) => (
+                      {(selectedProject.comments || []).map((comment) => (
                         <div key={comment.id} className="flex gap-3">
                           <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-sm">
                             {comment.author.split(' ').map(n => n[0]).join('')}
@@ -789,8 +789,8 @@ const ProjectManager: React.FC = () => {
               )}
 
               {activeTab === 'comments' && (
-                <ProjectComments 
-                  comments={selectedProject.comments.map(c => ({
+                <ProjectComments
+                  comments={(selectedProject.comments || []).map(c => ({
                     id: c.id,
                     text: c.content,
                     date: c.timestamp,

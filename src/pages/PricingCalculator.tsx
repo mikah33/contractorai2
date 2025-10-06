@@ -45,9 +45,9 @@ const PricingCalculator = () => {
     setShowSpecializedCalculator(['concrete', 'deck', 'doors_windows', 'drywall', 'electrical', 'excavation', 'fence', 'flooring', 'foundation', 'framing', 'gutter', 'hvac', 'junk_removal', 'paint', 'pavers', 'plumbing', 'retaining_walls', 'roofing', 'siding', 'tile'].includes(trade.id));
   };
 
-  // Scroll to calculator when trade is selected on mobile
+  // Scroll to calculator when trade is selected
   useEffect(() => {
-    if (selectedTrade && calculatorRef.current && window.innerWidth < 1024) {
+    if (selectedTrade && calculatorRef.current) {
       setTimeout(() => {
         calculatorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 100);

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
+import { getCachedEstimates } from '../lib/storeQueryBridge';
 
 // Helper to get current user ID
 const getCurrentUserId = async () => {
@@ -62,10 +63,22 @@ const useEstimateStore = create<EstimateStore>((set, get) => ({
   hasLoadedOnce: false,
 
   fetchEstimates: async (force = false) => {
+    // **FIRST: Check React Query cache**
+    const cachedEstimates = getCachedEstimates();
+    if (cachedEstimates && !force) {
+      set({
+        estimates: cachedEstimates,
+        isLoading: false,
+        hasLoadedOnce: true,
+        error: null
+      });
+      return;
+    }
+
     // Skip if already loaded and not forcing refresh
     const state = get();
     if (state.hasLoadedOnce && !force && state.estimates.length > 0) {
-      console.log('✅ Using cached estimates data');
+      console.log('✅ Using Zustand cached estimates data');
       return;
     }
 

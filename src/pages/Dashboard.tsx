@@ -6,35 +6,29 @@ import StatCard from '../components/dashboard/StatCard';
 import RecentEstimatesTable from '../components/dashboard/RecentEstimatesTable';
 import FinanceSummaryChart from '../components/dashboard/FinanceSummaryChart';
 import ConnectionTest from '../components/ConnectionTest';
-import useProjectStore from '../stores/projectStore';
-import useEstimateStore from '../stores/estimateStore';
+import { useCachedProjects, useCachedEstimates, useCachedEvents } from '../hooks/useCachedData';
 import { useFinanceStore } from '../stores/financeStoreSupabase';
-import { useCalendarStoreSupabase } from '../stores/calendarStoreSupabase';
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { projects, fetchProjects } = useProjectStore();
-  const { estimates, fetchEstimates } = useEstimateStore();
+
+  // Use React Query cached data - instant loading!
+  const { projects } = useCachedProjects();
+  const { estimates } = useCachedEstimates();
+  const { events } = useCachedEvents();
   const { financialSummary } = useFinanceStore();
-  const { events, fetchEvents } = useCalendarStoreSupabase();
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
   // Debug: Log when component mounts and data state
   useEffect(() => {
-    console.log('📊 Dashboard mounted');
-    console.log('  Projects:', projects.length);
-    console.log('  Estimates:', estimates.length);
-    console.log('  Events:', events.length);
+    console.log('📊 Dashboard mounted with cached data');
+    console.log('  Projects:', projects.length, '(cached)');
+    console.log('  Estimates:', estimates.length, '(cached)');
+    console.log('  Events:', events.length, '(cached)');
     console.log('  Financial Summary:', financialSummary);
-  }, []);
+  }, [projects.length, estimates.length, events.length]);
 
-  // Fetch data on component mount (only if not already loaded)
-  useEffect(() => {
-    console.log('📊 Dashboard calling fetch methods...');
-    fetchProjects(); // Will use cache if already loaded
-    fetchEstimates(); // Will use cache if already loaded
-    fetchEvents(); // Load calendar events
-  }, []); // Empty deps array - only run once on mount
+  // No more fetchProjects/fetchEstimates needed! React Query handles it
 
   // Debug: Log events when they change
   useEffect(() => {

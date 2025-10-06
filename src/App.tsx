@@ -40,6 +40,9 @@ function App() {
           <p className="text-gray-600">
             {!initialized ? 'Checking authentication...' : 'Loading your data...'}
           </p>
+          {initError && (
+            <p className="text-red-500 text-sm mt-2">Error: {initError}</p>
+          )}
         </div>
       </div>
     );
