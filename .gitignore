@@ -30,3 +30,5 @@ docs/NETLIFY-ENV-VARS.md
 debug-*.html
 setup-*.html
 test-*.html
+.env
+scripts/apply-client-columns.ts
