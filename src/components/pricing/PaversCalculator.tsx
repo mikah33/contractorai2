@@ -173,7 +173,7 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 } border border-slate-300`}
                 onClick={() => setInputType('dimensions')}
               >
-                Use Dimensions
+                {t('calculators.useDimensions')}
               </button>
               <button
                 type="button"
@@ -184,7 +184,7 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 } border border-slate-300`}
                 onClick={() => setInputType('area')}
               >
-                Use Square Footage
+                {t('calculators.useSquareFootage')}
               </button>
             </div>
           </div>
@@ -193,7 +193,7 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="length" className="block text-sm font-medium text-slate-700 mb-1">
-                  Length (feet)
+                  {t('calculators.lengthFeet')}
                 </label>
                 <input
                   type="number"
@@ -203,13 +203,13 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   value={length}
                   onChange={(e) => setLength(e.target.value ? Number(e.target.value) : '')}
                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  placeholder="Enter length in feet"
+                  placeholder={t('calculators.enterLength')}
                 />
               </div>
-              
+
               <div>
                 <label htmlFor="width" className="block text-sm font-medium text-slate-700 mb-1">
-                  Width (feet)
+                  {t('calculators.widthFeet')}
                 </label>
                 <input
                   type="number"
@@ -219,7 +219,7 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   value={width}
                   onChange={(e) => setWidth(e.target.value ? Number(e.target.value) : '')}
                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  placeholder="Enter width in feet"
+                  placeholder={t('calculators.enterWidth')}
                 />
               </div>
             </div>

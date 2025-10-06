@@ -370,6 +370,14 @@
   },
   "calculators": {
     "calculateMaterials": "Calcular Materiales",
+    "useDimensions": "Usar Dimensiones",
+    "useSquareFootage": "Usar Pies Cuadrados",
+    "lengthFeet": "Longitud (pies)",
+    "widthFeet": "Ancho (pies)",
+    "heightFeet": "Altura (pies)",
+    "enterLength": "Ingresar longitud en pies",
+    "enterWidth": "Ingresar ancho en pies",
+    "enterHeight": "Ingresar altura en pies",
     "deck": {
       "title": "Calculadora de Terrazas",
       "useDimensions": "Usar Dimensiones",
@@ -381,7 +389,46 @@
       "totalArea": "Área Total (pies cuadrados)",
       "totalAreaPlaceholder": "Ingrese el área total en pies cuadrados",
       "deckingType": "Tipo de Entarimado",
-      "framingDetails": "Detalles del Enmarcado"
+      "framingDetails": "Detalles del Enmarcado",
+      "customBoardWidth": "Ancho de Tabla Personalizado (pulgadas)",
+      "enterBoardWidth": "Ingresar ancho de tabla",
+      "boardSpacing": "Espaciado de Tablas (pulgadas)",
+      "enterSpacing": "Ingresar espaciado entre tablas",
+      "joistSpacing": "Espaciado de Vigas",
+      "joistSpacing12": "12\" al centro",
+      "joistSpacing16": "16\" al centro",
+      "joistSize": "Tamaño de Viga",
+      "joists2x6": "Vigas 2x6",
+      "joists2x8": "Vigas 2x8",
+      "joists2x10": "Vigas 2x10",
+      "joists2x12": "Vigas 2x12",
+      "beamSpan": "Tramo de Viga (pies)",
+      "enterBeamSpan": "Ingresar tramo de viga",
+      "includeCantilever": "Incluir Voladizo",
+      "cantileverLength": "Longitud de Voladizo (pulgadas) - Máx 24 pulgadas",
+      "enterCantilever": "Ingresar longitud de voladizo (máx 24 pulgadas)",
+      "cantileverWarning": "Advertencia: El voladizo máximo recomendado es de 24 pulgadas",
+      "includeStairs": "Incluir Escaleras",
+      "heightAboveGrade": "Altura Sobre el Nivel (pulgadas)",
+      "enterHeightInches": "Ingresar altura en pulgadas",
+      "stairWidth": "Ancho de Escalera (pulgadas)",
+      "enterStairWidth": "Ingresar ancho de escalera (mín. 36 pulgadas)",
+      "stairWidthWarning": "Advertencia: El ancho mínimo recomendado de escalera es de 36 pulgadas",
+      "stairRun": "Huella de Escalera (pulgadas)",
+      "stairRun10": "10\" (Estándar)",
+      "stairRun12": "12\" (Extendida)",
+      "includeRailing": "Incluir Barandilla",
+      "railingType": "Tipo de Barandilla",
+      "pressureTreated": "Tratada a Presión",
+      "trexComposite": "Compuesto Trex",
+      "railingLength": "Longitud Total de Barandilla (pies)",
+      "enterRailingLength": "Ingresar longitud total de barandilla en pies",
+      "includeFascia": "Incluir Tablas de Fascia",
+      "fasciaMaterial": "Material de Fascia",
+      "azekPVC": "Azek PVC",
+      "metalStock": "Lámina de Metal",
+      "fasciaLength": "Longitud Total de Fascia (pies)",
+      "enterFasciaLength": "Ingresar longitud total de fascia en pies"
     },
     "concrete": {
       "title": "Calculadora de Concreto"
@@ -433,6 +480,12 @@
     },
     "tile": {
       "title": "Calculadora de Azulejos"
+    },
+    "flooring": {
+      "title": "Calculadora de Pisos"
+    },
+    "foundation": {
+      "title": "Calculadora de Cimientos"
     }
   }
 }

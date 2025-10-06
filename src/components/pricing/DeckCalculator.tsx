@@ -576,7 +576,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div>
               <label htmlFor="customDeckingWidth" className="block text-sm font-medium text-slate-700 mb-1">
-                Custom Board Width (inches)
+                {t('calculators.deck.customBoardWidth')}
               </label>
               <input
                 type="number"
@@ -586,12 +586,12 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 value={customDeckingWidth}
                 onChange={(e) => setCustomDeckingWidth(e.target.value ? Number(e.target.value) : '')}
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                placeholder="Enter board width"
+                placeholder={t('calculators.deck.enterBoardWidth')}
               />
             </div>
             <div>
               <label htmlFor="customDeckingSpacing" className="block text-sm font-medium text-slate-700 mb-1">
-                Board Spacing (inches)
+                {t('calculators.deck.boardSpacing')}
               </label>
               <input
                 type="number"
@@ -601,7 +601,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 value={customDeckingSpacing}
                 onChange={(e) => setCustomDeckingSpacing(e.target.value ? Number(e.target.value) : '')}
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                placeholder="Enter spacing between boards"
+                placeholder={t('calculators.deck.enterSpacing')}
               />
             </div>
           </div>
@@ -612,7 +612,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div>
               <label htmlFor="joistsSpacing" className="block text-sm font-medium text-slate-700 mb-1">
-                Joist Spacing
+                {t('calculators.deck.joistSpacing')}
               </label>
               <select
                 id="joistsSpacing"
@@ -620,13 +620,13 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 onChange={(e) => setJoistsSpacing(Number(e.target.value) as 12 | 16)}
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               >
-                <option value={12}>12" on center</option>
-                <option value={16}>16" on center</option>
+                <option value={12}>{t('calculators.deck.joistSpacing12')}</option>
+                <option value={16}>{t('calculators.deck.joistSpacing16')}</option>
               </select>
             </div>
             <div>
               <label htmlFor="joistSize" className="block text-sm font-medium text-slate-700 mb-1">
-                Joist Size
+                {t('calculators.deck.joistSize')}
               </label>
               <select
                 id="joistSize"
@@ -634,15 +634,15 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 onChange={(e) => setJoistSize(e.target.value as typeof joistSize)}
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               >
-                <option value="2x6">2x6 Joists</option>
-                <option value="2x8">2x8 Joists</option>
-                <option value="2x10">2x10 Joists</option>
-                <option value="2x12">2x12 Joists</option>
+                <option value="2x6">{t('calculators.deck.joists2x6')}</option>
+                <option value="2x8">{t('calculators.deck.joists2x8')}</option>
+                <option value="2x10">{t('calculators.deck.joists2x10')}</option>
+                <option value="2x12">{t('calculators.deck.joists2x12')}</option>
               </select>
             </div>
             <div>
               <label htmlFor="beamSpan" className="block text-sm font-medium text-slate-700 mb-1">
-                Beam Span (feet)
+                {t('calculators.deck.beamSpan')}
               </label>
               <input
                 type="number"
@@ -652,7 +652,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 value={beamSpan}
                 onChange={(e) => setBeamSpan(e.target.value ? Number(e.target.value) : '')}
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                placeholder="Enter beam span"
+                placeholder={t('calculators.deck.enterBeamSpan')}
               />
             </div>
           </div>
@@ -673,14 +673,14 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
             />
             <label htmlFor="includeCantilever" className="ml-2 block text-sm font-medium text-slate-700">
-              Include Cantilever
+              {t('calculators.deck.includeCantilever')}
             </label>
           </div>
 
           {includeCantilever && (
             <div className="mb-6">
               <label htmlFor="cantileverLength" className="block text-sm font-medium text-slate-700 mb-1">
-                Cantilever Length (inches) - Max 24 inches
+                {t('calculators.deck.cantileverLength')}
               </label>
               <input
                 type="number"
@@ -691,11 +691,11 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 value={cantileverLength}
                 onChange={(e) => setCantileverLength(e.target.value ? Number(e.target.value) : '')}
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                placeholder="Enter cantilever length (max 24 inches)"
+                placeholder={t('calculators.deck.enterCantilever')}
               />
               {typeof cantileverLength === 'number' && cantileverLength > 24 && (
                 <p className="mt-1 text-sm text-red-600">
-                  Warning: Maximum recommended cantilever is 24 inches
+                  {t('calculators.deck.cantileverWarning')}
                 </p>
               )}
             </div>
@@ -710,7 +710,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
             />
             <label htmlFor="includeStairs" className="ml-2 block text-sm font-medium text-slate-700">
-              Include Stairs
+              {t('calculators.deck.includeStairs')}
             </label>
           </div>
 
@@ -718,7 +718,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             <div className="space-y-4">
               <div>
                 <label htmlFor="heightAboveGrade" className="block text-sm font-medium text-slate-700 mb-1">
-                  Height Above Grade (inches)
+                  {t('calculators.deck.heightAboveGrade')}
                 </label>
                 <input
                   type="number"
@@ -728,13 +728,13 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   value={heightAboveGrade}
                   onChange={(e) => setHeightAboveGrade(e.target.value ? Number(e.target.value) : '')}
                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  placeholder="Enter height in inches"
+                  placeholder={t('calculators.deck.enterHeightInches')}
                 />
               </div>
 
               <div>
                 <label htmlFor="stairWidth" className="block text-sm font-medium text-slate-700 mb-1">
-                  Stair Width (inches)
+                  {t('calculators.deck.stairWidth')}
                 </label>
                 <input
                   type="number"
@@ -744,18 +744,18 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   value={stairWidth}
                   onChange={(e) => setStairWidth(e.target.value ? Number(e.target.value) : '')}
                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  placeholder="Enter stair width (min. 36 inches)"
+                  placeholder={t('calculators.deck.enterStairWidth')}
                 />
                 {typeof stairWidth === 'number' && stairWidth < 36 && (
                   <p className="mt-1 text-sm text-red-600">
-                    Warning: Minimum recommended stair width is 36 inches
+                    {t('calculators.deck.stairWidthWarning')}
                   </p>
                 )}
               </div>
 
               <div>
                 <label htmlFor="stairRun" className="block text-sm font-medium text-slate-700 mb-1">
-                  Stair Run (inches)
+                  {t('calculators.deck.stairRun')}
                 </label>
                 <select
                   id="stairRun"
@@ -763,8 +763,8 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   onChange={(e) => setStairRun(Number(e.target.value) as 10 | 12)}
                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 >
-                  <option value={10}>10" (Standard)</option>
-                  <option value={12}>12" (Extended)</option>
+                  <option value={10}>{t('calculators.deck.stairRun10')}</option>
+                  <option value={12}>{t('calculators.deck.stairRun12')}</option>
                 </select>
               </div>
             </div>
@@ -786,7 +786,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
             />
             <label htmlFor="includeRailing" className="ml-2 block text-sm font-medium text-slate-700">
-              Include Railing
+              {t('calculators.deck.includeRailing')}
             </label>
           </div>
 
@@ -794,7 +794,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             <div className="space-y-4">
               <div>
                 <label htmlFor="railingType" className="block text-sm font-medium text-slate-700 mb-1">
-                  Railing Type
+                  {t('calculators.deck.railingType')}
                 </label>
                 <select
                   id="railingType"
@@ -802,14 +802,14 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   onChange={(e) => setRailingType(e.target.value as 'pt' | 'trex')}
                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 >
-                  <option value="pt">Pressure Treated</option>
-                  <option value="trex">Trex Composite</option>
+                  <option value="pt">{t('calculators.deck.pressureTreated')}</option>
+                  <option value="trex">{t('calculators.deck.trexComposite')}</option>
                 </select>
               </div>
 
               <div>
                 <label htmlFor="railingLength" className="block text-sm font-medium text-slate-700 mb-1">
-                  Total Railing Length (feet)
+                  {t('calculators.deck.railingLength')}
                 </label>
                 <input
                   type="number"
@@ -819,7 +819,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   value={railingLength}
                   onChange={(e) => setRailingLength(e.target.value ? Number(e.target.value) : '')}
                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  placeholder="Enter total railing length in feet"
+                  placeholder={t('calculators.deck.enterRailingLength')}
                 />
               </div>
             </div>
@@ -841,7 +841,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
             />
             <label htmlFor="includeFascia" className="ml-2 block text-sm font-medium text-slate-700">
-              Include Fascia Boards
+              {t('calculators.deck.includeFascia')}
             </label>
           </div>
 
@@ -849,7 +849,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             <div className="space-y-4">
               <div>
                 <label htmlFor="fasciaType" className="block text-sm font-medium text-slate-700 mb-1">
-                  Fascia Material
+                  {t('calculators.deck.fasciaMaterial')}
                 </label>
                 <select
                   id="fasciaType"
@@ -857,15 +857,15 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   onChange={(e) => setFasciaType(e.target.value as 'pt' | 'azek' | 'metal')}
                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 >
-                  <option value="pt">Pressure Treated</option>
-                  <option value="azek">Azek PVC</option>
-                  <option value="metal">Metal Stock</option>
+                  <option value="pt">{t('calculators.deck.pressureTreated')}</option>
+                  <option value="azek">{t('calculators.deck.azekPVC')}</option>
+                  <option value="metal">{t('calculators.deck.metalStock')}</option>
                 </select>
               </div>
 
               <div>
                 <label htmlFor="fasciaLength" className="block text-sm font-medium text-slate-700 mb-1">
-                  Total Fascia Length (feet)
+                  {t('calculators.deck.fasciaLength')}
                 </label>
                 <input
                   type="number"
@@ -875,7 +875,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   value={fasciaLength}
                   onChange={(e) => setFasciaLength(e.target.value ? Number(e.target.value) : '')}
                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  placeholder="Enter total fascia length in feet"
+                  placeholder={t('calculators.deck.enterFasciaLength')}
                 />
               </div>
             </div>
