@@ -36,6 +36,7 @@ export interface Estimate {
   title: string;
   clientName?: string;  // Using clientName, NOT clientId
   projectName?: string; // Using projectName, NOT projectId
+  projectId?: string;   // Add projectId to link with project for team members
   status?: 'draft' | 'sent' | 'approved' | 'rejected' | 'expired';
   createdAt?: string;
   expiresAt?: string;
@@ -47,4 +48,6 @@ export interface Estimate {
   notes?: string;
   terms?: string;
   branding?: EstimateBranding;
+  convertedToInvoice?: boolean;  // Track if converted to invoice
+  invoiceId?: string;            // Reference to the created invoice
 }

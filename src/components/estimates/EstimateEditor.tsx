@@ -1,6 +1,9 @@
 import { useState } from 'react';
-import { Plus, Trash2, Image, Settings, Palette, DollarSign, Calendar, User, Briefcase, FileText, Tag, Info, Edit2 } from 'lucide-react';
+import { Plus, Trash2, Image, Settings, Palette, DollarSign, Calendar, User, Briefcase, FileText, Tag, Info, Edit2, Users } from 'lucide-react';
 import { Estimate, EstimateItem } from '../../types/estimates';
+import { supabase } from '../../lib/supabase';
+import { useData } from '../../contexts/DataContext';
+import { useNavigate } from 'react-router-dom';
 
 interface EstimateEditorProps {
   estimate: Estimate;
@@ -23,6 +26,8 @@ const EstimateEditor: React.FC<EstimateEditorProps> = ({
   clients,
   projects
 }) => {
+  const { profile } = useData();
+  const navigate = useNavigate();
   // Early return if no estimate provided
   if (!estimate) {
     return <div className="p-6 text-center text-gray-500">No estimate data available</div>;
@@ -117,6 +122,52 @@ const EstimateEditor: React.FC<EstimateEditorProps> = ({
         [field]: value
       }
     });
+  };
+
+  const handleAutoPopulateLabor = async () => {
+    if (!safeEstimate.projectId) {
+      alert('Please select a project first to auto-populate labor costs.');
+      return;
+    }
+
+    try {
+      // Fetch team members for this project
+      const { data: teamMembers, error } = await supabase
+        .from('project_team_members')
+        .select('member_name, member_email, role, hourly_rate')
+        .eq('project_id', safeEstimate.projectId);
+
+      if (error) {
+        console.error('Error fetching team members:', error);
+        alert('Failed to fetch team members. Please try again.');
+        return;
+      }
+
+      if (!teamMembers || teamMembers.length === 0) {
+        alert('No team members found for this project. Add team members to the project first.');
+        return;
+      }
+
+      // Create labor items for each team member
+      teamMembers.forEach(member => {
+        const laborItem: EstimateItem = {
+          id: `labor-${Date.now()}-${Math.random()}`,
+          description: `${member.member_name}${member.role ? ` (${member.role})` : ''}`,
+          quantity: 0, // User will fill in hours
+          unit: 'hour',
+          unitPrice: member.hourly_rate || 0,
+          totalPrice: 0,
+          type: 'labor',
+          notes: member.member_email ? `Contact: ${member.member_email}` : undefined
+        };
+        onAddItem(laborItem);
+      });
+
+      alert(`Added ${teamMembers.length} team member(s) to labor section. Enter hours for each.`);
+    } catch (error) {
+      console.error('Error auto-populating labor:', error);
+      alert('An error occurred. Please try again.');
+    }
   };
 
   return (
@@ -441,13 +492,31 @@ const EstimateEditor: React.FC<EstimateEditorProps> = ({
                     </td>
                   </tr>
                 </tbody>
-                
-                <tfoot className="bg-gray-50">
+              </table>
+            </div>
+
+            {/* Auto-populate Labor Button */}
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={handleAutoPopulateLabor}
+                disabled={!safeEstimate.projectId}
+                className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                title={!safeEstimate.projectId ? "Select a project first" : "Add team members as labor items"}
+              >
+                <Users className="h-5 w-5 mr-2" />
+                Auto-populate Labor from Project
+              </button>
+            </div>
+
+            {/* Totals Section */}
+            <div className="bg-gray-50 rounded-lg p-4">
+              <table className="min-w-full">
+                <tfoot>
                   <tr>
-                    <td colSpan={5} className="px-6 py-4 text-right text-sm font-medium text-gray-900">
+                    <td colSpan={5} className="px-6 py-2 text-right text-sm font-medium text-gray-900">
                       Subtotal
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-900">
                       ${safeEstimate.subtotal.toFixed(2)}
                     </td>
                     <td></td>
@@ -503,29 +572,37 @@ const EstimateEditor: React.FC<EstimateEditorProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Company Logo</label>
-                <div className="mt-1 flex items-center">
-                  {safeEstimate.branding.logo ? (
-                    <div className="relative">
-                      <img 
-                        src={safeEstimate.branding.logo} 
-                        alt="Company Logo" 
-                        className="h-32 w-auto object-contain"
-                      />
-                      <button
-                        onClick={() => handleBrandingChange('logo', '')}
-                        className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                <div className="mt-1">
+                  {profile?.logo_url ? (
+                    <div className="space-y-2">
+                      <div className="border-2 border-gray-200 rounded-lg p-4 bg-gray-50 inline-block">
+                        <img
+                          src={profile.logo_url}
+                          alt="Company Logo"
+                          className="h-24 w-auto object-contain"
+                        />
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        This logo will appear on all your estimates.{' '}
+                        <button
+                          onClick={() => navigate('/settings')}
+                          className="text-blue-600 hover:text-blue-800 underline"
+                        >
+                          Change in Settings
+                        </button>
+                      </p>
                     </div>
                   ) : (
-                    <button
-                      onClick={onLogoUpload}
-                      className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    >
-                      <Image className="h-5 w-5 mr-2 text-gray-400" />
-                      Upload Logo
-                    </button>
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                      <Image className="h-12 w-12 mx-auto text-gray-400 mb-2" />
+                      <p className="text-sm text-gray-600 mb-1">No company logo uploaded</p>
+                      <button
+                        onClick={() => navigate('/settings')}
+                        className="text-sm text-blue-600 hover:text-blue-800 underline"
+                      >
+                        Upload logo in Settings
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -549,45 +626,61 @@ const EstimateEditor: React.FC<EstimateEditorProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Primary Color</label>
-                <div className="mt-1 flex items-center">
-                  <div 
-                    className="h-8 w-8 rounded-full mr-2 border border-gray-300"
+                <div className="mt-1 flex items-center space-x-3">
+                  <div
+                    className="h-10 w-10 rounded-md border-2 border-gray-300 flex-shrink-0"
                     style={{ backgroundColor: safeEstimate.branding.primaryColor }}
                   ></div>
-                  <input
-                    type="color"
+                  <select
                     value={safeEstimate.branding.primaryColor}
                     onChange={(e) => handleBrandingChange('primaryColor', e.target.value)}
-                    className="h-8 w-8 rounded-full overflow-hidden"
-                  />
-                  <input
-                    type="text"
-                    value={safeEstimate.branding.primaryColor}
-                    onChange={(e) => handleBrandingChange('primaryColor', e.target.value)}
-                    className="ml-2 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  />
+                    className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  >
+                    <option value="#3b82f6">Blue</option>
+                    <option value="#ef4444">Red</option>
+                    <option value="#10b981">Green</option>
+                    <option value="#f59e0b">Orange</option>
+                    <option value="#8b5cf6">Purple</option>
+                    <option value="#ec4899">Pink</option>
+                    <option value="#14b8a6">Teal</option>
+                    <option value="#f97316">Burnt Orange</option>
+                    <option value="#6366f1">Indigo</option>
+                    <option value="#84cc16">Lime</option>
+                    <option value="#06b6d4">Cyan</option>
+                    <option value="#64748b">Slate</option>
+                    <option value="#1f2937">Dark Gray</option>
+                    <option value="#000000">Black</option>
+                  </select>
                 </div>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700">Secondary Color</label>
-                <div className="mt-1 flex items-center">
-                  <div 
-                    className="h-8 w-8 rounded-full mr-2 border border-gray-300"
+                <div className="mt-1 flex items-center space-x-3">
+                  <div
+                    className="h-10 w-10 rounded-md border-2 border-gray-300 flex-shrink-0"
                     style={{ backgroundColor: safeEstimate.branding.secondaryColor }}
                   ></div>
-                  <input
-                    type="color"
+                  <select
                     value={safeEstimate.branding.secondaryColor}
                     onChange={(e) => handleBrandingChange('secondaryColor', e.target.value)}
-                    className="h-8 w-8 rounded-full overflow-hidden"
-                  />
-                  <input
-                    type="text"
-                    value={safeEstimate.branding.secondaryColor}
-                    onChange={(e) => handleBrandingChange('secondaryColor', e.target.value)}
-                    className="ml-2 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  />
+                    className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  >
+                    <option value="#1e40af">Dark Blue</option>
+                    <option value="#b91c1c">Dark Red</option>
+                    <option value="#047857">Dark Green</option>
+                    <option value="#d97706">Dark Orange</option>
+                    <option value="#6d28d9">Dark Purple</option>
+                    <option value="#be185d">Dark Pink</option>
+                    <option value="#0f766e">Dark Teal</option>
+                    <option value="#c2410c">Dark Burnt Orange</option>
+                    <option value="#4338ca">Dark Indigo</option>
+                    <option value="#65a30d">Dark Lime</option>
+                    <option value="#0e7490">Dark Cyan</option>
+                    <option value="#475569">Dark Slate</option>
+                    <option value="#111827">Almost Black</option>
+                    <option value="#000000">Black</option>
+                  </select>
                 </div>
               </div>
             </div>
@@ -637,47 +730,27 @@ const EstimateEditor: React.FC<EstimateEditorProps> = ({
               />
             </div>
             
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <div className="flex items-start">
-                <div className="flex-shrink-0">
-                  <Info className="h-5 w-5 text-blue-400" />
-                </div>
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-blue-800">Suggested Terms</h3>
-                  <div className="mt-2 text-sm text-blue-700">
-                    <ul className="space-y-2">
-                      <li className="flex items-center">
-                        <button 
-                          onClick={() => handleUpdateField('terms', 'This estimate is valid for 30 days from the date of issue. To accept this estimate, please sign below or contact us.')}
-                          className="text-blue-600 hover:text-blue-800"
-                        >
-                          <Plus className="h-4 w-4 mr-1 inline" />
-                          <span>Standard 30-day validity</span>
-                        </button>
-                      </li>
-                      <li className="flex items-center">
-                        <button 
-                          onClick={() => handleUpdateField('terms', 'A 50% deposit is required to begin work, with the balance due upon completion. This estimate is valid for 30 days.')}
-                          className="text-blue-600 hover:text-blue-800"
-                        >
-                          <Plus className="h-4 w-4 mr-1 inline" />
-                          <span>50% deposit required</span>
-                        </button>
-                      </li>
-                      <li className="flex items-center">
-                        <button 
-                          onClick={() => handleUpdateField('terms', 'Any changes to the scope of work may result in additional charges. This estimate is valid for 30 days from the date of issue.')}
-                          className="text-blue-600 hover:text-blue-800"
-                        >
-                          <Plus className="h-4 w-4 mr-1 inline" />
-                          <span>Scope change clause</span>
-                        </button>
-                      </li>
-                    </ul>
+            {profile?.default_terms && (
+              <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <Info className="h-5 w-5 text-blue-500" />
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-blue-800">Company Default Terms</h3>
+                    <p className="mt-1 text-xs text-blue-600">
+                      Your default terms from Settings are automatically applied to new estimates. You can edit them above or change the defaults in Settings.
+                    </p>
+                    <button
+                      onClick={() => navigate('/settings')}
+                      className="mt-2 text-xs text-blue-600 hover:text-blue-800 underline"
+                    >
+                      Edit default terms in Settings
+                    </button>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         )}
       </div>

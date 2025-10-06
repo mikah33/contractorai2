@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { BarChart3, Brain, Users, Target, TrendingUp, Settings, Download } from 'lucide-react';
 import AccountConnection from '../components/ads/AccountConnection';
 import MetricsDashboard from '../components/ads/MetricsDashboard';
@@ -8,17 +9,18 @@ import ABTesting from '../components/ads/ABTesting';
 import { useAdAnalyzerStore } from '../stores/adAnalyzerStore';
 
 const AdAnalyzer = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'overview' | 'insights' | 'competitors' | 'testing' | 'accounts'>('overview');
-  
-  const { 
-    accounts, 
-    campaigns, 
-    metrics, 
-    selectedAccount, 
+
+  const {
+    accounts,
+    campaigns,
+    metrics,
+    selectedAccount,
     dateRange,
-    fetchCampaigns, 
+    fetchCampaigns,
     fetchMetrics,
-    setSelectedAccount 
+    setSelectedAccount
   } = useAdAnalyzerStore();
 
   // Auto-fetch data when account is selected
@@ -131,7 +133,7 @@ const AdAnalyzer = () => {
             {tabs.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => tab.id === 'accounts' ? navigate('/ad-accounts') : setActiveTab(tab.id as any)}
                 className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center ${
                   activeTab === tab.id
                     ? 'border-blue-500 text-blue-600'
@@ -165,7 +167,7 @@ const AdAnalyzer = () => {
             Connect your Google Ads, Facebook Ads, or other advertising accounts to start analyzing performance with AI-powered insights.
           </p>
           <button
-            onClick={() => setActiveTab('accounts')}
+            onClick={() => navigate('/ad-accounts')}
             className="inline-flex items-center px-6 py-3 text-base font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
           >
             <Settings className="w-5 h-5 mr-2" />

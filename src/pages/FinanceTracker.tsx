@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { DollarSign, Receipt, Calendar, BarChart2, FileText, Download, Filter, RefreshCw } from 'lucide-react';
+import { DollarSign, Receipt, Calendar, BarChart2, FileText, Download, RefreshCw } from 'lucide-react';
 import ReceiptCapture from '../components/finance/ReceiptCapture';
 import ExpenseList from '../components/finance/ExpenseList';
 import PaymentTracker from '../components/finance/PaymentTracker';
@@ -8,6 +8,8 @@ import FinanceDashboard from '../components/finance/FinanceDashboard';
 import RecurringExpenses from '../components/finance/RecurringExpenses';
 import BudgetTracker from '../components/finance/BudgetTracker';
 import ReportGenerator from '../components/finance/ReportGenerator';
+import RevenueTracker from '../components/finance/RevenueTracker';
+import InvoiceManager from '../components/finance/InvoiceManager';
 import { useFinanceStore } from '../stores/financeStoreSupabase';
 
 const FinanceTracker = () => {
@@ -109,10 +111,6 @@ const FinanceTracker = () => {
         
         <div className="flex space-x-2">
           <button className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-            <Filter className="h-4 w-4 mr-2" />
-            Filter
-          </button>
-          <button className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
             <Download className="h-4 w-4 mr-2" />
             Export
           </button>
@@ -149,6 +147,17 @@ const FinanceTracker = () => {
               Dashboard
             </button>
             <button
+              onClick={() => setActiveTab('revenue')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center ${
+                activeTab === 'revenue'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <DollarSign className="w-4 h-4 mr-2" />
+              Revenue
+            </button>
+            <button
               onClick={() => setActiveTab('expenses')}
               className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center ${
                 activeTab === 'expenses'
@@ -169,6 +178,17 @@ const FinanceTracker = () => {
             >
               <DollarSign className="w-4 h-4 mr-2" />
               Payments
+            </button>
+            <button
+              onClick={() => setActiveTab('invoices')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center ${
+                activeTab === 'invoices'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <FileText className="w-4 h-4 mr-2" />
+              Invoices
             </button>
             <button
               onClick={() => setActiveTab('recurring')}
@@ -208,14 +228,23 @@ const FinanceTracker = () => {
 
         <div className="p-6">
           {activeTab === 'dashboard' && (
-            <FinanceDashboard 
+            <FinanceDashboard
               summary={financialSummary}
               dateRange={dateRange}
               onChangeDateRange={setDateRange}
               onExport={(format) => handleExportData(format)}
             />
           )}
-          
+
+          {activeTab === 'revenue' && (
+            <RevenueTracker
+              projects={projects}
+              receipts={receipts}
+              payments={payments}
+              recurringExpenses={recurringExpenses}
+            />
+          )}
+
           {activeTab === 'expenses' && (
             <div className="space-y-6">
               <ReceiptCapture 
@@ -245,8 +274,14 @@ const FinanceTracker = () => {
               />
           )}
           
+          {activeTab === 'invoices' && (
+            <div className="p-6">
+              <InvoiceManager />
+            </div>
+          )}
+
           {activeTab === 'recurring' && (
-            <RecurringExpenses 
+            <RecurringExpenses
               expenses={recurringExpenses}
               projects={projects}
               onAdd={addRecurringExpense}
@@ -257,9 +292,11 @@ const FinanceTracker = () => {
           )}
           
           {activeTab === 'budget' && (
-            <BudgetTracker 
+            <BudgetTracker
               projects={projects}
               budgetItems={budgetItems}
+              receipts={receipts}
+              payments={payments}
               onAddBudgetItem={addBudgetItem}
               onUpdateBudgetItem={updateBudgetItem}
               onDeleteBudgetItem={deleteBudgetItem}

@@ -19,10 +19,9 @@ export const estimateService = {
   // Save or update an estimate
   async saveEstimate(estimate: Estimate) {
     try {
-      // Validate and fix UUID if needed
-      if (!isValidUUID(estimate.id)) {
-        console.warn('Invalid estimate UUID detected, regenerating:', estimate.id);
-        estimate.id = generateUUID();
+      // Don't regenerate UUIDs - trust the ID from the database or generator
+      if (!estimate.id || !isValidUUID(estimate.id)) {
+        throw new Error('Invalid or missing estimate ID');
       }
       
       // Get user ID
@@ -37,6 +36,7 @@ export const estimateService = {
         title: estimate.title,
         client_name: estimate.clientName || (typeof estimate.clientId === 'string' && !estimate.clientId.includes('-') ? estimate.clientId : null) || null,  // Support both old and new field names, but ignore UUIDs
         project_name: estimate.projectName || (typeof estimate.projectId === 'string' && !estimate.projectId.includes('-') ? estimate.projectId : null) || null,  // Support both old and new field names, but ignore UUIDs
+        project_id: estimate.projectId || null,
         status: estimate.status || 'draft',
         subtotal: estimate.subtotal || 0,
         tax_rate: estimate.taxRate || 0,
@@ -45,6 +45,7 @@ export const estimateService = {
         notes: estimate.notes || null,
         terms: estimate.terms || null,
         expires_at: estimate.expiresAt || null,
+        items: estimate.items || [],
         user_id: user.id,
         updated_at: new Date().toISOString()
       };
@@ -127,6 +128,7 @@ export const estimateService = {
         title: estimate.title,
         clientName: estimate.client_name,
         projectName: estimate.project_name,
+        projectId: estimate.project_id,
         status: estimate.status,
         createdAt: estimate.created_at,
         expiresAt: estimate.expires_at,
@@ -136,7 +138,9 @@ export const estimateService = {
         total: estimate.total,
         notes: estimate.notes,
         terms: estimate.terms,
-        items: []  // No separate items table in simple schema
+        items: estimate.items || [],  // Load items from database
+        convertedToInvoice: estimate.converted_to_invoice || false,
+        invoiceId: estimate.invoice_id || undefined
       };
 
       return { success: true, data: transformedEstimate };
@@ -168,6 +172,7 @@ export const estimateService = {
         title: estimate.title,
         clientName: estimate.client_name,
         projectName: estimate.project_name,
+        projectId: estimate.project_id,
         status: estimate.status,
         createdAt: estimate.created_at,
         expiresAt: estimate.expires_at,
@@ -177,7 +182,9 @@ export const estimateService = {
         total: estimate.total,
         notes: estimate.notes,
         terms: estimate.terms,
-        items: []
+        items: estimate.items || [],
+        convertedToInvoice: estimate.converted_to_invoice || false,
+        invoiceId: estimate.invoice_id || undefined
       }));
 
       return { success: true, data: transformedEstimates };

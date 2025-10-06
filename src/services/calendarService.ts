@@ -57,15 +57,23 @@ export class CalendarService {
   // Create a new event
   static async createEvent(event: Partial<CalendarEvent>): Promise<CalendarEvent | null> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        console.error('User not authenticated when creating event');
-        throw new Error('User not authenticated');
+      let userId = event.user_id;
+
+      // Try to get authenticated user first
+      if (!userId) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          userId = user.id;
+        } else {
+          // Fallback for development mode
+          console.warn('No authenticated user, using development mode for calendar');
+          userId = '00000000-0000-0000-0000-000000000000';
+        }
       }
 
       const eventData = {
         ...event,
-        user_id: user.id,
+        user_id: userId,
         created_at: new Date().toISOString()
       };
 
@@ -124,7 +132,9 @@ export class CalendarService {
   static async syncProjectDates(projectId: string, projectData: any): Promise<void> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      const userId = user?.id || '00000000-0000-0000-0000-000000000000';
+
+      console.log('Syncing project dates to calendar for project:', projectId);
 
       // Delete existing auto-generated events for this project
       await supabase
@@ -137,10 +147,10 @@ export class CalendarService {
       if (projectData.start_date) {
         await this.createEvent({
           title: `Project Start: ${projectData.name}`,
-          description: `${projectData.name} project begins`,
           start_date: projectData.start_date,
           event_type: 'project_start',
           status: 'pending',
+          user_id: userId,
           project_id: projectId,
           auto_generated: true,
         });
@@ -150,10 +160,10 @@ export class CalendarService {
       if (projectData.end_date) {
         await this.createEvent({
           title: `Project Deadline: ${projectData.name}`,
-          description: `${projectData.name} project deadline`,
           start_date: projectData.end_date,
           event_type: 'project_end',
           status: 'pending',
+          user_id: userId,
           project_id: projectId,
           auto_generated: true,
         });

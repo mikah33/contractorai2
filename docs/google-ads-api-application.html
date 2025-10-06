@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Ads API Access Application - ContractorAI</title>
+    <style>
+        @page {
+            margin: 1in;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 8.5in;
+            margin: 0 auto;
+            padding: 0.5in;
+            background: white;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #4285f4;
+        }
+
+        .header h1 {
+            color: #4285f4;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            color: #4285f4;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .field {
+            margin-bottom: 20px;
+        }
+
+        .field-label {
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .field-value {
+            padding: 12px;
+            background: #f5f5f5;
+            border-left: 4px solid #4285f4;
+            margin-bottom: 5px;
+        }
+
+        .description {
+            background: #e8f0fe;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+
+        ul {
+            margin-left: 20px;
+        }
+
+        ul li {
+            margin-bottom: 8px;
+        }
+
+        .highlight {
+            background: #fff3cd;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        table th {
+            background: #4285f4;
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+
+        table td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+
+        table tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        @media print {
+            body {
+                padding: 0;
+            }
+
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Google Ads API Access Application</h1>
+        <div class="subtitle">ContractorAI - Advanced Contractor Management & Analytics Platform</div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">1. Application Information</div>
+
+        <div class="field">
+            <span class="field-label">Application Name:</span>
+            <div class="field-value">ContractorAI</div>
+        </div>
+
+        <div class="field">
+            <span class="field-label">Application Type:</span>
+            <div class="field-value">SaaS Web Application (Software as a Service)</div>
+        </div>
+
+        <div class="field">
+            <span class="field-label">Developer/Company:</span>
+            <div class="field-value">ContractorAI Development Team</div>
+        </div>
+
+        <div class="field">
+            <span class="field-label">Google Cloud Project ID:</span>
+            <div class="field-value">716912343285</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">2. Purpose & Use Case</div>
+
+        <div class="description">
+            <strong>Primary Purpose:</strong> ContractorAI is a comprehensive contractor management platform that helps roofing and construction contractors manage their business operations, including advertising performance analytics.
+        </div>
+
+        <div class="field">
+            <span class="field-label">How will you use the Google Ads API?</span>
+            <div class="field-value">
+                Our application will use the Google Ads API to:
+                <ul>
+                    <li><strong>Analytics & Reporting:</strong> Fetch campaign performance metrics (impressions, clicks, conversions, spend, ROAS) to provide contractors with unified analytics dashboards</li>
+                    <li><strong>Campaign Monitoring:</strong> Track active campaigns and their performance in real-time</li>
+                    <li><strong>Attribution Analysis:</strong> Connect ad performance with business outcomes (estimates generated, projects won) to calculate true ROI</li>
+                    <li><strong>Multi-Platform Integration:</strong> Aggregate Google Ads data alongside Meta Ads and organic traffic for comprehensive marketing insights</li>
+                    <li><strong>Performance Optimization:</strong> Provide AI-powered recommendations based on campaign performance data</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="field">
+            <span class="field-label">Target Users:</span>
+            <div class="field-value">
+                Roofing contractors, construction companies, and home service businesses who advertise on Google Ads and want to track their advertising ROI alongside business operations.
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">3. Technical Implementation</div>
+
+        <div class="field">
+            <span class="field-label">Authentication Method:</span>
+            <div class="field-value">OAuth 2.0 with user consent flow</div>
+        </div>
+
+        <div class="field">
+            <span class="field-label">API Scopes Requested:</span>
+            <div class="field-value">
+                <code>https://www.googleapis.com/auth/adwords</code> - Read and analyze Google Ads account data
+            </div>
+        </div>
+
+        <div class="field">
+            <span class="field-label">Data Access Pattern:</span>
+            <div class="field-value">
+                <ul>
+                    <li>Users authenticate via OAuth 2.0 and grant permission to access their Google Ads accounts</li>
+                    <li>Application reads campaign and performance data (read-only access)</li>
+                    <li>Data is stored securely in Supabase PostgreSQL database</li>
+                    <li>Daily automated sync to keep metrics up-to-date</li>
+                    <li>All tokens are encrypted and stored securely</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="field">
+            <span class="field-label">Technology Stack:</span>
+            <div class="field-value">
+                <table>
+                    <tr>
+                        <th>Component</th>
+                        <th>Technology</th>
+                    </tr>
+                    <tr>
+                        <td>Frontend</td>
+                        <td>React + TypeScript</td>
+                    </tr>
+                    <tr>
+                        <td>Backend</td>
+                        <td>Supabase (PostgreSQL + Edge Functions)</td>
+                    </tr>
+                    <tr>
+                        <td>Authentication</td>
+                        <td>Supabase Auth + OAuth 2.0</td>
+                    </tr>
+                    <tr>
+                        <td>Hosting</td>
+                        <td>Vercel / Netlify</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">4. Data Security & Privacy</div>
+
+        <div class="field">
+            <span class="field-label">Security Measures:</span>
+            <div class="field-value">
+                <ul>
+                    <li><strong>Token Storage:</strong> All OAuth tokens encrypted at rest in Supabase</li>
+                    <li><strong>Data Transmission:</strong> HTTPS/TLS encryption for all API communications</li>
+                    <li><strong>Access Control:</strong> Row Level Security (RLS) policies ensure users only access their own data</li>
+                    <li><strong>Token Refresh:</strong> Automated refresh token rotation to maintain security</li>
+                    <li><strong>Audit Logging:</strong> All API calls logged for security monitoring</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="field">
+            <span class="field-label">Privacy Compliance:</span>
+            <div class="field-value">
+                <ul>
+                    <li>GDPR compliant data handling</li>
+                    <li>Users can revoke access at any time via Google Account settings</li>
+                    <li>Data retention policies in place (metrics stored for 2 years)</li>
+                    <li>Clear privacy policy explaining data usage</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">5. Expected Usage Volume</div>
+
+        <div class="field">
+            <span class="field-label">Initial Launch:</span>
+            <div class="field-value">
+                <ul>
+                    <li>50-100 beta users in first 3 months</li>
+                    <li>Approximately 500-1,000 API calls per day</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="field">
+            <span class="field-label">Growth Projection (12 months):</span>
+            <div class="field-value">
+                <ul>
+                    <li>500-1,000 active users</li>
+                    <li>10,000-20,000 API calls per day</li>
+                    <li>Daily automated syncs + on-demand refreshes</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">6. Benefits to Advertisers</div>
+
+        <div class="description">
+            <strong>How ContractorAI helps Google Ads advertisers:</strong>
+        </div>
+
+        <div class="field-value">
+            <ul>
+                <li><strong>Better ROI Tracking:</strong> Connect ad spend directly to business outcomes (estimates, projects, revenue)</li>
+                <li><strong>Unified Analytics:</strong> See all marketing channels (Google Ads, Meta, organic) in one dashboard</li>
+                <li><strong>Attribution Insights:</strong> Understand which campaigns drive actual business results, not just clicks</li>
+                <li><strong>Performance Optimization:</strong> AI-powered recommendations to improve campaign performance</li>
+                <li><strong>Time Savings:</strong> Automated reporting eliminates manual data collection from multiple platforms</li>
+                <li><strong>Business Context:</strong> View ad performance alongside project management, finances, and scheduling</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">7. Terms of Service Acceptance</div>
+
+        <div class="field">
+            <span class="field-label">Google Ads API Terms of Service:</span>
+            <div class="field-value">
+                ✓ I have read and agree to comply with the <span class="highlight">Google Ads API Terms of Service</span>
+            </div>
+        </div>
+
+        <div class="field">
+            <span class="field-label">Google API Services User Data Policy:</span>
+            <div class="field-value">
+                ✓ I have read and agree to comply with the <span class="highlight">Google API Services User Data Policy</span>
+            </div>
+        </div>
+
+        <div class="field">
+            <span class="field-label">Commitment:</span>
+            <div class="field-value">
+                I confirm that ContractorAI will:
+                <ul>
+                    <li>Only access data that users explicitly grant permission to access</li>
+                    <li>Use the data solely for the purposes described in this application</li>
+                    <li>Protect user data with industry-standard security measures</li>
+                    <li>Comply with all Google Ads API policies and guidelines</li>
+                    <li>Promptly address any policy violations if identified</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">8. Additional Information</div>
+
+        <div class="field">
+            <span class="field-label">Development Status:</span>
+            <div class="field-value">Active development - Beta launch planned Q1 2025</div>
+        </div>
+
+        <div class="field">
+            <span class="field-label">Support Contact:</span>
+            <div class="field-value">support@contractorai.com (update with actual email)</div>
+        </div>
+
+        <div class="field">
+            <span class="field-label">Website:</span>
+            <div class="field-value">https://contractorai.com (update with actual domain)</div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p><strong>Application Submitted:</strong> January 2025</p>
+        <p>This application is for <strong>Basic Access</strong> to the Google Ads API for read-only analytics purposes.</p>
+        <p class="no-print" style="margin-top: 20px; font-size: 14px; color: #4285f4;">
+            <strong>To convert to PDF:</strong> Press Ctrl+P (Cmd+P on Mac) and select "Save as PDF"
+        </p>
+    </div>
+</body>
+</html>

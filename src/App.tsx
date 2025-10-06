@@ -11,10 +11,18 @@ import Calendar from './pages/Calendar';
 import AdAnalyzer from './pages/AdAnalyzer';
 import Settings from './pages/Settings';
 import Clients from './pages/Clients';
+import EmployeesManager from './pages/EmployeesManager';
+import AdAccountsSetup from './pages/AdAccountsSetup';
+import AdOAuthCallback from './pages/AdOAuthCallback';
+import MetaOAuthCallback from './pages/MetaOAuthCallback';
+import AnalyticsDashboard from './pages/AnalyticsDashboard';
+import Subscriptions from './pages/Subscriptions';
+import ResetPassword from './pages/ResetPassword';
 import LoginPage from './pages/auth/LoginPage';
 import SignupPage from './pages/auth/SignupPage';
 import { PricingProvider } from './contexts/PricingContext';
 import { ProjectProvider } from './contexts/ProjectContext';
+import { DataProvider } from './contexts/DataContext';
 import { useAuthStore } from './stores/authStore';
 
 function App() {
@@ -42,9 +50,10 @@ function App() {
 
   // Show main app when user is logged in
   return (
-    <div className="flex h-screen bg-gray-50">
-      <PricingProvider>
-        <ProjectProvider>
+    <DataProvider>
+      <div className="flex h-screen bg-gray-50">
+        <PricingProvider>
+          <ProjectProvider>
           <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
           
           <div className="flex flex-col flex-1 overflow-hidden">
@@ -58,16 +67,24 @@ function App() {
                 <Route path="/estimates" element={<EstimateGenerator />} />
                 <Route path="/projects" element={<ProjectManager />} />
                 <Route path="/clients" element={<Clients />} />
+                <Route path="/employees" element={<EmployeesManager />} />
                 <Route path="/calendar" element={<Calendar />} />
                 <Route path="/ad-analyzer" element={<AdAnalyzer />} />
+                <Route path="/ad-accounts" element={<AdAccountsSetup />} />
+                <Route path="/ad-oauth-callback" element={<AdOAuthCallback />} />
+                <Route path="/meta-oauth-callback" element={<MetaOAuthCallback />} />
+                <Route path="/analytics" element={<AnalyticsDashboard />} />
+                <Route path="/subscriptions" element={<Subscriptions />} />
                 <Route path="/settings" element={<Settings />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </main>
           </div>
         </ProjectProvider>
       </PricingProvider>
-    </div>
+      </div>
+    </DataProvider>
   );
 }
 

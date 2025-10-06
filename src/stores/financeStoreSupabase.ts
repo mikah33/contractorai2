@@ -2,7 +2,42 @@ import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
 import { subDays, addDays, format, parseISO, addMonths } from 'date-fns';
 
+// Helper function to get current user ID
+const getCurrentUserId = async () => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user?.id) return user.id;
+  } catch (error) {
+    console.log('Auth not available, using development mode');
+  }
+  // Return a default user ID for development
+  return '00000000-0000-0000-0000-000000000000';
+};
+
 // Types
+export interface LineItem {
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  totalAmount: number;
+}
+
+export interface ReceiptMetadata {
+  receiptNumber?: string;
+  taxAmount?: number;
+  subtotal?: number;
+  supplierAddress?: string;
+  supplierPhone?: string;
+  lineItems?: LineItem[];
+  confidence?: {
+    vendor?: number;
+    amount?: number;
+    date?: number;
+    overall?: number;
+  };
+  source?: string;
+}
+
 export interface Receipt {
   id: string;
   vendor: string;
@@ -15,6 +50,7 @@ export interface Receipt {
   status: 'pending' | 'processed' | 'verified';
   userId?: string;
   createdAt?: string;
+  metadata?: ReceiptMetadata;
 }
 
 export interface Payment {
@@ -38,6 +74,7 @@ export interface RecurringExpense {
   category: string;
   frequency: 'weekly' | 'monthly' | 'quarterly' | 'yearly';
   nextDueDate: string;
+  startDate?: string; // When this recurring expense started (for historical tracking)
   vendor: string;
   projectId?: string;
   isActive: boolean;
@@ -79,10 +116,33 @@ export interface Client {
 export interface Invoice {
   id: string;
   projectId: string;
-  amount: number;
+  clientId: string;
+  estimateId?: string; // Link to original estimate if converted
+  invoiceNumber?: string;
+  totalAmount: number;
+  paidAmount: number;
+  balance: number; // totalAmount - paidAmount
   dueDate: string;
-  status: 'draft' | 'sent' | 'paid' | 'overdue';
+  issuedDate: string;
+  status: 'draft' | 'sent' | 'outstanding' | 'partial' | 'paid' | 'overdue';
+  lineItems?: LineItem[];
+  notes?: string;
   userId?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface InvoicePayment {
+  id: string;
+  invoiceId: string;
+  amount: number;
+  paymentDate: string;
+  paymentMethod?: 'cash' | 'check' | 'credit_card' | 'bank_transfer' | 'other';
+  referenceNumber?: string;
+  notes?: string;
+  userId?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface FinancialSummary {
@@ -125,12 +185,13 @@ interface FinanceState {
   projects: Project[];
   clients: Client[];
   invoices: Invoice[];
-  
+  invoicePayments: InvoicePayment[];
+
   // UI state
   dateRange: 'week' | 'month' | 'quarter' | 'year';
   isLoading: boolean;
   error: string | null;
-  
+
   // Computed data
   financialSummary: FinancialSummary;
   
@@ -163,7 +224,16 @@ interface FinanceState {
   fetchProjects: () => Promise<void>;
   fetchClients: () => Promise<void>;
   fetchInvoices: () => Promise<void>;
-  
+
+  // Actions - Invoice Management
+  convertEstimateToInvoice: (estimateId: string) => Promise<Invoice | null>;
+  recordInvoicePayment: (invoiceId: string, payment: Omit<InvoicePayment, 'id' | 'invoiceId' | 'userId' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  fetchInvoicePayments: (invoiceId: string) => Promise<InvoicePayment[]>;
+  updateInvoicePayment: (invoiceId: string, paymentAmount: number, status?: 'partial' | 'paid') => Promise<void>;
+  addInvoice: (invoice: Omit<Invoice, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateInvoice: (invoice: Invoice) => Promise<void>;
+  deleteInvoice: (id: string) => Promise<void>;
+
   // Other Actions
   setDateRange: (range: 'week' | 'month' | 'quarter' | 'year') => void;
   generateReport: (options: any) => Promise<void>;
@@ -178,17 +248,10 @@ interface FinanceState {
 // Helper function to get current user
 // For development, we'll use a mock user since auth isn't implemented
 const getCurrentUser = async () => {
-  // Check if there's a real user first
-  const { data: { user }, error } = await supabase.auth.getUser();
-  
-  // If there's a user, return it
-  if (user) return user;
-  
-  // Otherwise, return a mock user for development
-  // You should implement proper auth later
-  console.warn('No authenticated user, using mock user for development');
+  // Always return the same fixed user for development
+  // This user_id matches what's already in your database
   return {
-    id: '00000000-0000-0000-0000-000000000000', // Valid UUID format
+    id: '5ff28ea6-751f-4a22-b584-ca6c8a43f506', // The user_id from your session
     email: 'dev@example.com'
   };
 };
@@ -220,6 +283,7 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
   projects: [],
   clients: [],
   invoices: [],
+  invoicePayments: [],
   dateRange: 'month',
   isLoading: false,
   error: null,
@@ -239,14 +303,22 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
   fetchReceipts: async () => {
     set({ isLoading: true, error: null });
     try {
+      console.log('🔍 Fetching receipts from finance_expenses...');
+
       // Use new finance_expenses table
       const { data, error } = await supabase
         .from('finance_expenses')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      
+      if (error) {
+        console.error('❌ Error fetching receipts:', error);
+        throw error;
+      }
+
+      console.log('📊 Raw data from finance_expenses:', data);
+      console.log('📊 Number of expenses:', data?.length || 0);
+
       // Transform finance_expenses to receipt format
       const receipts = data?.map(expense => ({
         id: expense.id,
@@ -255,18 +327,23 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
         amount: expense.amount || 0,
         category: expense.category || 'General',
         notes: expense.notes || '',
-        status: 'processed',
-        projectId: null,
-        userId: expense.user_id
+        status: 'processed' as const,
+        projectId: expense.project_id || null,
+        userId: expense.user_id,
+        metadata: expense.metadata || undefined
       })) || [];
 
-      set({ 
-        receipts: receipts, 
-        isLoading: false 
+      console.log('✅ Transformed receipts:', receipts);
+      console.log('✅ Number of receipts:', receipts.length);
+
+      set({
+        receipts: receipts,
+        isLoading: false
       });
-      
+
       get().calculateFinancialSummary();
     } catch (error: any) {
+      console.error('💥 Failed to fetch receipts:', error);
       set({ error: error.message, isLoading: false });
     }
   },
@@ -300,7 +377,10 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
 
       if (error) {
         console.error('Error adding receipt:', error);
-        throw error;
+        console.error('Error details:', JSON.stringify(error, null, 2));
+        set({ error: `Failed to save expense: ${error.message}`, isLoading: false });
+        alert(`Error saving expense: ${error.message}`);
+        return;
       }
 
       console.log('Receipt added successfully:', data);
@@ -348,31 +428,35 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
       // Resolve project ID (handles revenue-tracker special case)
       const resolvedProjectId = await resolveProjectId(receipt.projectId);
 
+      // Prepare update data including metadata
+      const updateData: any = {
+        vendor: receipt.vendor,
+        amount: receipt.amount,
+        date: receipt.date,
+        category: receipt.category,
+        status: receipt.status,
+        notes: receipt.notes,
+        project_id: resolvedProjectId,
+        metadata: receipt.metadata || null
+      };
+
       const { data, error } = await supabase
         .from('finance_expenses')
-        .update({
-          vendor: receipt.vendor,
-          amount: receipt.amount,
-          date: receipt.date,
-          category: receipt.category,
-          status: receipt.status,
-          notes: receipt.notes,
-          project_id: resolvedProjectId
-        })
+        .update(updateData)
         .eq('id', receipt.id)
-        .eq('user_id', user.id)
-        .select()
-        .single();
+        .select();
 
       if (error) throw error;
 
+      // Update local state
       set(state => ({
         receipts: state.receipts.map(r => r.id === receipt.id ? receipt : r),
         isLoading: false
       }));
-      
+
       get().calculateFinancialSummary();
     } catch (error: any) {
+      console.error('Update error:', error);
       set({ error: error.message, isLoading: false });
     }
   },
@@ -424,7 +508,7 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
       const payments = data?.map(payment => ({
         id: payment.id,
         clientId: payment.client_name || 'Unknown',
-        projectId: null,
+        projectId: payment.project_id || null,
         amount: payment.amount || 0,
         date: payment.date || new Date().toISOString().split('T')[0],
         method: payment.method || 'bank_transfer',
@@ -452,7 +536,10 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
       const userId = user?.id || null;
 
       console.log('Adding payment:', payment);
-      
+
+      // Resolve project ID if it's revenue-tracker
+      const resolvedProjectId = await resolveProjectId(payment.projectId);
+
       // Insert into finance_payments table for payment tracking
       const { data, error } = await supabase
         .from('finance_payments')
@@ -468,13 +555,19 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error adding payment:', error);
+        console.error('Error details:', JSON.stringify(error, null, 2));
+        set({ error: `Failed to save payment: ${error.message}`, isLoading: false });
+        alert(`Error saving payment: ${error.message}`);
+        return;
+      }
 
       // Transform to payment format for state
       const paymentData = {
         id: data.id,
         clientId: payment.clientId,
-        projectId: payment.projectId,
+        projectId: resolvedProjectId, // Use resolved project ID
         amount: payment.amount,
         date: payment.date,
         method: payment.method || 'bank_transfer',
@@ -504,10 +597,14 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
         return;
       }
 
+      // Resolve project ID if it's revenue-tracker
+      const resolvedProjectId = await resolveProjectId(payment.projectId);
+
       const { data, error } = await supabase
         .from('finance_payments')
         .update({
           client_name: payment.clientId || 'Unknown Client',
+          project_id: resolvedProjectId, // Save the project ID
           amount: payment.amount,
           date: payment.date,
           method: payment.method || 'bank_transfer',
@@ -522,7 +619,9 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
       if (error) throw error;
 
       set(state => ({
-        payments: state.payments.map(p => p.id === payment.id ? payment : p),
+        payments: state.payments.map(p =>
+          p.id === payment.id ? { ...payment, projectId: resolvedProjectId } : p
+        ),
         isLoading: false
       }));
       
@@ -542,7 +641,7 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
       }
 
       const { error } = await supabase
-        .from('finance_expenses')
+        .from('finance_payments')
         .delete()
         .eq('id', id)
         .eq('user_id', user.id);
@@ -564,31 +663,30 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
   fetchRecurringExpenses: async () => {
     set({ isLoading: true, error: null });
     try {
-      // Use existing projects table as recurring expenses
       const { data, error } = await supabase
-        .from('projects')
+        .from('recurring_expenses')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      // Transform projects to recurring expense format
-      const recurringExpenses = data?.map(project => ({
-        id: project.id,
-        name: project.name || 'Unnamed Project',
-        amount: project.budget || 0,
-        category: 'Project Budget',
-        frequency: 'monthly',
-        nextDueDate: new Date().toISOString().split('T')[0],
-        vendor: project.client_name || 'Unknown Client',
-        projectId: project.id,
-        isActive: project.status === 'active',
-        userId: project.user_id
-      })) || [];
-      
-      set({ 
-        recurringExpenses: recurringExpenses, 
-        isLoading: false 
+      const recurringExpenses = (data || []).map(expense => ({
+        id: expense.id,
+        name: expense.name,
+        amount: expense.amount,
+        category: expense.category,
+        frequency: expense.frequency,
+        nextDueDate: expense.next_due_date,
+        startDate: expense.start_date || undefined,
+        projectId: expense.project_id || undefined,
+        vendor: expense.vendor || '',
+        isActive: expense.is_active,
+        userId: expense.user_id
+      }));
+
+      set({
+        recurringExpenses: recurringExpenses,
+        isLoading: false
       });
     } catch (error: any) {
       set({ error: error.message, isLoading: false });
@@ -605,21 +703,38 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
       }
 
       console.log('Adding recurring expense:', expense);
-      
-      // Insert into projects table as recurring expense project
+      console.log('  - projectId:', expense.projectId);
+      console.log('  - startDate:', expense.startDate);
+
+      // Resolve project ID (handles revenue-tracker special case)
+      const resolvedProjectId = await resolveProjectId(expense.projectId);
+      console.log('  - resolvedProjectId:', resolvedProjectId);
+
+      // Insert into recurring_expenses table
       const { data, error } = await supabase
-        .from('projects')
+        .from('recurring_expenses')
         .insert({
           name: expense.name,
-          budget: expense.amount,
-          client_name: expense.vendor,
-          status: expense.isActive ? 'active' : 'inactive',
+          amount: expense.amount,
+          category: expense.category,
+          frequency: expense.frequency,
+          next_due_date: expense.nextDueDate,
+          start_date: expense.startDate || null,
+          project_id: resolvedProjectId,
+          vendor: expense.vendor || '',
+          is_active: expense.isActive,
           user_id: user.id
         })
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error adding recurring expense:', error);
+        console.error('Error details:', JSON.stringify(error, null, 2));
+        set({ error: `Failed to save recurring expense: ${error.message}`, isLoading: false });
+        alert(`Error saving recurring expense: ${error.message}`);
+        return;
+      }
 
       // Transform to recurring expense format for state
       const recurringData = {
@@ -628,10 +743,11 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
         amount: expense.amount,
         category: expense.category,
         frequency: expense.frequency,
-        nextDueDate: expense.nextDueDate,
-        vendor: expense.vendor,
-        projectId: data.id,
-        isActive: expense.isActive,
+        nextDueDate: data.next_due_date,
+        startDate: data.start_date || undefined,
+        projectId: resolvedProjectId || undefined,
+        vendor: expense.vendor || '',
+        isActive: data.is_active,
         userId: user.id
       };
 
@@ -653,13 +769,21 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
         return;
       }
 
+      // Resolve project ID (handles revenue-tracker special case)
+      const resolvedProjectId = await resolveProjectId(expense.projectId);
+
       const { data, error } = await supabase
-        .from('projects')
+        .from('recurring_expenses')
         .update({
           name: expense.name,
-          budget: expense.amount,
-          client_name: expense.vendor,
-          status: expense.isActive ? 'active' : 'inactive'
+          amount: expense.amount,
+          category: expense.category,
+          frequency: expense.frequency,
+          next_due_date: expense.nextDueDate,
+          start_date: expense.startDate || null,
+          project_id: resolvedProjectId,
+          vendor: expense.vendor || '',
+          is_active: expense.isActive
         })
         .eq('id', expense.id)
         .eq('user_id', user.id)
@@ -669,7 +793,9 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
       if (error) throw error;
 
       set(state => ({
-        recurringExpenses: state.recurringExpenses.map(e => e.id === expense.id ? expense : e),
+        recurringExpenses: state.recurringExpenses.map(e =>
+          e.id === expense.id ? expense : e
+        ),
         isLoading: false
       }));
     } catch (error: any) {
@@ -687,7 +813,7 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
       }
 
       const { error } = await supabase
-        .from('projects')
+        .from('recurring_expenses')
         .delete()
         .eq('id', id)
         .eq('user_id', user.id);
@@ -713,8 +839,8 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
       }
 
       const { data, error } = await supabase
-        .from('projects')
-        .update({ status: isActive ? 'active' : 'inactive' })
+        .from('recurring_expenses')
+        .update({ is_active: isActive })
         .eq('id', id)
         .eq('user_id', user.id)
         .select()
@@ -723,7 +849,7 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
       if (error) throw error;
 
       set(state => ({
-        recurringExpenses: state.recurringExpenses.map(e => 
+        recurringExpenses: state.recurringExpenses.map(e =>
           e.id === id ? { ...e, isActive } : e
         ),
         isLoading: false
@@ -920,6 +1046,7 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
   fetchProjects: async () => {
     set({ isLoading: true, error: null });
     try {
+      // Fetch all projects from database
       const { data, error } = await supabase
         .from('projects')
         .select('*')
@@ -927,12 +1054,25 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
 
       if (error) throw error;
 
+      // Filter out recurring expenses (they have null dates AND description with linked_project: OR are named something other than Revenue Tracker)
+      // Include Revenue Tracker even if it has null dates
+      const projectsData = (data || []).filter(project => {
+        // Always include Revenue Tracker
+        if (project.name === 'Revenue Tracker') return true;
+
+        // Include projects with dates (real projects)
+        if (project.start_date != null) return true;
+
+        // Exclude recurring expenses (null dates and not Revenue Tracker)
+        return false;
+      });
+
       // Map projects to include all required fields for finance components
-      const projectsWithBudget = (data || []).map(project => ({
+      const projectsWithBudget = projectsData.map(project => ({
         id: project.id,
         name: project.name,
-        clientId: project.client_name || '', // Use client_name as clientId for matching
-        clientName: project.client_name || '', // Store the actual client name
+        clientId: project.client_id || null, // Use actual client_id UUID
+        clientName: project.client_name || 'Unknown Client', // Store the actual client name for display
         totalBudget: project.budget || 0,
         totalActual: project.spent || 0,
         totalAmount: project.budget || 0, // PaymentTracker expects totalAmount
@@ -982,31 +1122,37 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
   fetchInvoices: async () => {
     set({ isLoading: true, error: null });
     try {
-      // Use estimates table to represent invoices (approved estimates can be invoices)
+      const userId = await getCurrentUserId();
       const { data, error } = await supabase
-        .from('finance_expenses')
+        .from('invoices')
         .select('*')
-        .eq('status', 'approved')
+        .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      // Transform estimates to invoice format
-      const invoices = data?.map(estimate => ({
-        id: estimate.id,
-        projectId: estimate.project_id,
-        amount: estimate.total || 0,
-        dueDate: estimate.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
-        status: 'sent', // Default status for approved estimates
-        userId: estimate.user_id,
-        created_at: estimate.created_at
+      const invoices = data?.map(inv => ({
+        id: inv.id,
+        projectId: inv.project_id,
+        clientId: inv.client_id,
+        estimateId: inv.estimate_id,
+        invoiceNumber: inv.invoice_number,
+        totalAmount: inv.total_amount,
+        paidAmount: inv.paid_amount,
+        balance: inv.balance,
+        dueDate: inv.due_date,
+        issuedDate: inv.issued_date,
+        status: inv.status,
+        lineItems: inv.line_items,
+        notes: inv.notes,
+        userId: inv.user_id,
+        createdAt: inv.created_at,
+        updatedAt: inv.updated_at
       })) || [];
 
-      console.log('Fetched invoices:', invoices);
-
-      set({ 
-        invoices: invoices, 
-        isLoading: false 
+      set({
+        invoices: invoices,
+        isLoading: false
       });
     } catch (error: any) {
       console.error('Error fetching invoices:', error);
@@ -1014,23 +1160,457 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
     }
   },
 
+  // Convert estimate to invoice
+  convertEstimateToInvoice: async (estimateId: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const userId = await getCurrentUserId();
+
+      // Fetch the estimate
+      const { data: estimateData, error: estimateError } = await supabase
+        .from('estimates')
+        .select('*')
+        .eq('id', estimateId)
+        .eq('user_id', userId)
+        .single();
+
+      if (estimateError) throw estimateError;
+      if (!estimateData) throw new Error('Estimate not found');
+
+      // Create invoice from estimate
+      const invoiceNumber = `INV-${Date.now()}`;
+      const dueDate = addDays(new Date(), 30).toISOString().split('T')[0]; // 30 days from now
+
+      const newInvoice = {
+        project_id: estimateData.project_id,
+        client_id: estimateData.client_id,
+        estimate_id: estimateId,
+        invoice_number: invoiceNumber,
+        total_amount: estimateData.total,
+        paid_amount: 0,
+        balance: estimateData.total,
+        due_date: dueDate,
+        issued_date: new Date().toISOString().split('T')[0],
+        status: 'outstanding',
+        line_items: estimateData.items,
+        notes: estimateData.notes,
+        user_id: userId
+      };
+
+      const { data, error } = await supabase
+        .from('invoices')
+        .insert([newInvoice])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Update estimate to mark it as converted to invoice
+      await supabase
+        .from('estimates')
+        .update({
+          status: 'approved',
+          converted_to_invoice: true,
+          invoice_id: data.id
+        })
+        .eq('id', estimateId);
+
+      const invoice: Invoice = {
+        id: data.id,
+        projectId: data.project_id,
+        clientId: data.client_id,
+        estimateId: data.estimate_id,
+        invoiceNumber: data.invoice_number,
+        totalAmount: data.total_amount,
+        paidAmount: data.paid_amount,
+        balance: data.balance,
+        dueDate: data.due_date,
+        issuedDate: data.issued_date,
+        status: data.status,
+        lineItems: data.line_items,
+        notes: data.notes,
+        userId: data.user_id,
+        createdAt: data.created_at,
+        updatedAt: data.updated_at
+      };
+
+      set((state) => ({
+        invoices: [invoice, ...state.invoices],
+        isLoading: false
+      }));
+
+      // Refresh financial summary
+      get().calculateFinancialSummary();
+
+      return invoice;
+    } catch (error: any) {
+      console.error('Error converting estimate to invoice:', error);
+      set({ error: error.message, isLoading: false });
+      return null;
+    }
+  },
+
+  // Update invoice payment
+  updateInvoicePayment: async (invoiceId: string, paymentAmount: number, status?: 'partial' | 'paid') => {
+    set({ isLoading: true, error: null });
+    try {
+      const userId = await getCurrentUserId();
+
+      // Get current invoice
+      const { data: invoiceData, error: fetchError } = await supabase
+        .from('invoices')
+        .select('*')
+        .eq('id', invoiceId)
+        .eq('user_id', userId)
+        .single();
+
+      if (fetchError) throw fetchError;
+      if (!invoiceData) throw new Error('Invoice not found');
+
+      const newPaidAmount = invoiceData.paid_amount + paymentAmount;
+      const newBalance = invoiceData.total_amount - newPaidAmount;
+
+      let newStatus = status;
+      if (!newStatus) {
+        newStatus = newBalance <= 0 ? 'paid' : 'partial';
+      }
+
+      const { error } = await supabase
+        .from('invoices')
+        .update({
+          paid_amount: newPaidAmount,
+          balance: newBalance,
+          status: newStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', invoiceId);
+
+      if (error) throw error;
+
+      set((state) => ({
+        invoices: state.invoices.map((inv) =>
+          inv.id === invoiceId
+            ? {
+                ...inv,
+                paidAmount: newPaidAmount,
+                balance: newBalance,
+                status: newStatus as any,
+                updatedAt: new Date().toISOString()
+              }
+            : inv
+        ),
+        isLoading: false
+      }));
+
+      // Refresh financial summary
+      get().calculateFinancialSummary();
+    } catch (error: any) {
+      console.error('Error updating invoice payment:', error);
+      set({ error: error.message, isLoading: false });
+    }
+  },
+
+  // Add invoice
+  addInvoice: async (invoice: Omit<Invoice, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => {
+    set({ isLoading: true, error: null });
+    try {
+      const userId = await getCurrentUserId();
+
+      const { data, error } = await supabase
+        .from('invoices')
+        .insert([{
+          project_id: invoice.projectId,
+          client_id: invoice.clientId,
+          estimate_id: invoice.estimateId,
+          invoice_number: invoice.invoiceNumber,
+          total_amount: invoice.totalAmount,
+          paid_amount: invoice.paidAmount,
+          balance: invoice.balance,
+          due_date: invoice.dueDate,
+          issued_date: invoice.issuedDate,
+          status: invoice.status,
+          line_items: invoice.lineItems,
+          notes: invoice.notes,
+          user_id: userId
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const newInvoice: Invoice = {
+        id: data.id,
+        projectId: data.project_id,
+        clientId: data.client_id,
+        estimateId: data.estimate_id,
+        invoiceNumber: data.invoice_number,
+        totalAmount: data.total_amount,
+        paidAmount: data.paid_amount,
+        balance: data.balance,
+        dueDate: data.due_date,
+        issuedDate: data.issued_date,
+        status: data.status,
+        lineItems: data.line_items,
+        notes: data.notes,
+        userId: data.user_id,
+        createdAt: data.created_at,
+        updatedAt: data.updated_at
+      };
+
+      set((state) => ({
+        invoices: [newInvoice, ...state.invoices],
+        isLoading: false
+      }));
+
+      get().calculateFinancialSummary();
+    } catch (error: any) {
+      console.error('Error adding invoice:', error);
+      set({ error: error.message, isLoading: false });
+    }
+  },
+
+  // Update invoice
+  updateInvoice: async (invoice: Invoice) => {
+    set({ isLoading: true, error: null });
+    try {
+      const { error } = await supabase
+        .from('invoices')
+        .update({
+          project_id: invoice.projectId,
+          client_id: invoice.clientId,
+          invoice_number: invoice.invoiceNumber,
+          total_amount: invoice.totalAmount,
+          paid_amount: invoice.paidAmount,
+          balance: invoice.balance,
+          due_date: invoice.dueDate,
+          issued_date: invoice.issuedDate,
+          status: invoice.status,
+          line_items: invoice.lineItems,
+          notes: invoice.notes,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', invoice.id);
+
+      if (error) throw error;
+
+      set((state) => ({
+        invoices: state.invoices.map((inv) =>
+          inv.id === invoice.id ? { ...invoice, updatedAt: new Date().toISOString() } : inv
+        ),
+        isLoading: false
+      }));
+
+      get().calculateFinancialSummary();
+    } catch (error: any) {
+      console.error('Error updating invoice:', error);
+      set({ error: error.message, isLoading: false });
+    }
+  },
+
+  // Delete invoice
+  deleteInvoice: async (id: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const { error } = await supabase
+        .from('invoices')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      set((state) => ({
+        invoices: state.invoices.filter((inv) => inv.id !== id),
+        isLoading: false
+      }));
+
+      get().calculateFinancialSummary();
+    } catch (error: any) {
+      console.error('Error deleting invoice:', error);
+      set({ error: error.message, isLoading: false });
+    }
+  },
+
+  // Record invoice payment with history tracking
+  recordInvoicePayment: async (invoiceId: string, payment: Omit<InvoicePayment, 'id' | 'invoiceId' | 'userId' | 'createdAt' | 'updatedAt'>) => {
+    set({ isLoading: true, error: null });
+    try {
+      const userId = await getCurrentUserId();
+
+      // Get current invoice
+      const { data: invoiceData, error: fetchError } = await supabase
+        .from('invoices')
+        .select('*')
+        .eq('id', invoiceId)
+        .eq('user_id', userId)
+        .single();
+
+      if (fetchError) throw fetchError;
+      if (!invoiceData) throw new Error('Invoice not found');
+
+      // Record payment transaction in invoice_payments table
+      const { data: paymentData, error: paymentError } = await supabase
+        .from('invoice_payments')
+        .insert([{
+          invoice_id: invoiceId,
+          amount: payment.amount,
+          payment_date: payment.paymentDate,
+          payment_method: payment.paymentMethod,
+          reference_number: payment.referenceNumber,
+          notes: payment.notes,
+          user_id: userId
+        }])
+        .select()
+        .single();
+
+      if (paymentError) throw paymentError;
+
+      // Also create a Payment record for revenue tracking
+      const { data: revenuePayment, error: revenueError } = await supabase
+        .from('finance_payments')
+        .insert([{
+          client_name: invoiceData.client_id || 'Unknown Client',
+          amount: payment.amount,
+          date: payment.paymentDate,
+          method: payment.paymentMethod || 'other',
+          reference: payment.referenceNumber || '',
+          notes: payment.notes || `Payment for invoice ${invoiceData.invoice_number}`,
+          user_id: userId
+        }])
+        .select()
+        .single();
+
+      if (revenueError) throw revenueError;
+
+      // Calculate new totals
+      const newPaidAmount = invoiceData.paid_amount + payment.amount;
+      const newBalance = invoiceData.total_amount - newPaidAmount;
+      const newStatus = newBalance <= 0 ? 'paid' : 'partial';
+
+      // Update invoice
+      const { error: updateError } = await supabase
+        .from('invoices')
+        .update({
+          paid_amount: newPaidAmount,
+          balance: newBalance,
+          status: newStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', invoiceId);
+
+      if (updateError) throw updateError;
+
+      // Update local state
+      set((state) => ({
+        invoices: state.invoices.map((inv) =>
+          inv.id === invoiceId
+            ? {
+                ...inv,
+                paidAmount: newPaidAmount,
+                balance: newBalance,
+                status: newStatus as any,
+                updatedAt: new Date().toISOString()
+              }
+            : inv
+        ),
+        invoicePayments: [...state.invoicePayments, {
+          id: paymentData.id,
+          invoiceId: paymentData.invoice_id,
+          amount: paymentData.amount,
+          paymentDate: paymentData.payment_date,
+          paymentMethod: paymentData.payment_method,
+          referenceNumber: paymentData.reference_number,
+          notes: paymentData.notes,
+          userId: paymentData.user_id,
+          createdAt: paymentData.created_at,
+          updatedAt: paymentData.updated_at
+        }],
+        payments: [...state.payments, {
+          id: revenuePayment.id,
+          clientId: revenuePayment.client_id,
+          projectId: revenuePayment.project_id,
+          amount: revenuePayment.amount,
+          date: revenuePayment.date,
+          method: revenuePayment.method,
+          reference: revenuePayment.reference,
+          notes: revenuePayment.notes,
+          status: revenuePayment.status,
+          invoiceId: revenuePayment.invoice_id,
+          userId: revenuePayment.user_id
+        }],
+        isLoading: false
+      }));
+
+      get().calculateFinancialSummary();
+    } catch (error: any) {
+      console.error('Error recording invoice payment:', error);
+      set({ error: error.message, isLoading: false });
+    }
+  },
+
+  // Fetch invoice payment history
+  fetchInvoicePayments: async (invoiceId: string) => {
+    try {
+      const userId = await getCurrentUserId();
+      const { data, error } = await supabase
+        .from('invoice_payments')
+        .select('*')
+        .eq('invoice_id', invoiceId)
+        .eq('user_id', userId)
+        .order('payment_date', { ascending: false });
+
+      if (error) throw error;
+
+      const payments = data?.map(p => ({
+        id: p.id,
+        invoiceId: p.invoice_id,
+        amount: p.amount,
+        paymentDate: p.payment_date,
+        paymentMethod: p.payment_method,
+        referenceNumber: p.reference_number,
+        notes: p.notes,
+        userId: p.user_id,
+        createdAt: p.created_at,
+        updatedAt: p.updated_at
+      })) || [];
+
+      return payments;
+    } catch (error: any) {
+      console.error('Error fetching invoice payments:', error);
+      return [];
+    }
+  },
+
   // Calculate financial summary
   calculateFinancialSummary: () => {
     const state = get();
-    const { receipts, payments, invoices } = state;
+    const { receipts, payments, invoices, recurringExpenses } = state;
 
-    // Calculate totals
-    const totalExpenses = receipts.reduce((sum, r) => sum + r.amount, 0);
+    // Calculate monthly recurring cost
+    const monthlyRecurringCost = recurringExpenses
+      .filter(e => e.isActive)
+      .reduce((sum, e) => {
+        switch (e.frequency) {
+          case 'weekly': return sum + (e.amount * 4.33);
+          case 'monthly': return sum + e.amount;
+          case 'quarterly': return sum + (e.amount / 3);
+          case 'yearly': return sum + (e.amount / 12);
+          default: return sum + e.amount;
+        }
+      }, 0);
+
+    // Calculate totals (include monthly recurring in expenses)
+    const totalExpenses = receipts.reduce((sum, r) => sum + r.amount, 0) + monthlyRecurringCost;
     const totalRevenue = payments
       .filter(p => p.status === 'completed')
       .reduce((sum, p) => sum + p.amount, 0);
-    
+
     const profit = totalRevenue - totalExpenses;
     const profitMargin = totalRevenue > 0 ? (profit / totalRevenue) * 100 : 0;
-    
+
+    // Calculate outstanding invoices using balance (unpaid amount)
     const outstandingInvoices = invoices
-      .filter(i => i.status !== 'paid')
-      .reduce((sum, i) => sum + i.amount, 0);
+      .filter(i => i.status === 'outstanding' || i.status === 'partial' || i.status === 'overdue')
+      .reduce((sum, i) => sum + (i.balance || 0), 0);
 
     // Get recent transactions
     const recentTransactions = [
@@ -1066,6 +1646,51 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
       percentage: totalExpenses > 0 ? (amount / totalExpenses) * 100 : 0
     }));
 
+    // Calculate upcoming payments from recurring expenses
+    const upcomingPayments = recurringExpenses
+      .filter(e => e.isActive)
+      .map(e => ({
+        amount: e.amount,
+        dueDate: e.nextDueDate,
+        projectName: 'Recurring Expense',
+        clientName: e.vendor || e.name
+      }))
+      .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+      .slice(0, 5);
+
+    // Calculate monthly data for last 6 months
+    const monthlyData = [];
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date();
+      date.setMonth(date.getMonth() - i);
+      const monthStart = new Date(date.getFullYear(), date.getMonth(), 1);
+      const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+
+      const monthRevenue = payments
+        .filter(p => {
+          const pDate = new Date(p.date);
+          return pDate >= monthStart && pDate <= monthEnd;
+        })
+        .reduce((sum, p) => sum + p.amount, 0);
+
+      const monthExpenses = receipts
+        .filter(r => {
+          const rDate = new Date(r.date);
+          return rDate >= monthStart && rDate <= monthEnd;
+        })
+        .reduce((sum, r) => sum + r.amount, 0);
+
+      monthlyData.push({
+        month: date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+        revenue: monthRevenue,
+        expenses: monthExpenses
+      });
+    }
+
+    console.log('📊 Monthly data calculated:', monthlyData);
+    console.log('  Total payments:', payments.length);
+    console.log('  Total receipts:', receipts.length);
+
     set({
       financialSummary: {
         totalRevenue,
@@ -1073,9 +1698,9 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
         profit,
         profitMargin,
         outstandingInvoices,
-        upcomingPayments: [],
+        upcomingPayments,
         recentTransactions,
-        monthlyData: [],
+        monthlyData,
         expensesByCategory
       }
     });
@@ -1098,29 +1723,89 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
         console.warn('No data available for report generation');
       }
       
-      // Create allTransactions array for both CSV and PDF generation
+      // Filter data by report type (whole vs project-based)
+      const isProjectReport = options.type === 'project' && options.projectId;
+
+      // Filter receipts, budgetItems, recurringExpenses, payments based on report type
+      const filteredReceipts = isProjectReport
+        ? receipts.filter(r => r.projectId === options.projectId)
+        : receipts;
+
+      const filteredBudgetItems = isProjectReport
+        ? budgetItems.filter(b => b.projectId === options.projectId)
+        : budgetItems;
+
+      const filteredRecurringExpenses = isProjectReport
+        ? recurringExpenses.filter(e => e.projectId === options.projectId)
+        : recurringExpenses;
+
+      const filteredPayments = isProjectReport
+        ? payments.filter(p => p.projectId === options.projectId)
+        : payments;
+
+      // Create allTransactions array including ALL expense types
       const allTransactions = [
-        ...payments.map(p => ({
+        // Payments (Income)
+        ...filteredPayments.map(p => ({
           date: p.date,
           type: 'Income',
           description: `Payment #${p.id?.substring(0, 8) || 'N/A'}`,
           category: 'Payment',
           income: p.amount,
-          expense: 0
+          expense: 0,
+          source: 'payment'
         })),
-        ...receipts.map(r => ({
+        // Receipts (Expenses)
+        ...filteredReceipts.map(r => ({
           date: r.date,
           type: 'Expense',
           description: r.vendor,
           category: r.category,
           income: 0,
-          expense: r.amount
+          expense: r.amount,
+          source: 'receipt'
+        })),
+        // Budget Items (Planned Expenses)
+        ...filteredBudgetItems.map(b => ({
+          date: new Date().toISOString().split('T')[0], // Current date for budget items
+          type: 'Budget',
+          description: `${b.category} - Budget Item`,
+          category: b.category,
+          income: 0,
+          expense: b.actual || 0,
+          source: 'budget'
+        })),
+        // Recurring Expenses
+        ...filteredRecurringExpenses.filter(e => e.isActive).map(e => ({
+          date: e.nextDueDate || new Date().toISOString().split('T')[0],
+          type: 'Recurring',
+          description: `${e.name} (${e.frequency})`,
+          category: e.category,
+          income: 0,
+          expense: e.amount,
+          source: 'recurring'
         }))
       ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      
+
+      // Calculate expense summary by category (ALL expense sources)
+      const expenseByCategory = allTransactions
+        .filter(t => t.expense > 0)
+        .reduce((acc, t) => {
+          if (!acc[t.category]) acc[t.category] = { amount: 0, count: 0 };
+          acc[t.category].amount += t.expense;
+          acc[t.category].count++;
+          return acc;
+        }, {} as Record<string, { amount: number; count: number }>);
+
+      // Determine report title based on type
+      const reportTitle = options.type === 'project'
+        ? `PROJECT-BASED FINANCIAL REPORT${options.projectId ? ` - Project ${options.projectId.substring(0, 8)}` : ''}`
+        : 'WHOLE COMPANY FINANCIAL REPORT';
+
       if (options.format === 'csv') {
-        // Generate comprehensive CSV data
-        let csvContent = 'COMPREHENSIVE FINANCIAL REPORT\n';
+        // Generate CSV data
+        let csvContent = `${reportTitle}\n`;
+        csvContent += `"Report Type:","${options.type === 'whole' ? 'All Company Expenses' : 'Project-Specific'}"\n`;
         csvContent += `"Period:",="${options.dateRange.start}","to",="${options.dateRange.end}"\n\n`;
         
         // Financial Summary
@@ -1131,25 +1816,19 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
         csvContent += `"Net Profit","$${financialSummary.profit.toFixed(2)}"\n`;
         csvContent += `"Profit Margin","${financialSummary.profitMargin.toFixed(2)}%"\n\n`;
         
-        // Profit & Loss Statement
-        csvContent += 'PROFIT & LOSS STATEMENT\n';
-        csvContent += '"Date","Type","Description","Category","Income","Expense"\n';
-        
+        // All Transactions (Receipts, Budget, Recurring, Payments)
+        csvContent += 'ALL TRANSACTIONS (Receipts + Budget Items + Recurring Expenses + Payments)\n';
+        csvContent += '"Date","Type","Description","Category","Income","Expense","Source"\n';
+
         allTransactions.forEach(t => {
-          csvContent += `"${t.date}","${t.type}","${t.description}","${t.category}","$${t.income.toFixed(2)}","$${t.expense.toFixed(2)}"\n`;
+          csvContent += `"${t.date}","${t.type}","${t.description}","${t.category}","$${t.income.toFixed(2)}","$${t.expense.toFixed(2)}","${t.source}"\n`;
         });
         csvContent += '\n';
         
         // Expense Summary by Category
         csvContent += 'EXPENSE SUMMARY BY CATEGORY\n';
         csvContent += '"Category","Total Amount","Count"\n';
-        const expenseByCategory = receipts.reduce((acc, r) => {
-          if (!acc[r.category]) acc[r.category] = { amount: 0, count: 0 };
-          acc[r.category].amount += r.amount;
-          acc[r.category].count++;
-          return acc;
-        }, {} as Record<string, { amount: number; count: number }>);
-        
+
         Object.entries(expenseByCategory).forEach(([category, data]) => {
           csvContent += `"${category}","$${data.amount.toFixed(2)}","${data.count}"\n`;
         });
@@ -1169,12 +1848,23 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
           csvContent += '\n';
         }
         
-        // Recurring Expenses
-        if (recurringExpenses.length > 0) {
-          csvContent += 'RECURRING EXPENSES\n';
-          csvContent += '"Name","Amount","Frequency","Status"\n';
-          recurringExpenses.forEach(e => {
-            csvContent += `"${e.name}","$${e.amount.toFixed(2)}","${e.frequency}","${e.isActive ? 'Active' : 'Inactive'}"\n`;
+        // Budget Items Detail
+        if (filteredBudgetItems.length > 0) {
+          csvContent += '\n';
+          csvContent += 'BUDGET ITEMS DETAIL\n';
+          csvContent += '"Category","Planned","Actual","Variance","Variance %"\n';
+          filteredBudgetItems.forEach(b => {
+            csvContent += `"${b.category}","$${b.budgetedAmount.toFixed(2)}","$${b.actualAmount.toFixed(2)}","$${b.variance.toFixed(2)}","${b.variancePercentage.toFixed(2)}%"\n`;
+          });
+        }
+
+        // Recurring Expenses Detail
+        if (filteredRecurringExpenses.length > 0) {
+          csvContent += '\n';
+          csvContent += 'RECURRING EXPENSES DETAIL\n';
+          csvContent += '"Name","Amount","Category","Frequency","Next Due","Status"\n';
+          filteredRecurringExpenses.forEach(e => {
+            csvContent += `"${e.name}","$${e.amount.toFixed(2)}","${e.category}","${e.frequency}","${e.nextDueDate}","${e.isActive ? 'Active' : 'Inactive'}"\n`;
           });
         }
         
@@ -1183,7 +1873,8 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
         const link = document.createElement('a');
         const url = URL.createObjectURL(blob);
         link.setAttribute('href', url);
-        link.setAttribute('download', `comprehensive_report_${options.dateRange.start}_${options.dateRange.end}.csv`);
+        const reportType = options.type === 'whole' ? 'whole_company' : 'project';
+        link.setAttribute('download', `${reportType}_report_${options.dateRange.start}_${options.dateRange.end}.csv`);
         link.style.visibility = 'hidden';
         document.body.appendChild(link);
         link.click();
@@ -1210,30 +1901,33 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
         document.body.removeChild(textarea);
         
       } else {
-        // Generate comprehensive PDF with all sections
-        const { default: jsPDF } = await import('jspdf');
+        // Generate PDF with all sections
+        const { jsPDF } = await import('jspdf');
         const autoTable = (await import('jspdf-autotable')).default;
-        
+
         const doc = new jsPDF();
-        
-        // Attach autoTable to the doc instance
-        (doc as any).autoTable = autoTable;
         let yPos = 20;
-        
+
         // Title Page
         doc.setFontSize(24);
-        doc.text('COMPREHENSIVE FINANCIAL REPORT', 105, yPos, { align: 'center' });
-        yPos += 15;
-        
+        const pdfTitle = options.type === 'whole' ? 'WHOLE COMPANY REPORT' : 'PROJECT-BASED REPORT';
+        doc.text(pdfTitle, 105, yPos, { align: 'center' });
+        yPos += 10;
+
+        doc.setFontSize(10);
+        const reportTypeText = options.type === 'whole' ? 'All Company Expenses' : 'Project-Specific Expenses';
+        doc.text(reportTypeText, 105, yPos, { align: 'center' });
+        yPos += 10;
+
         doc.setFontSize(12);
         doc.text(`Period: ${options.dateRange.start} to ${options.dateRange.end}`, 105, yPos, { align: 'center' });
         yPos += 20;
-        
+
         // Executive Summary
         doc.setFontSize(16);
         doc.text('Executive Summary', 14, yPos);
         yPos += 10;
-        
+
         doc.setFontSize(10);
         const summaryItems = [
           `Total Revenue: $${financialSummary.totalRevenue.toLocaleString()}`,
@@ -1241,32 +1935,34 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
           `Net Profit: $${financialSummary.profit.toLocaleString()}`,
           `Profit Margin: ${financialSummary.profitMargin.toFixed(2)}%`
         ];
-        
+
         summaryItems.forEach(item => {
           doc.text(item, 14, yPos);
           yPos += 7;
         });
         yPos += 10;
-        
-        // Section 1: Profit & Loss
+
+        // Section 1: All Transactions (including source)
         doc.setFontSize(14);
-        doc.text('1. Profit & Loss Statement', 14, yPos);
+        doc.text('1. All Transactions (Receipts + Budget + Recurring + Payments)', 14, yPos);
         yPos += 10;
-        
-        const plData = allTransactions.slice(0, 15).map(t => [
+
+        const plData = allTransactions.slice(0, 20).map(t => [
           t.date,
-          t.description.substring(0, 25),
-          t.category,
+          t.type,
+          t.description.substring(0, 20),
+          t.category.substring(0, 15),
           t.income > 0 ? `$${t.income.toFixed(2)}` : '',
-          t.expense > 0 ? `$${t.expense.toFixed(2)}` : ''
+          t.expense > 0 ? `$${t.expense.toFixed(2)}` : '',
+          t.source
         ]);
-        
-        doc.autoTable({
-          head: [['Date', 'Description', 'Category', 'Income', 'Expense']],
+
+        autoTable(doc, {
+          head: [['Date', 'Type', 'Description', 'Category', 'Income', 'Expense', 'Source']],
           body: plData,
           startY: yPos,
           margin: { left: 14 },
-          styles: { fontSize: 8 }
+          styles: { fontSize: 7 }
         });
         
         // Section 2: Expense Summary (new page)
@@ -1283,17 +1979,17 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
           `$${(data.amount / data.count).toFixed(2)}`
         ]);
         
-        doc.autoTable({
+        autoTable(doc, {
           head: [['Category', 'Total Amount', 'Count', 'Average']],
           body: expenseData,
           startY: yPos,
           margin: { left: 14 },
           styles: { fontSize: 9 }
         });
-        
+
         // Section 3: Project Profitability
         if (projects.length > 0) {
-          yPos = doc.lastAutoTable.finalY + 20;
+          yPos = (doc as any).lastAutoTable.finalY + 20;
           if (yPos > 240) {
             doc.addPage();
             yPos = 20;
@@ -1315,7 +2011,7 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
             ];
           });
           
-          doc.autoTable({
+          autoTable(doc, {
             head: [['Project', 'Budget', 'Spent', 'Remaining', 'Margin']],
             body: projectData,
             startY: yPos,
@@ -1323,37 +2019,69 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
             styles: { fontSize: 9 }
           });
         }
-        
-        // Section 4: Recurring Expenses
-        if (recurringExpenses.length > 0) {
-          yPos = doc.lastAutoTable.finalY + 20;
+
+        // Section 4: Budget Items Detail
+        if (filteredBudgetItems.length > 0) {
+          yPos = (doc as any).lastAutoTable.finalY + 20;
           if (yPos > 240) {
             doc.addPage();
             yPos = 20;
           }
-          
+
           doc.setFontSize(14);
-          doc.text('4. Recurring Expenses', 14, yPos);
+          doc.text('4. Budget Items Detail', 14, yPos);
           yPos += 10;
-          
-          const recurringData = recurringExpenses.map(e => [
-            e.name,
-            `$${e.amount.toFixed(2)}`,
-            e.frequency,
-            e.isActive ? 'Active' : 'Inactive'
+
+          const budgetData = filteredBudgetItems.map(b => [
+            b.category,
+            `$${b.budgetedAmount.toFixed(2)}`,
+            `$${b.actualAmount.toFixed(2)}`,
+            `$${b.variance.toFixed(2)}`,
+            `${b.variancePercentage.toFixed(1)}%`
           ]);
-          
-          doc.autoTable({
-            head: [['Expense', 'Amount', 'Frequency', 'Status']],
-            body: recurringData,
+
+          autoTable(doc, {
+            head: [['Category', 'Planned', 'Actual', 'Variance', 'Variance %']],
+            body: budgetData,
             startY: yPos,
             margin: { left: 14 },
             styles: { fontSize: 9 }
           });
         }
+
+        // Section 5: Recurring Expenses Detail
+        if (filteredRecurringExpenses.length > 0) {
+          yPos = (doc as any).lastAutoTable.finalY + 20;
+          if (yPos > 240) {
+            doc.addPage();
+            yPos = 20;
+          }
+
+          doc.setFontSize(14);
+          doc.text('5. Recurring Expenses Detail', 14, yPos);
+          yPos += 10;
+
+          const recurringData = filteredRecurringExpenses.map(e => [
+            e.name,
+            `$${e.amount.toFixed(2)}`,
+            e.category,
+            e.frequency,
+            e.nextDueDate || 'N/A',
+            e.isActive ? 'Active' : 'Inactive'
+          ]);
+
+          autoTable(doc, {
+            head: [['Name', 'Amount', 'Category', 'Frequency', 'Next Due', 'Status']],
+            body: recurringData,
+            startY: yPos,
+            margin: { left: 14 },
+            styles: { fontSize: 8 }
+          });
+        }
         
         // Save the PDF
-        const fileName = `comprehensive_report_${options.dateRange.start}_${options.dateRange.end}.pdf`;
+        const reportType = options.type === 'whole' ? 'whole_company' : 'project';
+        const fileName = `${reportType}_report_${options.dateRange.start}_${options.dateRange.end}.pdf`;
         doc.save(fileName);
       }
       

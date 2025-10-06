@@ -49,16 +49,19 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, team, onAddTask, onUpdateTas
     const titleEl = document.getElementById('edit-title') as HTMLInputElement;
     const statusEl = document.getElementById('edit-status') as HTMLSelectElement;
     const priorityEl = document.getElementById('edit-priority') as HTMLSelectElement;
-    const assigneeEl = document.getElementById('edit-assignee') as HTMLSelectElement;
     const dueDateEl = document.getElementById('edit-due-date') as HTMLInputElement;
     const descriptionEl = document.getElementById('edit-description') as HTMLTextAreaElement;
-    
+
+    // Get checked assignees from checkboxes
+    const assigneeCheckboxes = document.querySelectorAll('input[name="assignee-checkbox"]:checked');
+    const assignees = Array.from(assigneeCheckboxes).map((checkbox: any) => checkbox.value).filter(v => v);
+
     if (onUpdateTask && titleEl) {
       onUpdateTask(taskId, {
         title: titleEl.value,
         status: statusEl.value as any,
         priority: priorityEl.value as any,
-        assignee: assigneeEl.value,
+        assignee: assignees.length > 0 ? assignees.join(',') : '',
         dueDate: dueDateEl.value,
         description: descriptionEl.value
       });
@@ -244,7 +247,26 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, team, onAddTask, onUpdateTas
                         <span className="mx-2 text-gray-500">•</span>
                         <div className="flex items-center text-sm text-gray-500">
                           <User className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" />
-                          <span>{team.find(m => m.id === task.assignee)?.name || 'Unassigned'}</span>
+                          <span>
+                            {(() => {
+                              const isUUID = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+
+                              if (Array.isArray(task.assignee)) {
+                                const names = task.assignee
+                                  .map(id => team.find(m => m.id === id)?.name || (!isUUID(id) ? id : null))
+                                  .filter(Boolean);
+                                return names.length > 0 ? names.join(', ') : 'Unassigned';
+                              }
+
+                              const memberById = team.find(m => m.id === task.assignee);
+                              const memberByName = team.find(m => m.name === task.assignee);
+
+                              if (memberById) return memberById.name;
+                              if (memberByName) return memberByName.name;
+                              if (task.assignee && !isUUID(task.assignee)) return task.assignee;
+                              return 'Unassigned';
+                            })()}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -310,17 +332,28 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, team, onAddTask, onUpdateTas
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label htmlFor="edit-assignee" className="block text-sm font-medium text-gray-700">Assignee</label>
-                            <select
-                              id="edit-assignee"
-                              defaultValue={task.assignee}
-                              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                            >
-                              <option value="">Unassigned</option>
-                              {team.map(member => (
-                                <option key={member.id} value={member.id}>{member.name}</option>
-                              ))}
-                            </select>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Assignees</label>
+                            <div className="mt-1 max-h-32 overflow-y-auto border border-gray-300 rounded-md p-2 bg-white">
+                              {team.map(member => {
+                                const currentAssignees = Array.isArray(task.assignee)
+                                  ? task.assignee
+                                  : (task.assignee ? task.assignee.split(',') : []);
+                                const isChecked = currentAssignees.includes(member.id) || currentAssignees.includes(member.name);
+
+                                return (
+                                  <div key={member.id} className="flex items-center mb-1">
+                                    <input
+                                      type="checkbox"
+                                      name="assignee-checkbox"
+                                      value={member.id}
+                                      defaultChecked={isChecked}
+                                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                    />
+                                    <label className="ml-2 text-sm text-gray-700">{member.name}</label>
+                                  </div>
+                                );
+                              })}
+                            </div>
                           </div>
                           <div>
                             <label htmlFor="edit-due-date" className="block text-sm font-medium text-gray-700">Due Date</label>
@@ -385,23 +418,54 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, team, onAddTask, onUpdateTas
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                           <div>
-                            <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Assignee</h4>
-                            <div className="mt-1 flex items-center">
-                              {team.find(m => m.id === task.assignee)?.avatar ? (
-                                <img 
-                                  src={team.find(m => m.id === task.assignee)?.avatar} 
-                                  alt={team.find(m => m.id === task.assignee)?.name} 
-                                  className="h-8 w-8 rounded-full"
-                                />
-                              ) : (
-                                <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
-                                  <User className="h-4 w-4 text-gray-500" />
-                                </div>
-                              )}
-                              <div className="ml-3">
-                                <p className="text-sm font-medium text-gray-900">{team.find(m => m.id === task.assignee)?.name || 'Unassigned'}</p>
-                                <p className="text-xs text-gray-500">{team.find(m => m.id === task.assignee)?.role}</p>
-                              </div>
+                            <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Assignees</h4>
+                            <div className="mt-1 space-y-2">
+                              {(() => {
+                                const assigneeIds = Array.isArray(task.assignee)
+                                  ? task.assignee
+                                  : (task.assignee ? (task.assignee.includes(',') ? task.assignee.split(',') : [task.assignee]) : []);
+
+                                if (assigneeIds.length === 0) {
+                                  return (
+                                    <div className="flex items-center">
+                                      <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
+                                        <User className="h-4 w-4 text-gray-500" />
+                                      </div>
+                                      <div className="ml-3">
+                                        <p className="text-sm font-medium text-gray-900">Unassigned</p>
+                                      </div>
+                                    </div>
+                                  );
+                                }
+
+                                return assigneeIds.map(assigneeId => {
+                                  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(assigneeId);
+                                  const member = team.find(m => m.id === assigneeId);
+
+                                  // Skip UUIDs that don't match team members
+                                  if (!member && isUUID) return null;
+
+                                  return (
+                                    <div key={assigneeId} className="flex items-center">
+                                      {member?.avatar ? (
+                                        <img
+                                          src={member.avatar}
+                                          alt={member.name}
+                                          className="h-8 w-8 rounded-full"
+                                        />
+                                      ) : (
+                                        <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
+                                          <User className="h-4 w-4 text-gray-500" />
+                                        </div>
+                                      )}
+                                      <div className="ml-3">
+                                        <p className="text-sm font-medium text-gray-900">{member?.name || assigneeId}</p>
+                                        <p className="text-xs text-gray-500">{member?.role || ''}</p>
+                                      </div>
+                                    </div>
+                                  );
+                                });
+                              })()}
                             </div>
                           </div>
                           

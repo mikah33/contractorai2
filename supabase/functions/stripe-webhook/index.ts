@@ -60,6 +60,16 @@ async function handleEvent(event: Stripe.Event) {
     return;
   }
 
+  // Handle subscription update/delete events directly
+  if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.deleted') {
+    const subscription = stripeData as Stripe.Subscription;
+    const customerId = typeof subscription.customer === 'string' ? subscription.customer : subscription.customer.id;
+
+    console.info(`Processing ${event.type} for customer: ${customerId}`);
+    await syncCustomerFromStripe(customerId);
+    return;
+  }
+
   if (!('customer' in stripeData)) {
     return;
   }
@@ -141,7 +151,7 @@ async function syncCustomerFromStripe(customerId: string) {
       const { error: noSubError } = await supabase.from('stripe_subscriptions').upsert(
         {
           customer_id: customerId,
-          subscription_status: 'not_started',
+          status: 'not_started',
         },
         {
           onConflict: 'customer_id',
@@ -152,10 +162,19 @@ async function syncCustomerFromStripe(customerId: string) {
         console.error('Error updating subscription status:', noSubError);
         throw new Error('Failed to update subscription status in database');
       }
+      return;
     }
 
     // assumes that a customer can only have a single subscription
     const subscription = subscriptions.data[0];
+
+    // For subscriptions with 100% promo codes, dates are in items, not root
+    const periodStartTimestamp = subscription.current_period_start || subscription.items.data[0]?.current_period_start;
+    const periodEndTimestamp = subscription.current_period_end || subscription.items.data[0]?.current_period_end;
+
+    // Convert Unix timestamps to ISO strings for PostgreSQL
+    const periodStart = periodStartTimestamp ? new Date(periodStartTimestamp * 1000).toISOString() : null;
+    const periodEnd = periodEndTimestamp ? new Date(periodEndTimestamp * 1000).toISOString() : null;
 
     // store subscription state
     const { error: subError } = await supabase.from('stripe_subscriptions').upsert(
@@ -163,19 +182,13 @@ async function syncCustomerFromStripe(customerId: string) {
         customer_id: customerId,
         subscription_id: subscription.id,
         price_id: subscription.items.data[0].price.id,
-        current_period_start: subscription.current_period_start,
-        current_period_end: subscription.current_period_end,
+        current_period_start: periodStart,
+        current_period_end: periodEnd,
         cancel_at_period_end: subscription.cancel_at_period_end,
-        ...(subscription.default_payment_method && typeof subscription.default_payment_method !== 'string'
-          ? {
-              payment_method_brand: subscription.default_payment_method.card?.brand ?? null,
-              payment_method_last4: subscription.default_payment_method.card?.last4 ?? null,
-            }
-          : {}),
         status: subscription.status,
       },
       {
-        onConflict: 'customer_id',
+        onConflict: 'subscription_id',
       },
     );
 

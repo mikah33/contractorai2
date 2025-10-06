@@ -46,7 +46,7 @@ const FinanceDashboard: React.FC<FinanceDashboardProps> = ({
   onChangeDateRange,
   onExport
 }) => {
-  const [selectedChart, setSelectedChart] = useState<'revenue' | 'expenses' | 'profit'>('revenue');
+  const [selectedChart, setSelectedChart] = useState<'revenue' | 'expenses' | 'profit'>('profit');
 
   // Calculate date range for display
   const getDateRangeText = () => {
@@ -75,37 +75,86 @@ const FinanceDashboard: React.FC<FinanceDashboardProps> = ({
 
   // Render the bar chart
   const renderBarChart = () => {
-    const maxValue = Math.max(
-      ...summary.monthlyData.map(d => 
-        selectedChart === 'revenue' ? d.revenue : 
-        selectedChart === 'expenses' ? d.expenses : 
-        d.revenue - d.expenses
-      )
-    );
-    
+    // Check if we have data
+    if (!summary.monthlyData || summary.monthlyData.length === 0) {
+      return (
+        <div className="h-64 flex items-center justify-center text-gray-400">
+          <div className="text-center">
+            <p className="text-sm">No data available</p>
+            <p className="text-xs mt-1">Add payments and expenses to see trends</p>
+          </div>
+        </div>
+      );
+    }
+
+    // Calculate profit values
+    const profitValues = summary.monthlyData.map(d => d.revenue - d.expenses);
+    const maxProfit = Math.max(...profitValues, 0);
+    const minProfit = Math.min(...profitValues, 0);
+
+    // Add 30% padding to max value for better visualization
+    const paddedMax = maxProfit * 1.3;
+    const paddedMin = minProfit * 1.3;
+
+    // Round to nearest $1000 for clean axis labels
+    const roundToThousand = (num: number) => Math.ceil(Math.abs(num) / 1000) * 1000 * Math.sign(num || 1);
+    const maxValue = roundToThousand(paddedMax) || 1000;
+    const minValue = roundToThousand(paddedMin);
+    const range = maxValue - minValue;
+
     return (
-      <div className="h-64 flex items-end space-x-2">
-        {summary.monthlyData.map((data, index) => {
-          const value = selectedChart === 'revenue' ? data.revenue : 
-                        selectedChart === 'expenses' ? data.expenses : 
-                        data.revenue - data.expenses;
-          
-          const height = maxValue > 0 ? (value / maxValue) * 100 : 0;
-          
-          return (
-            <div key={index} className="flex-1 flex flex-col items-center">
-              <div 
-                className={`w-full rounded-t ${
-                  selectedChart === 'revenue' ? 'bg-blue-500' : 
-                  selectedChart === 'expenses' ? 'bg-red-500' : 
-                  value >= 0 ? 'bg-green-500' : 'bg-red-500'
-                }`}
-                style={{ height: `${Math.max(height, 1)}%` }}
-              ></div>
-              <div className="text-xs text-gray-500 mt-2">{data.month}</div>
-            </div>
-          );
-        })}
+      <div className="relative">
+        {/* Y-axis labels - rounded to $1000 increments */}
+        <div className="absolute left-0 top-0 bottom-8 w-16 flex flex-col justify-between text-xs text-gray-500">
+          <div>${maxValue.toLocaleString()}</div>
+          <div>${Math.round(maxValue * 0.75).toLocaleString()}</div>
+          <div>${Math.round(maxValue * 0.5).toLocaleString()}</div>
+          <div>${Math.round(maxValue * 0.25).toLocaleString()}</div>
+          <div>${minValue.toLocaleString()}</div>
+        </div>
+
+        {/* Chart area with gridlines */}
+        <div className="ml-16 relative">
+          {/* Horizontal gridlines */}
+          <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
+            {[0, 1, 2, 3, 4].map((i) => (
+              <div key={i} className="border-t border-gray-200"></div>
+            ))}
+          </div>
+
+          {/* Bars */}
+          <div className="h-64 flex items-end space-x-1 relative">
+            {summary.monthlyData.map((data, index) => {
+              const value = data.revenue - data.expenses; // Always show profit
+
+              // Calculate height as percentage of range, offset by minimum value
+              const heightPercent = range > 0 ? ((value - minValue) / range) * 100 : 0;
+
+              return (
+                <div key={index} className="flex-1 flex flex-col items-center group">
+                  <div className="w-full flex items-end justify-center relative" style={{ height: '256px' }}>
+                    {value !== 0 && (
+                      <div
+                        className={`w-full rounded-t-lg transition-all cursor-pointer hover:opacity-80 ${
+                          value >= 0 ? 'bg-gradient-to-t from-green-600 to-green-400' : 'bg-gradient-to-t from-red-600 to-red-400'
+                        } shadow-lg`}
+                        style={{ height: `${Math.max(heightPercent, 5)}%` }}
+                      >
+                        {/* Tooltip on hover */}
+                        <div className="opacity-0 group-hover:opacity-100 absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs rounded py-1 px-2 whitespace-nowrap transition-opacity z-10">
+                          ${value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-xs text-gray-500 mt-2 font-medium">{data.month}</div>
+                  <div className="text-xs text-gray-600 font-semibold">${value.toFixed(0)}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
     );
   };
@@ -195,10 +244,6 @@ const FinanceDashboard: React.FC<FinanceDashboardProps> = ({
                   <dt className="text-sm font-medium text-gray-500 truncate">Total Revenue</dt>
                   <dd className="flex items-baseline">
                     <div className="text-2xl font-semibold text-gray-900">${summary.totalRevenue.toLocaleString()}</div>
-                    <div className="ml-2 flex items-baseline text-sm font-semibold text-green-600">
-                      <TrendingUp className="self-center flex-shrink-0 h-4 w-4 text-green-500" />
-                      <span className="ml-1">12.5%</span>
-                    </div>
                   </dd>
                 </dl>
               </div>
@@ -217,10 +262,6 @@ const FinanceDashboard: React.FC<FinanceDashboardProps> = ({
                   <dt className="text-sm font-medium text-gray-500 truncate">Total Expenses</dt>
                   <dd className="flex items-baseline">
                     <div className="text-2xl font-semibold text-gray-900">${summary.totalExpenses.toLocaleString()}</div>
-                    <div className="ml-2 flex items-baseline text-sm font-semibold text-red-600">
-                      <TrendingUp className="self-center flex-shrink-0 h-4 w-4 text-red-500" />
-                      <span className="ml-1">8.2%</span>
-                    </div>
                   </dd>
                 </dl>
               </div>
@@ -239,10 +280,6 @@ const FinanceDashboard: React.FC<FinanceDashboardProps> = ({
                   <dt className="text-sm font-medium text-gray-500 truncate">Net Profit</dt>
                   <dd className="flex items-baseline">
                     <div className="text-2xl font-semibold text-gray-900">${summary.profit.toLocaleString()}</div>
-                    <div className="ml-2 flex items-baseline text-sm font-semibold text-green-600">
-                      <TrendingUp className="self-center flex-shrink-0 h-4 w-4 text-green-500" />
-                      <span className="ml-1">23.1%</span>
-                    </div>
                   </dd>
                 </dl>
               </div>
@@ -261,10 +298,6 @@ const FinanceDashboard: React.FC<FinanceDashboardProps> = ({
                   <dt className="text-sm font-medium text-gray-500 truncate">Outstanding Invoices</dt>
                   <dd className="flex items-baseline">
                     <div className="text-2xl font-semibold text-gray-900">${summary.outstandingInvoices.toLocaleString()}</div>
-                    <div className="ml-2 flex items-baseline text-sm font-semibold text-red-600">
-                      <TrendingDown className="self-center flex-shrink-0 h-4 w-4 text-red-500" />
-                      <span className="ml-1">4.3%</span>
-                    </div>
                   </dd>
                 </dl>
               </div>
@@ -276,41 +309,7 @@ const FinanceDashboard: React.FC<FinanceDashboardProps> = ({
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         <div className="bg-white overflow-hidden shadow rounded-lg">
           <div className="px-5 py-4 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-medium text-gray-900">Revenue vs. Expenses</h3>
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => setSelectedChart('revenue')}
-                  className={`px-3 py-1 text-xs font-medium rounded-md ${
-                    selectedChart === 'revenue' 
-                      ? 'bg-blue-100 text-blue-800' 
-                      : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                  }`}
-                >
-                  Revenue
-                </button>
-                <button
-                  onClick={() => setSelectedChart('expenses')}
-                  className={`px-3 py-1 text-xs font-medium rounded-md ${
-                    selectedChart === 'expenses' 
-                      ? 'bg-blue-100 text-blue-800' 
-                      : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                  }`}
-                >
-                  Expenses
-                </button>
-                <button
-                  onClick={() => setSelectedChart('profit')}
-                  className={`px-3 py-1 text-xs font-medium rounded-md ${
-                    selectedChart === 'profit' 
-                      ? 'bg-blue-100 text-blue-800' 
-                      : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                  }`}
-                >
-                  Profit
-                </button>
-              </div>
-            </div>
+            <h3 className="text-lg font-medium text-gray-900">Profit Trend</h3>
           </div>
           <div className="p-5">
             {renderBarChart()}
@@ -426,53 +425,6 @@ const FinanceDashboard: React.FC<FinanceDashboardProps> = ({
         </div>
       </div>
 
-      <div className="bg-white overflow-hidden shadow rounded-lg">
-        <div className="px-5 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900">AI Financial Insights</h3>
-        </div>
-        <div className="p-5">
-          <div className="space-y-4">
-            <div className="bg-blue-50 border-l-4 border-blue-400 p-4">
-              <div className="flex">
-                <div className="flex-shrink-0">
-                  <TrendingUp className="h-5 w-5 text-blue-400" />
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm text-blue-700">
-                    <span className="font-medium">Cash Flow Prediction:</span> Based on your current revenue and expense patterns, you're projected to have a positive cash flow of approximately $12,500 next month.
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
-              <div className="flex">
-                <div className="flex-shrink-0">
-                  <AlertCircle className="h-5 w-5 text-yellow-400" />
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm text-yellow-700">
-                    <span className="font-medium">Budget Alert:</span> No active projects to monitor.
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-green-50 border-l-4 border-green-400 p-4">
-              <div className="flex">
-                <div className="flex-shrink-0">
-                  <TrendingUp className="h-5 w-5 text-green-400" />
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm text-green-700">
-                    <span className="font-medium">Profit Opportunity:</span> Your bathroom renovation projects have a 35% higher profit margin than your kitchen projects. Consider focusing marketing efforts on bathroom renovations.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

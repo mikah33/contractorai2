@@ -1,10 +1,11 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { format, startOfWeek, addDays, isSameDay, parseISO, addMonths, subMonths, isToday } from 'date-fns';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, Filter, Download, List, Grid, Clock, Sparkles, Check, AlertCircle, PenTool as Tool } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, Download, List, Grid, Clock, Sparkles, Check, AlertCircle, PenTool as Tool } from 'lucide-react';
 import { useCalendarStoreSupabase } from '../stores/calendarStoreSupabase';
 import { CalendarEvent } from '../services/calendarService';
 import EventModal from '../components/calendar/EventModal';
-import CalendarDebug from '../components/calendar/CalendarDebug';
+import { checkUpcomingEvents } from '../utils/notifications';
+import { useData } from '../contexts/DataContext';
 
 type ViewType = 'month' | 'week' | 'day';
 
@@ -14,19 +15,27 @@ const Calendar = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [showAIRecommendations, setShowAIRecommendations] = useState(false);
   const [showEventModal, setShowEventModal] = useState(false);
-  const { 
-    events, 
-    loading, 
+  const { profile } = useData();
+  const {
+    events,
+    loading,
     error,
     fetchEvents,
-    getEventsByDate, 
-    generateAIRecommendations 
+    getEventsByDate,
+    generateAIRecommendations
   } = useCalendarStoreSupabase();
 
   // Fetch events on component mount
   useEffect(() => {
     fetchEvents();
   }, []);
+
+  // Check for upcoming events and schedule notifications
+  useEffect(() => {
+    if (events.length > 0 && profile?.calendar_reminders) {
+      checkUpcomingEvents(events);
+    }
+  }, [events, profile]);
 
   const getEventColor = (eventType: string) => {
     switch (eventType) {
@@ -295,8 +304,6 @@ const Calendar = () => {
 
   return (
     <div className="space-y-6">
-      <CalendarDebug />
-      
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Project Calendar</h1>
@@ -306,13 +313,6 @@ const Calendar = () => {
         </div>
         
         <div className="flex space-x-2">
-          <button
-            onClick={handleFilterClick}
-            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 active:bg-gray-100"
-          >
-            <Filter className="w-4 h-4 mr-2" />
-            Filter
-          </button>
           <button
             onClick={handleExportClick}
             className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 active:bg-gray-100"

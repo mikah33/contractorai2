@@ -43,20 +43,17 @@ Deno.serve(async (req) => {
       return corsResponse({ error: 'Method not allowed' }, 405);
     }
 
-    const { price_id, success_url, cancel_url, mode } = await req.json();
+    const body = await req.json();
+    const { price_id, priceId, success_url, cancel_url, mode } = body;
+    const finalPriceId = priceId || price_id;
 
-    const error = validateParameters(
-      { price_id, success_url, cancel_url, mode },
-      {
-        cancel_url: 'string',
-        price_id: 'string',
-        success_url: 'string',
-        mode: { values: ['payment', 'subscription'] },
-      },
-    );
+    // Set default URLs if not provided
+    const finalSuccessUrl = success_url || `${req.headers.get('origin') || 'http://localhost:5174'}/subscription-success`;
+    const finalCancelUrl = cancel_url || `${req.headers.get('origin') || 'http://localhost:5174'}/subscriptions`;
+    const finalMode = mode || 'subscription';
 
-    if (error) {
-      return corsResponse({ error }, 400);
+    if (!finalPriceId) {
+      return corsResponse({ error: 'Missing required parameter: priceId or price_id' }, 400);
     }
 
     const authHeader = req.headers.get('Authorization')!;
@@ -177,19 +174,20 @@ Deno.serve(async (req) => {
       }
     }
 
-    // create Checkout Session
+    // create Checkout Session - use redirect mode for now (embedded has issues)
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ['card'],
       line_items: [
         {
-          price: price_id,
+          price: finalPriceId,
           quantity: 1,
         },
       ],
-      mode,
-      success_url,
-      cancel_url,
+      mode: finalMode,
+      allow_promotion_codes: true, // Enable coupon code field
+      success_url: finalSuccessUrl,
+      cancel_url: finalCancelUrl,
     });
 
     console.log(`Created checkout session ${session.id} for customer ${customerId}`);

@@ -1,17 +1,20 @@
-import { Link, useLocation } from 'react-router-dom';
-import { 
-  Home, 
-  Calculator, 
-  BarChart2, 
-  FileText, 
-  Clipboard, 
-  CreditCard, 
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import {
+  Home,
+  Calculator,
+  BarChart2,
+  FileText,
+  Clipboard,
+  CreditCard,
   Settings,
   Calendar,
   X,
   BarChart3,
-  Users
+  Users,
+  UserCog
 } from 'lucide-react';
+import { useData } from '../../contexts/DataContext';
+import { stripeProducts } from '../../stripe-config';
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -20,7 +23,36 @@ interface SidebarProps {
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   const location = useLocation();
-  
+  const navigate = useNavigate();
+  const { subscription } = useData();
+
+  const getSubscriptionInfo = () => {
+    if (!subscription || subscription.status === 'canceled' || !subscription.status) {
+      return {
+        name: 'Free Plan',
+        validUntil: null,
+        isActive: false
+      };
+    }
+
+    const product = stripeProducts.find(p => p.priceId === subscription.price_id);
+    const endDate = subscription.current_period_end
+      ? new Date(subscription.current_period_end).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        })
+      : null;
+
+    return {
+      name: product?.name || 'Pro Plan',
+      validUntil: endDate,
+      isActive: true
+    };
+  };
+
+  const subscriptionInfo = getSubscriptionInfo();
+
   const navigation = [
     { name: 'Dashboard', icon: Home, href: '/' },
     { name: 'Pricing Calculator', icon: Calculator, href: '/pricing' },
@@ -28,6 +60,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
     { name: 'Estimate Generator', icon: FileText, href: '/estimates' },
     { name: 'Project Manager', icon: Clipboard, href: '/projects' },
     { name: 'Clients', icon: Users, href: '/clients' },
+    { name: 'Employees', icon: UserCog, href: '/employees' },
     { name: 'Calendar', icon: Calendar, href: '/calendar' },
     { name: 'Ad Analyzer', icon: BarChart3, href: '/ad-analyzer' },
     { name: 'Subscription Plans', icon: CreditCard, href: '/subscriptions' },
@@ -82,10 +115,22 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
         
         <div className="absolute bottom-0 w-full px-6 py-4">
           <div className="bg-blue-800 rounded-lg p-4 text-blue-100 text-sm">
-            <p className="font-semibold mb-2">Pro Subscription</p>
-            <p className="text-xs text-blue-300 mb-3">Valid until Dec 31, 2025</p>
-            <button className="w-full py-1.5 bg-teal-500 hover:bg-teal-600 text-white rounded-md text-xs font-medium transition-colors">
-              Manage Subscription
+            <p className="font-semibold mb-2">{subscriptionInfo.name}</p>
+            {subscriptionInfo.validUntil && (
+              <p className="text-xs text-blue-300 mb-3">
+                Valid until {subscriptionInfo.validUntil}
+              </p>
+            )}
+            {!subscriptionInfo.isActive && (
+              <p className="text-xs text-blue-300 mb-3">
+                Upgrade to unlock all features
+              </p>
+            )}
+            <button
+              onClick={() => navigate('/subscriptions')}
+              className="w-full py-1.5 bg-teal-500 hover:bg-teal-600 text-white rounded-md text-xs font-medium transition-colors"
+            >
+              {subscriptionInfo.isActive ? 'Manage Subscription' : 'Upgrade Now'}
             </button>
           </div>
         </div>

@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
-import { BarChart, Activity, Users, DollarSign, TrendingUp, CalendarRange, FileText } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { BarChart, Activity, Users, DollarSign, TrendingUp, CalendarRange, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 import ProjectSummaryCard from '../components/dashboard/ProjectSummaryCard';
 import StatCard from '../components/dashboard/StatCard';
 import RecentEstimatesTable from '../components/dashboard/RecentEstimatesTable';
@@ -8,24 +8,41 @@ import FinanceSummaryChart from '../components/dashboard/FinanceSummaryChart';
 import ConnectionTest from '../components/ConnectionTest';
 import useProjectStore from '../stores/projectStore';
 import useEstimateStore from '../stores/estimateStore';
+import { useFinanceStore } from '../stores/financeStoreSupabase';
+import { useCalendarStoreSupabase } from '../stores/calendarStoreSupabase';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { projects, fetchProjects } = useProjectStore();
   const { estimates, fetchEstimates } = useEstimateStore();
+  const { financialSummary } = useFinanceStore();
+  const { events, fetchEvents } = useCalendarStoreSupabase();
+  const [currentMonth, setCurrentMonth] = useState(new Date());
 
-  // Fetch data on component mount
+  // Fetch data on component mount (only if not already loaded)
   useEffect(() => {
-    fetchProjects();
-    fetchEstimates();
-  }, [fetchProjects, fetchEstimates]);
+    fetchProjects(); // Will use cache if already loaded
+    fetchEstimates(); // Will use cache if already loaded
+    fetchEvents(); // Load calendar events
+  }, []); // Empty deps array - only run once on mount
+
+  // Debug: Log events when they change
+  useEffect(() => {
+    console.log('📅 Calendar events loaded:', events.length);
+    events.forEach(e => {
+      const eventDate = e.start_date ? new Date(e.start_date) : null;
+      const isValidDate = eventDate && !isNaN(eventDate.getTime());
+      console.log(`  Event: "${e.title}" on ${e.start_date} - Valid: ${isValidDate}`);
+    });
+  }, [events]);
 
   // Calculate dashboard statistics
   const activeProjects = projects.filter(p => p.status === 'active').length;
   const pendingEstimates = estimates.filter(e => e.status === 'draft' || e.status === 'sent').length;
-  const monthlyRevenue = projects
-    .filter(p => p.status === 'completed')
-    .reduce((sum, p) => sum + p.budget, 0);
+
+  // Get total revenue from finance store (sum of completed payments)
+  const totalRevenue = financialSummary.totalRevenue;
+
   const newClients = new Set(projects.map(p => p.client)).size;
 
   const handleNewProject = () => {
@@ -50,8 +67,6 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-6">
-      <ConnectionTest />
-      
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
         <div className="flex space-x-3">
@@ -87,7 +102,7 @@ const Dashboard = () => {
         />
         <StatCard
           title="Total Revenue"
-          value={`$${monthlyRevenue.toLocaleString()}`}
+          value={`$${totalRevenue.toLocaleString()}`}
           change="+0%"
           positive={true}
           icon={<DollarSign className="w-6 h-6 text-green-600" />}
@@ -119,34 +134,139 @@ const Dashboard = () => {
         <div className="lg:col-span-1">
           <div className="p-6 bg-white rounded-lg shadow">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Upcoming Deadlines</h2>
-              <button 
+              <h2 className="text-lg font-semibold text-gray-900">Calendar</h2>
+              <button
                 onClick={handleViewAllDeadlines}
-                className="text-blue-600 hover:text-blue-800"
+                className="text-blue-600 hover:text-blue-800 text-sm"
               >
-                View All
+                View Full
               </button>
             </div>
-            <div className="space-y-4">
-              {[].map((deadline) => (
-                <div key={deadline.id} className="flex items-start p-3 border-l-4 border-blue-500 bg-blue-50 rounded-r-md">
-                  <CalendarRange className="w-5 h-5 mr-3 text-blue-500 mt-0.5" />
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-900">{deadline.project}</p>
-                    <p className="text-sm text-gray-600">{deadline.client}</p>
-                    <div className="flex items-center mt-1">
-                      <span className="text-xs text-gray-500">{deadline.date}</span>
-                      <span className={`ml-2 px-1.5 py-0.5 text-xs rounded-full ${
-                        deadline.status === "On Track" 
-                          ? "bg-green-100 text-green-800" 
-                          : "bg-amber-100 text-amber-800"
-                      }`}>
-                        {deadline.status}
-                      </span>
-                    </div>
+
+            {/* Mini Calendar */}
+            <div className="space-y-3">
+              {/* Month navigation */}
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
+                  className="p-1 hover:bg-gray-100 rounded"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <span className="text-sm font-medium">
+                  {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                </span>
+                <button
+                  onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
+                  className="p-1 hover:bg-gray-100 rounded"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Calendar grid */}
+              <div className="grid grid-cols-7 gap-1">
+                {/* Day headers */}
+                {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+                  <div key={i} className="text-center text-xs font-medium text-gray-500 py-1">
+                    {day}
                   </div>
+                ))}
+
+                {/* Calendar days */}
+                {(() => {
+                  const year = currentMonth.getFullYear();
+                  const month = currentMonth.getMonth();
+                  const firstDay = new Date(year, month, 1).getDay();
+                  const daysInMonth = new Date(year, month + 1, 0).getDate();
+                  const today = new Date();
+                  const days = [];
+
+                  // Empty cells for days before month starts
+                  for (let i = 0; i < firstDay; i++) {
+                    days.push(<div key={`empty-${i}`} className="aspect-square" />);
+                  }
+
+                  // Days of the month
+                  for (let day = 1; day <= daysInMonth; day++) {
+                    const date = new Date(year, month, day);
+                    const dateStr = date.toISOString().split('T')[0];
+                    const isToday = date.toDateString() === today.toDateString();
+                    const hasEvent = events.some(e => {
+                      if (!e.start_date) return false;
+                      try {
+                        const eventDate = new Date(e.start_date);
+                        if (isNaN(eventDate.getTime())) return false;
+                        const eventDateStr = eventDate.toISOString().split('T')[0];
+                        return eventDateStr === dateStr;
+                      } catch {
+                        return false;
+                      }
+                    });
+
+                    days.push(
+                      <div
+                        key={day}
+                        className={`aspect-square flex items-center justify-center text-xs rounded-md cursor-pointer
+                          ${isToday ? 'bg-orange-500 text-white font-semibold' : ''}
+                          ${hasEvent && !isToday ? 'bg-blue-100 text-blue-700' : ''}
+                          ${!isToday && !hasEvent ? 'hover:bg-gray-100' : ''}
+                        `}
+                        onClick={() => navigate('/calendar')}
+                      >
+                        {day}
+                      </div>
+                    );
+                  }
+
+                  return days;
+                })()}
+              </div>
+
+              {/* Upcoming events */}
+              <div className="mt-4 pt-4 border-t">
+                <h3 className="text-xs font-semibold text-gray-700 mb-2">Upcoming Events</h3>
+                <div className="space-y-2 max-h-32 overflow-y-auto">
+                  {events
+                    .filter(e => {
+                      if (!e.start_date) return false;
+                      const eventDate = new Date(e.start_date);
+                      if (isNaN(eventDate.getTime())) return false;
+                      return eventDate >= new Date();
+                    })
+                    .sort((a, b) => {
+                      const dateA = new Date(a.start_date).getTime();
+                      const dateB = new Date(b.start_date).getTime();
+                      return dateA - dateB;
+                    })
+                    .slice(0, 3)
+                    .map(event => {
+                      const eventDate = new Date(event.start_date);
+                      return (
+                        <div key={event.id} className="text-xs flex items-start space-x-2">
+                          <div className={`w-2 h-2 rounded-full mt-1 flex-shrink-0 ${
+                            event.event_type === 'meeting' ? 'bg-blue-500' :
+                            event.event_type === 'deadline' ? 'bg-red-500' :
+                            event.event_type === 'task' ? 'bg-green-500' : 'bg-gray-500'
+                          }`} />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-gray-900 truncate">{event.title}</p>
+                            <p className="text-gray-500">
+                              {eventDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  {events.filter(e => {
+                    if (!e.start_date) return false;
+                    const eventDate = new Date(e.start_date);
+                    return !isNaN(eventDate.getTime()) && eventDate >= new Date();
+                  }).length === 0 && (
+                    <p className="text-xs text-gray-500">No upcoming events</p>
+                  )}
                 </div>
-              ))}
+              </div>
             </div>
           </div>
         </div>

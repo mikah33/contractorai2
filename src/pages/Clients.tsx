@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, Plus, Search, Filter, Download, RefreshCw, UserPlus } from 'lucide-react';
+import { Users, Plus, Search, Download, RefreshCw, UserPlus } from 'lucide-react';
 import { useClientsStore } from '../stores/clientsStore';
 import ClientsList from '../components/clients/ClientsList';
 import AddClientModal from '../components/clients/AddClientModal';
@@ -215,7 +215,6 @@ const Clients = () => {
             </div>
             
             <div className="flex items-center space-x-2">
-              <Filter className="h-5 w-5 text-gray-400" />
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as any)}

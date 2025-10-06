@@ -12,6 +12,12 @@ interface Profile {
   updated_at: string;
 }
 
+interface SignUpMetadata {
+  fullName?: string;
+  companyName?: string;
+  phoneNumber?: string;
+}
+
 interface AuthState {
   user: User | null;
   profile: Profile | null;
@@ -19,7 +25,7 @@ interface AuthState {
   loading: boolean;
   initialized: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, metadata?: SignUpMetadata) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   fetchProfile: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: Error | null }>;
@@ -64,12 +70,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  signUp: async (email: string, password: string) => {
+  signUp: async (email: string, password: string, metadata?: SignUpMetadata) => {
     set({ loading: true });
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            full_name: metadata?.fullName,
+            company_name: metadata?.companyName,
+            phone: metadata?.phoneNumber,
+          }
+        }
       });
 
       if (error) {
@@ -78,13 +91,35 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
 
       if (data.user) {
-        set({ 
-          user: data.user, 
+        set({
+          user: data.user,
           session: data.session,
-          loading: false 
+          loading: false
         });
+
+        // Send registration data to n8n webhook
+        try {
+          await fetch('https://contractorai.app.n8n.cloud/webhook/170d14a9-ace1-49cf-baab-49dd8aec1245', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              email,
+              fullName: metadata?.fullName || '',
+              companyName: metadata?.companyName || '',
+              phoneNumber: metadata?.phoneNumber || '',
+              userId: data.user.id,
+              timestamp: new Date().toISOString(),
+              source: 'ContractorAI Web App',
+            }),
+          });
+        } catch (webhookError) {
+          console.error('Webhook notification failed:', webhookError);
+          // Don't fail the signup if webhook fails
+        }
       }
-      
+
       return { error: null };
     } catch (error) {
       set({ loading: false });

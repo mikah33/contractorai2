@@ -1,4 +1,4 @@
-import { Home, Hammer, Wrench, PaintBucket, Lightbulb, Maximize, Scale, Construction, Square as SquareFoot, Footprints, Trash2, Router, Layers, BellOff as WallOff, Thermometer, Droplet, Columns, DoorOpen as Door, Radiation as Foundation, Cloud } from 'lucide-react';
+import { Home, Hammer, Wrench, PaintBucket, Lightbulb, Maximize, Scale, Construction, Square as SquareFoot, Footprints, Trash2, Router, Layers, BellOff as WallOff, Thermometer, Droplet, Columns, DoorOpen as Door, Radiation as Foundation, Cloud, Warehouse } from 'lucide-react';
 import { Trade } from '../types';
 
 export const trades: Trade[] = [
@@ -648,6 +648,132 @@ export const trades: Trade[] = [
         label: 'Sorting',
         type: 'checkbox',
         checkboxLabel: 'Include sorting and recycling'
+      }
+    ]
+  },
+  {
+    id: 'roofing',
+    name: 'Roofing',
+    category: 'Exterior',
+    icon: <Warehouse />,
+    description: 'Roof installation, replacement, and repair with AI-powered estimation',
+    requiredFields: [
+      {
+        id: 'address',
+        label: 'Property Address',
+        type: 'text',
+        required: true,
+        placeholder: 'Enter full address for AI analysis',
+        helpText: 'AI will analyze satellite imagery to estimate roof details'
+      },
+      {
+        id: 'roof_type',
+        label: 'Roof Type',
+        type: 'select',
+        required: true,
+        options: [
+          { value: 'gable', label: 'Gable' },
+          { value: 'hip', label: 'Hip' },
+          { value: 'flat', label: 'Flat' },
+          { value: 'mansard', label: 'Mansard' },
+          { value: 'gambrel', label: 'Gambrel' },
+          { value: 'shed', label: 'Shed' }
+        ],
+        helpText: 'Can be auto-detected by AI'
+      },
+      {
+        id: 'material',
+        label: 'Roofing Material',
+        type: 'select',
+        required: true,
+        options: [
+          { value: 'asphalt', label: 'Asphalt Shingles' },
+          { value: 'metal', label: 'Metal Roofing' },
+          { value: 'tile', label: 'Clay/Concrete Tile' },
+          { value: 'slate', label: 'Slate' },
+          { value: 'tpo', label: 'TPO (Flat Roof)' },
+          { value: 'epdm', label: 'EPDM Rubber' },
+          { value: 'wood', label: 'Wood Shakes' }
+        ]
+      },
+      {
+        id: 'pitch',
+        label: 'Roof Pitch',
+        type: 'select',
+        required: true,
+        options: [
+          { value: '1:12', label: '1:12 (Nearly Flat)' },
+          { value: '2:12', label: '2:12' },
+          { value: '3:12', label: '3:12' },
+          { value: '4:12', label: '4:12 (Low Pitch)' },
+          { value: '5:12', label: '5:12' },
+          { value: '6:12', label: '6:12 (Standard)' },
+          { value: '7:12', label: '7:12' },
+          { value: '8:12', label: '8:12 (Steep)' },
+          { value: '9:12', label: '9:12' },
+          { value: '10:12', label: '10:12' },
+          { value: '12:12', label: '12:12 (45°)' }
+        ],
+        helpText: 'Can be estimated by AI'
+      }
+    ],
+    optionalFields: [
+      {
+        id: 'layers',
+        label: 'Layers to Remove',
+        type: 'number',
+        placeholder: 'Number of existing roof layers',
+        unit: 'layers',
+        helpText: 'Additional charge for removal'
+      },
+      {
+        id: 'skylights',
+        label: 'Skylights',
+        type: 'number',
+        placeholder: 'Number of skylights',
+        unit: 'units'
+      },
+      {
+        id: 'chimneys',
+        label: 'Chimneys',
+        type: 'number',
+        placeholder: 'Number of chimneys',
+        unit: 'units'
+      },
+      {
+        id: 'valleys',
+        label: 'Valleys',
+        type: 'number',
+        placeholder: 'Number of valleys',
+        unit: 'units'
+      },
+      {
+        id: 'stories',
+        label: 'Stories',
+        type: 'select',
+        options: [
+          { value: '1', label: '1 Story' },
+          { value: '2', label: '2 Stories' },
+          { value: '3', label: '3+ Stories' }
+        ]
+      },
+      {
+        id: 'ventilation',
+        label: 'Ventilation Upgrade',
+        type: 'checkbox',
+        checkboxLabel: 'Include ridge vent and soffit vents'
+      },
+      {
+        id: 'ice_shield',
+        label: 'Ice & Water Shield',
+        type: 'checkbox',
+        checkboxLabel: 'Include ice & water shield (recommended)'
+      },
+      {
+        id: 'warranty',
+        label: 'Extended Warranty',
+        type: 'checkbox',
+        checkboxLabel: 'Include extended manufacturer warranty'
       }
     ]
   }

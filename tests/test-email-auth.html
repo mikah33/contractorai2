@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase Email Auth Diagnostic</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: monospace;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #00ff00;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #00ff00;
+            border-radius: 5px;
+        }
+        input, button {
+            padding: 10px;
+            margin: 5px;
+            background: #2a2a2a;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            border-radius: 3px;
+        }
+        button {
+            cursor: pointer;
+        }
+        button:hover {
+            background: #00ff00;
+            color: #000;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background: #2a2a2a;
+            border-left: 3px solid #00ff00;
+        }
+        .error {
+            border-left-color: #ff0000;
+            color: #ff0000;
+        }
+        .success {
+            border-left-color: #00ff00;
+            color: #00ff00;
+        }
+        h2 {
+            color: #00ffff;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Supabase Email Auth Diagnostic Tool</h1>
+
+    <div class="section">
+        <h2>1. Configuration Check</h2>
+        <button onclick="checkConfig()">Check Supabase Config</button>
+        <div id="config-result" class="result"></div>
+    </div>
+
+    <div class="section">
+        <h2>2. Test Signup (Email Confirmation)</h2>
+        <input type="email" id="signup-email" placeholder="test@example.com" />
+        <input type="password" id="signup-password" placeholder="Password123!" />
+        <button onclick="testSignup()">Test Signup</button>
+        <div id="signup-result" class="result"></div>
+    </div>
+
+    <div class="section">
+        <h2>3. Check Auth Settings</h2>
+        <button onclick="checkAuthSettings()">Get Auth Settings</button>
+        <div id="auth-settings-result" class="result"></div>
+    </div>
+
+    <div class="section">
+        <h2>4. Check User in Database</h2>
+        <input type="email" id="check-email" placeholder="Email to check" />
+        <button onclick="checkUser()">Check User</button>
+        <div id="user-result" class="result"></div>
+    </div>
+
+    <script>
+        // Initialize Supabase client
+        const SUPABASE_URL = 'https://ujhgwcurllkkeouzwvgk.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqaGd3Y3VybGxra2VvdXp3dmdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcwMzIzMjQsImV4cCI6MjA3MjYwODMyNH0.ez6RDJ2FxgSfb7mo2Xug1lXaynKLR-2nJFO-x64UNnY';
+
+        // Create Supabase client (use window.supabase from CDN)
+        const { createClient } = window.supabase;
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        function logResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.className = `result ${type}`;
+            element.innerHTML = `<pre>${JSON.stringify(message, null, 2)}</pre>`;
+        }
+
+        async function checkConfig() {
+            logResult('config-result', 'Checking configuration...', 'info');
+
+            const config = {
+                supabaseUrl: SUPABASE_URL,
+                hasAnonKey: SUPABASE_ANON_KEY ? '✅ Present' : '❌ Missing',
+                keyLength: SUPABASE_ANON_KEY ? SUPABASE_ANON_KEY.length : 0,
+                keyPrefix: SUPABASE_ANON_KEY ? SUPABASE_ANON_KEY.substring(0, 20) + '...' : 'N/A'
+            };
+
+            logResult('config-result', config, 'success');
+        }
+
+        async function testSignup() {
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+
+            if (!email || !password) {
+                logResult('signup-result', { error: 'Please enter email and password' }, 'error');
+                return;
+            }
+
+            logResult('signup-result', `Attempting signup for: ${email}...`, 'info');
+
+            try {
+                const { data, error } = await supabase.auth.signUp({
+                    email: email,
+                    password: password,
+                    options: {
+                        emailRedirectTo: window.location.origin
+                    }
+                });
+
+                if (error) {
+                    logResult('signup-result', {
+                        error: error.message,
+                        details: error
+                    }, 'error');
+                } else {
+                    const result = {
+                        success: '✅ Signup initiated',
+                        user: data.user,
+                        session: data.session,
+                        emailConfirmationRequired: !data.session ? '⚠️ YES - Check email for confirmation' : '✅ NO - Auto-confirmed',
+                        identities: data.user?.identities,
+                        confirmationSentAt: data.user?.confirmation_sent_at,
+                        emailConfirmed: data.user?.email_confirmed_at,
+                        note: !data.session ?
+                            '📧 Email confirmation is ENABLED. Check your email inbox for confirmation link.' :
+                            '⚡ Email confirmation is DISABLED. User auto-confirmed.'
+                    };
+                    logResult('signup-result', result, 'success');
+                }
+            } catch (err) {
+                logResult('signup-result', {
+                    error: 'Unexpected error',
+                    message: err.message,
+                    stack: err.stack
+                }, 'error');
+            }
+        }
+
+        async function checkAuthSettings() {
+            logResult('auth-settings-result', 'Fetching auth settings...', 'info');
+
+            try {
+                const response = await fetch(`${SUPABASE_URL}/auth/v1/settings`, {
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY
+                    }
+                });
+
+                const settings = await response.json();
+
+                const analysis = {
+                    rawSettings: settings,
+                    emailConfirmationEnabled: settings.external?.email?.enabled,
+                    autoconfirm: settings.autoconfirm,
+                    externalProviders: Object.keys(settings.external || {})
+                };
+
+                logResult('auth-settings-result', analysis, 'success');
+            } catch (err) {
+                logResult('auth-settings-result', {
+                    error: err.message
+                }, 'error');
+            }
+        }
+
+        async function checkUser() {
+            const email = document.getElementById('check-email').value;
+
+            if (!email) {
+                logResult('user-result', { error: 'Please enter email' }, 'error');
+                return;
+            }
+
+            logResult('user-result', `Checking user: ${email}...`, 'info');
+
+            try {
+                // Check in profiles table
+                const { data: profile, error: profileError } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('email', email)
+                    .maybeSingle();
+
+                const result = {
+                    email: email,
+                    profileExists: profile ? '✅ YES' : '❌ NO',
+                    profileData: profile || 'Not found',
+                    profileError: profileError?.message || null,
+                    note: profile ?
+                        '✅ User profile created in database' :
+                        '⚠️ User not found in profiles table'
+                };
+
+                logResult('user-result', result, profile ? 'success' : 'error');
+            } catch (err) {
+                logResult('user-result', {
+                    error: err.message
+                }, 'error');
+            }
+        }
+
+        // Auto-check config on load
+        window.addEventListener('load', checkConfig);
+    </script>
+</body>
+</html>

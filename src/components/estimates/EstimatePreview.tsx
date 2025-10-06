@@ -1,6 +1,7 @@
 import { DollarSign, Calendar, User, Briefcase, Check } from 'lucide-react';
 import { Estimate } from '../../types/estimates';
 import { format } from 'date-fns';
+import { useData } from '../../contexts/DataContext';
 
 interface EstimatePreviewProps {
   estimate: Estimate;
@@ -9,6 +10,7 @@ interface EstimatePreviewProps {
 }
 
 const EstimatePreview: React.FC<EstimatePreviewProps> = ({ estimate, clients, projects }) => {
+  const { profile } = useData();
   const client = clients.find(c => c.name === estimate.clientName);
   const project = projects.find(p => p.name === estimate.projectName);
   
@@ -25,10 +27,10 @@ const EstimatePreview: React.FC<EstimatePreviewProps> = ({ estimate, clients, pr
       {/* Header */}
       <div className="flex justify-between items-start mb-8">
         <div>
-          {estimate.branding?.logo && (
-            <img 
-              src={estimate.branding.logo} 
-              alt="Company Logo" 
+          {profile?.logo_url && (
+            <img
+              src={profile.logo_url}
+              alt="Company Logo"
               className="h-16 w-auto object-contain mb-4"
             />
           )}

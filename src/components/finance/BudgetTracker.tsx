@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { DollarSign, AlertCircle, TrendingUp, TrendingDown, Edit, Plus } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { DollarSign, AlertCircle, TrendingUp, TrendingDown, Receipt as ReceiptIcon, CreditCard } from 'lucide-react';
 
 interface BudgetItem {
   id: string;
@@ -21,9 +21,27 @@ interface Project {
   variancePercentage: number;
 }
 
+interface Receipt {
+  id: string;
+  projectId?: string;
+  amount: number;
+  category: string;
+  date: string;
+  vendor: string;
+}
+
+interface Payment {
+  id: string;
+  projectId: string;
+  amount: number;
+  date: string;
+}
+
 interface BudgetTrackerProps {
   projects: Project[];
   budgetItems: BudgetItem[];
+  receipts: Receipt[];
+  payments: Payment[];
   onAddBudgetItem: (item: Omit<BudgetItem, 'id' | 'variance' | 'variancePercentage'>) => void;
   onUpdateBudgetItem: (item: BudgetItem) => void;
   onDeleteBudgetItem: (id: string) => void;
@@ -32,6 +50,8 @@ interface BudgetTrackerProps {
 const BudgetTracker: React.FC<BudgetTrackerProps> = ({
   projects,
   budgetItems,
+  receipts,
+  payments,
   onAddBudgetItem,
   onUpdateBudgetItem,
   onDeleteBudgetItem
@@ -53,12 +73,55 @@ const BudgetTracker: React.FC<BudgetTrackerProps> = ({
   });
 
   const categories = [
-    'Labor', 'Materials', 'Subcontractors', 'Equipment Rental', 
+    'Labor', 'Materials', 'Subcontractors', 'Equipment Rental',
     'Tools', 'Permits', 'Office Supplies', 'Travel', 'Other'
   ];
 
+  // Calculate actual expenses from receipts for this project
+  const projectReceipts = useMemo(() =>
+    receipts.filter(r => r.projectId === selectedProjectId),
+    [receipts, selectedProjectId]
+  );
+
+  const projectPayments = useMemo(() =>
+    payments.filter(p => p.projectId === selectedProjectId),
+    [payments, selectedProjectId]
+  );
+
+  const totalExpenses = useMemo(() =>
+    projectReceipts.reduce((sum, r) => sum + r.amount, 0),
+    [projectReceipts]
+  );
+
+  const totalPaymentsReceived = useMemo(() =>
+    projectPayments.reduce((sum, p) => sum + p.amount, 0),
+    [projectPayments]
+  );
+
   const selectedProject = projects.find(p => p.id === selectedProjectId);
   const projectBudgetItems = budgetItems.filter(item => item.projectId === selectedProjectId);
+
+  // Group receipts by category to show actual spending
+  const expensesByCategory = useMemo(() => {
+    const categoryMap = new Map<string, { total: number; count: number; receipts: Receipt[] }>();
+
+    projectReceipts.forEach(receipt => {
+      const category = receipt.category || 'Other';
+      const existing = categoryMap.get(category) || { total: 0, count: 0, receipts: [] };
+      categoryMap.set(category, {
+        total: existing.total + receipt.amount,
+        count: existing.count + 1,
+        receipts: [...existing.receipts, receipt]
+      });
+    });
+
+    return Array.from(categoryMap.entries()).map(([category, data]) => ({
+      category,
+      totalActual: data.total,
+      receiptCount: data.count,
+      receipts: data.receipts
+    }));
+  }, [projectReceipts]);
 
   // Group budget items by category and calculate totals
   const categoryTotals = projectBudgetItems.reduce((acc, item) => {
@@ -80,7 +143,7 @@ const BudgetTracker: React.FC<BudgetTrackerProps> = ({
   const categorySummary = Object.values(categoryTotals).map(cat => {
     const totalVariance = cat.totalBudgeted - cat.totalActual;
     const totalVariancePercentage = cat.totalBudgeted > 0 ? (totalVariance / cat.totalBudgeted) * 100 : 0;
-    
+
     return {
       category: cat.category,
       totalBudgeted: cat.totalBudgeted,
@@ -145,7 +208,7 @@ const BudgetTracker: React.FC<BudgetTrackerProps> = ({
     <div className="bg-white rounded-lg shadow-md">
       <div className="p-6 border-b border-gray-200">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <h3 className="text-lg font-medium text-gray-900">Budget Tracker - UPDATED CATEGORIES</h3>
+          <h3 className="text-lg font-medium text-gray-900">Project Budget Tracker</h3>
           <div className="flex items-center space-x-2">
             <select
               value={selectedProjectId}
@@ -159,13 +222,6 @@ const BudgetTracker: React.FC<BudgetTrackerProps> = ({
                 <option key={project.id} value={project.id}>{project.name}</option>
               ))}
             </select>
-            <button
-              onClick={() => setShowAddForm(true)}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Budget Item
-            </button>
           </div>
         </div>
       </div>
@@ -263,38 +319,53 @@ const BudgetTracker: React.FC<BudgetTrackerProps> = ({
 
       {selectedProject && (
         <div className="p-6 border-b border-gray-200 bg-blue-50">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div>
-              <p className="text-sm font-medium text-gray-500">Total Budget</p>
+              <div className="flex items-center">
+                <DollarSign className="h-5 w-5 text-gray-400 mr-2" />
+                <p className="text-sm font-medium text-gray-500">Total Budget</p>
+              </div>
               <p className="mt-1 text-2xl font-semibold text-gray-900">${selectedProject.totalBudget.toLocaleString()}</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-500">Total Actual</p>
-              <p className="mt-1 text-2xl font-semibold text-gray-900">${selectedProject.totalActual.toLocaleString()}</p>
+              <div className="flex items-center">
+                <ReceiptIcon className="h-5 w-5 text-red-400 mr-2" />
+                <p className="text-sm font-medium text-gray-500">Total Expenses</p>
+              </div>
+              <p className="mt-1 text-2xl font-semibold text-red-600">${totalExpenses.toLocaleString()}</p>
+              <p className="text-xs text-gray-500 mt-1">{projectReceipts.length} receipts</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-500">Variance</p>
-              <div className="mt-1 flex items-center">
-                <p className={`text-2xl font-semibold ${getVarianceColor(selectedProject.variance)}`}>
-                  ${Math.abs(selectedProject.variance).toLocaleString()}
-                </p>
-                <div className="ml-2 flex items-center">
-                  {getVarianceIcon(selectedProject.variance)}
-                  <span className={`ml-1 text-sm font-medium ${getVarianceColor(selectedProject.variance)}`}>
-                    {selectedProject.variance >= 0 ? 'Under' : 'Over'} budget ({Math.abs(selectedProject.variancePercentage).toFixed(1)}%)
-                  </span>
-                </div>
+              <div className="flex items-center">
+                <CreditCard className="h-5 w-5 text-green-400 mr-2" />
+                <p className="text-sm font-medium text-gray-500">Payments Received</p>
               </div>
+              <p className="mt-1 text-2xl font-semibold text-green-600">${totalPaymentsReceived.toLocaleString()}</p>
+              <p className="text-xs text-gray-500 mt-1">{projectPayments.length} payments</p>
+            </div>
+            <div>
+              <div className="flex items-center">
+                <TrendingUp className="h-5 w-5 text-blue-400 mr-2" />
+                <p className="text-sm font-medium text-gray-500">Net Position</p>
+              </div>
+              <p className={`mt-1 text-2xl font-semibold ${totalPaymentsReceived - totalExpenses >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                ${Math.abs(totalPaymentsReceived - totalExpenses).toLocaleString()}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                {totalPaymentsReceived - totalExpenses >= 0 ? 'Profit' : 'Loss'}
+              </p>
             </div>
           </div>
-          
+
           <div className="mt-4">
-            {renderProgressBar(selectedProject.totalActual, selectedProject.totalBudget)}
+            <p className="text-sm text-gray-600 mb-2">Budget Usage: {selectedProject.totalBudget > 0 ? ((totalExpenses / selectedProject.totalBudget) * 100).toFixed(1) : 0}%</p>
+            {renderProgressBar(totalExpenses, selectedProject.totalBudget)}
           </div>
         </div>
       )}
 
       <div className="overflow-x-auto">
+        <h4 className="px-6 py-4 text-md font-semibold text-gray-700">Expenses by Category</h4>
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
@@ -302,93 +373,43 @@ const BudgetTracker: React.FC<BudgetTrackerProps> = ({
                 Category
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Budgeted
+                Total Spent
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actual
+                Receipts
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Variance
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Progress
-              </th>
-              <th scope="col" className="relative px-6 py-3">
-                <span className="sr-only">Actions</span>
+                % of Budget
               </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {categorySummary.length === 0 ? (
+            {expensesByCategory.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
-                  No budget items for this project
+                <td colSpan={4} className="px-6 py-4 text-center text-sm text-gray-500">
+                  No expenses recorded for this project yet
                 </td>
               </tr>
             ) : (
-              categorySummary.map((categoryData) => (
+              expensesByCategory.map((categoryData) => (
                 <tr key={categoryData.category} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center space-x-3">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                         {categoryData.category}
                       </span>
-                      <span className="text-sm text-gray-500">
-                        ({categoryData.itemCount} item{categoryData.itemCount !== 1 ? 's' : ''})
-                      </span>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    ${categoryData.totalBudgeted.toFixed(2)}
+                    ${categoryData.totalActual.toFixed(2)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <span className="text-sm font-medium text-gray-900 mr-2">
-                        ${categoryData.totalActual.toFixed(2)}
-                      </span>
-                      <button 
-                        className="text-gray-400 hover:text-gray-600"
-                        title="Update actual amount"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </button>
-                    </div>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {categoryData.receiptCount} receipt{categoryData.receiptCount !== 1 ? 's' : ''}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      {getVarianceIcon(categoryData.totalVariance)}
-                      <span className={`ml-1 text-sm font-medium ${getVarianceColor(categoryData.totalVariance)}`}>
-                        ${Math.abs(categoryData.totalVariance).toFixed(2)} ({Math.abs(categoryData.totalVariancePercentage).toFixed(1)}%)
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="w-full">
-                      {renderProgressBar(categoryData.totalActual, categoryData.totalBudgeted)}
-                      <div className="mt-1 text-xs text-gray-500">
-                        {Math.round((categoryData.totalActual / categoryData.totalBudgeted) * 100)}% of budget
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex items-center space-x-2">
-                      <button className="text-blue-600 hover:text-blue-900">
-                        <Edit className="h-4 w-4" />
-                      </button>
-                      <button 
-                        onClick={() => {
-                          // Find all items in this category and delete them
-                          const itemsToDelete = projectBudgetItems.filter(item => item.category === categoryData.category);
-                          itemsToDelete.forEach(item => onDeleteBudgetItem(item.id));
-                        }}
-                        className="text-red-600 hover:text-red-900"
-                        title="Delete all items in this category"
-                      >
-                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {selectedProject && selectedProject.totalBudget > 0
+                      ? ((categoryData.totalActual / selectedProject.totalBudget) * 100).toFixed(1)
+                      : 0}%
                   </td>
                 </tr>
               ))

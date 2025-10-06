@@ -1,22 +1,24 @@
 import { useState, useRef, useEffect } from 'react';
-import { FileText, Plus, Download, Trash2, Edit2, Image, Copy, Check, X, Settings, Palette, Layout, FileUp, FileDown, Sparkles, DollarSign, Printer, Eye, RefreshCw } from 'lucide-react';
-import { useLocation } from 'react-router-dom';
+import { FileText, Plus, Download, Trash2, Edit2, Image, Copy, Check, X, Settings, Palette, Layout, FileUp, FileDown, Sparkles, DollarSign, Printer, Eye, RefreshCw, Receipt, ArrowLeft } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import useProjectStore from '../stores/projectStore';
 import { useClientsStore } from '../stores/clientsStore';
 import useEstimateStore from '../stores/estimateStore';
-import EstimateTemplateSelector from '../components/estimates/EstimateTemplateSelector';
+import { useFinanceStore } from '../stores/financeStoreSupabase';
 import EstimateEditor from '../components/estimates/EstimateEditor';
 import EstimatePreview from '../components/estimates/EstimatePreview';
 import AIEstimateAssistant from '../components/estimates/AIEstimateAssistant';
-import { Estimate, EstimateItem, EstimateTemplate } from '../types/estimates';
+import { Estimate, EstimateItem } from '../types/estimates';
 import { estimateService } from '../services/estimateService';
+import { useData } from '../contexts/DataContext';
 
 const EstimateGenerator = () => {
   const location = useLocation();
-  const [activeTab, setActiveTab] = useState<'templates' | 'editor' | 'preview'>('templates');
-  const [selectedTemplate, setSelectedTemplate] = useState<EstimateTemplate | null>(null);
+  const navigate = useNavigate();
+  const { profile } = useData();
+  const [activeTab, setActiveTab] = useState<'editor' | 'preview'>('editor');
   const [currentEstimate, setCurrentEstimate] = useState<Estimate | null>(null);
   const [showAIAssistant, setShowAIAssistant] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -24,10 +26,14 @@ const EstimateGenerator = () => {
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [recentEstimates, setRecentEstimates] = useState<any[]>([]);
   const [loadingEstimates, setLoadingEstimates] = useState(false);
-  
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const hasSavedCalculator = useRef(false); // PREVENT DOUBLE SAVES
+  const initialEstimateRef = useRef<string>(''); // Track initial state
+
   const { projects, fetchProjects } = useProjectStore();
   const { clients: clientsData, fetchClients } = useClientsStore();
-  const { createFromCalculator, fetchEstimates: fetchEstimatesFromStore } = useEstimateStore();
+  const { createFromCalculator, fetchEstimates: fetchEstimatesFromStore, updateEstimate } = useEstimateStore();
+  const { convertEstimateToInvoice } = useFinanceStore();
   
   // Helper function to generate UUID v4
   const generateUUID = () => {
@@ -44,12 +50,20 @@ const EstimateGenerator = () => {
       console.log('EstimateGenerator - Location state:', location.state);
       if (location.state?.fromCalculator && location.state?.calculatorData) {
         console.log('Processing calculator data:', location.state.calculatorData);
-        
+
+        // ABSOLUTE GUARD - use ref to prevent ANY duplicate saves
+        if (hasSavedCalculator.current) {
+          console.log('🛑 BLOCKED: Already saved calculator estimate in this session');
+          return;
+        }
+
+        console.log('✅ SAVING: First save, proceeding...');
+        hasSavedCalculator.current = true; // Mark immediately to prevent race conditions
+
         // Clear any old localStorage data that might have invalid IDs
         localStorage.removeItem('currentEstimate');
         localStorage.removeItem('estimateData');
-        sessionStorage.clear();
-        
+
         // Save calculator data to database
         const savedEstimate = await createFromCalculator(location.state.calculatorData);
         
@@ -109,7 +123,7 @@ const EstimateGenerator = () => {
     };
     
     saveCalculatorData();
-  }, [location, createFromCalculator]);
+  }, [location.state?.fromCalculator, location.state?.calculatorData]); // eslint-disable-line react-hooks/exhaustive-deps
   
   // Fetch projects, clients, and estimates on component mount
   useEffect(() => {
@@ -151,7 +165,30 @@ const EstimateGenerator = () => {
       fetchEstimates();
     }
   }, [showSaveSuccess]);
-  
+
+  // Set initial state when estimate is first loaded
+  useEffect(() => {
+    if (currentEstimate && !initialEstimateRef.current) {
+      initialEstimateRef.current = JSON.stringify(currentEstimate);
+      setHasUnsavedChanges(false);
+    }
+  }, [currentEstimate]);
+
+  const handleBack = () => {
+    if (hasUnsavedChanges) {
+      const confirmLeave = window.confirm(
+        'You have unsaved changes. Are you sure you want to leave? Your changes will be lost.'
+      );
+      if (!confirmLeave) {
+        return;
+      }
+    }
+    // Clear current estimate and go back to list view
+    setCurrentEstimate(null);
+    initialEstimateRef.current = '';
+    setHasUnsavedChanges(false);
+  };
+
   // Debug: Log data to see what we're working with
   useEffect(() => {
     console.log('Projects loaded:', projects);
@@ -169,9 +206,7 @@ const EstimateGenerator = () => {
   console.log('Clients for dropdown:', clients);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleTemplateSelect = (template: EstimateTemplate) => {
-    setSelectedTemplate(template);
-    
+  const handleTemplateSelect = () => {
     // Create a new estimate using simple schema
     const newEstimate: Estimate = {
       id: generateUUID(),
@@ -183,24 +218,24 @@ const EstimateGenerator = () => {
       expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       items: [],
       subtotal: 0,
-      taxRate: template.defaultTaxRate || 0,
+      taxRate: 0,
       taxAmount: 0,
       total: 0,
-      notes: template.defaultNotes || '',
-      terms: template.defaultTerms || 'Valid for 30 days from the date of issue.',
+      notes: '',
+      terms: profile?.default_terms || 'Valid for 30 days from the date of issue.',
       branding: {
         logo: '',
-        primaryColor: template.defaultPrimaryColor || '#3B82F6',
-        fontFamily: template.defaultFontFamily || 'Inter'
+        primaryColor: '#3B82F6',
+        fontFamily: 'Inter'
       }
     };
-    
+
     setCurrentEstimate(newEstimate);
     setActiveTab('editor');
   };
 
   const handleCreateFromScratch = () => {
-    
+
     // Create a blank estimate using simple schema
     const newEstimate: Estimate = {
       id: generateUUID(),
@@ -216,14 +251,14 @@ const EstimateGenerator = () => {
       taxAmount: 0,
       total: 0,
       notes: '',
-      terms: 'Valid for 30 days from the date of issue.',
+      terms: profile?.default_terms || 'Valid for 30 days from the date of issue.',
       branding: {
         logo: '',
         primaryColor: '#3B82F6',
         fontFamily: 'Inter'
       }
     };
-    
+
     setCurrentEstimate(newEstimate);
     setActiveTab('editor');
   };
@@ -262,20 +297,53 @@ const EstimateGenerator = () => {
     }
   };
 
-  const handleUpdateEstimate = (updatedEstimate: Estimate) => {
-    setCurrentEstimate(updatedEstimate);
-    
+  const handleUpdateEstimate = async (updatedEstimate: Estimate) => {
     // Recalculate totals
     const subtotal = updatedEstimate.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
     const taxAmount = subtotal * (updatedEstimate.taxRate / 100);
     const total = subtotal + taxAmount;
-    
-    setCurrentEstimate({
+
+    const estimateWithTotals = {
       ...updatedEstimate,
       subtotal,
       taxAmount,
       total
-    });
+    };
+
+    // Check if estimate has changed from initial state
+    const currentState = JSON.stringify(estimateWithTotals);
+    if (currentState !== initialEstimateRef.current) {
+      setHasUnsavedChanges(true);
+    }
+
+    setCurrentEstimate(estimateWithTotals);
+
+    // Auto-save to database if estimate has an ID
+    if (estimateWithTotals.id) {
+      try {
+        await updateEstimate(estimateWithTotals.id, {
+          title: estimateWithTotals.title,
+          client_name: estimateWithTotals.clientName,
+          project_name: estimateWithTotals.projectName,
+          project_id: estimateWithTotals.projectId,
+          status: estimateWithTotals.status,
+          items: estimateWithTotals.items,
+          subtotal: estimateWithTotals.subtotal,
+          tax_rate: estimateWithTotals.taxRate,
+          tax_amount: estimateWithTotals.taxAmount,
+          total: estimateWithTotals.total,
+          notes: estimateWithTotals.notes,
+          terms: estimateWithTotals.terms,
+          expires_at: estimateWithTotals.expiresAt
+        });
+        console.log('Auto-saved estimate to database');
+        // Reset unsaved changes flag after successful save
+        initialEstimateRef.current = currentState;
+        setHasUnsavedChanges(false);
+      } catch (error) {
+        console.error('Error auto-saving estimate:', error);
+      }
+    }
   };
 
   const handleAddItem = (item: EstimateItem) => {
@@ -319,62 +387,38 @@ const EstimateGenerator = () => {
 
   const handleSaveEstimate = async () => {
     if (!currentEstimate) return;
-    
+
     setIsGenerating(true);
-    
-    // Use the current estimate as-is - trust that IDs are already valid
-    // Only generate new UUID if there's no ID at all
-    let estimateToSave = currentEstimate;
-    
-    if (!currentEstimate.id) {
-      console.log('No ID found, generating new UUID...');
-      estimateToSave = {
-        ...currentEstimate,
-        id: generateUUID(),
-        items: currentEstimate.items.map((item: any) => ({
-          ...item,
-          id: item.id || generateUUID()
-        }))
-      };
-      setCurrentEstimate(estimateToSave);
-    }
-    
-    console.log('Saving estimate to Supabase:', estimateToSave);
-    
-    // Create a timeout promise
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Save operation timed out after 10 seconds')), 10000)
-    );
-    
+
     try {
-      // Race between save operation and timeout
-      const result = await Promise.race([
-        estimateService.saveEstimate(estimateToSave),
-        timeoutPromise
-      ]);
-      
-      if (result && result.success) {
-        setIsGenerating(false);
-        setShowSaveSuccess(true);
-        console.log('Estimate saved successfully to Supabase!', result.data);
-        alert('Estimate saved successfully to Supabase database!');
-        
-        setTimeout(() => {
-          setShowSaveSuccess(false);
-        }, 3000);
-      } else {
-        setIsGenerating(false);
-        console.error('Failed to save estimate:', result?.error || 'Unknown error');
-        alert(`Failed to save estimate. Error: ${result?.error?.message || 'Please check if Supabase tables are configured. Run fix_estimates_tables.sql in your Supabase SQL editor.'}`);
-      }
+      // Use the same update method as auto-save to avoid duplicates
+      await updateEstimate(currentEstimate.id, {
+        title: currentEstimate.title,
+        client_name: currentEstimate.clientName,
+        project_name: currentEstimate.projectName,
+        project_id: currentEstimate.projectId,
+        status: currentEstimate.status,
+        items: currentEstimate.items,
+        subtotal: currentEstimate.subtotal,
+        tax_rate: currentEstimate.taxRate,
+        tax_amount: currentEstimate.taxAmount,
+        total: currentEstimate.total,
+        notes: currentEstimate.notes,
+        terms: currentEstimate.terms,
+        expires_at: currentEstimate.expiresAt
+      });
+
+      setIsGenerating(false);
+      setShowSaveSuccess(true);
+      console.log('Estimate saved successfully to Supabase!');
+
+      setTimeout(() => {
+        setShowSaveSuccess(false);
+      }, 3000);
     } catch (error) {
       setIsGenerating(false);
       console.error('Error saving estimate:', error);
-      if (error.message === 'Save operation timed out after 10 seconds') {
-        alert('Save operation timed out. Please check:\n1. Your Supabase connection\n2. Run fix_estimates_tables.sql in Supabase SQL editor\n3. Check browser console for errors');
-      } else {
-        alert(`Error saving estimate: ${error.message || 'Unknown error'}.\n\nPlease run fix_estimates_tables.sql in your Supabase SQL editor.`);
-      }
+      alert(`Error saving estimate: ${error.message || 'Unknown error'}`);
     }
   };
 
@@ -529,14 +573,69 @@ const EstimateGenerator = () => {
 
   const handleAIGeneratedItems = (items: EstimateItem[]) => {
     if (!currentEstimate) return;
-    
+
     const updatedEstimate = {
       ...currentEstimate,
       items: [...currentEstimate.items, ...items]
     };
-    
+
     handleUpdateEstimate(updatedEstimate);
     setShowAIAssistant(false);
+  };
+
+  const handleMarkAsApproved = async () => {
+    if (!currentEstimate || !currentEstimate.id) {
+      alert('Please save the estimate first');
+      return;
+    }
+
+    // Update estimate status to approved
+    await updateEstimate(currentEstimate.id, { status: 'approved' });
+
+    setCurrentEstimate({
+      ...currentEstimate,
+      status: 'approved'
+    });
+
+    // Ask if they want to convert to invoice
+    const createInvoice = confirm('Estimate marked as approved! Would you like to create an invoice now?');
+    if (createInvoice) {
+      const invoice = await convertEstimateToInvoice(currentEstimate.id);
+      if (invoice) {
+        alert(`Invoice ${invoice.invoiceNumber} created successfully!`);
+      }
+    }
+  };
+
+  const handleConvertToInvoice = async () => {
+    if (!currentEstimate || !currentEstimate.id) {
+      alert('Please save the estimate before converting to invoice');
+      return;
+    }
+
+    // Check if estimate has already been converted to invoice
+    if (currentEstimate.convertedToInvoice) {
+      alert('This estimate has already been converted to an invoice. Each estimate can only be converted once.');
+      return;
+    }
+
+    if (currentEstimate.status !== 'approved') {
+      const confirmConvert = confirm('This estimate has not been approved yet. Convert to invoice anyway?');
+      if (!confirmConvert) return;
+    }
+
+    const invoice = await convertEstimateToInvoice(currentEstimate.id);
+    if (invoice) {
+      // Update local state to reflect conversion
+      setCurrentEstimate({
+        ...currentEstimate,
+        convertedToInvoice: true,
+        invoiceId: invoice.id
+      });
+      alert(`Invoice ${invoice.invoiceNumber} created successfully!`);
+    } else {
+      alert('Failed to convert estimate to invoice');
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -556,10 +655,23 @@ const EstimateGenerator = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Estimate Generator</h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Create professional estimates and proposals for your clients
-          </p>
+          <div className="flex items-center space-x-3">
+            {currentEstimate && (
+              <button
+                onClick={handleBack}
+                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+                title="Back to Estimates List"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+            )}
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Estimate Generator</h1>
+              <p className="mt-1 text-sm text-gray-600">
+                Create professional estimates and proposals for your clients
+              </p>
+            </div>
+          </div>
         </div>
         
         {currentEstimate ? (
@@ -611,9 +723,33 @@ const EstimateGenerator = () => {
                 </div>
               )}
             </div>
-            
+
+            {currentEstimate.status !== 'approved' ? (
+              <button
+                onClick={handleMarkAsApproved}
+                className="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                <Check className="w-4 h-4 mr-2" />
+                Customer Approved
+              </button>
+            ) : (
+              <button
+                onClick={handleConvertToInvoice}
+                disabled={currentEstimate.convertedToInvoice}
+                className={`inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white ${
+                  currentEstimate.convertedToInvoice
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500'
+                }`}
+                title={currentEstimate.convertedToInvoice ? 'Already converted to invoice' : 'Convert to Invoice'}
+              >
+                <Receipt className="w-4 h-4 mr-2" />
+                {currentEstimate.convertedToInvoice ? 'Already Invoiced' : 'Convert to Invoice'}
+              </button>
+            )}
+
             {activeTab === 'preview' && (
-              <button 
+              <button
                 onClick={() => setActiveTab('editor')}
                 className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
@@ -659,16 +795,6 @@ const EstimateGenerator = () => {
                 </button>
               </>
             )}
-            
-            {activeTab === 'templates' && (
-              <button 
-                onClick={handleCreateFromScratch}
-                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Create Blank
-              </button>
-            )}
           </div>
         ) : (
           <button 
@@ -688,13 +814,12 @@ const EstimateGenerator = () => {
         </div>
       )}
 
-
-      {activeTab === 'templates' && !currentEstimate && (
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow">
+      {activeTab === 'editor' && (
+        <>
+          {!currentEstimate && (
+            <div className="bg-white rounded-lg shadow mb-6">
               <div className="p-6 border-b border-gray-200">
-                <h2 className="text-lg font-medium text-gray-900">Recent Estimates</h2>
+                <h2 className="text-lg font-medium text-gray-900">Your Estimates</h2>
               </div>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
@@ -728,7 +853,7 @@ const EstimateGenerator = () => {
                     ) : recentEstimates.length === 0 ? (
                       <tr>
                         <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
-                          No estimates yet. Create your first estimate above!
+                          No estimates yet. Create your first estimate!
                         </td>
                       </tr>
                     ) : (
@@ -747,16 +872,15 @@ const EstimateGenerator = () => {
                         <td className="px-6 py-4 text-sm text-gray-500">{estimate.date}</td>
                         <td className="px-6 py-4 text-right text-sm font-medium">
                           <div className="flex items-center justify-end space-x-3">
-                            <button 
+                            <button
                               onClick={() => handleEditEstimate(estimate.id)}
                               className="text-blue-600 hover:text-blue-900"
                               title="Edit Estimate"
                             >
                               <Edit2 className="w-4 h-4" />
                             </button>
-                            <button 
+                            <button
                               onClick={async () => {
-                                // Load estimate and export as PDF
                                 const result = await estimateService.getEstimate(estimate.id);
                                 if (result.success && result.data) {
                                   setCurrentEstimate(result.data);
@@ -769,7 +893,7 @@ const EstimateGenerator = () => {
                             >
                               <Download className="w-4 h-4" />
                             </button>
-                            <button 
+                            <button
                               onClick={() => handleDeleteEstimate(estimate.id)}
                               className="text-red-600 hover:text-red-900"
                               title="Delete Estimate"
@@ -784,39 +908,8 @@ const EstimateGenerator = () => {
                 </table>
               </div>
             </div>
-          </div>
+          )}
 
-          <div className="space-y-6">
-            <EstimateTemplateSelector onSelectTemplate={handleTemplateSelect} />
-
-            <div className="bg-white rounded-lg shadow">
-              <div className="p-6 border-b border-gray-200">
-                <h2 className="text-lg font-medium text-gray-900">Quick Actions</h2>
-              </div>
-              <div className="p-6 space-y-3">
-                <button 
-                  onClick={handleCreateFromScratch}
-                  className="w-full flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  <Plus className="w-4 h-4 mr-2 text-gray-500" />
-                  Create Blank Estimate
-                </button>
-                <button className="w-full flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                  <Download className="w-4 h-4 mr-2 text-gray-500" />
-                  Import from Calculator
-                </button>
-                <button className="w-full flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                  <Settings className="w-4 h-4 mr-2 text-gray-500" />
-                  Manage Templates
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {activeTab === 'editor' && (
-        <>
           {currentEstimate ? (
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
               <div className={`${showAIAssistant ? 'lg:col-span-2' : 'lg:col-span-3'}`}>

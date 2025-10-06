@@ -1,6 +1,30 @@
 import { useState } from 'react';
-import { Search, Filter, Download, Edit, Trash, Tag, FileText, ChevronDown, ChevronUp, Receipt } from 'lucide-react';
+import { Search, Filter, Download, Edit, Trash, Tag, FileText, ChevronDown, ChevronUp, Receipt, Package, MapPin, Phone } from 'lucide-react';
 import { format } from 'date-fns';
+import EditExpenseModal from './EditExpenseModal';
+
+interface LineItem {
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  totalAmount: number;
+}
+
+interface ExpenseMetadata {
+  receiptNumber?: string;
+  taxAmount?: number;
+  subtotal?: number;
+  supplierAddress?: string;
+  supplierPhone?: string;
+  lineItems?: LineItem[];
+  confidence?: {
+    vendor?: number;
+    amount?: number;
+    date?: number;
+    overall?: number;
+  };
+  source?: string;
+}
 
 interface Expense {
   id: string;
@@ -14,6 +38,7 @@ interface Expense {
   status: 'pending' | 'processed' | 'verified';
   isRecurring?: boolean;
   recurringInterval?: 'weekly' | 'monthly' | 'quarterly' | 'yearly';
+  metadata?: ExpenseMetadata;
 }
 
 interface ExpenseListProps {
@@ -24,10 +49,10 @@ interface ExpenseListProps {
   onExport: (format: 'csv' | 'pdf') => void;
 }
 
-const ExpenseList: React.FC<ExpenseListProps> = ({ 
-  expenses, 
-  projects, 
-  onEdit, 
+const ExpenseList: React.FC<ExpenseListProps> = ({
+  expenses,
+  projects,
+  onEdit,
   onDelete,
   onExport
 }) => {
@@ -40,6 +65,8 @@ const ExpenseList: React.FC<ExpenseListProps> = ({
   });
   const [sortField, setSortField] = useState<keyof Expense>('date');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [expandedRow, setExpandedRow] = useState<string | null>(null);
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
 
   const categories = [...new Set(expenses.map(expense => expense.category))];
 
@@ -117,7 +144,17 @@ const ExpenseList: React.FC<ExpenseListProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md">
+    <>
+      {editingExpense && (
+        <EditExpenseModal
+          expense={editingExpense}
+          projects={projects}
+          onSave={onEdit}
+          onClose={() => setEditingExpense(null)}
+        />
+      )}
+
+      <div className="bg-white rounded-lg shadow-md">
       <div className="p-6 border-b border-gray-200">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex-1 min-w-0">
@@ -266,61 +303,176 @@ const ExpenseList: React.FC<ExpenseListProps> = ({
                 </td>
               </tr>
             ) : (
-              filteredExpenses.map((expense) => (
-                <tr key={expense.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {format(new Date(expense.date), 'MMM d, yyyy')}
-                    {expense.isRecurring && (
-                      <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                        Recurring
-                      </span>
+              filteredExpenses.map((expense) => {
+                const hasLineItems = expense.metadata?.lineItems && expense.metadata.lineItems.length > 0;
+                const isExpanded = expandedRow === expense.id;
+
+                return (
+                  <>
+                    <tr key={expense.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {format(new Date(expense.date), 'MMM d, yyyy')}
+                        {expense.isRecurring && (
+                          <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                            Recurring
+                          </span>
+                        )}
+                        {expense.metadata?.source === 'n8n_webhook' && (
+                          <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                            Auto
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="font-medium">{expense.vendor}</div>
+                            {expense.metadata?.receiptNumber && (
+                              <div className="text-xs text-gray-500">Receipt #{expense.metadata.receiptNumber}</div>
+                            )}
+                          </div>
+                          {hasLineItems && (
+                            <button
+                              onClick={() => setExpandedRow(isExpanded ? null : expense.id)}
+                              className="ml-2 text-gray-400 hover:text-gray-600"
+                            >
+                              {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          <Tag className="mr-1 h-3 w-3" />
+                          {expense.category}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <div className="font-medium">${expense.amount.toFixed(2)}</div>
+                        {expense.metadata?.taxAmount && (
+                          <div className="text-xs text-gray-500">Tax: ${expense.metadata.taxAmount.toFixed(2)}</div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {getProjectName(expense.projectId)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {expense.imageUrl ? (
+                          <button className="text-blue-600 hover:text-blue-800">
+                            <FileText className="h-5 w-5" />
+                          </button>
+                        ) : hasLineItems ? (
+                          <Package className="h-5 w-5 text-green-500" />
+                        ) : (
+                          <span className="text-gray-400">None</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button
+                          onClick={() => setEditingExpense(expense)}
+                          className="text-blue-600 hover:text-blue-900 mr-4"
+                          title="Edit expense"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => onDelete(expense.id)}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          <Trash className="h-4 w-4" />
+                        </button>
+                      </td>
+                    </tr>
+
+                    {/* Expanded row with line items */}
+                    {isExpanded && hasLineItems && (
+                      <tr key={`${expense.id}-expanded`} className="bg-gray-50">
+                        <td colSpan={7} className="px-6 py-4">
+                          <div className="space-y-4">
+                            {/* Line Items Table */}
+                            <div>
+                              <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                <Package className="h-4 w-4 mr-2" />
+                                Line Items ({expense.metadata!.lineItems!.length})
+                              </h4>
+                              <div className="bg-white rounded-md shadow-sm overflow-hidden">
+                                <table className="min-w-full">
+                                  <thead className="bg-gray-100">
+                                    <tr>
+                                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Description</th>
+                                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Qty</th>
+                                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Unit Price</th>
+                                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Total</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-gray-200">
+                                    {expense.metadata!.lineItems!.map((item, idx) => (
+                                      <tr key={`${expense.id}-line-${idx}`}>
+                                        <td className="px-4 py-2 text-sm text-gray-900">{item.description}</td>
+                                        <td className="px-4 py-2 text-sm text-gray-600 text-right">{item.quantity}</td>
+                                        <td className="px-4 py-2 text-sm text-gray-600 text-right">${item.unitPrice.toFixed(2)}</td>
+                                        <td className="px-4 py-2 text-sm font-medium text-gray-900 text-right">${item.totalAmount.toFixed(2)}</td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                  {expense.metadata!.subtotal && (
+                                    <tfoot className="bg-gray-50">
+                                      <tr>
+                                        <td colSpan={3} className="px-4 py-2 text-sm text-gray-600 text-right">Subtotal:</td>
+                                        <td className="px-4 py-2 text-sm font-medium text-gray-900 text-right">${expense.metadata!.subtotal.toFixed(2)}</td>
+                                      </tr>
+                                      {expense.metadata!.taxAmount && (
+                                        <tr>
+                                          <td colSpan={3} className="px-4 py-2 text-sm text-gray-600 text-right">Tax:</td>
+                                          <td className="px-4 py-2 text-sm font-medium text-gray-900 text-right">${expense.metadata!.taxAmount.toFixed(2)}</td>
+                                        </tr>
+                                      )}
+                                      <tr className="font-bold">
+                                        <td colSpan={3} className="px-4 py-2 text-sm text-gray-900 text-right">Total:</td>
+                                        <td className="px-4 py-2 text-sm font-bold text-gray-900 text-right">${expense.amount.toFixed(2)}</td>
+                                      </tr>
+                                    </tfoot>
+                                  )}
+                                </table>
+                              </div>
+                            </div>
+
+                            {/* Supplier Details */}
+                            {(expense.metadata!.supplierAddress || expense.metadata!.supplierPhone) && (
+                              <div className="grid grid-cols-2 gap-4 pt-3 border-t border-gray-200">
+                                {expense.metadata!.supplierAddress && (
+                                  <div className="flex items-start">
+                                    <MapPin className="h-4 w-4 text-gray-400 mr-2 mt-0.5" />
+                                    <div>
+                                      <div className="text-xs font-medium text-gray-500">Address</div>
+                                      <div className="text-sm text-gray-700">{expense.metadata!.supplierAddress}</div>
+                                    </div>
+                                  </div>
+                                )}
+                                {expense.metadata!.supplierPhone && (
+                                  <div className="flex items-start">
+                                    <Phone className="h-4 w-4 text-gray-400 mr-2 mt-0.5" />
+                                    <div>
+                                      <div className="text-xs font-medium text-gray-500">Phone</div>
+                                      <div className="text-sm text-gray-700">{expense.metadata!.supplierPhone}</div>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
                     )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {expense.vendor}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      <Tag className="mr-1 h-3 w-3" />
-                      {expense.category}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    ${expense.amount.toFixed(2)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {getProjectName(expense.projectId)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {expense.imageUrl ? (
-                      <button className="text-blue-600 hover:text-blue-800">
-                        <FileText className="h-5 w-5" />
-                      </button>
-                    ) : (
-                      <span className="text-gray-400">None</span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button 
-                      onClick={() => onEdit(expense)}
-                      className="text-blue-600 hover:text-blue-900 mr-4"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </button>
-                    <button 
-                      onClick={() => onDelete(expense.id)}
-                      className="text-red-600 hover:text-red-900"
-                    >
-                      <Trash className="h-4 w-4" />
-                    </button>
-                  </td>
-                </tr>
-              ))
+                  </>
+                );
+              })
             )}
           </tbody>
         </table>
       </div>
     </div>
+    </>
   );
 };
 

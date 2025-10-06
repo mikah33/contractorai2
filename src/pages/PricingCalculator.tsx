@@ -22,6 +22,7 @@ import PlumbingCalculator from '../components/pricing/PlumbingCalculator';
 import RetainingWallCalculator from '../components/pricing/RetainingWallCalculator';
 import SidingCalculator from '../components/pricing/SidingCalculator';
 import TileCalculator from '../components/pricing/TileCalculator';
+import RoofingCalculator from '../components/pricing/RoofingCalculator';
 import CalculatorResults from '../components/pricing/CalculatorResults';
 import { Trade, CalculationResult } from '../types';
 import { trades } from '../data/trades';
@@ -39,8 +40,8 @@ const PricingCalculator = () => {
     setCalculationComplete(false);
     setSpecifications({});
     setCalculatorResults([]);
-    // Show specialized calculator for concrete, deck, doors_windows, drywall, electrical, excavation, fence, flooring, framing, hvac, and paint
-    setShowSpecializedCalculator(['concrete', 'deck', 'doors_windows', 'drywall', 'electrical', 'excavation', 'fence', 'flooring', 'foundation', 'framing', 'gutter', 'hvac', 'junk_removal', 'paint', 'pavers', 'plumbing', 'retaining_walls', 'siding', 'tile'].includes(trade.id));
+    // Show specialized calculator for concrete, deck, doors_windows, drywall, electrical, excavation, fence, flooring, framing, hvac, paint, and roofing
+    setShowSpecializedCalculator(['concrete', 'deck', 'doors_windows', 'drywall', 'electrical', 'excavation', 'fence', 'flooring', 'foundation', 'framing', 'gutter', 'hvac', 'junk_removal', 'paint', 'pavers', 'plumbing', 'retaining_walls', 'roofing', 'siding', 'tile'].includes(trade.id));
   };
   
   const handleSpecificationChange = (key: string, value: any) => {
@@ -117,6 +118,8 @@ const PricingCalculator = () => {
         return <SidingCalculator onCalculate={handleSpecializedCalculation} />;
       case 'tile':
         return <TileCalculator onCalculate={handleSpecializedCalculation} />;
+      case 'roofing':
+        return <RoofingCalculator onCalculate={handleSpecializedCalculation} />;
       default:
         return null;
     }

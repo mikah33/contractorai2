@@ -9,6 +9,7 @@ interface RecurringExpense {
   category: string;
   frequency: 'weekly' | 'monthly' | 'quarterly' | 'yearly';
   nextDueDate: string;
+  startDate?: string; // When this recurring expense started (for historical tracking)
   vendor: string;
   projectId?: string;
   isActive: boolean;
@@ -39,6 +40,7 @@ const RecurringExpenses: React.FC<RecurringExpensesProps> = ({
     category: '',
     frequency: 'monthly',
     nextDueDate: new Date().toISOString().split('T')[0],
+    startDate: new Date().toISOString().split('T')[0],
     vendor: '',
     isActive: true
   });
@@ -68,6 +70,7 @@ const RecurringExpenses: React.FC<RecurringExpensesProps> = ({
       category: '',
       frequency: 'monthly',
       nextDueDate: new Date().toISOString().split('T')[0],
+      startDate: new Date().toISOString().split('T')[0],
       vendor: '',
       isActive: true
     });
@@ -81,6 +84,7 @@ const RecurringExpenses: React.FC<RecurringExpensesProps> = ({
       category: expense.category,
       frequency: expense.frequency,
       nextDueDate: expense.nextDueDate,
+      startDate: expense.startDate || new Date().toISOString().split('T')[0],
       vendor: expense.vendor,
       projectId: expense.projectId,
       isActive: expense.isActive
@@ -97,6 +101,7 @@ const RecurringExpenses: React.FC<RecurringExpensesProps> = ({
       category: '',
       frequency: 'monthly',
       nextDueDate: new Date().toISOString().split('T')[0],
+      startDate: new Date().toISOString().split('T')[0],
       vendor: '',
       isActive: true
     });
@@ -118,16 +123,16 @@ const RecurringExpenses: React.FC<RecurringExpensesProps> = ({
   };
 
   const getProjectName = (projectId?: string) => {
-    if (!projectId) return 'Unassigned';
-    
+    if (!projectId) return '📊 General Business';
+
     // Handle Revenue Tracker project specially
     const revenueTrackerProject = projects.find(p => p.name === 'Revenue Tracker');
     if (revenueTrackerProject && projectId === revenueTrackerProject.id) {
       return '📊 Revenue Tracker';
     }
-    
+
     const project = projects.find(p => p.id === projectId);
-    return project ? project.name : 'Unknown Project';
+    return project ? project.name : '📊 General Business';
   };
 
   return (
@@ -247,6 +252,28 @@ const RecurringExpenses: React.FC<RecurringExpensesProps> = ({
                     className="block w-full pl-10 pr-3 py-2 border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Start Date (Historical Tracking)
+                  <span className="ml-1 text-xs text-gray-500">Optional</span>
+                </label>
+                <div className="mt-1 relative rounded-md shadow-sm">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Calendar className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type="date"
+                    value={formData.startDate || ''}
+                    onChange={(e) => setFormData({...formData, startDate: e.target.value})}
+                    className="block w-full pl-10 pr-3 py-2 border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    placeholder="When did this expense start?"
+                  />
+                </div>
+                <p className="mt-1 text-xs text-gray-500">
+                  Set when this expense started to include it in past month trends
+                </p>
               </div>
 
               <div>
