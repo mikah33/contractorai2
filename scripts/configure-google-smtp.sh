@@ -18,7 +18,7 @@ NC='\033[0m' # No Color
 
 # Supabase project details
 SUPABASE_REF="ujhgwcurllkkeouzwvgk"
-SUPABASE_URL="https://ujhgwcurllkkeouzwvgk.supabase.co"
+SUPABASE_URL="https://YOUR_PROJECT_REF.supabase.co"
 
 echo -e "${YELLOW}📋 Prerequisites Check${NC}"
 echo "Before proceeding, ensure you have:"

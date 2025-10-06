@@ -24,3 +24,9 @@ dist-ssr
 *.sw?
 .env
 docs/NETLIFY-ENV-VARS.md
+
+# Test files
+*.test.html
+debug-*.html
+setup-*.html
+test-*.html

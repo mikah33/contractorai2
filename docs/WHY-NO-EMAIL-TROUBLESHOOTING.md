@@ -101,7 +101,7 @@ You **MUST** configure Google Workspace SMTP (or another provider) to send email
 
 Run this command:
 ```bash
-curl -s "https://ujhgwcurllkkeouzwvgk.supabase.co/auth/v1/settings" \
+curl -s "https://YOUR_PROJECT_REF.supabase.co/auth/v1/settings" \
   -H "apikey: YOUR_API_KEY" | jq '.'
 ```
 
