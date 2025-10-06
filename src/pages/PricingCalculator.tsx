@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { FileDown, Copy, RotateCw, Calculator } from 'lucide-react';
 import TradeSelector from '../components/pricing/TradeSelector';
 import ProjectSpecifications from '../components/pricing/ProjectSpecifications';
@@ -34,7 +34,8 @@ const PricingCalculator = () => {
   const [calculating, setCalculating] = useState(false);
   const [calculatorResults, setCalculatorResults] = useState<CalculationResult[]>([]);
   const [showSpecializedCalculator, setShowSpecializedCalculator] = useState(false);
-  
+  const calculatorRef = useRef<HTMLDivElement>(null);
+
   const handleTradeSelect = (trade: Trade) => {
     setSelectedTrade(trade);
     setCalculationComplete(false);
@@ -43,6 +44,15 @@ const PricingCalculator = () => {
     // Show specialized calculator for concrete, deck, doors_windows, drywall, electrical, excavation, fence, flooring, framing, hvac, paint, and roofing
     setShowSpecializedCalculator(['concrete', 'deck', 'doors_windows', 'drywall', 'electrical', 'excavation', 'fence', 'flooring', 'foundation', 'framing', 'gutter', 'hvac', 'junk_removal', 'paint', 'pavers', 'plumbing', 'retaining_walls', 'roofing', 'siding', 'tile'].includes(trade.id));
   };
+
+  // Scroll to calculator when trade is selected on mobile
+  useEffect(() => {
+    if (selectedTrade && calculatorRef.current && window.innerWidth < 1024) {
+      setTimeout(() => {
+        calculatorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+  }, [selectedTrade]);
   
   const handleSpecificationChange = (key: string, value: any) => {
     setSpecifications(prev => ({
@@ -126,23 +136,23 @@ const PricingCalculator = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 px-4 sm:px-6 lg:px-0">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Pricing Calculator</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Pricing Calculator</h1>
           <p className="mt-1 text-sm text-gray-600">
             Get accurate, AI-powered pricing estimates for your construction projects
           </p>
         </div>
-        
-        <div className="flex space-x-2">
+
+        <div className="flex flex-col sm:flex-row gap-2">
           {(calculationComplete || calculatorResults.length > 0) && (
             <>
-              <button className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-teal-600 border border-transparent rounded-md shadow-sm hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
+              <button className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-teal-600 border border-transparent rounded-md shadow-sm hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 w-full sm:w-auto">
                 <FileDown className="w-4 h-4 mr-2" />
                 Export PDF
               </button>
-              <button className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+              <button className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 w-full sm:w-auto">
                 <Copy className="w-4 h-4 mr-2" />
                 Copy to Estimate
               </button>
@@ -153,7 +163,7 @@ const PricingCalculator = () => {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="lg:col-span-1">
-          <div className="p-6 bg-white rounded-lg shadow">
+          <div className="p-4 sm:p-6 bg-white rounded-lg shadow">
             <h2 className="flex items-center text-lg font-medium text-gray-900 mb-4">
               <Calculator className="w-5 h-5 mr-2 text-blue-600" />
               Select Trade
@@ -200,8 +210,8 @@ const PricingCalculator = () => {
           </div>
         </div>
         
-        <div className="lg:col-span-2">
-          <div className="p-6 bg-white rounded-lg shadow h-full">
+        <div className="lg:col-span-2" ref={calculatorRef}>
+          <div className="p-4 sm:p-6 bg-white rounded-lg shadow h-full overflow-x-auto">
             {!selectedTrade ? (
               <div className="flex flex-col items-center justify-center h-full text-center p-8">
                 <Calculator className="w-16 h-16 text-gray-400 mb-4" />
