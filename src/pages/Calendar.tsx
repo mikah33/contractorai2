@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { format, startOfWeek, addDays, isSameDay, parseISO, addMonths, subMonths, isToday } from 'date-fns';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, Download, List, Grid, Clock, Sparkles, Check, AlertCircle, PenTool as Tool } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, Download, List, Grid, Clock, Check, AlertCircle, PenTool as Tool } from 'lucide-react';
 import { useCalendarStoreSupabase } from '../stores/calendarStoreSupabase';
 import { CalendarEvent } from '../services/calendarService';
 import EventModal from '../components/calendar/EventModal';
@@ -13,7 +13,6 @@ const Calendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<ViewType>('month');
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [showAIRecommendations, setShowAIRecommendations] = useState(false);
   const [showEventModal, setShowEventModal] = useState(false);
   const { profile } = useData();
   const {
@@ -21,8 +20,7 @@ const Calendar = () => {
     loading,
     error,
     fetchEvents,
-    getEventsByDate,
-    generateAIRecommendations
+    getEventsByDate
   } = useCalendarStoreSupabase();
 
   // Fetch events on component mount
@@ -94,20 +92,9 @@ const Calendar = () => {
     setCurrentDate(prev => direction === 'prev' ? subMonths(prev, 1) : addMonths(prev, 1));
   };
 
-  const handleGenerateAISchedule = useCallback(() => {
-    console.log('Generating AI schedule for date:', currentDate);
-    const newEvents = generateAIRecommendations('deck', currentDate);
-    console.log('AI Generated Events:', newEvents);
-  }, [currentDate, generateAIRecommendations]);
-
   const handleDateClick = (date: Date) => {
     console.log('Date clicked:', date);
     setSelectedDate(date);
-  };
-
-  const handleAIInsightsToggle = () => {
-    console.log('AI Insights toggled');
-    setShowAIRecommendations(!showAIRecommendations);
   };
 
   const renderMonthView = () => {
@@ -279,33 +266,6 @@ const Calendar = () => {
     );
   };
 
-  const aiRecommendations = useMemo(() => [
-    {
-      type: 'optimization',
-      message: 'Consider scheduling concrete work for next week when weather conditions will be optimal',
-      confidence: 85,
-      impact: 'high'
-    },
-    {
-      type: 'warning',
-      message: 'Potential resource conflict detected on March 20th',
-      confidence: 90,
-      impact: 'medium'
-    },
-    {
-      type: 'suggestion',
-      message: 'Based on past projects, electrical work typically takes 20% longer than scheduled',
-      confidence: 75,
-      impact: 'medium'
-    },
-    {
-      type: 'optimization',
-      message: 'Grouping similar tasks could reduce mobilization costs by 15%',
-      confidence: 80,
-      impact: 'high'
-    }
-  ], []);
-
   return (
     <div className="space-y-4 sm:space-y-6 px-4 sm:px-6 lg:px-0">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -392,17 +352,6 @@ const Calendar = () => {
                 </button>
               </div>
 
-              <button
-                onClick={handleAIInsightsToggle}
-                className={`inline-flex items-center justify-center px-3 py-2 border rounded-md text-sm font-medium ${
-                  showAIRecommendations
-                    ? 'border-blue-500 text-blue-600 bg-blue-50'
-                    : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50 active:bg-gray-100'
-                }`}
-              >
-                <Sparkles className="w-4 h-4 sm:mr-2" />
-                <span className="hidden sm:inline">AI Insights</span>
-              </button>
             </div>
           </div>
 
@@ -424,43 +373,6 @@ const Calendar = () => {
           {view === 'day' && renderDayView()}
         </div>
       </div>
-
-      {showAIRecommendations && (
-        <div className="bg-white rounded-lg shadow p-4 sm:p-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-            <h3 className="text-base sm:text-lg font-medium text-gray-900">AI Schedule Recommendations</h3>
-            <button
-              onClick={handleGenerateAISchedule}
-              className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 active:bg-blue-800 w-full sm:w-auto"
-            >
-              <Sparkles className="w-4 h-4 mr-2" />
-              Generate Schedule
-            </button>
-          </div>
-          <div className="space-y-3 sm:space-y-4">
-            {aiRecommendations.map((rec, index) => (
-              <div
-                key={index}
-                className="flex items-start p-4 border rounded-lg bg-blue-50 border-blue-200"
-              >
-                <div className="flex-1">
-                  <div className="flex items-center">
-                    <Sparkles className="w-4 h-4 text-blue-600 mr-2" />
-                    <span className="font-medium text-blue-900">{rec.message}</span>
-                  </div>
-                  <div className="mt-1 text-sm text-blue-700">
-                    <span className="font-medium">Confidence:</span> {rec.confidence}% | 
-                    <span className="font-medium ml-2">Impact:</span> {rec.impact}
-                  </div>
-                </div>
-                <button className="text-blue-600 hover:text-blue-700 active:text-blue-800">
-                  <Check className="w-5 h-5" />
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       <EventModal 
         isOpen={showEventModal}
