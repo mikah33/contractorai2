@@ -369,7 +369,7 @@ const EmployeesManager = () => {
                   value={newEmployee.name || ''}
                   onChange={(e) => setNewEmployee({...newEmployee, name: e.target.value})}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="John Doe"
+                  placeholder={t('employees.namePlaceholder')}
                 />
               </div>
 
@@ -381,7 +381,7 @@ const EmployeesManager = () => {
                     value={newEmployee.email || ''}
                     onChange={(e) => setNewEmployee({...newEmployee, email: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="john@example.com"
+                    placeholder={t('employees.emailPlaceholder')}
                   />
                 </div>
                 <div>
@@ -391,7 +391,7 @@ const EmployeesManager = () => {
                     value={newEmployee.phone || ''}
                     onChange={(e) => setNewEmployee({...newEmployee, phone: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="(555) 123-4567"
+                    placeholder={t('employees.phonePlaceholder')}
                   />
                 </div>
               </div>
@@ -404,7 +404,7 @@ const EmployeesManager = () => {
                     value={newEmployee.jobTitle || ''}
                     onChange={(e) => setNewEmployee({...newEmployee, jobTitle: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Project Manager"
+                    placeholder={t('employees.rolePlaceholder')}
                   />
                 </div>
                 <div>
@@ -414,7 +414,7 @@ const EmployeesManager = () => {
                     value={newEmployee.hourlyRate || 0}
                     onChange={(e) => setNewEmployee({...newEmployee, hourlyRate: parseFloat(e.target.value) || 0})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="50"
+                    placeholder={t('employees.salaryPlaceholder')}
                     min="0"
                     step="0.01"
                   />
@@ -428,8 +428,8 @@ const EmployeesManager = () => {
                   onChange={(e) => setNewEmployee({...newEmployee, status: e.target.value as 'active' | 'inactive'})}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
+                  <option value="active">{t('employees.active')}</option>
+                  <option value="inactive">{t('employees.inactive')}</option>
                 </select>
               </div>
 
@@ -440,7 +440,7 @@ const EmployeesManager = () => {
                   onChange={(e) => setNewEmployee({...newEmployee, notes: e.target.value})}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   rows={3}
-                  placeholder="Additional notes about this employee..."
+                  placeholder={t('employees.notesPlaceholder')}
                 ></textarea>
               </div>
             </div>

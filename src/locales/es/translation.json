@@ -29,7 +29,11 @@
     "prospects": "Prospectos",
     "searchClients": "Buscar clientes...",
     "allStatus": "Todos los Estados",
-    "totalRevenue": "Ingresos Totales"
+    "totalRevenue": "Ingresos Totales",
+    "low": "Baja",
+    "medium": "Media",
+    "high": "Alta",
+    "amount": "Cantidad"
   },
   "navigation": {
     "dashboard": "Panel",
@@ -121,7 +125,12 @@
     "onHold": "En Espera",
     "cancelled": "Cancelado",
     "searchPlaceholder": "Buscar proyectos...",
-    "allStatus": "Todos los Estados"
+    "allStatus": "Todos los Estados",
+    "selectClient": "Seleccionar un cliente (opcional)",
+    "selectTask": "Seleccionar una tarea",
+    "addCommentPlaceholder": "Agregar un comentario...",
+    "overview": "Resumen",
+    "estimates": "Presupuestos"
   },
   "clients": {
     "title": "Clientes",
@@ -174,7 +183,24 @@
     "date": "FECHA",
     "actions": "ACCIONES",
     "noEstimateLoaded": "No hay presupuesto cargado. Seleccione una plantilla o cree uno desde cero.",
-    "createNewEstimate": "Crear Nuevo Presupuesto"
+    "createNewEstimate": "Crear Nuevo Presupuesto",
+    "noEstimatesYet": "Aún no hay presupuestos. ¡Crea tu primer presupuesto!",
+    "unsavedChanges": "Tiene cambios sin guardar. ¿Está seguro de que desea salir?",
+    "deleteConfirm": "¿Está seguro de que desea eliminar este presupuesto?",
+    "previewInvoice": "Vista Previa de Factura",
+    "preview": "Vista Previa",
+    "sendToCustomer": "Enviar al Cliente",
+    "send": "Enviar",
+    "saveEstimate": "Guardar Presupuesto",
+    "exportAsPDF": "Exportar como PDF",
+    "exportAsExcel": "Exportar como Excel",
+    "customerApproved": "Aprobado por el Cliente",
+    "alreadyInvoiced": "Ya Facturado",
+    "convertToInvoice": "Convertir a Factura",
+    "clearDataConfirm": "¿Está seguro de que desea borrar todos los datos? Esta acción no se puede deshacer.",
+    "clearDataTitle": "Borrar todos los datos y empezar de nuevo",
+    "clearData": "Borrar Datos",
+    "savedSuccessfully": "Guardado Exitosamente"
   },
   "finance": {
     "title": "Rastreador de Finanzas",
@@ -242,7 +268,17 @@
     "inactive": "Inactivo",
     "totalEmployees": "Total de Empleados",
     "searchPlaceholder": "Buscar empleados...",
-    "allStatus": "Todos los Estados"
+    "allStatus": "Todos los Estados",
+    "namePlaceholder": "Juan Pérez",
+    "emailPlaceholder": "juan@ejemplo.com",
+    "phonePlaceholder": "(555) 123-4567",
+    "rolePlaceholder": "Gerente de Proyecto",
+    "salaryPlaceholder": "50",
+    "notesPlaceholder": "Notas adicionales sobre este empleado...",
+    "noEmployeesFound": "No se encontraron empleados",
+    "addFirstEmployee": "Agregar Primer Empleado",
+    "editEmployee": "Editar Empleado",
+    "addNewEmployee": "Agregar Nuevo Empleado"
   },
   "calculator": {
     "title": "Calculadora de Precios",

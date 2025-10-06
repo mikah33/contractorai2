@@ -399,7 +399,7 @@ const ProjectManager: React.FC = () => {
 
                   <div className="mb-4">
                     <div className="flex justify-between text-sm text-gray-600 mb-1">
-                      <span>Progress</span>
+                      <span>{t('projects.progress')}</span>
                       <span>{project.progress}%</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
@@ -577,7 +577,7 @@ const ProjectManager: React.FC = () => {
                   {/* Progress */}
                   <div className="mb-6">
                     <div className="flex justify-between text-sm text-gray-600 mb-2">
-                      <span>Progress</span>
+                      <span>{t('projects.progress')}</span>
                       <span>{selectedProject.progress}%</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-3">
@@ -590,14 +590,14 @@ const ProjectManager: React.FC = () => {
 
                   {/* Budget */}
                   <div className="mb-6">
-                    <h3 className="font-medium text-gray-900 mb-2">Budget</h3>
+                    <h3 className="font-medium text-gray-900 mb-2">{t('projects.budget')}</h3>
                     <div className="bg-gray-50 rounded-lg p-4">
                       <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm text-gray-600">Spent</span>
+                        <span className="text-sm text-gray-600">{t('projects.spent')}</span>
                         <span className="font-medium">${selectedProject.spent.toLocaleString()}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Budget</span>
+                        <span className="text-sm text-gray-600">{t('projects.budget')}</span>
                         <span className="font-medium">${selectedProject.budget.toLocaleString()}</span>
                       </div>
                     </div>
@@ -605,7 +605,7 @@ const ProjectManager: React.FC = () => {
 
                   {/* Team */}
                   <div className="mb-6">
-                    <h3 className="font-medium text-gray-900 mb-2">Team</h3>
+                    <h3 className="font-medium text-gray-900 mb-2">{t('projects.team')}</h3>
                     <div className="space-y-2">
                       {(selectedProject.team || []).map((member, index) => (
                         <div key={index} className="flex items-center gap-3">
@@ -621,12 +621,12 @@ const ProjectManager: React.FC = () => {
                   {/* Tasks */}
                   <div className="mb-6">
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="font-medium text-gray-900">Tasks</h3>
+                      <h3 className="font-medium text-gray-900">{t('projects.tasks')}</h3>
                       <button
                         onClick={() => setShowTaskModal(true)}
                         className="text-blue-600 hover:text-blue-700 text-sm"
                       >
-                        Add Task
+                        {t('projects.addTask')}
                       </button>
                     </div>
                     <div className="space-y-2">
@@ -661,7 +661,7 @@ const ProjectManager: React.FC = () => {
 
                   {/* Comments */}
                   <div>
-                    <h3 className="font-medium text-gray-900 mb-3">Comments</h3>
+                    <h3 className="font-medium text-gray-900 mb-3">{t('projects.comments')}</h3>
                     <div className="space-y-4 mb-4">
                       {(selectedProject.comments || []).map((comment) => (
                         <div key={comment.id} className="flex gap-3">
@@ -676,15 +676,15 @@ const ProjectManager: React.FC = () => {
                                   {comment.attachments.map((attachment, idx) => {
                                     const isImage = attachment.match(/\.(jpg|jpeg|png|gif|webp)$/i);
                                     return isImage ? (
-                                      <img 
-                                        key={idx} 
-                                        src={attachment} 
+                                      <img
+                                        key={idx}
+                                        src={attachment}
                                         alt={`Attachment ${idx + 1}`}
                                         className="h-16 w-16 object-cover rounded cursor-pointer hover:opacity-75"
                                         onClick={() => window.open(attachment, '_blank')}
                                       />
                                     ) : (
-                                      <a 
+                                      <a
                                         key={idx}
                                         href={attachment}
                                         target="_blank"
@@ -711,7 +711,7 @@ const ProjectManager: React.FC = () => {
                     <div className="flex gap-2">
                       <input
                         type="text"
-                        placeholder="Add a comment..."
+                        placeholder={t('projects.addCommentPlaceholder')}
                         value={newComment}
                         onChange={(e) => setNewComment(e.target.value)}
                         className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
@@ -939,7 +939,7 @@ const ProjectManager: React.FC = () => {
                     }}
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   >
-                    <option value="">Select a client (optional)</option>
+                    <option value="">{t('projects.selectClient')}</option>
                     {clients.map((client) => (
                       <option key={client.id} value={client.id}>
                         {client.name} {client.company ? `- ${client.company}` : ''}
@@ -979,27 +979,27 @@ const ProjectManager: React.FC = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                  <select 
+                  <select
                     value={newProject.status}
                     onChange={(e) => setNewProject({...newProject, status: e.target.value as any})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   >
-                    <option value="active">Active</option>
-                    <option value="on_hold">On Hold</option>
-                    <option value="cancelled">Cancelled</option>
-                    <option value="completed">Completed</option>
+                    <option value="active">{t('projects.active')}</option>
+                    <option value="on_hold">{t('projects.onHold')}</option>
+                    <option value="cancelled">{t('projects.cancelled')}</option>
+                    <option value="completed">{t('projects.completed')}</option>
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
-                  <select 
+                  <select
                     value={newProject.priority}
                     onChange={(e) => setNewProject({...newProject, priority: e.target.value as any})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   >
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
+                    <option value="low">{t('common.low')}</option>
+                    <option value="medium">{t('common.medium')}</option>
+                    <option value="high">{t('common.high')}</option>
                   </select>
                 </div>
               </div>
@@ -1170,24 +1170,24 @@ const ProjectManager: React.FC = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                  <select 
+                  <select
                     value={newTask.status}
                     onChange={(e) => setNewTask({...newTask, status: e.target.value as 'todo' | 'in-progress' | 'completed'})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                    <option value="todo">To Do</option>
-                    <option value="in-progress">In Progress</option>
-                    <option value="completed">Completed</option>
+                    <option value="todo">{t('tasks.todo')}</option>
+                    <option value="in-progress">{t('tasks.inProgress')}</option>
+                    <option value="completed">{t('tasks.completed')}</option>
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
-                  <select 
+                  <select
                     value={newTask.priority}
                     onChange={(e) => setNewTask({...newTask, priority: e.target.value as 'low' | 'medium' | 'high'})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
+                    <option value="low">{t('common.low')}</option>
+                    <option value="medium">{t('common.medium')}</option>
+                    <option value="high">{t('common.high')}</option>
                   </select>
                 </div>
               </div>
@@ -1258,11 +1258,11 @@ const ProjectManager: React.FC = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Related Task</label>
-                <select 
+                <select
                   value={uploadTaskId}
                   onChange={(e) => setUploadTaskId(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                  <option value="">Select a task</option>
+                  <option value="">{t('projects.selectTask')}</option>
                   {selectedProject?.tasks.map(task => (
                     <option key={task.id} value={task.id}>{task.title}</option>
                   ))}
