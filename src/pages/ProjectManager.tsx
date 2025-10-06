@@ -9,7 +9,6 @@ import TaskList from '../components/projects/TaskList';
 import TeamMemberSelector from '../components/projects/TeamMemberSelector';
 import ProjectProgressGallery from '../components/projects/ProjectProgressGallery';
 import ProjectComments from '../components/projects/ProjectComments';
-import ProjectAIInsights from '../components/projects/ProjectAIInsights';
 import useProjectStore from '../stores/projectStore';
 import { useClientsStore } from '../stores/clientsStore';
 import { estimateService } from '../services/estimateService';
@@ -93,7 +92,7 @@ const ProjectManager: React.FC = () => {
     priority: 'medium' as 'low' | 'medium' | 'high',
     status: 'todo' as 'todo' | 'in-progress' | 'completed'
   });
-  const [activeTab, setActiveTab] = useState<'overview' | 'tasks' | 'team' | 'progress' | 'comments' | 'insights' | 'estimates'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'tasks' | 'team' | 'progress' | 'comments' | 'estimates'>('overview');
   const [projectEstimates, setProjectEstimates] = useState<any[]>([]);
   const [fullTeamMembers, setFullTeamMembers] = useState<any[]>([]);
   
@@ -834,10 +833,6 @@ const ProjectManager: React.FC = () => {
                     }
                   }}
                 />
-              )}
-
-              {activeTab === 'insights' && (
-                <ProjectAIInsights project={selectedProject} />
               )}
 
               {activeTab === 'estimates' && (
