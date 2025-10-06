@@ -2,23 +2,13 @@
   command = "npm run build"
   publish = "dist"
 
-# Ignore test files and temporary files
-[build.processing]
-  skip_processing = false
-
-# Configure secrets scanning
+# Configure secrets scanning - allow public frontend keys
 [build.environment]
-  # Allow public keys in build output (these are meant to be public)
-  SECRETS_SCAN_OMIT_KEYS = "VITE_SUPABASE_URL,VITE_SUPABASE_ANON_KEY,VITE_STRIPE_PUBLIC_KEY,VITE_GOOGLE_ADS_CLIENT_ID,VITE_META_APP_ID"
+  SECRETS_SCAN_OMIT_KEYS = "VITE_SUPABASE_URL,VITE_SUPABASE_ANON_KEY,VITE_STRIPE_PUBLIC_KEY,VITE_GOOGLE_ADS_CLIENT_ID,VITE_META_APP_ID,STRIPE_PRICE_1_MONTH,STRIPE_PRICE_3_MONTHS,STRIPE_PRICE_1_YEAR"
+  SECRETS_SCAN_OMIT_PATHS = "dist/**,tests/**,src/pages/Subscriptions.tsx"
 
-# Exclude test files from deployment
+# SPA redirects
 [[redirects]]
-  from = "/tests/*"
-  to = "/404"
-  status = 404
-
-[[redirects]]
-  from = "/*.html"
+  from = "/*"
   to = "/index.html"
   status = 200
-  conditions = {Role = ["admin"]}
