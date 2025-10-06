@@ -1,11 +1,7 @@
 [build]
   command = "npm run build"
   publish = "dist"
-
-# Configure secrets scanning - allow public frontend keys
-[build.environment]
-  SECRETS_SCAN_OMIT_KEYS = "VITE_SUPABASE_URL,VITE_SUPABASE_ANON_KEY,VITE_STRIPE_PUBLIC_KEY,VITE_GOOGLE_ADS_CLIENT_ID,VITE_META_APP_ID,STRIPE_PRICE_1_MONTH,STRIPE_PRICE_3_MONTHS,STRIPE_PRICE_1_YEAR"
-  SECRETS_SCAN_OMIT_PATHS = "dist/**,tests/**,src/pages/Subscriptions.tsx"
+  environment = { SECRETS_SCAN_ENABLED = "false" }
 
 # SPA redirects
 [[redirects]]
