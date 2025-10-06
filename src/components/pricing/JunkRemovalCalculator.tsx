@@ -91,7 +91,7 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   };
 
   const updateItem = (id: string, updates: Partial<JunkItem>) => {
-    setItems(items.map(item => 
+    setItems(items.map(item =>
       item.id === id ? { ...item, ...updates } : item
     ));
   };
@@ -124,7 +124,7 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         results.push({
           label: `${item.type.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}`,
           value: item.quantity,
-          unit: 'items'
+          unit: t('calculators.junkRemoval.units.items')
         });
       });
 
@@ -133,19 +133,19 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       totalCost += baseCost;
 
       results.push({
-        label: 'Total Volume',
+        label: t('calculators.junkRemoval.results.totalVolume'),
         value: totalVolume,
-        unit: 'cubic feet'
+        unit: t('calculators.junkRemoval.units.cubicFeet')
       },
       {
-        label: 'Total Weight',
+        label: t('calculators.junkRemoval.results.totalWeight'),
         value: totalWeight,
-        unit: 'pounds'
+        unit: t('calculators.junkRemoval.units.pounds')
       },
       {
-        label: 'Base Removal Cost',
+        label: t('calculators.junkRemoval.results.baseRemovalCost'),
         value: Number(baseCost.toFixed(2)),
-        unit: 'USD',
+        unit: t('calculators.junkRemoval.units.usd'),
         cost: baseCost
       });
 
@@ -157,9 +157,9 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         totalCost += laborCost;
 
         results.push({
-          label: `Labor (${laborers} workers, ${estimatedHours} hours)`,
+          label: `${t('calculators.junkRemoval.results.labor')} (${laborers} ${t('calculators.junkRemoval.results.workers')}, ${estimatedHours} ${t('calculators.junkRemoval.results.hours')})`,
           value: laborers * estimatedHours,
-          unit: 'labor hours',
+          unit: t('calculators.junkRemoval.units.laborHours'),
           cost: laborCost
         });
       }
@@ -169,9 +169,9 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       totalCost += distanceFee;
 
       results.push({
-        label: 'Distance Fee',
+        label: t('calculators.junkRemoval.results.distanceFee'),
         value: distance,
-        unit: 'miles',
+        unit: t('calculators.junkRemoval.units.miles'),
         cost: distanceFee
       });
 
@@ -179,14 +179,14 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       if (includeDisposal) {
         const specialItems = items.filter(item => item.requiresSpecialDisposal);
         if (specialItems.length > 0) {
-          const specialDisposalFee = specialItems.reduce((sum, item) => 
+          const specialDisposalFee = specialItems.reduce((sum, item) =>
             sum + (item.quantity * 25), 0); // $25 per special item
           totalCost += specialDisposalFee;
 
           results.push({
-            label: 'Special Disposal Fee',
+            label: t('calculators.junkRemoval.results.specialDisposalFee'),
             value: specialItems.length,
-            unit: 'items',
+            unit: t('calculators.junkRemoval.units.items'),
             cost: specialDisposalFee
           });
         }
@@ -198,9 +198,9 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         totalCost += permitFee;
 
         results.push({
-          label: 'Disposal Permit',
+          label: t('calculators.junkRemoval.results.disposalPermit'),
           value: 1,
-          unit: 'permit',
+          unit: t('calculators.junkRemoval.units.permit'),
           cost: permitFee
         });
       }
@@ -211,9 +211,9 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         totalCost += hazardousFee;
 
         results.push({
-          label: 'Hazardous Material Fee',
+          label: t('calculators.junkRemoval.results.hazardousMaterialFee'),
           value: totalWeight,
-          unit: 'pounds',
+          unit: t('calculators.junkRemoval.units.pounds'),
           cost: hazardousFee
         });
       }
@@ -225,7 +225,7 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         'difficult': 1.5
       };
       const accessMultiplier = accessMultipliers[accessDifficulty];
-      
+
       // Floor multiplier
       const floorMultiplier = 1 + ((floors - 1) * 0.15); // 15% increase per floor
 
@@ -234,17 +234,17 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
       if (accessDifficulty !== 'easy' || floors > 1) {
         results.push({
-          label: 'Access Difficulty & Floor Adjustment',
+          label: t('calculators.junkRemoval.results.accessDifficultyFloorAdjustment'),
           value: Number((accessMultiplier * floorMultiplier).toFixed(2)),
-          unit: 'multiplier'
+          unit: t('calculators.junkRemoval.units.multiplier')
         });
       }
 
       // Add total cost
       results.push({
-        label: 'Total Estimated Cost',
+        label: t('calculators.junkRemoval.results.totalEstimatedCost'),
         value: Number(totalCost.toFixed(2)),
-        unit: 'USD',
+        unit: t('calculators.junkRemoval.units.usd'),
         isTotal: true
       });
 
@@ -260,15 +260,15 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         <Trash className="h-6 w-6 text-orange-500 mr-2" />
         <h2 className="text-xl font-bold text-slate-800">{t('calculators.junkRemoval.title')}</h2>
       </div>
-      
+
       <div className="mb-4">
         <div className="border-b border-slate-200 pb-6 mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium text-slate-800">Items to Remove</h3>
+            <h3 className="text-lg font-medium text-slate-800">{t('calculators.junkRemoval.itemsToRemove')}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 md:grid-cols-3 gap-2">
               <div className="relative group">
                 <button className="w-full px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors">
-                  Furniture
+                  {t('calculators.junkRemoval.categories.furniture')}
                 </button>
                 <div className="absolute z-10 hidden group-hover:block w-48 bg-white border border-slate-200 rounded-md shadow-lg mt-1 right-0">
                   {Object.keys(commonItems.furniture).map(itemType => (
@@ -277,14 +277,14 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                       onClick={() => addItem('furniture', itemType)}
                       className="block w-full text-left px-4 py-2 hover:bg-slate-100 text-sm"
                     >
-                      {itemType.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                      {t(`calculators.junkRemoval.items.${itemType}`)}
                     </button>
                   ))}
                 </div>
               </div>
               <div className="relative group">
                 <button className="w-full px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors">
-                  Appliances
+                  {t('calculators.junkRemoval.categories.appliances')}
                 </button>
                 <div className="absolute z-10 hidden group-hover:block w-48 bg-white border border-slate-200 rounded-md shadow-lg mt-1 right-0">
                   {Object.keys(commonItems.appliances).map(itemType => (
@@ -293,14 +293,14 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                       onClick={() => addItem('appliances', itemType)}
                       className="block w-full text-left px-4 py-2 hover:bg-slate-100 text-sm"
                     >
-                      {itemType.charAt(0).toUpperCase() + itemType.slice(1)}
+                      {t(`calculators.junkRemoval.items.${itemType}`)}
                     </button>
                   ))}
                 </div>
               </div>
               <div className="relative group">
                 <button className="w-full px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors">
-                  Construction
+                  {t('calculators.junkRemoval.categories.construction')}
                 </button>
                 <div className="absolute z-10 hidden group-hover:block w-48 bg-white border border-slate-200 rounded-md shadow-lg mt-1 right-0">
                   {Object.keys(commonItems.construction).map(itemType => (
@@ -309,14 +309,14 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                       onClick={() => addItem('construction', itemType)}
                       className="block w-full text-left px-4 py-2 hover:bg-slate-100 text-sm"
                     >
-                      {itemType.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                      {t(`calculators.junkRemoval.items.${itemType}`)}
                     </button>
                   ))}
                 </div>
               </div>
               <div className="relative group">
                 <button className="w-full px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors">
-                  Yard Waste
+                  {t('calculators.junkRemoval.categories.yardWaste')}
                 </button>
                 <div className="absolute z-10 hidden group-hover:block w-48 bg-white border border-slate-200 rounded-md shadow-lg mt-1 right-0">
                   {Object.keys(commonItems.yard).map(itemType => (
@@ -325,14 +325,14 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                       onClick={() => addItem('yard', itemType)}
                       className="block w-full text-left px-4 py-2 hover:bg-slate-100 text-sm"
                     >
-                      {itemType.charAt(0).toUpperCase() + itemType.slice(1)}
+                      {t(`calculators.junkRemoval.items.${itemType}`)}
                     </button>
                   ))}
                 </div>
               </div>
               <div className="relative group">
                 <button className="w-full px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors">
-                  Electronics
+                  {t('calculators.junkRemoval.categories.electronics')}
                 </button>
                 <div className="absolute z-10 hidden group-hover:block w-48 bg-white border border-slate-200 rounded-md shadow-lg mt-1 right-0">
                   {Object.keys(commonItems.electronics).map(itemType => (
@@ -341,14 +341,14 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                       onClick={() => addItem('electronics', itemType)}
                       className="block w-full text-left px-4 py-2 hover:bg-slate-100 text-sm"
                     >
-                      {itemType.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                      {t(`calculators.junkRemoval.items.${itemType}`)}
                     </button>
                   ))}
                 </div>
               </div>
               <div className="relative group">
                 <button className="w-full px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors">
-                  Miscellaneous
+                  {t('calculators.junkRemoval.categories.miscellaneous')}
                 </button>
                 <div className="absolute z-10 hidden group-hover:block w-48 bg-white border border-slate-200 rounded-md shadow-lg mt-1 right-0">
                   {Object.keys(commonItems.misc).map(itemType => (
@@ -357,7 +357,7 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                       onClick={() => addItem('misc', itemType)}
                       className="block w-full text-left px-4 py-2 hover:bg-slate-100 text-sm"
                     >
-                      {itemType.charAt(0).toUpperCase() + itemType.slice(1)}
+                      {t(`calculators.junkRemoval.items.${itemType}`)}
                     </button>
                   ))}
                 </div>
@@ -370,16 +370,16 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Item Type
+                    {t('calculators.junkRemoval.itemType')}
                   </label>
                   <div className="p-2 bg-white border border-slate-300 rounded-md">
-                    {item.type.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                    {t(`calculators.junkRemoval.items.${item.type.split('-').slice(1).join('-')}`)}
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Quantity
+                    {t('calculators.junkRemoval.quantity')}
                   </label>
                   <input
                     type="number"
@@ -393,12 +393,12 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 <div className="flex items-center space-x-4">
                   {item.requiresSpecialDisposal && (
                     <span className="text-orange-500 text-sm">
-                      Requires special disposal
+                      {t('calculators.junkRemoval.requiresSpecialDisposal')}
                     </span>
                   )}
                   {item.needsDisassembly && (
                     <span className="text-blue-500 text-sm">
-                      May require disassembly
+                      {t('calculators.junkRemoval.mayRequireDisassembly')}
                     </span>
                   )}
                 </div>
@@ -408,18 +408,18 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 onClick={() => removeItem(item.id)}
                 className="mt-4 text-red-500 hover:text-red-600"
               >
-                Remove Item
+                {t('calculators.junkRemoval.removeItem')}
               </button>
             </div>
           ))}
         </div>
 
         <div className="border-b border-slate-200 pb-6 mb-6">
-          <h3 className="text-lg font-medium text-slate-800 mb-4">Service Details</h3>
+          <h3 className="text-lg font-medium text-slate-800 mb-4">{t('calculators.junkRemoval.serviceDetails')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label htmlFor="distance" className="block text-sm font-medium text-slate-700 mb-1">
-                Distance to Disposal Site (miles)
+                {t('calculators.junkRemoval.distanceToDisposalSite')}
               </label>
               <input
                 type="number"
@@ -429,13 +429,13 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 value={distance}
                 onChange={(e) => setDistance(e.target.value ? Number(e.target.value) : '')}
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                placeholder="Enter distance in miles"
+                placeholder={t('calculators.junkRemoval.enterDistancePlaceholder')}
               />
             </div>
 
             <div>
               <label htmlFor="accessDifficulty" className="block text-sm font-medium text-slate-700 mb-1">
-                Access Difficulty
+                {t('calculators.junkRemoval.accessDifficulty')}
               </label>
               <select
                 id="accessDifficulty"
@@ -443,15 +443,15 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 onChange={(e) => setAccessDifficulty(e.target.value as 'easy' | 'moderate' | 'difficult')}
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               >
-                <option value="easy">Easy Access</option>
-                <option value="moderate">Moderate Access</option>
-                <option value="difficult">Difficult Access</option>
+                <option value="easy">{t('calculators.junkRemoval.accessLevels.easy')}</option>
+                <option value="moderate">{t('calculators.junkRemoval.accessLevels.moderate')}</option>
+                <option value="difficult">{t('calculators.junkRemoval.accessLevels.difficult')}</option>
               </select>
             </div>
 
             <div>
               <label htmlFor="floors" className="block text-sm font-medium text-slate-700 mb-1">
-                Number of Floors
+                {t('calculators.junkRemoval.numberOfFloors')}
               </label>
               <input
                 type="number"
@@ -473,7 +473,7 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
               />
               <label htmlFor="needsLabor" className="ml-2 block text-sm font-medium text-slate-700">
-                Need Loading Assistance
+                {t('calculators.junkRemoval.needLoadingAssistance')}
               </label>
             </div>
           </div>
@@ -481,7 +481,7 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
           {needsLabor && (
             <div className="mt-4">
               <label htmlFor="laborers" className="block text-sm font-medium text-slate-700 mb-1">
-                Number of Workers
+                {t('calculators.junkRemoval.numberOfWorkers')}
               </label>
               <select
                 id="laborers"
@@ -489,16 +489,16 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 onChange={(e) => setLaborers(Number(e.target.value) as 2 | 3 | 4)}
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               >
-                <option value={2}>2 Workers</option>
-                <option value={3}>3 Workers</option>
-                <option value={4}>4 Workers</option>
+                <option value={2}>{t('calculators.junkRemoval.workersCount.two')}</option>
+                <option value={3}>{t('calculators.junkRemoval.workersCount.three')}</option>
+                <option value={4}>{t('calculators.junkRemoval.workersCount.four')}</option>
               </select>
             </div>
           )}
         </div>
 
         <div className="border-b border-slate-200 pb-6">
-          <h3 className="text-lg font-medium text-slate-800 mb-4">Additional Options</h3>
+          <h3 className="text-lg font-medium text-slate-800 mb-4">{t('calculators.junkRemoval.additionalOptions')}</h3>
           <div className="space-y-4">
             <div className="flex items-center">
               <input
@@ -509,7 +509,7 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
               />
               <label htmlFor="includeDisposal" className="ml-2 block text-sm font-medium text-slate-700">
-                Include Disposal Fees
+                {t('calculators.junkRemoval.includeDisposalFees')}
               </label>
             </div>
 
@@ -522,7 +522,7 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
               />
               <label htmlFor="needsPermit" className="ml-2 block text-sm font-medium text-slate-700">
-                Requires Disposal Permit
+                {t('calculators.junkRemoval.requiresDisposalPermit')}
               </label>
             </div>
 
@@ -535,13 +535,13 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
               />
               <label htmlFor="isHazardous" className="ml-2 block text-sm font-medium text-slate-700">
-                Contains Hazardous Materials
+                {t('calculators.junkRemoval.containsHazardousMaterials')}
               </label>
             </div>
           </div>
         </div>
       </div>
-      
+
       <button
         onClick={handleCalculate}
         disabled={!isFormValid}

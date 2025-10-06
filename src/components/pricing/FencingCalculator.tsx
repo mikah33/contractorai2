@@ -169,7 +169,7 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   };
 
   const updateGate = (id: string, updates: Partial<Gate>) => {
-    setGates(gates.map(gate => 
+    setGates(gates.map(gate =>
       gate.id === id ? { ...gate, ...updates } : gate
     ));
   };
@@ -187,7 +187,7 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   };
 
   const updateCorner = (id: string, updates: Partial<Corner>) => {
-    setCorners(corners.map(corner => 
+    setCorners(corners.map(corner =>
       corner.id === id ? { ...corner, ...updates } : corner
     ));
   };
@@ -209,9 +209,9 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       totalCost += postCost;
 
       results.push({
-        label: `${material.charAt(0).toUpperCase() + material.slice(1)} Posts`,
+        label: `${material.charAt(0).toUpperCase() + material.slice(1)} ${t('calculators.fencing.posts')}`,
         value: postCount,
-        unit: 'posts',
+        unit: t('calculators.fencing.postsUnit'),
         cost: postCost
       });
 
@@ -222,9 +222,9 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         totalCost += capCost;
 
         results.push({
-          label: 'Post Caps',
+          label: t('calculators.fencing.postCaps'),
           value: postCount,
-          unit: 'caps',
+          unit: t('calculators.fencing.capsUnit'),
           cost: capCost
         });
       }
@@ -237,9 +237,9 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         totalCost += concreteCost;
 
         results.push({
-          label: 'Concrete Mix',
+          label: t('calculators.fencing.concreteMix'),
           value: Math.ceil(totalConcrete * 4),
-          unit: '60lb bags',
+          unit: t('calculators.fencing.concreteBagsUnit'),
           cost: concreteCost
         });
       } else if (postMountType === 'spike') {
@@ -247,9 +247,9 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         totalCost += spikeCost;
 
         results.push({
-          label: 'Post Spikes',
+          label: t('calculators.fencing.postSpikes'),
           value: postCount,
-          unit: 'pieces',
+          unit: t('calculators.fencing.piecesUnit'),
           cost: spikeCost
         });
       } else if (postMountType === 'bracket') {
@@ -257,9 +257,9 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         totalCost += bracketCost;
 
         results.push({
-          label: 'Post Mounting Brackets',
+          label: t('calculators.fencing.postMountingBrackets'),
           value: postCount,
-          unit: 'pieces',
+          unit: t('calculators.fencing.piecesUnit'),
           cost: bracketCost
         });
       }
@@ -272,9 +272,9 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         totalCost += panelCost;
 
         results.push({
-          label: `${material.charAt(0).toUpperCase() + material.slice(1)} Panels`,
+          label: `${material.charAt(0).toUpperCase() + material.slice(1)} ${t('calculators.fencing.panels')}`,
           value: panelsNeeded,
-          unit: '8ft panels',
+          unit: t('calculators.fencing.panelsUnit'),
           cost: panelCost
         });
       } else if (fenceType === 'picket') {
@@ -285,9 +285,9 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         totalCost += picketCost;
 
         results.push({
-          label: `${material.charAt(0).toUpperCase() + material.slice(1)} Pickets`,
+          label: `${material.charAt(0).toUpperCase() + material.slice(1)} ${t('calculators.fencing.pickets')}`,
           value: picketsNeeded,
-          unit: 'pickets',
+          unit: t('calculators.fencing.picketsUnit'),
           cost: picketCost
         });
       } else if (fenceType === 'chain-link') {
@@ -297,9 +297,9 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         totalCost += fabricCost;
 
         results.push({
-          label: 'Chain Link Fabric',
+          label: t('calculators.fencing.chainLinkFabric'),
           value: Number(fabricNeeded.toFixed(2)),
-          unit: 'square yards',
+          unit: t('calculators.fencing.squareYardsUnit'),
           cost: fabricCost
         });
       }
@@ -313,9 +313,9 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         totalCost += railCost;
 
         results.push({
-          label: `${material.charAt(0).toUpperCase() + material.slice(1)} Rails`,
+          label: `${material.charAt(0).toUpperCase() + material.slice(1)} ${t('calculators.fencing.rails')}`,
           value: railsNeeded,
-          unit: '8ft pieces',
+          unit: t('calculators.fencing.railsUnit'),
           cost: railCost
         });
       }
@@ -328,9 +328,9 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         totalCost += kickboardCost;
 
         results.push({
-          label: 'Kickboard',
+          label: t('calculators.fencing.kickboard'),
           value: kickboardPieces,
-          unit: '8ft pieces',
+          unit: t('calculators.fencing.kickboardUnit'),
           cost: kickboardCost
         });
       }
@@ -342,9 +342,9 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         totalCost += gateCost;
 
         results.push({
-          label: `${gate.type.charAt(0).toUpperCase() + gate.type.slice(1)} Gate`,
+          label: `${gate.type.charAt(0).toUpperCase() + gate.type.slice(1)} ${t('calculators.fencing.gate')}`,
           value: 1,
-          unit: 'unit',
+          unit: t('calculators.fencing.gateUnit'),
           cost: gateCost
         });
 
@@ -353,9 +353,9 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
           totalCost += hardwareCost;
 
           results.push({
-            label: `${gate.type.charAt(0).toUpperCase() + gate.type.slice(1)} Gate Hardware`,
+            label: `${gate.type.charAt(0).toUpperCase() + gate.type.slice(1)} ${t('calculators.fencing.gateHardware')}`,
             value: 1,
-            unit: 'set',
+            unit: t('calculators.fencing.gateHardwareUnit'),
             cost: hardwareCost
           });
         }
@@ -363,9 +363,9 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
       // Add total cost
       results.push({
-        label: 'Total Estimated Cost',
+        label: t('calculators.fencing.totalEstimatedCost'),
         value: Number(totalCost.toFixed(2)),
-        unit: 'USD',
+        unit: t('calculators.fencing.currencyUnit'),
         isTotal: true
       });
 
@@ -373,8 +373,8 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     }
   };
 
-  const isFormValid = 
-    typeof length === 'number' && 
+  const isFormValid =
+    typeof length === 'number' &&
     typeof height === 'number' &&
     (!includeKickboard || typeof height === 'number') &&
     (postMountType !== 'concrete' || typeof concreteDepth === 'number');
@@ -385,12 +385,12 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         <Fence className="h-6 w-6 text-orange-500 mr-2" />
         <h2 className="text-xl font-bold text-slate-800">{t('calculators.fencing.title')}</h2>
       </div>
-      
+
       <div className="mb-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div>
             <label htmlFor="fenceType" className="block text-sm font-medium text-slate-700 mb-1">
-              Fence Type
+              {t('calculators.fencing.fenceType')}
             </label>
             <select
               id="fenceType"
@@ -398,17 +398,17 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               onChange={(e) => setFenceType(e.target.value as typeof fenceType)}
               className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             >
-              <option value="privacy">Privacy Fence</option>
-              <option value="picket">Picket Fence</option>
-              <option value="chain-link">Chain Link Fence</option>
-              <option value="ranch">Ranch Rail Fence</option>
-              <option value="panel">Panel Fence</option>
+              <option value="privacy">{t('calculators.fencing.privacyFence')}</option>
+              <option value="picket">{t('calculators.fencing.picketFence')}</option>
+              <option value="chain-link">{t('calculators.fencing.chainLinkFence')}</option>
+              <option value="ranch">{t('calculators.fencing.ranchRailFence')}</option>
+              <option value="panel">{t('calculators.fencing.panelFence')}</option>
             </select>
           </div>
 
           <div>
             <label htmlFor="material" className="block text-sm font-medium text-slate-700 mb-1">
-              Material
+              {t('calculators.fencing.material')}
             </label>
             <select
               id="material"
@@ -418,13 +418,13 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             >
               {fenceType !== 'chain-link' && (
                 <>
-                  <option value="wood">Wood</option>
-                  <option value="vinyl">Vinyl</option>
-                  {fenceType !== 'ranch' && <option value="composite">Composite</option>}
+                  <option value="wood">{t('calculators.fencing.wood')}</option>
+                  <option value="vinyl">{t('calculators.fencing.vinyl')}</option>
+                  {fenceType !== 'ranch' && <option value="composite">{t('calculators.fencing.composite')}</option>}
                 </>
               )}
               {(fenceType === 'chain-link' || fenceType === 'picket') && (
-                <option value="metal">Metal</option>
+                <option value="metal">{t('calculators.fencing.metal')}</option>
               )}
             </select>
           </div>
@@ -433,7 +433,7 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div>
             <label htmlFor="length" className="block text-sm font-medium text-slate-700 mb-1">
-              Total Length (feet)
+              {t('calculators.fencing.totalLength')}
             </label>
             <input
               type="number"
@@ -443,13 +443,13 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               value={length}
               onChange={(e) => setLength(e.target.value ? Number(e.target.value) : '')}
               className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-              placeholder="Enter fence length"
+              placeholder={t('calculators.fencing.enterFenceLength')}
             />
           </div>
 
           <div>
             <label htmlFor="height" className="block text-sm font-medium text-slate-700 mb-1">
-              Height (inches)
+              {t('calculators.fencing.height')}
             </label>
             <input
               type="number"
@@ -459,13 +459,13 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               value={height}
               onChange={(e) => setHeight(e.target.value ? Number(e.target.value) : '')}
               className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-              placeholder="Enter fence height"
+              placeholder={t('calculators.fencing.enterFenceHeight')}
             />
           </div>
 
           <div>
             <label htmlFor="postSpacing" className="block text-sm font-medium text-slate-700 mb-1">
-              Post Spacing
+              {t('calculators.fencing.postSpacing')}
             </label>
             <select
               id="postSpacing"
@@ -473,33 +473,33 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               onChange={(e) => setPostSpacing(Number(e.target.value) as 6 | 8)}
               className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             >
-              <option value={6}>6 feet</option>
-              <option value={8}>8 feet</option>
+              <option value={6}>{t('calculators.fencing.sixFeet')}</option>
+              <option value={8}>{t('calculators.fencing.eightFeet')}</option>
             </select>
           </div>
         </div>
 
         <div className="border-t border-slate-200 pt-6 mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium text-slate-800">Gates</h3>
+            <h3 className="text-lg font-medium text-slate-800">{t('calculators.fencing.gates')}</h3>
             <div className="flex space-x-2">
               <button
                 onClick={() => addGate('single')}
                 className="px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors"
               >
-                Add Single Gate
+                {t('calculators.fencing.addSingleGate')}
               </button>
               <button
                 onClick={() => addGate('double')}
                 className="px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors"
               >
-                Add Double Gate
+                {t('calculators.fencing.addDoubleGate')}
               </button>
               <button
                 onClick={() => addGate('rolling')}
                 className="px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors"
               >
-                Add Rolling Gate
+                {t('calculators.fencing.addRollingGate')}
               </button>
             </div>
           </div>
@@ -509,7 +509,7 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Gate Width (inches)
+                    {t('calculators.fencing.gateWidth')}
                   </label>
                   <input
                     type="number"
@@ -523,7 +523,7 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Gate Height (inches)
+                    {t('calculators.fencing.gateHeight')}
                   </label>
                   <input
                     type="number"
@@ -537,17 +537,17 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Material
+                    {t('calculators.fencing.material')}
                   </label>
                   <select
                     value={gate.material}
                     onChange={(e) => updateGate(gate.id, { material: e.target.value })}
                     className="w-full p-2 border border-slate-300 rounded-md"
                   >
-                    <option value="wood">Wood</option>
-                    <option value="vinyl">Vinyl</option>
-                    <option value="metal">Metal</option>
-                    <option value="composite">Composite</option>
+                    <option value="wood">{t('calculators.fencing.wood')}</option>
+                    <option value="vinyl">{t('calculators.fencing.vinyl')}</option>
+                    <option value="metal">{t('calculators.fencing.metal')}</option>
+                    <option value="composite">{t('calculators.fencing.composite')}</option>
                   </select>
                 </div>
 
@@ -559,7 +559,7 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                     className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
                   />
                   <label className="ml-2 block text-sm font-medium text-slate-700">
-                    Include Hardware
+                    {t('calculators.fencing.includeHardware')}
                   </label>
                 </div>
               </div>
@@ -568,7 +568,7 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 onClick={() => removeGate(gate.id)}
                 className="mt-4 text-red-500 hover:text-red-600"
               >
-                Remove Gate
+                {t('calculators.fencing.removeGate')}
               </button>
             </div>
           ))}
@@ -576,12 +576,12 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
         <div className="border-t border-slate-200 pt-6 mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium text-slate-800">Corners</h3>
+            <h3 className="text-lg font-medium text-slate-800">{t('calculators.fencing.corners')}</h3>
             <button
               onClick={addCorner}
               className="px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors"
             >
-              Add Corner
+              {t('calculators.fencing.addCorner')}
             </button>
           </div>
 
@@ -589,7 +589,7 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             <div key={corner.id} className="mb-4 p-4 bg-slate-50 rounded-lg">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Corner Angle (degrees)
+                  {t('calculators.fencing.cornerAngle')}
                 </label>
                 <input
                   type="number"
@@ -606,18 +606,18 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 onClick={() => removeCorner(corner.id)}
                 className="mt-4 text-red-500 hover:text-red-600"
               >
-                Remove Corner
+                {t('calculators.fencing.removeCorner')}
               </button>
             </div>
           ))}
         </div>
 
         <div className="border-t border-slate-200 pt-6 mb-6">
-          <h3 className="text-lg font-medium text-slate-800 mb-4">Terrain & Installation</h3>
+          <h3 className="text-lg font-medium text-slate-800 mb-4">{t('calculators.fencing.terrainInstallation')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label htmlFor="slopeType" className="block text-sm font-medium text-slate-700 mb-1">
-                Slope Type
+                {t('calculators.fencing.slopeType')}
               </label>
               <select
                 id="slopeType"
@@ -625,16 +625,16 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 onChange={(e) => setSlopeType(e.target.value as typeof slopeType)}
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               >
-                <option value="level">Level Ground</option>
-                <option value="stepping">Stepping</option>
-                <option value="racking">Racking</option>
+                <option value="level">{t('calculators.fencing.levelGround')}</option>
+                <option value="stepping">{t('calculators.fencing.stepping')}</option>
+                <option value="racking">{t('calculators.fencing.racking')}</option>
               </select>
             </div>
 
             {slopeType !== 'level' && (
               <div>
                 <label htmlFor="slopePercentage" className="block text-sm font-medium text-slate-700 mb-1">
-                  Slope Percentage
+                  {t('calculators.fencing.slopePercentage')}
                 </label>
                 <input
                   type="number"
@@ -645,14 +645,14 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   value={slopePercentage}
                   onChange={(e) => setSlopePercentage(e.target.value ? Number(e.target.value) : '')}
                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  placeholder="Enter slope percentage"
+                  placeholder={t('calculators.fencing.enterSlopePercentage')}
                 />
               </div>
             )}
 
             <div>
               <label htmlFor="postMountType" className="block text-sm font-medium text-slate-700 mb-1">
-                Post Mounting Method
+                {t('calculators.fencing.postMountingMethod')}
               </label>
               <select
                 id="postMountType"
@@ -660,16 +660,16 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 onChange={(e) => setPostMountType(e.target.value as typeof postMountType)}
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               >
-                <option value="concrete">Concrete</option>
-                <option value="spike">Ground Spike</option>
-                <option value="bracket">Surface Mount Bracket</option>
+                <option value="concrete">{t('calculators.fencing.concrete')}</option>
+                <option value="spike">{t('calculators.fencing.groundSpike')}</option>
+                <option value="bracket">{t('calculators.fencing.surfaceMountBracket')}</option>
               </select>
             </div>
 
             {postMountType === 'concrete' && (
               <div>
                 <label htmlFor="concreteDepth" className="block text-sm font-medium text-slate-700 mb-1">
-                  Post Hole Depth (inches)
+                  {t('calculators.fencing.postHoleDepth')}
                 </label>
                 <input
                   type="number"
@@ -679,7 +679,7 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   value={concreteDepth}
                   onChange={(e) => setConcreteDepth(e.target.value ? Number(e.target.value) : '')}
                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  placeholder="Enter post hole depth"
+                  placeholder={t('calculators.fencing.enterPostHoleDepth')}
                 />
               </div>
             )}
@@ -687,7 +687,7 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         </div>
 
         <div className="border-t border-slate-200 pt-6">
-          <h3 className="text-lg font-medium text-slate-800 mb-4">Additional Options</h3>
+          <h3 className="text-lg font-medium text-slate-800 mb-4">{t('calculators.fencing.additionalOptions')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex items-center">
               <input
@@ -698,7 +698,7 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
               />
               <label htmlFor="includePostCaps" className="ml-2 block text-sm font-medium text-slate-700">
-                Include Post Caps
+                {t('calculators.fencing.includePostCaps')}
               </label>
             </div>
 
@@ -711,13 +711,13 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
               />
               <label htmlFor="includeKickboard" className="ml-2 block text-sm font-medium text-slate-700">
-                Include Kickboard
+                {t('calculators.fencing.includeKickboard')}
               </label>
             </div>
 
             <div>
               <label htmlFor="wasteFactor" className="block text-sm font-medium text-slate-700 mb-1">
-                Waste Factor
+                {t('calculators.fencing.wasteFactor')}
               </label>
               <select
                 id="wasteFactor"
@@ -725,15 +725,15 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 onChange={(e) => setWasteFactor(Number(e.target.value) as 10 | 15 | 20)}
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               >
-                <option value={10}>10% - Simple layout</option>
-                <option value={15}>15% - Average complexity</option>
-                <option value={20}>20% - Complex layout</option>
+                <option value={10}>{t('calculators.fencing.wasteFactorSimple')}</option>
+                <option value={15}>{t('calculators.fencing.wasteFactorAverage')}</option>
+                <option value={20}>{t('calculators.fencing.wasteFactorComplex')}</option>
               </select>
             </div>
           </div>
         </div>
       </div>
-      
+
       <button
         onClick={handleCalculate}
         disabled={!isFormValid}

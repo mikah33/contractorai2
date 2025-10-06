@@ -18,9 +18,9 @@ const ExcavationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const [spoilFactor, setSpoilFactor] = useState<10 | 15 | 20>(15);
 
   const handleCalculate = () => {
-    if (typeof length === 'number' && typeof width === 'number' && 
+    if (typeof length === 'number' && typeof width === 'number' &&
         typeof depth === 'number' && typeof removalCostPerYard === 'number') {
-      
+
       let totalVolume = 0;
       const results: CalculationResult[] = [];
 
@@ -32,7 +32,7 @@ const ExcavationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         const slopeDepthOffset = depth * slopeRatio;
         const topLength = length + (2 * slopeDepthOffset);
         const topWidth = width + (2 * slopeDepthOffset);
-        
+
         // Average area times height
         totalVolume = (
           ((length * width) + (topLength * topWidth)) / 2 * depth
@@ -43,16 +43,16 @@ const ExcavationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       const spoilVolume = addSpoilFactor ? totalVolume * (1 + spoilFactor / 100) : totalVolume;
 
       results.push({
-        label: 'Base Excavation Volume',
+        label: t('calculators.excavation.baseExcavationVolume'),
         value: Number(totalVolume.toFixed(2)),
-        unit: 'cubic yards'
+        unit: t('calculators.excavation.cubicYards')
       });
 
       if (addSpoilFactor) {
         results.push({
-          label: `Volume with ${spoilFactor}% Spoil Factor`,
+          label: t('calculators.excavation.volumeWithSpoilFactor', { factor: spoilFactor }),
           value: Number(spoilVolume.toFixed(2)),
-          unit: 'cubic yards'
+          unit: t('calculators.excavation.cubicYards')
         });
       }
 
@@ -61,9 +61,9 @@ const ExcavationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       let totalCost = removalCost;
 
       results.push({
-        label: 'Removal Cost',
+        label: t('calculators.excavation.removalCost'),
         value: Number(removalCost.toFixed(2)),
-        unit: 'USD',
+        unit: t('calculators.excavation.usd'),
         cost: removalCost
       });
 
@@ -72,18 +72,18 @@ const ExcavationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         totalCost += totalHaulOffCost;
 
         results.push({
-          label: 'Total Haul-off Cost',
+          label: t('calculators.excavation.totalHaulOffCost'),
           value: Number(totalHaulOffCost.toFixed(2)),
-          unit: 'USD',
+          unit: t('calculators.excavation.usd'),
           cost: totalHaulOffCost
         });
       }
 
       // Add total cost
       results.push({
-        label: 'Total Cost',
+        label: t('calculators.excavation.totalCost'),
         value: Number(totalCost.toFixed(2)),
-        unit: 'USD',
+        unit: t('calculators.excavation.usd'),
         isTotal: true
       });
 
@@ -91,10 +91,10 @@ const ExcavationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     }
   };
 
-  const isFormValid = 
-    typeof length === 'number' && 
-    typeof width === 'number' && 
-    typeof depth === 'number' && 
+  const isFormValid =
+    typeof length === 'number' &&
+    typeof width === 'number' &&
+    typeof depth === 'number' &&
     typeof removalCostPerYard === 'number' &&
     (!includeHaulOff || typeof totalHaulOffCost === 'number');
 
@@ -104,12 +104,12 @@ const ExcavationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         <Shovel className="h-6 w-6 text-orange-500 mr-2" />
         <h2 className="text-xl font-bold text-slate-800">{t('calculators.excavation.title')}</h2>
       </div>
-      
+
       <div className="mb-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div>
             <label htmlFor="length" className="block text-sm font-medium text-slate-700 mb-1">
-              Length (feet)
+              {t('calculators.excavation.lengthFeet')}
             </label>
             <input
               type="number"
@@ -119,13 +119,13 @@ const ExcavationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               value={length}
               onChange={(e) => setLength(e.target.value ? Number(e.target.value) : '')}
               className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-              placeholder="Enter length in feet"
+              placeholder={t('calculators.excavation.enterLengthInFeet')}
             />
           </div>
-          
+
           <div>
             <label htmlFor="width" className="block text-sm font-medium text-slate-700 mb-1">
-              Width (feet)
+              {t('calculators.excavation.widthFeet')}
             </label>
             <input
               type="number"
@@ -135,13 +135,13 @@ const ExcavationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               value={width}
               onChange={(e) => setWidth(e.target.value ? Number(e.target.value) : '')}
               className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-              placeholder="Enter width in feet"
+              placeholder={t('calculators.excavation.enterWidthInFeet')}
             />
           </div>
 
           <div>
             <label htmlFor="depth" className="block text-sm font-medium text-slate-700 mb-1">
-              Depth (feet)
+              {t('calculators.excavation.depthFeet')}
             </label>
             <input
               type="number"
@@ -151,14 +151,14 @@ const ExcavationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               value={depth}
               onChange={(e) => setDepth(e.target.value ? Number(e.target.value) : '')}
               className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-              placeholder="Enter depth in feet"
+              placeholder={t('calculators.excavation.enterDepthInFeet')}
             />
           </div>
         </div>
 
         <div className="mb-6">
           <label htmlFor="removalCostPerYard" className="block text-sm font-medium text-slate-700 mb-1">
-            Removal Cost per Cubic Yard ($)
+            {t('calculators.excavation.removalCostPerCubicYard')}
           </label>
           <input
             type="number"
@@ -168,16 +168,16 @@ const ExcavationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             value={removalCostPerYard}
             onChange={(e) => setRemovalCostPerYard(e.target.value ? Number(e.target.value) : '')}
             className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-            placeholder="Enter removal cost per cubic yard"
+            placeholder={t('calculators.excavation.enterRemovalCostPerCubicYard')}
           />
         </div>
 
         <div className="border-t border-slate-200 pt-6 mb-6">
-          <h3 className="text-lg font-medium text-slate-800 mb-4">Site Conditions</h3>
+          <h3 className="text-lg font-medium text-slate-800 mb-4">{t('calculators.excavation.siteConditions')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label htmlFor="soilType" className="block text-sm font-medium text-slate-700 mb-1">
-                Soil Type
+                {t('calculators.excavation.soilType')}
               </label>
               <select
                 id="soilType"
@@ -185,9 +185,9 @@ const ExcavationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 onChange={(e) => setSoilType(e.target.value as 'loose' | 'compacted' | 'rock')}
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               >
-                <option value="loose">Loose Soil</option>
-                <option value="compacted">Compacted Soil</option>
-                <option value="rock">Rocky Soil</option>
+                <option value="loose">{t('calculators.excavation.looseSoil')}</option>
+                <option value="compacted">{t('calculators.excavation.compactedSoil')}</option>
+                <option value="rock">{t('calculators.excavation.rockySoil')}</option>
               </select>
             </div>
 
@@ -200,7 +200,7 @@ const ExcavationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
               />
               <label htmlFor="hasSlopedSides" className="ml-2 block text-sm font-medium text-slate-700">
-                Include Sloped Sides
+                {t('calculators.excavation.includeSlopedSides')}
               </label>
             </div>
           </div>
@@ -208,7 +208,7 @@ const ExcavationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
           {hasSlopedSides && (
             <div className="mt-4">
               <label htmlFor="slopeRatio" className="block text-sm font-medium text-slate-700 mb-1">
-                Slope Ratio (horizontal:1 vertical)
+                {t('calculators.excavation.slopeRatio')}
               </label>
               <select
                 id="slopeRatio"
@@ -216,16 +216,16 @@ const ExcavationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 onChange={(e) => setSlopeRatio(Number(e.target.value) as 1 | 1.5 | 2)}
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               >
-                <option value={1}>1:1 Slope</option>
-                <option value={1.5}>1.5:1 Slope</option>
-                <option value={2}>2:1 Slope</option>
+                <option value={1}>{t('calculators.excavation.slope1to1')}</option>
+                <option value={1.5}>{t('calculators.excavation.slope1_5to1')}</option>
+                <option value={2}>{t('calculators.excavation.slope2to1')}</option>
               </select>
             </div>
           )}
         </div>
 
         <div className="border-t border-slate-200 pt-6">
-          <h3 className="text-lg font-medium text-slate-800 mb-4">Additional Options</h3>
+          <h3 className="text-lg font-medium text-slate-800 mb-4">{t('calculators.excavation.additionalOptions')}</h3>
           <div className="space-y-4">
             <div className="flex items-center">
               <input
@@ -236,14 +236,14 @@ const ExcavationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
               />
               <label htmlFor="addSpoilFactor" className="ml-2 block text-sm font-medium text-slate-700">
-                Add Spoil Factor
+                {t('calculators.excavation.addSpoilFactor')}
               </label>
             </div>
 
             {addSpoilFactor && (
               <div>
                 <label htmlFor="spoilFactor" className="block text-sm font-medium text-slate-700 mb-1">
-                  Spoil Factor Percentage
+                  {t('calculators.excavation.spoilFactorPercentage')}
                 </label>
                 <select
                   id="spoilFactor"
@@ -251,9 +251,9 @@ const ExcavationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   onChange={(e) => setSpoilFactor(Number(e.target.value) as 10 | 15 | 20)}
                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 >
-                  <option value={10}>10% - Sandy/Loose Soil</option>
-                  <option value={15}>15% - Average Soil</option>
-                  <option value={20}>20% - Clay/Heavy Soil</option>
+                  <option value={10}>{t('calculators.excavation.spoilFactor10')}</option>
+                  <option value={15}>{t('calculators.excavation.spoilFactor15')}</option>
+                  <option value={20}>{t('calculators.excavation.spoilFactor20')}</option>
                 </select>
               </div>
             )}
@@ -267,14 +267,14 @@ const ExcavationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
               />
               <label htmlFor="includeHaulOff" className="ml-2 block text-sm font-medium text-slate-700">
-                Include Haul-off
+                {t('calculators.excavation.includeHaulOff')}
               </label>
             </div>
 
             {includeHaulOff && (
               <div>
                 <label htmlFor="totalHaulOffCost" className="block text-sm font-medium text-slate-700 mb-1">
-                  Total Haul-off Cost for Job ($)
+                  {t('calculators.excavation.totalHaulOffCostForJob')}
                 </label>
                 <input
                   type="number"
@@ -284,14 +284,14 @@ const ExcavationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   value={totalHaulOffCost}
                   onChange={(e) => setTotalHaulOffCost(e.target.value ? Number(e.target.value) : '')}
                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  placeholder="Enter total haul-off cost"
+                  placeholder={t('calculators.excavation.enterTotalHaulOffCost')}
                 />
               </div>
             )}
           </div>
         </div>
       </div>
-      
+
       <button
         onClick={handleCalculate}
         disabled={!isFormValid}

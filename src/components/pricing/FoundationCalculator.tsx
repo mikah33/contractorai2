@@ -578,9 +578,9 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   onChange={(e) => setRebarSize(e.target.value as '#3' | '#4' | '#5')}
                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 >
-                  <option value="#3">#3 Rebar (3/8")</option>
-                  <option value="#4">#4 Rebar (1/2")</option>
-                  <option value="#5">#5 Rebar (5/8")</option>
+                  <option value="#3">{t('calculators.foundation.rebarSize3')}</option>
+                  <option value="#4">{t('calculators.foundation.rebarSize4')}</option>
+                  <option value="#5">{t('calculators.foundation.rebarSize5')}</option>
                 </select>
               </div>
 
@@ -594,9 +594,9 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   onChange={(e) => setRebarSpacing(Number(e.target.value) as 12 | 16 | 18)}
                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 >
-                  <option value={12}>12" on center</option>
-                  <option value={16}>16" on center</option>
-                  <option value={18}>18" on center</option>
+                  <option value={12}>{t('calculators.foundation.rebarSpacing12')}</option>
+                  <option value={16}>{t('calculators.foundation.rebarSpacing16')}</option>
+                  <option value={18}>{t('calculators.foundation.rebarSpacing18')}</option>
                 </select>
               </div>
             </div>

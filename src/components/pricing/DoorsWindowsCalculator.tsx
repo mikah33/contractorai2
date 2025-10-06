@@ -29,7 +29,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
   const doorStyles = {
     'entry': {
-      name: 'Entry Door',
+      name: t('calculators.doorsWindows.doorStyles.entry'),
       materials: ['steel', 'fiberglass', 'wood'],
       finishes: ['primed', 'stained', 'painted'],
       prices: {
@@ -39,7 +39,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       }
     },
     'interior': {
-      name: 'Interior Door',
+      name: t('calculators.doorsWindows.doorStyles.interior'),
       materials: ['hollow-core', 'solid-core', 'wood'],
       finishes: ['primed', 'stained', 'painted'],
       prices: {
@@ -49,7 +49,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       }
     },
     'patio': {
-      name: 'Patio Door',
+      name: t('calculators.doorsWindows.doorStyles.patio'),
       materials: ['vinyl', 'aluminum', 'wood'],
       finishes: ['white', 'bronze', 'stained'],
       prices: {
@@ -59,7 +59,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       }
     },
     'french': {
-      name: 'French Door',
+      name: t('calculators.doorsWindows.doorStyles.french'),
       materials: ['wood', 'fiberglass', 'steel'],
       finishes: ['primed', 'stained', 'painted'],
       prices: {
@@ -69,7 +69,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       }
     },
     'bifold': {
-      name: 'Bifold Door',
+      name: t('calculators.doorsWindows.doorStyles.bifold'),
       materials: ['hollow-core', 'solid-core', 'wood'],
       finishes: ['primed', 'stained', 'painted'],
       prices: {
@@ -82,7 +82,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
   const windowStyles = {
     'single-hung': {
-      name: 'Single Hung Window',
+      name: t('calculators.doorsWindows.windowStyles.singleHung'),
       materials: ['vinyl', 'aluminum', 'wood'],
       finishes: ['white', 'bronze', 'stained'],
       prices: {
@@ -92,7 +92,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       }
     },
     'double-hung': {
-      name: 'Double Hung Window',
+      name: t('calculators.doorsWindows.windowStyles.doubleHung'),
       materials: ['vinyl', 'aluminum', 'wood'],
       finishes: ['white', 'bronze', 'stained'],
       prices: {
@@ -102,7 +102,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       }
     },
     'casement': {
-      name: 'Casement Window',
+      name: t('calculators.doorsWindows.windowStyles.casement'),
       materials: ['vinyl', 'aluminum', 'wood'],
       finishes: ['white', 'bronze', 'stained'],
       prices: {
@@ -112,7 +112,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       }
     },
     'sliding': {
-      name: 'Sliding Window',
+      name: t('calculators.doorsWindows.windowStyles.sliding'),
       materials: ['vinyl', 'aluminum', 'wood'],
       finishes: ['white', 'bronze', 'stained'],
       prices: {
@@ -122,7 +122,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       }
     },
     'picture': {
-      name: 'Picture Window',
+      name: t('calculators.doorsWindows.windowStyles.picture'),
       materials: ['vinyl', 'aluminum', 'wood'],
       finishes: ['white', 'bronze', 'stained'],
       prices: {
@@ -135,19 +135,19 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
   const trimStyles = {
     'basic': {
-      name: 'Basic Trim',
+      name: t('calculators.doorsWindows.trimStyles.basic'),
       price: 2.98 // per linear foot
     },
     'colonial': {
-      name: 'Colonial Trim',
+      name: t('calculators.doorsWindows.trimStyles.colonial'),
       price: 3.98
     },
     'craftsman': {
-      name: 'Craftsman Trim',
+      name: t('calculators.doorsWindows.trimStyles.craftsman'),
       price: 4.98
     },
     'modern': {
-      name: 'Modern Trim',
+      name: t('calculators.doorsWindows.trimStyles.modern'),
       price: 3.98
     }
   };
@@ -194,7 +194,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   };
 
   const updateOpening = (id: string, updates: Partial<Opening>) => {
-    setOpenings(openings.map(opening => 
+    setOpenings(openings.map(opening =>
       opening.id === id ? { ...opening, ...updates } : opening
     ));
   };
@@ -220,7 +220,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       results.push({
         label: `${styles[opening.style].name} (${opening.material})`,
         value: opening.quantity,
-        unit: 'units',
+        unit: t('calculators.doorsWindows.units.units'),
         cost: itemCost
       });
 
@@ -231,9 +231,9 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         totalCost += totalPreHungCost;
 
         results.push({
-          label: 'Pre-hung Frame Kit',
+          label: t('calculators.doorsWindows.preHungFrame'),
           value: opening.quantity,
-          unit: 'kits',
+          unit: t('calculators.doorsWindows.units.kits'),
           cost: totalPreHungCost
         });
       }
@@ -247,9 +247,9 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         totalCost += trimCost;
 
         results.push({
-          label: `${trimStyles[opening.trimStyle].name} Trim`,
+          label: `${trimStyles[opening.trimStyle].name} ${t('calculators.doorsWindows.trim')}`,
           value: Number(totalTrimLength.toFixed(2)),
-          unit: 'linear feet',
+          unit: t('calculators.doorsWindows.units.linearFeet'),
           cost: trimCost
         });
       }
@@ -258,20 +258,20 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       if (opening.includeHardware) {
         let hardwareCost: number;
         if (opening.type === 'door') {
-          hardwareCost = opening.isExterior ? 
+          hardwareCost = opening.isExterior ?
             hardwarePrices.door.exterior.basic :
             hardwarePrices.door.interior.basic;
         } else {
           hardwareCost = hardwarePrices.window.basic;
         }
-        
+
         const totalHardwareCost = hardwareCost * opening.quantity;
         totalCost += totalHardwareCost;
 
         results.push({
-          label: `${opening.type === 'door' ? 'Door' : 'Window'} Hardware`,
+          label: `${opening.type === 'door' ? t('calculators.doorsWindows.door') : t('calculators.doorsWindows.window')} ${t('calculators.doorsWindows.hardware')}`,
           value: opening.quantity,
-          unit: 'sets',
+          unit: t('calculators.doorsWindows.units.sets'),
           cost: totalHardwareCost
         });
       }
@@ -283,14 +283,14 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         const perimeterFeet = (opening.width + opening.height) * 2 / 12;
         return sum + (perimeterFeet * opening.quantity);
       }, 0);
-      
+
       const insulationCost = Math.ceil(insulationNeeded / 20) * 12.98; // 20ft per roll
       totalCost += insulationCost;
 
       results.push({
-        label: 'Insulation',
+        label: t('calculators.doorsWindows.insulation'),
         value: Math.ceil(insulationNeeded / 20),
-        unit: '20ft rolls',
+        unit: t('calculators.doorsWindows.units.rolls20ft'),
         cost: insulationCost
       });
     }
@@ -301,9 +301,9 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       totalCost += flashingCost;
 
       results.push({
-        label: 'Flashing Tape',
+        label: t('calculators.doorsWindows.flashingTape'),
         value: exteriorOpenings,
-        unit: 'rolls',
+        unit: t('calculators.doorsWindows.units.rolls'),
         cost: flashingCost
       });
     }
@@ -313,14 +313,14 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         const linearFeet = (opening.width + opening.height) * 2 / 12;
         return sum + (linearFeet * opening.quantity / 20); // 20 linear feet per tube
       }, 0));
-      
+
       const caulkCost = caulkTubes * 6.98;
       totalCost += caulkCost;
 
       results.push({
-        label: 'Caulk',
+        label: t('calculators.doorsWindows.caulk'),
         value: caulkTubes,
-        unit: 'tubes',
+        unit: t('calculators.doorsWindows.units.tubes'),
         cost: caulkCost
       });
     }
@@ -331,9 +331,9 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       totalCost += shimCost;
 
       results.push({
-        label: 'Shim Packs',
+        label: t('calculators.doorsWindows.shimPacks'),
         value: shimPacks,
-        unit: 'packs',
+        unit: t('calculators.doorsWindows.units.packs'),
         cost: shimCost
       });
     }
@@ -352,7 +352,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         </div>
         <h2 className="text-xl font-bold text-slate-800 ml-2">{t('calculators.doorsWindows.title')}</h2>
       </div>
-      
+
       <div className="mb-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex space-x-2">
@@ -360,13 +360,13 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               onClick={() => addOpening('door')}
               className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors"
             >
-              Add Door
+              {t('calculators.doorsWindows.addDoor')}
             </button>
             <button
               onClick={() => addOpening('window')}
               className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors"
             >
-              Add Window
+              {t('calculators.doorsWindows.addWindow')}
             </button>
           </div>
         </div>
@@ -376,11 +376,11 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  {opening.type === 'door' ? 'Door' : 'Window'} Style
+                  {opening.type === 'door' ? t('calculators.doorsWindows.doorStyle') : t('calculators.doorsWindows.windowStyle')}
                 </label>
                 <select
                   value={opening.style}
-                  onChange={(e) => updateOpening(opening.id, { 
+                  onChange={(e) => updateOpening(opening.id, {
                     style: e.target.value,
                     material: (opening.type === 'door' ? doorStyles : windowStyles)[e.target.value].materials[0]
                   })}
@@ -394,7 +394,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Material
+                  {t('calculators.doorsWindows.material')}
                 </label>
                 <select
                   value={opening.material}
@@ -403,7 +403,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 >
                   {(opening.type === 'door' ? doorStyles : windowStyles)[opening.style].materials.map(material => (
                     <option key={material} value={material}>
-                      {material.charAt(0).toUpperCase() + material.slice(1).replace('-', ' ')}
+                      {t(`calculators.doorsWindows.materials.${material}`)}
                     </option>
                   ))}
                 </select>
@@ -411,7 +411,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Finish
+                  {t('calculators.doorsWindows.finish')}
                 </label>
                 <select
                   value={opening.finish}
@@ -420,7 +420,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 >
                   {(opening.type === 'door' ? doorStyles : windowStyles)[opening.style].finishes.map(finish => (
                     <option key={finish} value={finish}>
-                      {finish.charAt(0).toUpperCase() + finish.slice(1)}
+                      {t(`calculators.doorsWindows.finishes.${finish}`)}
                     </option>
                   ))}
                 </select>
@@ -428,7 +428,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Width (inches)
+                  {t('calculators.doorsWindows.widthInches')}
                 </label>
                 <input
                   type="number"
@@ -442,7 +442,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Height (inches)
+                  {t('calculators.doorsWindows.heightInches')}
                 </label>
                 <input
                   type="number"
@@ -456,7 +456,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Quantity
+                  {t('calculators.doorsWindows.quantity')}
                 </label>
                 <input
                   type="number"
@@ -476,7 +476,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
                 />
                 <label className="ml-2 block text-sm font-medium text-slate-700">
-                  Exterior Installation
+                  {t('calculators.doorsWindows.exteriorInstallation')}
                 </label>
               </div>
 
@@ -489,7 +489,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                     className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
                   />
                   <label className="ml-2 block text-sm font-medium text-slate-700">
-                    Pre-hung
+                    {t('calculators.doorsWindows.preHung')}
                   </label>
                 </div>
               )}
@@ -502,14 +502,14 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
                 />
                 <label className="ml-2 block text-sm font-medium text-slate-700">
-                  Include Trim
+                  {t('calculators.doorsWindows.includeTrim')}
                 </label>
               </div>
 
               {opening.includeTrim && (
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Trim Style
+                    {t('calculators.doorsWindows.trimStyle')}
                   </label>
                   <select
                     value={opening.trimStyle}
@@ -531,7 +531,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
                 />
                 <label className="ml-2 block text-sm font-medium text-slate-700">
-                  Include Hardware
+                  {t('calculators.doorsWindows.includeHardware')}
                 </label>
               </div>
             </div>
@@ -540,7 +540,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               onClick={() => removeOpening(opening.id)}
               className="mt-4 text-red-500 hover:text-red-600 text-sm font-medium"
             >
-              Remove {opening.type === 'door' ? 'Door' : 'Window'}
+              {t('calculators.doorsWindows.remove')} {opening.type === 'door' ? t('calculators.doorsWindows.door') : t('calculators.doorsWindows.window')}
             </button>
           </div>
         ))}
@@ -551,26 +551,26 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               <DoorClosed className="w-12 h-12 text-gray-400" />
               <AppWindow className="w-12 h-12 text-gray-400" />
             </div>
-            <p className="text-gray-600 mb-4">Add doors and windows to calculate materials</p>
+            <p className="text-gray-600 mb-4">{t('calculators.doorsWindows.emptyMessage')}</p>
             <div className="flex justify-center space-x-2">
               <button
                 onClick={() => addOpening('door')}
                 className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors"
               >
-                Add Door
+                {t('calculators.doorsWindows.addDoor')}
               </button>
               <button
                 onClick={() => addOpening('window')}
                 className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors"
               >
-                Add Window
+                {t('calculators.doorsWindows.addWindow')}
               </button>
             </div>
           </div>
         )}
 
         <div className="border-t border-slate-200 pt-6">
-          <h3 className="text-lg font-medium text-slate-800 mb-4">Additional Materials</h3>
+          <h3 className="text-lg font-medium text-slate-800 mb-4">{t('calculators.doorsWindows.additionalMaterials')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex items-center">
               <input
@@ -581,7 +581,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
               />
               <label htmlFor="includeInsulation" className="ml-2 block text-sm font-medium text-slate-700">
-                Include Insulation
+                {t('calculators.doorsWindows.includeInsulation')}
               </label>
             </div>
 
@@ -594,7 +594,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
               />
               <label htmlFor="includeFlashing" className="ml-2 block text-sm font-medium text-slate-700">
-                Include Flashing (Exterior Only)
+                {t('calculators.doorsWindows.includeFlashing')}
               </label>
             </div>
 
@@ -607,7 +607,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
               />
               <label htmlFor="includeCaulk" className="ml-2 block text-sm font-medium text-slate-700">
-                Include Caulk
+                {t('calculators.doorsWindows.includeCaulk')}
               </label>
             </div>
 
@@ -620,13 +620,13 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
               />
               <label htmlFor="includeShims" className="ml-2 block text-sm font-medium text-slate-700">
-                Include Shims
+                {t('calculators.doorsWindows.includeShims')}
               </label>
             </div>
           </div>
         </div>
       </div>
-      
+
       <button
         onClick={handleCalculate}
         disabled={!isFormValid}

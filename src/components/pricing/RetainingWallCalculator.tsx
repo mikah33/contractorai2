@@ -65,19 +65,19 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
       // Base calculations
       const wallArea = length * height;
       results.push({
-        label: 'Total Wall Area',
+        label: t('calculators.retainingWall.totalWallArea'),
         value: Number(wallArea.toFixed(2)),
-        unit: 'square feet'
+        unit: t('calculators.retainingWall.squareFeet')
       });
 
       if (wallType === 'block') {
         const specs = blockSpecs[blockType];
-        
+
         // For custom blocks, verify all dimensions are provided
-        if (blockType === 'custom' && 
-            typeof specs.width === 'number' && 
-            typeof specs.height === 'number' && 
-            typeof specs.depth === 'number' && 
+        if (blockType === 'custom' &&
+            typeof specs.width === 'number' &&
+            typeof specs.height === 'number' &&
+            typeof specs.depth === 'number' &&
             typeof specs.price === 'number') {
           const blocksPerSqFt = 144 / (specs.width * specs.height); // 144 sq inches in a sq ft
           const totalBlocks = Math.ceil(wallArea * blocksPerSqFt);
@@ -85,9 +85,9 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
           totalCost += blockCost;
 
           results.push({
-            label: `Custom Blocks (${specs.width}"x${specs.height}"x${specs.depth}")`,
+            label: `${t('calculators.retainingWall.customBlocks')} (${specs.width}"x${specs.height}"x${specs.depth}")`,
             value: totalBlocks,
-            unit: 'blocks',
+            unit: t('calculators.retainingWall.blocks'),
             cost: blockCost
           });
         } else if (blockType !== 'custom') {
@@ -97,9 +97,9 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
           totalCost += blockCost;
 
           results.push({
-            label: `Retaining Wall Blocks (${blockType})`,
+            label: `${t('calculators.retainingWall.retainingWallBlocks')} (${blockType})`,
             value: totalBlocks,
-            unit: 'blocks',
+            unit: t('calculators.retainingWall.blocks'),
             cost: blockCost
           });
         }
@@ -111,9 +111,9 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
           totalCost += capstoneCost;
 
           results.push({
-            label: 'Capstone Blocks',
+            label: t('calculators.retainingWall.capstoneBlocks'),
             value: capstonesNeeded,
-            unit: 'pieces',
+            unit: t('calculators.retainingWall.pieces'),
             cost: capstoneCost
           });
         }
@@ -125,9 +125,9 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
         totalCost += concreteCost;
 
         results.push({
-          label: 'Concrete Needed',
+          label: t('calculators.retainingWall.concreteNeeded'),
           value: Number(volumeCuYd.toFixed(2)),
-          unit: 'cubic yards',
+          unit: t('calculators.retainingWall.cubicYards'),
           cost: concreteCost
         });
 
@@ -141,9 +141,9 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
         totalCost += rebarCost;
 
         results.push({
-          label: 'Rebar Needed',
+          label: t('calculators.retainingWall.rebarNeeded'),
           value: Math.ceil(totalRebar),
-          unit: 'linear feet',
+          unit: t('calculators.retainingWall.linearFeet'),
           cost: rebarCost
         });
 
@@ -156,9 +156,9 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
         totalCost += timberCost;
 
         results.push({
-          label: '6x6 Pressure Treated Timbers',
+          label: t('calculators.retainingWall.pressureTreatedTimbers'),
           value: timbersNeeded,
-          unit: '8ft lengths',
+          unit: t('calculators.retainingWall.eightFootLengths'),
           cost: timberCost
         });
 
@@ -168,9 +168,9 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
         totalCost += deadmenCost;
 
         results.push({
-          label: 'Deadmen Timbers',
+          label: t('calculators.retainingWall.deadmenTimbers'),
           value: deadmenNeeded,
-          unit: '8ft lengths',
+          unit: t('calculators.retainingWall.eightFootLengths'),
           cost: deadmenCost
         });
       }
@@ -183,9 +183,9 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
       totalCost += baseCost;
 
       results.push({
-        label: 'Gravel Base Material',
+        label: t('calculators.retainingWall.gravelBaseMaterial'),
         value: Number(baseVolume.toFixed(2)),
-        unit: 'cubic yards',
+        unit: t('calculators.retainingWall.cubicYards'),
         cost: baseCost
       });
 
@@ -197,9 +197,9 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
           totalCost += drainageGravelCost;
 
           results.push({
-            label: 'Drainage Gravel',
+            label: t('calculators.retainingWall.drainageGravel'),
             value: Number(drainageGravelVolume.toFixed(2)),
-            unit: 'cubic yards',
+            unit: t('calculators.retainingWall.cubicYards'),
             cost: drainageGravelCost
           });
         }
@@ -210,9 +210,9 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
           totalCost += drainPipeCost;
 
           results.push({
-            label: 'Drainage Pipe',
+            label: t('calculators.retainingWall.drainagePipe'),
             value: drainPipeNeeded,
-            unit: '10ft sections',
+            unit: t('calculators.retainingWall.tenFootSections'),
             cost: drainPipeCost
           });
         }
@@ -226,9 +226,9 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
         totalCost += geogridCost;
 
         results.push({
-          label: 'Geogrid Reinforcement',
+          label: t('calculators.retainingWall.geogridReinforcement'),
           value: geogridRolls,
-          unit: '200sf rolls',
+          unit: t('calculators.retainingWall.twoHundredSfRolls'),
           cost: geogridCost
         });
       }
@@ -240,17 +240,17 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
       totalCost += fabricCost;
 
       results.push({
-        label: 'Filter Fabric',
+        label: t('calculators.retainingWall.filterFabric'),
         value: fabricRolls,
-        unit: '300sf rolls',
+        unit: t('calculators.retainingWall.threeHundredSfRolls'),
         cost: fabricCost
       });
 
       // Add total cost
       results.push({
-        label: 'Total Estimated Cost',
+        label: t('calculators.retainingWall.totalEstimatedCost'),
         value: Number(totalCost.toFixed(2)),
-        unit: 'USD',
+        unit: t('calculators.retainingWall.usd'),
         isTotal: true
       });
 
@@ -258,8 +258,8 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
     }
   };
 
-  const isFormValid = 
-    typeof length === 'number' && 
+  const isFormValid =
+    typeof length === 'number' &&
     typeof height === 'number' &&
     (blockType !== 'custom' || (
       typeof customBlockWidth === 'number' &&
@@ -275,7 +275,7 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
         <Wall className="h-6 w-6 text-orange-500 mr-2" />
         <h2 className="text-xl font-bold text-slate-800">{t('calculators.retainingWall.title')}</h2>
       </div>
-      
+
       <div className="mb-4">
         <div className="flex justify-between mb-4">
           <div className="inline-flex rounded-md shadow-sm">
@@ -288,7 +288,7 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
               } border border-slate-300 rounded-l-lg`}
               onClick={() => setWallType('block')}
             >
-              Block Wall
+              {t('calculators.retainingWall.blockWall')}
             </button>
             <button
               type="button"
@@ -299,7 +299,7 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
               } border-t border-b border-slate-300`}
               onClick={() => setWallType('concrete')}
             >
-              Concrete Wall
+              {t('calculators.retainingWall.concreteWall')}
             </button>
             <button
               type="button"
@@ -310,7 +310,7 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
               } border border-slate-300 rounded-r-lg`}
               onClick={() => setWallType('timber')}
             >
-              Timber Wall
+              {t('calculators.retainingWall.timberWall')}
             </button>
           </div>
         </div>
@@ -318,7 +318,7 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div>
             <label htmlFor="length" className="block text-sm font-medium text-slate-700 mb-1">
-              Wall Length (feet)
+              {t('calculators.retainingWall.wallLengthFeet')}
             </label>
             <input
               type="number"
@@ -328,13 +328,13 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
               value={length}
               onChange={(e) => setLength(e.target.value ? Number(e.target.value) : '')}
               className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-              placeholder="Enter wall length in feet"
+              placeholder={t('calculators.retainingWall.enterWallLengthPlaceholder')}
             />
           </div>
-          
+
           <div>
             <label htmlFor="height" className="block text-sm font-medium text-slate-700 mb-1">
-              Wall Height (feet)
+              {t('calculators.retainingWall.wallHeightFeet')}
             </label>
             <input
               type="number"
@@ -344,7 +344,7 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
               value={height}
               onChange={(e) => setHeight(e.target.value ? Number(e.target.value) : '')}
               className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-              placeholder="Enter wall height in feet"
+              placeholder={t('calculators.retainingWall.enterWallHeightPlaceholder')}
             />
           </div>
         </div>
@@ -352,7 +352,7 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
         {wallType === 'block' && (
           <div className="mb-6">
             <label htmlFor="blockType" className="block text-sm font-medium text-slate-700 mb-1">
-              Block Type
+              {t('calculators.retainingWall.blockType')}
             </label>
             <select
               id="blockType"
@@ -360,17 +360,17 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
               onChange={(e) => setBlockType(e.target.value as BlockType)}
               className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             >
-              <option value="standard">Standard Block (12"x8"x12")</option>
-              <option value="pinned">Pinned Block (16"x6"x12")</option>
-              <option value="gravity">Gravity Block (18"x8"x24")</option>
-              <option value="custom">Custom Block Size</option>
+              <option value="standard">{t('calculators.retainingWall.standardBlock')}</option>
+              <option value="pinned">{t('calculators.retainingWall.pinnedBlock')}</option>
+              <option value="gravity">{t('calculators.retainingWall.gravityBlock')}</option>
+              <option value="custom">{t('calculators.retainingWall.customBlockSize')}</option>
             </select>
 
             {blockType === 'custom' && (
               <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Block Width (inches)
+                    {t('calculators.retainingWall.blockWidthInches')}
                   </label>
                   <input
                     type="number"
@@ -379,12 +379,12 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
                     value={customBlockWidth}
                     onChange={(e) => setCustomBlockWidth(e.target.value ? Number(e.target.value) : '')}
                     className="w-full p-2 border border-slate-300 rounded-md"
-                    placeholder="Width in inches"
+                    placeholder={t('calculators.retainingWall.widthInInchesPlaceholder')}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Block Height (inches)
+                    {t('calculators.retainingWall.blockHeightInches')}
                   </label>
                   <input
                     type="number"
@@ -393,12 +393,12 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
                     value={customBlockHeight}
                     onChange={(e) => setCustomBlockHeight(e.target.value ? Number(e.target.value) : '')}
                     className="w-full p-2 border border-slate-300 rounded-md"
-                    placeholder="Height in inches"
+                    placeholder={t('calculators.retainingWall.heightInInchesPlaceholder')}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Block Depth (inches)
+                    {t('calculators.retainingWall.blockDepthInches')}
                   </label>
                   <input
                     type="number"
@@ -407,12 +407,12 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
                     value={customBlockDepth}
                     onChange={(e) => setCustomBlockDepth(e.target.value ? Number(e.target.value) : '')}
                     className="w-full p-2 border border-slate-300 rounded-md"
-                    placeholder="Depth in inches"
+                    placeholder={t('calculators.retainingWall.depthInInchesPlaceholder')}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Price per Block ($)
+                    {t('calculators.retainingWall.pricePerBlock')}
                   </label>
                   <input
                     type="number"
@@ -421,12 +421,12 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
                     value={customBlockPrice}
                     onChange={(e) => setCustomBlockPrice(e.target.value ? Number(e.target.value) : '')}
                     className="w-full p-2 border border-slate-300 rounded-md"
-                    placeholder="Price per block"
+                    placeholder={t('calculators.retainingWall.pricePerBlockPlaceholder')}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Block Weight (lbs)
+                    {t('calculators.retainingWall.blockWeightLbs')}
                   </label>
                   <input
                     type="number"
@@ -435,7 +435,7 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
                     value={customBlockWeight}
                     onChange={(e) => setCustomBlockWeight(e.target.value ? Number(e.target.value) : '')}
                     className="w-full p-2 border border-slate-300 rounded-md"
-                    placeholder="Weight in pounds"
+                    placeholder={t('calculators.retainingWall.weightInPoundsPlaceholder')}
                   />
                 </div>
               </div>
@@ -446,7 +446,7 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div>
             <label htmlFor="soilType" className="block text-sm font-medium text-slate-700 mb-1">
-              Soil Type
+              {t('calculators.retainingWall.soilType')}
             </label>
             <select
               id="soilType"
@@ -454,15 +454,15 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
               onChange={(e) => setSoilType(e.target.value as 'sandy' | 'clay' | 'gravel')}
               className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             >
-              <option value="sandy">Sandy Soil</option>
-              <option value="clay">Clay Soil</option>
-              <option value="gravel">Gravel/Rocky Soil</option>
+              <option value="sandy">{t('calculators.retainingWall.sandySoil')}</option>
+              <option value="clay">{t('calculators.retainingWall.claySoil')}</option>
+              <option value="gravel">{t('calculators.retainingWall.gravelRockySoil')}</option>
             </select>
           </div>
 
           <div>
             <label htmlFor="drainageType" className="block text-sm font-medium text-slate-700 mb-1">
-              Drainage System
+              {t('calculators.retainingWall.drainageSystem')}
             </label>
             <select
               id="drainageType"
@@ -470,16 +470,16 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
               onChange={(e) => setDrainageType(e.target.value as DrainageType)}
               className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             >
-              <option value="both">Gravel & Pipe</option>
-              <option value="gravel">Gravel Only</option>
-              <option value="pipe">Pipe Only</option>
-              <option value="none">No Drainage</option>
+              <option value="both">{t('calculators.retainingWall.gravelAndPipe')}</option>
+              <option value="gravel">{t('calculators.retainingWall.gravelOnly')}</option>
+              <option value="pipe">{t('calculators.retainingWall.pipeOnly')}</option>
+              <option value="none">{t('calculators.retainingWall.noDrainage')}</option>
             </select>
           </div>
         </div>
 
         <div className="border-t border-slate-200 pt-6 mb-6">
-          <h3 className="text-lg font-medium text-slate-800 mb-4">Additional Options</h3>
+          <h3 className="text-lg font-medium text-slate-800 mb-4">{t('calculators.retainingWall.additionalOptions')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex items-center">
               <input
@@ -490,7 +490,7 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
                 className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
               />
               <label htmlFor="includeFrost" className="ml-2 block text-sm font-medium text-slate-700">
-                Include Frost Protection
+                {t('calculators.retainingWall.includeFrostProtection')}
               </label>
             </div>
 
@@ -504,7 +504,7 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
                   className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
                 />
                 <label htmlFor="includeCapstone" className="ml-2 block text-sm font-medium text-slate-700">
-                  Include Capstone
+                  {t('calculators.retainingWall.includeCapstone')}
                 </label>
               </div>
             )}
@@ -522,14 +522,14 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
                 className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
               />
               <label htmlFor="includeGeogrid" className="ml-2 block text-sm font-medium text-slate-700">
-                Include Geogrid Reinforcement
+                {t('calculators.retainingWall.includeGeogridReinforcement')}
               </label>
             </div>
 
             {includeGeogrid && (
               <div>
                 <label htmlFor="geogridLayers" className="block text-sm font-medium text-slate-700 mb-1">
-                  Number of Geogrid Layers
+                  {t('calculators.retainingWall.numberOfGeogridLayers')}
                 </label>
                 <select
                   id="geogridLayers"
@@ -538,7 +538,7 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 >
                   {[2, 3, 4, 5].map(num => (
-                    <option key={num} value={num}>{num} layers</option>
+                    <option key={num} value={num}>{t('calculators.retainingWall.layersCount', { count: num })}</option>
                   ))}
                 </select>
               </div>
@@ -546,7 +546,7 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
           </div>
         )}
       </div>
-      
+
       <button
         onClick={handleCalculate}
         disabled={!isFormValid}

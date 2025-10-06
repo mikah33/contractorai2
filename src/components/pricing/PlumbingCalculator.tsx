@@ -49,49 +49,49 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     const costs = {
       sink: {
         cost: 149.98,
-        description: 'Standard Stainless Steel Kitchen Sink'
+        description: t('calculators.plumbing.standardStainlessSteelKitchenSink')
       },
       toilet: {
         cost: 199.98,
-        description: 'Standard Two-Piece Toilet'
+        description: t('calculators.plumbing.standardTwoPieceToilet')
       },
       shower: {
         cost: 299.98,
-        description: 'Standard Shower Kit',
+        description: t('calculators.plumbing.standardShowerKit'),
         components: {
           valve: {
             cost: 129.98,
-            description: 'Pressure Balance Shower Valve'
+            description: t('calculators.plumbing.pressureBalanceShowerValve')
           },
           head: {
             cost: 49.98,
-            description: 'Standard Shower Head'
+            description: t('calculators.plumbing.standardShowerHead')
           },
           trim: {
             cost: 79.98,
-            description: 'Shower Trim Kit'
+            description: t('calculators.plumbing.showerTrimKit')
           },
           drain: {
             cost: 39.98,
-            description: 'Shower Drain Assembly'
+            description: t('calculators.plumbing.showerDrainAssembly')
           }
         }
       },
       tub: {
         cost: 399.98,
-        description: 'Standard Alcove Bathtub'
+        description: t('calculators.plumbing.standardAlcoveBathtub')
       },
       washer: {
         cost: 24.98,
-        description: 'Washer Connection Box'
+        description: t('calculators.plumbing.washerConnectionBox')
       },
       dishwasher: {
         cost: 19.98,
-        description: 'Dishwasher Connection Kit'
+        description: t('calculators.plumbing.dishwasherConnectionKit')
       },
       custom: {
         cost: 0,
-        description: 'Custom Fixture'
+        description: t('calculators.plumbing.customFixture')
       }
     };
     return costs[type];
@@ -133,7 +133,7 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   };
 
   const updateFixture = (id: string, updates: Partial<Fixture>) => {
-    setFixtures(fixtures.map(fixture => 
+    setFixtures(fixtures.map(fixture =>
       fixture.id === id ? { ...fixture, ...updates } : fixture
     ));
   };
@@ -174,13 +174,13 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   };
 
   const updatePipingRun = (id: string, updates: Partial<PipingRun>) => {
-    setPipingRuns(pipingRuns.map(run => 
+    setPipingRuns(pipingRuns.map(run =>
       run.id === id ? { ...run, ...updates } : run
     ));
   };
 
   const updateFittings = (runId: string, updates: Partial<PipingRun['fittings']>) => {
-    setPipingRuns(pipingRuns.map(run => 
+    setPipingRuns(pipingRuns.map(run =>
       run.id === runId ? {
         ...run,
         fittings: { ...run.fittings, ...updates }
@@ -292,14 +292,14 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     fixtures.forEach(fixture => {
       // Add fixture cost
       const fixtureDetails = getDefaultFixtureCost(fixture.type);
-      const fixtureName = fixture.type === 'custom' && fixture.name 
-        ? fixture.name 
+      const fixtureName = fixture.type === 'custom' && fixture.name
+        ? fixture.name
         : fixtureDetails.description;
-      
+
       results.push({
         label: fixtureName,
         value: 1,
-        unit: 'piece',
+        unit: t('calculators.plumbing.piece'),
         cost: fixture.cost
       });
       totalCost += fixture.cost;
@@ -311,7 +311,7 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
           results.push({
             label: details.description,
             value: 1,
-            unit: 'piece',
+            unit: t('calculators.plumbing.piece'),
             cost: details.cost
           });
           totalCost += details.cost;
@@ -323,23 +323,23 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       totalCost += supplyLineCost;
 
       results.push({
-        label: `${fixture.type} Supply Lines`,
+        label: `${fixture.type} ${t('calculators.plumbing.supplyLines')}`,
         value: fixture.supplyLines,
-        unit: 'pieces',
+        unit: t('calculators.plumbing.pieces'),
         cost: supplyLineCost
       });
 
       // Drain assembly
-      const drainAssemblyCost = fixture.type === 'toilet' ? 24.98 : 
+      const drainAssemblyCost = fixture.type === 'toilet' ? 24.98 :
                                fixture.type === 'tub' ? 49.98 :
                                fixture.type === 'shower' ? 39.98 :
                                29.98;
       totalCost += drainAssemblyCost;
 
       results.push({
-        label: `${fixture.type} Drain Assembly`,
+        label: `${fixture.type} ${t('calculators.plumbing.drainAssembly')}`,
         value: 1,
-        unit: 'set',
+        unit: t('calculators.plumbing.set'),
         cost: drainAssemblyCost
       });
     });
@@ -351,9 +351,9 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       totalCost += pipeCost;
 
       results.push({
-        label: `${run.size}" ${run.material.toUpperCase()} ${run.type} Pipe`,
+        label: `${run.size}" ${run.material.toUpperCase()} ${run.type} ${t('calculators.plumbing.pipe')}`,
         value: run.length,
-        unit: 'feet',
+        unit: t('calculators.plumbing.feet'),
         cost: pipeCost
       });
 
@@ -367,7 +367,7 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
           results.push({
             label: `${run.size}" ${run.material.toUpperCase()} ${fitting}`,
             value: count,
-            unit: 'pieces',
+            unit: t('calculators.plumbing.pieces'),
             cost: fittingCost
           });
         }
@@ -390,14 +390,14 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
           75: 1499.98
         }
       };
-      
+
       const waterHeaterCost = waterHeaterPrices[waterHeaterType][waterHeaterSize];
       totalCost += waterHeaterCost;
 
       results.push({
-        label: `${waterHeaterType === 'tank' ? `${waterHeaterSize} Gallon` : 'Tankless'} Water Heater`,
+        label: `${waterHeaterType === 'tank' ? `${waterHeaterSize} ${t('calculators.plumbing.gallon')}` : t('calculators.plumbing.tankless')} ${t('calculators.plumbing.waterHeater')}`,
         value: 1,
-        unit: 'unit',
+        unit: t('calculators.plumbing.unit'),
         cost: waterHeaterCost
       });
 
@@ -406,9 +406,9 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       totalCost += installKitCost;
 
       results.push({
-        label: 'Water Heater Installation Kit',
+        label: t('calculators.plumbing.waterHeaterInstallationKit'),
         value: 1,
-        unit: 'kit',
+        unit: t('calculators.plumbing.kit'),
         cost: installKitCost
       });
     }
@@ -420,15 +420,15 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       totalCost += softenerCost + installKitCost;
 
       results.push({
-        label: 'Water Softener System',
+        label: t('calculators.plumbing.waterSoftenerSystem'),
         value: 1,
-        unit: 'unit',
+        unit: t('calculators.plumbing.unit'),
         cost: softenerCost
       },
       {
-        label: 'Softener Installation Kit',
+        label: t('calculators.plumbing.softenerInstallationKit'),
         value: 1,
-        unit: 'kit',
+        unit: t('calculators.plumbing.kit'),
         cost: installKitCost
       });
     }
@@ -440,21 +440,21 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         30: 249.98,
         40: 299.98
       };
-      
+
       const tankCost = tankPrices[pressureTankSize];
       const installKitCost = 69.98;
       totalCost += tankCost + installKitCost;
 
       results.push({
-        label: `${pressureTankSize} Gallon Pressure Tank`,
+        label: `${pressureTankSize} ${t('calculators.plumbing.gallon')} ${t('calculators.plumbing.pressureTank')}`,
         value: 1,
-        unit: 'unit',
+        unit: t('calculators.plumbing.unit'),
         cost: tankCost
       },
       {
-        label: 'Pressure Tank Installation Kit',
+        label: t('calculators.plumbing.pressureTankInstallationKit'),
         value: 1,
-        unit: 'kit',
+        unit: t('calculators.plumbing.kit'),
         cost: installKitCost
       });
     }
@@ -465,9 +465,9 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       totalCost += sewerPipeCost;
 
       results.push({
-        label: '4" Sewer Pipe',
+        label: t('calculators.plumbing.sewerPipe'),
         value: sewerLength,
-        unit: 'feet',
+        unit: t('calculators.plumbing.feet'),
         cost: sewerPipeCost
       });
     }
@@ -478,16 +478,16 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       totalCost += cleanoutCost;
 
       results.push({
-        label: 'Cleanouts',
+        label: t('calculators.plumbing.cleanouts'),
         value: cleanoutCount,
-        unit: 'pieces',
+        unit: t('calculators.plumbing.pieces'),
         cost: cleanoutCost
       });
     }
 
     // Add total cost
     results.push({
-      label: 'Total Estimated Cost',
+      label: t('calculators.plumbing.totalEstimatedCost'),
       value: Number(totalCost.toFixed(2)),
       unit: 'USD',
       isTotal: true
@@ -496,9 +496,9 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     onCalculate(results);
   };
 
-  const isFormValid = 
+  const isFormValid =
     pipingRuns.length > 0 &&
-    pipingRuns.every(run => 
+    pipingRuns.every(run =>
       typeof run.length === 'number' && run.length > 0
     ) &&
     (!includeSewerConnection || typeof sewerLength === 'number');
@@ -509,41 +509,41 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         <Pipe className="h-6 w-6 text-orange-500 mr-2" />
         <h2 className="text-xl font-bold text-slate-800">{t('calculators.plumbing.title')}</h2>
       </div>
-      
+
       <div className="mb-4">
         <div className="border-b border-slate-200 pb-6 mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium text-slate-800">Fixtures</h3>
+            <h3 className="text-lg font-medium text-slate-800">{t('calculators.plumbing.fixtures')}</h3>
             <div className="flex space-x-2">
               <button
                 onClick={() => addFixture('sink')}
                 className="px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors"
               >
-                Add Sink
+                {t('calculators.plumbing.addSink')}
               </button>
               <button
                 onClick={() => addFixture('toilet')}
                 className="px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors"
               >
-                Add Toilet
+                {t('calculators.plumbing.addToilet')}
               </button>
               <button
                 onClick={() => addFixture('shower')}
                 className="px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors"
               >
-                Add Shower
+                {t('calculators.plumbing.addShower')}
               </button>
               <button
                 onClick={() => addFixture('tub')}
                 className="px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors"
               >
-                Add Tub
+                {t('calculators.plumbing.addTub')}
               </button>
               <button
                 onClick={() => addFixture('custom')}
                 className="px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors"
               >
-                Add Custom
+                {t('calculators.plumbing.addCustom')}
               </button>
             </div>
           </div>
@@ -554,14 +554,14 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 {fixture.type === 'custom' && (
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Fixture Name
+                      {t('calculators.plumbing.fixtureName')}
                     </label>
                     <input
                       type="text"
                       value={fixture.name || ''}
                       onChange={(e) => updateFixture(fixture.id, { name: e.target.value })}
                       className="w-full p-2 border border-slate-300 rounded-md"
-                      placeholder="Enter fixture name"
+                      placeholder={t('calculators.plumbing.enterFixtureName')}
                     />
                   </div>
                 )}
@@ -569,7 +569,7 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 {fixture.type === 'custom' && (
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Fixture Cost ($)
+                      {t('calculators.plumbing.fixtureCost')}
                     </label>
                     <input
                       type="number"
@@ -578,14 +578,14 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                       value={fixture.cost || ''}
                       onChange={(e) => updateFixture(fixture.id, { cost: Number(e.target.value) })}
                       className="w-full p-2 border border-slate-300 rounded-md"
-                      placeholder="Enter fixture cost"
+                      placeholder={t('calculators.plumbing.enterFixtureCost')}
                     />
                   </div>
                 )}
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Supply Lines
+                    {t('calculators.plumbing.supplyLines')}
                   </label>
                   <input
                     type="number"
@@ -599,7 +599,7 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Drain Size (inches)
+                    {t('calculators.plumbing.drainSize')}
                   </label>
                   <select
                     value={fixture.drainSize}
@@ -615,7 +615,7 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Vent Size (inches)
+                    {t('calculators.plumbing.ventSize')}
                   </label>
                   <select
                     value={fixture.ventSize}
@@ -630,7 +630,7 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Distance from Stack (feet)
+                    {t('calculators.plumbing.distanceFromStack')}
                   </label>
                   <input
                     type="number"
@@ -647,7 +647,7 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 onClick={() => removeFixture(fixture.id)}
                 className="mt-4 text-red-500 hover:text-red-600"
               >
-                Remove Fixture
+                {t('calculators.plumbing.removeFixture')}
               </button>
             </div>
           ))}
@@ -655,25 +655,25 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
         <div className="border-b border-slate-200 pb-6 mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium text-slate-800">Piping Runs</h3>
+            <h3 className="text-lg font-medium text-slate-800">{t('calculators.plumbing.pipingRuns')}</h3>
             <div className="flex space-x-2">
               <button
                 onClick={() => addPipingRun('supply')}
                 className="px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors"
               >
-                Add Supply Line
+                {t('calculators.plumbing.addSupplyLine')}
               </button>
               <button
                 onClick={() => addPipingRun('drain')}
                 className="px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors"
               >
-                Add Drain Line
+                {t('calculators.plumbing.addDrainLine')}
               </button>
               <button
                 onClick={() => addPipingRun('vent')}
                 className="px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors"
               >
-                Add Vent Line
+                {t('calculators.plumbing.addVentLine')}
               </button>
             </div>
           </div>
@@ -683,7 +683,7 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Pipe Size (inches)
+                    {t('calculators.plumbing.pipeSize')}
                   </label>
                   <select
                     value={run.size}
@@ -709,7 +709,7 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Pipe Material
+                    {t('calculators.plumbing.pipeMaterial')}
                   </label>
                   <select
                     value={run.material}
@@ -719,14 +719,14 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                     {run.type === 'supply' ? (
                       <>
                         <option value="pex">PEX</option>
-                        <option value="copper">Copper</option>
+                        <option value="copper">{t('calculators.plumbing.copper')}</option>
                         <option value="cpvc">CPVC</option>
                       </>
                     ) : (
                       <>
                         <option value="pvc">PVC</option>
                         <option value="abs">ABS</option>
-                        <option value="cast-iron">Cast Iron</option>
+                        <option value="cast-iron">{t('calculators.plumbing.castIron')}</option>
                       </>
                     )}
                   </select>
@@ -734,7 +734,7 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Length (feet)
+                    {t('calculators.plumbing.length')}
                   </label>
                   <input
                     type="number"
@@ -743,17 +743,17 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                     value={run.length || ''}
                     onChange={(e) => updatePipingRun(run.id, { length: Number(e.target.value) })}
                     className="w-full p-2 border border-slate-300 rounded-md"
-                    placeholder="Enter length"
+                    placeholder={t('calculators.plumbing.enterLength')}
                   />
                 </div>
               </div>
 
               <div className="mt-4">
-                <h4 className="text-md font-medium text-slate-700 mb-2">Fittings</h4>
+                <h4 className="text-md font-medium text-slate-700 mb-2">{t('calculators.plumbing.fittings')}</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
-                      90° Elbows
+                      {t('calculators.plumbing.elbows90')}
                     </label>
                     <input
                       type="number"
@@ -766,7 +766,7 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
-                      45° Elbows
+                      {t('calculators.plumbing.elbows45')}
                     </label>
                     <input
                       type="number"
@@ -779,7 +779,7 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Tees
+                      {t('calculators.plumbing.tees')}
                     </label>
                     <input
                       type="number"
@@ -792,7 +792,7 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Couplings
+                      {t('calculators.plumbing.couplings')}
                     </label>
                     <input
                       type="number"
@@ -805,7 +805,7 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Adapters
+                      {t('calculators.plumbing.adapters')}
                     </label>
                     <input
                       type="number"
@@ -818,7 +818,7 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Valves
+                      {t('calculators.plumbing.valves')}
                     </label>
                     <input
                       type="number"
@@ -835,14 +835,14 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 onClick={() => removePipingRun(run.id)}
                 className="mt-4 text-red-500 hover:text-red-600"
               >
-                Remove Piping Run
+                {t('calculators.plumbing.removePipingRun')}
               </button>
             </div>
           ))}
         </div>
 
         <div className="border-b border-slate-200 pb-6 mb-6">
-          <h3 className="text-lg font-medium text-slate-800 mb-4">Equipment</h3>
+          <h3 className="text-lg font-medium text-slate-800 mb-4">{t('calculators.plumbing.equipment')}</h3>
           <div className="space-y-4">
             <div className="flex items-center">
               <input
@@ -853,7 +853,7 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
               />
               <label htmlFor="includeWaterHeater" className="ml-2 block text-sm font-medium text-slate-700">
-                Include Water Heater
+                {t('calculators.plumbing.includeWaterHeater')}
               </label>
             </div>
 
@@ -861,7 +861,7 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               <div className="pl-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="waterHeaterType" className="block text-sm font-medium text-slate-700 mb-1">
-                    Water Heater Type
+                    {t('calculators.plumbing.waterHeaterType')}
                   </label>
                   <select
                     id="waterHeaterType"
@@ -869,14 +869,14 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                     onChange={(e) => setWaterHeaterType(e.target.value as 'tank' | 'tankless')}
                     className="w-full p-2 border border-slate-300 rounded-md"
                   >
-                    <option value="tank">Tank Water Heater</option>
-                    <option value="tankless">Tankless Water Heater</option>
+                    <option value="tank">{t('calculators.plumbing.tankWaterHeater')}</option>
+                    <option value="tankless">{t('calculators.plumbing.tanklessWaterHeater')}</option>
                   </select>
                 </div>
 
                 <div>
                   <label htmlFor="waterHeaterSize" className="block text-sm font-medium text-slate-700 mb-1">
-                    {waterHeaterType === 'tank' ? 'Tank Size (gallons)' : 'Capacity (gallons/min)'}
+                    {waterHeaterType === 'tank' ? t('calculators.plumbing.tankSize') : t('calculators.plumbing.capacity')}
                   </label>
                   <select
                     id="waterHeaterSize"
@@ -902,7 +902,7 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
               />
               <label htmlFor="includeWaterSoftener" className="ml-2 block text-sm font-medium text-slate-700">
-                Include Water Softener
+                {t('calculators.plumbing.includeWaterSoftener')}
               </label>
             </div>
 
@@ -915,14 +915,14 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
               />
               <label htmlFor="includePressureTank" className="ml-2 block text-sm font-medium text-slate-700">
-                Include Pressure Tank
+                {t('calculators.plumbing.includePressureTank')}
               </label>
             </div>
 
             {includePressureTank && (
               <div className="pl-6">
                 <label htmlFor="pressureTankSize" className="block text-sm font-medium text-slate-700 mb-1">
-                  Pressure Tank Size (gallons)
+                  {t('calculators.plumbing.pressureTankSize')}
                 </label>
                 <select
                   id="pressureTankSize"
@@ -940,7 +940,7 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         </div>
 
         <div className="border-b border-slate-200 pb-6">
-          <h3 className="text-lg font-medium text-slate-800 mb-4">Drainage</h3>
+          <h3 className="text-lg font-medium text-slate-800 mb-4">{t('calculators.plumbing.drainage')}</h3>
           <div className="space-y-4">
             <div className="flex items-center">
               <input
@@ -951,14 +951,14 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
               />
               <label htmlFor="includeSewerConnection" className="ml-2 block text-sm font-medium text-slate-700">
-                Include Sewer Connection
+                {t('calculators.plumbing.includeSewerConnection')}
               </label>
             </div>
 
             {includeSewerConnection && (
               <div className="pl-6">
                 <label htmlFor="sewerLength" className="block text-sm font-medium text-slate-700 mb-1">
-                  Sewer Line Length (feet)
+                  {t('calculators.plumbing.sewerLineLength')}
                 </label>
                 <input
                   type="number"
@@ -968,7 +968,7 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   value={sewerLength}
                   onChange={(e) => setSewerLength(e.target.value ? Number(e.target.value) : '')}
                   className="w-full p-2 border border-slate-300 rounded-md"
-                  placeholder="Enter sewer line length"
+                  placeholder={t('calculators.plumbing.enterSewerLineLength')}
                 />
               </div>
             )}
@@ -982,14 +982,14 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
               />
               <label htmlFor="includeCleanouts" className="ml-2 block text-sm font-medium text-slate-700">
-                Include Cleanouts
+                {t('calculators.plumbing.includeCleanouts')}
               </label>
             </div>
 
             {includeCleanouts && (
               <div className="pl-6">
                 <label htmlFor="cleanoutCount" className="block text-sm font-medium text-slate-700 mb-1">
-                  Number of Cleanouts
+                  {t('calculators.plumbing.numberOfCleanouts')}
                 </label>
                 <input
                   type="number"
@@ -999,14 +999,14 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   value={cleanoutCount}
                   onChange={(e) => setCleanoutCount(Number(e.target.value))}
                   className="w-full p-2 border border-slate-300 rounded-md"
-                  placeholder="Enter number of cleanouts"
+                  placeholder={t('calculators.plumbing.enterNumberOfCleanouts')}
                 />
               </div>
             )}
           </div>
         </div>
       </div>
-      
+
       <button
         onClick={handleCalculate}
         disabled={!isFormValid}

@@ -45,7 +45,7 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   };
 
   const updateCircuit = (id: string, updates: Partial<Circuit>) => {
-    setCircuits(circuits.map(circuit => 
+    setCircuits(circuits.map(circuit =>
       circuit.id === id ? { ...circuit, ...updates } : circuit
     ));
   };
@@ -121,9 +121,9 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       totalCost += panelCost;
 
       results.push({
-        label: `${panelSize}A Panel (${panelSpaces} spaces)`,
+        label: `${panelSize}${t('calculators.electrical.ampPanel')} (${panelSpaces} ${t('calculators.electrical.spaces')})`,
         value: 1,
-        unit: 'panel',
+        unit: t('calculators.electrical.panel'),
         cost: panelCost
       });
 
@@ -134,9 +134,9 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         totalCost += groundRodCost + groundClampCost + groundWireCost;
 
         results.push({
-          label: 'Grounding System',
+          label: t('calculators.electrical.groundingSystem'),
           value: 1,
-          unit: 'set',
+          unit: t('calculators.electrical.set'),
           cost: groundRodCost + groundClampCost + groundWireCost
         });
       }
@@ -153,9 +153,9 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       totalCost += wireCost;
 
       results.push({
-        label: `${circuit.wireGauge} AWG ${circuit.wireType.toUpperCase()} Wire`,
+        label: `${circuit.wireGauge} AWG ${circuit.wireType.toUpperCase()} ${t('calculators.electrical.wire')}`,
         value: wireRollsNeeded,
-        unit: `${wireRollLength}ft rolls`,
+        unit: `${wireRollLength}${t('calculators.electrical.ftRolls')}`,
         cost: wireCost
       });
 
@@ -167,9 +167,9 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         totalCost += conduitCost;
 
         results.push({
-          label: `${circuit.conduitSize}" ${circuit.conduitType.toUpperCase()} Conduit`,
+          label: `${circuit.conduitSize}" ${circuit.conduitType.toUpperCase()} ${t('calculators.electrical.conduit')}`,
           value: conduitPieces,
-          unit: '10ft lengths',
+          unit: t('calculators.electrical.tenFtLengths'),
           cost: conduitCost
         });
 
@@ -180,9 +180,9 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         totalCost += fittingCost;
 
         results.push({
-          label: 'Conduit Fittings',
+          label: t('calculators.electrical.conduitFittings'),
           value: fittingsNeeded,
-          unit: 'pieces',
+          unit: t('calculators.electrical.pieces'),
           cost: fittingCost
         });
       }
@@ -202,9 +202,9 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         totalCost += deviceCost;
 
         results.push({
-          label: `${circuit.type.charAt(0).toUpperCase() + circuit.type.slice(1)} Devices`,
+          label: `${circuit.type.charAt(0).toUpperCase() + circuit.type.slice(1)} ${t('calculators.electrical.devices')}`,
           value: circuit.deviceCount,
-          unit: 'pieces',
+          unit: t('calculators.electrical.pieces'),
           cost: deviceCost
         });
       }
@@ -216,22 +216,22 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         totalCost += boxCost;
 
         results.push({
-          label: 'Electrical Boxes',
+          label: t('calculators.electrical.electricalBoxes'),
           value: circuit.boxCount,
-          unit: 'pieces',
+          unit: t('calculators.electrical.pieces'),
           cost: boxCost
         });
       }
 
       // Circuit breaker
-      const breakerPrice = circuit.amperage >= 30 ? 24.98 : 
+      const breakerPrice = circuit.amperage >= 30 ? 24.98 :
                           (includeAFCI ? 39.98 : 8.98);
       totalCost += breakerPrice;
 
       results.push({
-        label: `${circuit.amperage}A Circuit Breaker${includeAFCI ? ' (AFCI)' : ''}`,
+        label: `${circuit.amperage}${t('calculators.electrical.ampCircuitBreaker')}${includeAFCI ? ` (${t('calculators.electrical.afci')})` : ''}`,
         value: 1,
-        unit: 'piece',
+        unit: t('calculators.electrical.piece'),
         cost: breakerPrice
       });
     });
@@ -239,8 +239,8 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     onCalculate(results);
   };
 
-  const isFormValid = circuits.length > 0 && circuits.every(circuit => 
-    typeof circuit.length === 'number' && 
+  const isFormValid = circuits.length > 0 && circuits.every(circuit =>
+    typeof circuit.length === 'number' &&
     circuit.length > 0 &&
     typeof circuit.deviceCount === 'number' &&
     typeof circuit.boxCount === 'number'
@@ -252,27 +252,27 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         <Zap className="h-6 w-6 text-orange-500 mr-2" />
         <h2 className="text-xl font-bold text-slate-800">{t('calculators.electrical.title')}</h2>
       </div>
-      
+
       <div className="mb-4">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-medium text-slate-800">Circuits</h3>
+          <h3 className="text-lg font-medium text-slate-800">{t('calculators.electrical.circuits')}</h3>
           <button
             onClick={addCircuit}
             className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors"
           >
-            Add Circuit
+            {t('calculators.electrical.addCircuit')}
           </button>
         </div>
 
         {circuits.length === 0 && (
           <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
             <Zap className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-            <p className="text-gray-600 mb-4">Add electrical circuits to calculate materials</p>
+            <p className="text-gray-600 mb-4">{t('calculators.electrical.addCircuitsPrompt')}</p>
             <button
               onClick={addCircuit}
               className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors"
             >
-              Add Your First Circuit
+              {t('calculators.electrical.addFirstCircuit')}
             </button>
           </div>
         )}
@@ -282,54 +282,54 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Circuit Type
+                  {t('calculators.electrical.circuitType')}
                 </label>
                 <select
                   value={circuit.type}
                   onChange={(e) => updateCircuit(circuit.id, { type: e.target.value as Circuit['type'] })}
                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 >
-                  <option value="lighting">Lighting Circuit</option>
-                  <option value="receptacle">Receptacle Circuit</option>
-                  <option value="appliance">Appliance Circuit</option>
-                  <option value="hvac">HVAC Circuit</option>
+                  <option value="lighting">{t('calculators.electrical.lightingCircuit')}</option>
+                  <option value="receptacle">{t('calculators.electrical.receptacleCircuit')}</option>
+                  <option value="appliance">{t('calculators.electrical.applianceCircuit')}</option>
+                  <option value="hvac">{t('calculators.electrical.hvacCircuit')}</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Amperage
+                  {t('calculators.electrical.amperage')}
                 </label>
                 <select
                   value={circuit.amperage}
                   onChange={(e) => updateCircuit(circuit.id, { amperage: Number(e.target.value) as Circuit['amperage'] })}
                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 >
-                  <option value={15}>15 Amp</option>
-                  <option value={20}>20 Amp</option>
-                  <option value={30}>30 Amp</option>
-                  <option value={40}>40 Amp</option>
-                  <option value={50}>50 Amp</option>
+                  <option value={15}>{t('calculators.electrical.fifteenAmp')}</option>
+                  <option value={20}>{t('calculators.electrical.twentyAmp')}</option>
+                  <option value={30}>{t('calculators.electrical.thirtyAmp')}</option>
+                  <option value={40}>{t('calculators.electrical.fortyAmp')}</option>
+                  <option value={50}>{t('calculators.electrical.fiftyAmp')}</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Voltage
+                  {t('calculators.electrical.voltage')}
                 </label>
                 <select
                   value={circuit.voltage}
                   onChange={(e) => updateCircuit(circuit.id, { voltage: Number(e.target.value) as Circuit['voltage'] })}
                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 >
-                  <option value={120}>120V</option>
-                  <option value={240}>240V</option>
+                  <option value={120}>{t('calculators.electrical.onetwentyV')}</option>
+                  <option value={240}>{t('calculators.electrical.twofortyV')}</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Wire Length (feet)
+                  {t('calculators.electrical.wireLengthFeet')}
                 </label>
                 <input
                   type="number"
@@ -338,46 +338,46 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   value={circuit.length || ''}
                   onChange={(e) => updateCircuit(circuit.id, { length: Number(e.target.value) })}
                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  placeholder="Enter wire length"
+                  placeholder={t('calculators.electrical.enterWireLength')}
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Wire Gauge
+                  {t('calculators.electrical.wireGauge')}
                 </label>
                 <select
                   value={circuit.wireGauge}
                   onChange={(e) => updateCircuit(circuit.id, { wireGauge: Number(e.target.value) as Circuit['wireGauge'] })}
                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 >
-                  <option value={14}>14 AWG</option>
-                  <option value={12}>12 AWG</option>
-                  <option value={10}>10 AWG</option>
-                  <option value={8}>8 AWG</option>
-                  <option value={6}>6 AWG</option>
+                  <option value={14}>{t('calculators.electrical.fourteenAWG')}</option>
+                  <option value={12}>{t('calculators.electrical.twelveAWG')}</option>
+                  <option value={10}>{t('calculators.electrical.tenAWG')}</option>
+                  <option value={8}>{t('calculators.electrical.eightAWG')}</option>
+                  <option value={6}>{t('calculators.electrical.sixAWG')}</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Wire Type
+                  {t('calculators.electrical.wireType')}
                 </label>
                 <select
                   value={circuit.wireType}
                   onChange={(e) => updateCircuit(circuit.id, { wireType: e.target.value as Circuit['wireType'] })}
                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 >
-                  <option value="nm-b">NM-B (Romex)</option>
-                  <option value="thhn">THHN</option>
-                  <option value="ser">SER</option>
-                  <option value="uf-b">UF-B</option>
+                  <option value="nm-b">{t('calculators.electrical.nmb')}</option>
+                  <option value="thhn">{t('calculators.electrical.thhn')}</option>
+                  <option value="ser">{t('calculators.electrical.ser')}</option>
+                  <option value="uf-b">{t('calculators.electrical.ufb')}</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Device Count
+                  {t('calculators.electrical.deviceCount')}
                 </label>
                 <input
                   type="number"
@@ -386,13 +386,13 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   value={circuit.deviceCount || ''}
                   onChange={(e) => updateCircuit(circuit.id, { deviceCount: Number(e.target.value) })}
                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  placeholder="Enter number of devices"
+                  placeholder={t('calculators.electrical.enterDeviceCount')}
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Box Count
+                  {t('calculators.electrical.boxCount')}
                 </label>
                 <input
                   type="number"
@@ -401,7 +401,7 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   value={circuit.boxCount || ''}
                   onChange={(e) => updateCircuit(circuit.id, { boxCount: Number(e.target.value) })}
                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  placeholder="Enter number of boxes"
+                  placeholder={t('calculators.electrical.enterBoxCount')}
                 />
               </div>
 
@@ -413,7 +413,7 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
                 />
                 <label className="ml-2 block text-sm font-medium text-slate-700">
-                  Requires Conduit
+                  {t('calculators.electrical.requiresConduit')}
                 </label>
               </div>
             </div>
@@ -422,31 +422,31 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Conduit Type
+                    {t('calculators.electrical.conduitType')}
                   </label>
                   <select
                     value={circuit.conduitType}
                     onChange={(e) => updateCircuit(circuit.id, { conduitType: e.target.value as Circuit['conduitType'] })}
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   >
-                    <option value="emt">EMT</option>
-                    <option value="pvc">PVC</option>
-                    <option value="flex">Flexible</option>
+                    <option value="emt">{t('calculators.electrical.emt')}</option>
+                    <option value="pvc">{t('calculators.electrical.pvc')}</option>
+                    <option value="flex">{t('calculators.electrical.flexible')}</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Conduit Size
+                    {t('calculators.electrical.conduitSize')}
                   </label>
                   <select
                     value={circuit.conduitSize}
                     onChange={(e) => updateCircuit(circuit.id, { conduitSize: Number(e.target.value) as Circuit['conduitSize'] })}
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   >
-                    <option value={0.5}>1/2 inch</option>
-                    <option value={0.75}>3/4 inch</option>
-                    <option value={1}>1 inch</option>
+                    <option value={0.5}>{t('calculators.electrical.halfInch')}</option>
+                    <option value={0.75}>{t('calculators.electrical.threeQuarterInch')}</option>
+                    <option value={1}>{t('calculators.electrical.oneInch')}</option>
                   </select>
                 </div>
               </div>
@@ -456,13 +456,13 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               onClick={() => removeCircuit(circuit.id)}
               className="mt-4 text-red-500 hover:text-red-600 text-sm font-medium"
             >
-              Remove Circuit
+              {t('calculators.electrical.removeCircuit')}
             </button>
           </div>
         ))}
 
         <div className="border-t border-slate-200 pt-6">
-          <h3 className="text-lg font-medium text-slate-800 mb-4">Additional Options</h3>
+          <h3 className="text-lg font-medium text-slate-800 mb-4">{t('calculators.electrical.additionalOptions')}</h3>
           <div className="space-y-4">
             <div className="flex items-center">
               <input
@@ -473,7 +473,7 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
               />
               <label htmlFor="includePanel" className="ml-2 block text-sm font-medium text-slate-700">
-                Include Panel
+                {t('calculators.electrical.includePanel')}
               </label>
             </div>
 
@@ -481,7 +481,7 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-6">
                 <div>
                   <label htmlFor="panelSize" className="block text-sm font-medium text-slate-700 mb-1">
-                    Panel Size
+                    {t('calculators.electrical.panelSize')}
                   </label>
                   <select
                     id="panelSize"
@@ -489,15 +489,15 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                     onChange={(e) => setPanelSize(Number(e.target.value) as 100 | 150 | 200)}
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   >
-                    <option value={100}>100 Amp</option>
-                    <option value={150}>150 Amp</option>
-                    <option value={200}>200 Amp</option>
+                    <option value={100}>{t('calculators.electrical.oneHundredAmp')}</option>
+                    <option value={150}>{t('calculators.electrical.oneFiftyAmp')}</option>
+                    <option value={200}>{t('calculators.electrical.twoHundredAmp')}</option>
                   </select>
                 </div>
 
                 <div>
                   <label htmlFor="panelSpaces" className="block text-sm font-medium text-slate-700 mb-1">
-                    Panel Spaces
+                    {t('calculators.electrical.panelSpaces')}
                   </label>
                   <select
                     id="panelSpaces"
@@ -505,9 +505,9 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                     onChange={(e) => setPanelSpaces(Number(e.target.value) as 20 | 30 | 40)}
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   >
-                    <option value={20}>20 Space</option>
-                    <option value={30}>30 Space</option>
-                    <option value={40}>40 Space</option>
+                    <option value={20}>{t('calculators.electrical.twentySpace')}</option>
+                    <option value={30}>{t('calculators.electrical.thirtySpace')}</option>
+                    <option value={40}>{t('calculators.electrical.fortySpace')}</option>
                   </select>
                 </div>
 
@@ -520,7 +520,7 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                     className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
                   />
                   <label htmlFor="includeGroundRods" className="ml-2 block text-sm font-medium text-slate-700">
-                    Include Ground Rods
+                    {t('calculators.electrical.includeGroundRods')}
                   </label>
                 </div>
               </div>
@@ -535,7 +535,7 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
               />
               <label htmlFor="includeGFCI" className="ml-2 block text-sm font-medium text-slate-700">
-                Include GFCI Protection
+                {t('calculators.electrical.includeGFCIProtection')}
               </label>
             </div>
 
@@ -548,13 +548,13 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
               />
               <label htmlFor="includeAFCI" className="ml-2 block text-sm font-medium text-slate-700">
-                Include AFCI Protection
+                {t('calculators.electrical.includeAFCIProtection')}
               </label>
             </div>
           </div>
         </div>
       </div>
-      
+
       <button
         onClick={handleCalculate}
         disabled={!isFormValid}
