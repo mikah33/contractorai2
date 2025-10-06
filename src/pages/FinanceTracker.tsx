@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { DollarSign, Receipt, Calendar, BarChart2, FileText, Download, RefreshCw } from 'lucide-react';
+import { DollarSign, Receipt, Calendar, BarChart2, FileText, Download, RefreshCw, Menu, X } from 'lucide-react';
 import ReceiptCapture from '../components/finance/ReceiptCapture';
 import ExpenseList from '../components/finance/ExpenseList';
 import PaymentTracker from '../components/finance/PaymentTracker';
@@ -14,6 +14,7 @@ import { useFinanceStore } from '../stores/financeStoreSupabase';
 
 const FinanceTracker = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   const {
     receipts,
@@ -133,7 +134,115 @@ const FinanceTracker = () => {
       )}
 
       <div className="bg-white rounded-lg shadow">
-        <div className="border-b border-gray-200 overflow-x-auto">
+        {/* Mobile Menu Button */}
+        <div className="md:hidden border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="flex items-center space-x-2 text-gray-700 font-medium"
+          >
+            <Menu className="h-5 w-5" />
+            <span className="capitalize">{activeTab}</span>
+          </button>
+        </div>
+
+        {/* Mobile Dropdown Menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-b border-gray-200 bg-gray-50">
+            <nav className="px-4 py-2 space-y-1">
+              <button
+                onClick={() => { setActiveTab('dashboard'); setMobileMenuOpen(false); }}
+                className={`w-full flex items-center px-3 py-2 rounded-md text-sm font-medium ${
+                  activeTab === 'dashboard'
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <BarChart2 className="w-4 h-4 mr-3" />
+                Dashboard
+              </button>
+              <button
+                onClick={() => { setActiveTab('revenue'); setMobileMenuOpen(false); }}
+                className={`w-full flex items-center px-3 py-2 rounded-md text-sm font-medium ${
+                  activeTab === 'revenue'
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <DollarSign className="w-4 h-4 mr-3" />
+                Revenue
+              </button>
+              <button
+                onClick={() => { setActiveTab('expenses'); setMobileMenuOpen(false); }}
+                className={`w-full flex items-center px-3 py-2 rounded-md text-sm font-medium ${
+                  activeTab === 'expenses'
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <Receipt className="w-4 h-4 mr-3" />
+                Expenses
+              </button>
+              <button
+                onClick={() => { setActiveTab('payments'); setMobileMenuOpen(false); }}
+                className={`w-full flex items-center px-3 py-2 rounded-md text-sm font-medium ${
+                  activeTab === 'payments'
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <DollarSign className="w-4 h-4 mr-3" />
+                Payments
+              </button>
+              <button
+                onClick={() => { setActiveTab('invoices'); setMobileMenuOpen(false); }}
+                className={`w-full flex items-center px-3 py-2 rounded-md text-sm font-medium ${
+                  activeTab === 'invoices'
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <FileText className="w-4 h-4 mr-3" />
+                Invoices
+              </button>
+              <button
+                onClick={() => { setActiveTab('recurring'); setMobileMenuOpen(false); }}
+                className={`w-full flex items-center px-3 py-2 rounded-md text-sm font-medium ${
+                  activeTab === 'recurring'
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <Calendar className="w-4 h-4 mr-3" />
+                Recurring
+              </button>
+              <button
+                onClick={() => { setActiveTab('budget'); setMobileMenuOpen(false); }}
+                className={`w-full flex items-center px-3 py-2 rounded-md text-sm font-medium ${
+                  activeTab === 'budget'
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <DollarSign className="w-4 h-4 mr-3" />
+                Budget
+              </button>
+              <button
+                onClick={() => { setActiveTab('reports'); setMobileMenuOpen(false); }}
+                className={`w-full flex items-center px-3 py-2 rounded-md text-sm font-medium ${
+                  activeTab === 'reports'
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <FileText className="w-4 h-4 mr-3" />
+                Reports
+              </button>
+            </nav>
+          </div>
+        )}
+
+        {/* Desktop Tabs */}
+        <div className="hidden md:block border-b border-gray-200 overflow-x-auto">
           <nav className="flex space-x-4 md:space-x-8 px-4 sm:px-6 min-w-max md:min-w-0" aria-label="Tabs">
             <button
               onClick={() => setActiveTab('dashboard')}
