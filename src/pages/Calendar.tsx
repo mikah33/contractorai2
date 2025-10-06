@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { format, startOfWeek, addDays, isSameDay, parseISO, addMonths, subMonths, isToday } from 'date-fns';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, Download, List, Grid, Clock, Check, AlertCircle, PenTool as Tool } from 'lucide-react';
 import { useCalendarStoreSupabase } from '../stores/calendarStoreSupabase';
@@ -10,6 +11,7 @@ import { useData } from '../contexts/DataContext';
 type ViewType = 'month' | 'week' | 'day';
 
 const Calendar = () => {
+  const { t } = useTranslation();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<ViewType>('month');
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -274,9 +276,9 @@ const Calendar = () => {
     <div className="space-y-4 sm:space-y-6 px-4 sm:px-6 lg:px-0">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Project Calendar</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{t('calendar.title')}</h1>
           <p className="mt-1 text-sm text-gray-600">
-            Manage your project schedules and deadlines
+            {t('calendar.subtitle')}
           </p>
         </div>
 
@@ -286,14 +288,14 @@ const Calendar = () => {
             className="inline-flex items-center justify-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 active:bg-gray-100 w-full sm:w-auto"
           >
             <Download className="w-4 h-4 sm:mr-2" />
-            <span className="hidden sm:inline">Export</span>
+            <span className="hidden sm:inline">{t('common.export')}</span>
           </button>
           <button
             onClick={handleAddEvent}
             className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 active:bg-blue-800 w-full sm:w-auto"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Add Event
+            {t('calendar.addEvent')}
           </button>
         </div>
       </div>
@@ -330,7 +332,7 @@ const Calendar = () => {
                   }`}
                 >
                   <Grid className="w-4 h-4 sm:hidden" />
-                  <span className="hidden sm:inline">Month</span>
+                  <span className="hidden sm:inline">{t('calendar.month')}</span>
                 </button>
                 <button
                   onClick={() => handleViewChange('week')}
@@ -341,7 +343,7 @@ const Calendar = () => {
                   }`}
                 >
                   <List className="w-4 h-4 sm:hidden" />
-                  <span className="hidden sm:inline">Week</span>
+                  <span className="hidden sm:inline">{t('calendar.week')}</span>
                 </button>
                 <button
                   onClick={() => handleViewChange('day')}
@@ -352,7 +354,7 @@ const Calendar = () => {
                   }`}
                 >
                   <CalendarIcon className="w-4 h-4 sm:hidden" />
-                  <span className="hidden sm:inline">Day</span>
+                  <span className="hidden sm:inline">{t('calendar.day')}</span>
                 </button>
               </div>
 

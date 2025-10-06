@@ -841,26 +841,26 @@ const EstimateGenerator = () => {
           {!currentEstimate && (
             <div className="bg-white rounded-lg shadow mb-6">
               <div className="p-6 border-b border-gray-200">
-                <h2 className="text-lg font-medium text-gray-900">Your Estimates</h2>
+                <h2 className="text-lg font-medium text-gray-900">{t('estimates.yourEstimates')}</h2>
               </div>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Client & Project
+                        {t('estimates.clientAndProject')}
                       </th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Amount
+                        {t('common.amount')}
                       </th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
+                        {t('common.status')}
                       </th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Date
+                        {t('estimates.date')}
                       </th>
                       <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
+                        {t('estimates.actions')}
                       </th>
                     </tr>
                   </thead>
@@ -966,12 +966,12 @@ const EstimateGenerator = () => {
             </div>
           ) : (
             <div className="bg-white rounded-lg shadow-md p-8 text-center">
-              <p className="text-gray-500 mb-4">No estimate loaded. Please select a template or create from scratch.</p>
+              <p className="text-gray-500 mb-4">{t('estimates.noEstimateLoaded')}</p>
               <button
                 onClick={handleCreateFromScratch}
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
               >
-                Create New Estimate
+                {t('estimates.createNewEstimate')}
               </button>
             </div>
           )}

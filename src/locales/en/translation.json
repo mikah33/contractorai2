@@ -96,6 +96,7 @@
   },
   "projects": {
     "title": "Projects",
+    "subtitle": "Manage your construction projects",
     "newProject": "New Project",
     "projectName": "Project Name",
     "client": "Client",
@@ -118,10 +119,13 @@
     "active": "Active",
     "completed": "Completed",
     "onHold": "On Hold",
-    "cancelled": "Cancelled"
+    "cancelled": "Cancelled",
+    "searchPlaceholder": "Search projects...",
+    "allStatus": "All Status"
   },
   "clients": {
     "title": "Clients",
+    "subtitle": "Manage your client relationships",
     "newClient": "New Client",
     "clientName": "Client Name",
     "email": "Email",
@@ -135,10 +139,18 @@
     "status": "Status",
     "active": "Active",
     "inactive": "Inactive",
-    "prospect": "Prospect"
+    "prospect": "Prospect",
+    "totalClients": "Total Clients",
+    "searchPlaceholder": "Search clients...",
+    "allStatus": "All Status",
+    "addClient": "Add Client",
+    "client": "CLIENT",
+    "contact": "CONTACT",
+    "location": "LOCATION"
   },
   "estimates": {
     "title": "Estimates",
+    "subtitle": "Create and manage project estimates",
     "newEstimate": "New Estimate",
     "estimateTitle": "Estimate Title",
     "client": "Client",
@@ -156,7 +168,13 @@
     "description": "Description",
     "quantity": "Quantity",
     "unitPrice": "Unit Price",
-    "amount": "Amount"
+    "amount": "Amount",
+    "yourEstimates": "Your Estimates",
+    "clientAndProject": "CLIENT & PROJECT",
+    "date": "DATE",
+    "actions": "ACTIONS",
+    "noEstimateLoaded": "No estimate loaded. Please select a template or create from scratch.",
+    "createNewEstimate": "Create New Estimate"
   },
   "finance": {
     "title": "Finance Tracker",
@@ -211,6 +229,7 @@
   },
   "employees": {
     "title": "Employees",
+    "subtitle": "Manage your team members",
     "addEmployee": "Add Employee",
     "firstName": "First Name",
     "lastName": "Last Name",
@@ -220,7 +239,10 @@
     "department": "Department",
     "status": "Status",
     "active": "Active",
-    "inactive": "Inactive"
+    "inactive": "Inactive",
+    "totalEmployees": "Total Employees",
+    "searchPlaceholder": "Search employees...",
+    "allStatus": "All Status"
   },
   "calculator": {
     "title": "Pricing Calculator",
@@ -237,5 +259,14 @@
     "readyToCalculate": "Ready to Calculate",
     "aiAnalyzing": "Our AI is analyzing current material and labor costs for your project...",
     "fillSpecifications": "Fill in the project specifications and click \"Calculate Pricing\" to get your detailed estimate."
+  },
+  "calendar": {
+    "title": "Project Calendar",
+    "subtitle": "Manage your project schedules and deadlines",
+    "export": "Export",
+    "addEvent": "Add Event",
+    "month": "Month",
+    "week": "Week",
+    "day": "Day"
   }
 }

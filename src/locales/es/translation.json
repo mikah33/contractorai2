@@ -96,6 +96,7 @@
   },
   "projects": {
     "title": "Proyectos",
+    "subtitle": "Gestione sus proyectos de construcción",
     "newProject": "Nuevo Proyecto",
     "projectName": "Nombre del Proyecto",
     "client": "Cliente",
@@ -118,10 +119,13 @@
     "active": "Activo",
     "completed": "Completado",
     "onHold": "En Espera",
-    "cancelled": "Cancelado"
+    "cancelled": "Cancelado",
+    "searchPlaceholder": "Buscar proyectos...",
+    "allStatus": "Todos los Estados"
   },
   "clients": {
     "title": "Clientes",
+    "subtitle": "Gestione sus relaciones con clientes",
     "newClient": "Nuevo Cliente",
     "clientName": "Nombre del Cliente",
     "email": "Correo Electrónico",
@@ -135,10 +139,18 @@
     "status": "Estado",
     "active": "Activo",
     "inactive": "Inactivo",
-    "prospect": "Prospecto"
+    "prospect": "Prospecto",
+    "totalClients": "Total de Clientes",
+    "searchPlaceholder": "Buscar clientes...",
+    "allStatus": "Todos los Estados",
+    "addClient": "Agregar Cliente",
+    "client": "CLIENTE",
+    "contact": "CONTACTO",
+    "location": "UBICACIÓN"
   },
   "estimates": {
     "title": "Presupuestos",
+    "subtitle": "Crear y gestionar presupuestos de proyectos",
     "newEstimate": "Nuevo Presupuesto",
     "estimateTitle": "Título del Presupuesto",
     "client": "Cliente",
@@ -156,7 +168,13 @@
     "description": "Descripción",
     "quantity": "Cantidad",
     "unitPrice": "Precio Unitario",
-    "amount": "Cantidad"
+    "amount": "Cantidad",
+    "yourEstimates": "Sus Presupuestos",
+    "clientAndProject": "CLIENTE Y PROYECTO",
+    "date": "FECHA",
+    "actions": "ACCIONES",
+    "noEstimateLoaded": "No hay presupuesto cargado. Seleccione una plantilla o cree uno desde cero.",
+    "createNewEstimate": "Crear Nuevo Presupuesto"
   },
   "finance": {
     "title": "Rastreador de Finanzas",
@@ -211,6 +229,7 @@
   },
   "employees": {
     "title": "Empleados",
+    "subtitle": "Gestione los miembros de su equipo",
     "addEmployee": "Agregar Empleado",
     "firstName": "Nombre",
     "lastName": "Apellido",
@@ -220,7 +239,10 @@
     "department": "Departamento",
     "status": "Estado",
     "active": "Activo",
-    "inactive": "Inactivo"
+    "inactive": "Inactivo",
+    "totalEmployees": "Total de Empleados",
+    "searchPlaceholder": "Buscar empleados...",
+    "allStatus": "Todos los Estados"
   },
   "calculator": {
     "title": "Calculadora de Precios",
@@ -237,5 +259,14 @@
     "readyToCalculate": "Listo para Calcular",
     "aiAnalyzing": "Nuestra IA está analizando los costos actuales de materiales y mano de obra para su proyecto...",
     "fillSpecifications": "Complete las especificaciones del proyecto y haga clic en \"Calcular Precio\" para obtener su estimación detallada."
+  },
+  "calendar": {
+    "title": "Calendario de Proyectos",
+    "subtitle": "Gestione sus cronogramas y fechas límite de proyectos",
+    "export": "Exportar",
+    "addEvent": "Agregar Evento",
+    "month": "Mes",
+    "week": "Semana",
+    "day": "Día"
   }
 }
