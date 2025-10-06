@@ -13,6 +13,7 @@ import {
   Users,
   UserCog
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useData } from '../../contexts/DataContext';
 import { stripeProducts } from '../../stripe-config';
 
@@ -22,6 +23,7 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
+  const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const { subscription } = useData();
@@ -54,17 +56,17 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   const subscriptionInfo = getSubscriptionInfo();
 
   const navigation = [
-    { name: 'Dashboard', icon: Home, href: '/' },
-    { name: 'Pricing Calculator', icon: Calculator, href: '/pricing' },
-    { name: 'Finance Tracker', icon: BarChart2, href: '/finance' },
-    { name: 'Estimate Generator', icon: FileText, href: '/estimates' },
-    { name: 'Project Manager', icon: Clipboard, href: '/projects' },
-    { name: 'Clients', icon: Users, href: '/clients' },
-    { name: 'Employees', icon: UserCog, href: '/employees' },
-    { name: 'Calendar', icon: Calendar, href: '/calendar' },
+    { name: t('navigation.dashboard'), icon: Home, href: '/' },
+    { name: t('navigation.calculator'), icon: Calculator, href: '/pricing' },
+    { name: t('navigation.finance'), icon: BarChart2, href: '/finance' },
+    { name: t('navigation.estimates'), icon: FileText, href: '/estimates' },
+    { name: t('navigation.projects'), icon: Clipboard, href: '/projects' },
+    { name: t('navigation.clients'), icon: Users, href: '/clients' },
+    { name: t('navigation.employees'), icon: UserCog, href: '/employees' },
+    { name: t('navigation.calendar'), icon: Calendar, href: '/calendar' },
     { name: 'Ad Analyzer', icon: BarChart3, href: '/ad-analyzer' },
-    { name: 'Subscription Plans', icon: CreditCard, href: '/subscriptions' },
-    { name: 'Settings', icon: Settings, href: '/settings' },
+    { name: t('navigation.subscriptions'), icon: CreditCard, href: '/subscriptions' },
+    { name: t('navigation.settings'), icon: Settings, href: '/settings' },
   ];
 
   return (
@@ -118,19 +120,19 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
             <p className="font-semibold mb-2">{subscriptionInfo.name}</p>
             {subscriptionInfo.validUntil && (
               <p className="text-xs text-blue-300 mb-3">
-                Valid until {subscriptionInfo.validUntil}
+                {t('common.validUntil')} {subscriptionInfo.validUntil}
               </p>
             )}
             {!subscriptionInfo.isActive && (
               <p className="text-xs text-blue-300 mb-3">
-                Upgrade to unlock all features
+                {t('common.upgradeMessage')}
               </p>
             )}
             <button
               onClick={() => navigate('/subscriptions')}
               className="w-full py-1.5 bg-teal-500 hover:bg-teal-600 text-white rounded-md text-xs font-medium transition-colors"
             >
-              {subscriptionInfo.isActive ? 'Manage Subscription' : 'Upgrade Now'}
+              {subscriptionInfo.isActive ? t('common.manageSubscription') : t('common.upgradeNow')}
             </button>
           </div>
         </div>

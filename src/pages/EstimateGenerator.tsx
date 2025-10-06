@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FileText, Plus, Download, Trash2, Edit2, Image, Copy, Check, X, Settings, Palette, Layout, FileUp, FileDown, Sparkles, DollarSign, Printer, Eye, RefreshCw, Receipt, ArrowLeft, Mail } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import jsPDF from 'jspdf';
@@ -16,6 +17,7 @@ import { estimateService } from '../services/estimateService';
 import { useData } from '../contexts/DataContext';
 
 const EstimateGenerator = () => {
+  const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const { profile } = useData();
@@ -178,9 +180,7 @@ const EstimateGenerator = () => {
 
   const handleBack = () => {
     if (hasUnsavedChanges) {
-      const confirmLeave = window.confirm(
-        'You have unsaved changes. Are you sure you want to leave? Your changes will be lost.'
-      );
+      const confirmLeave = window.confirm(t('estimates.unsavedChanges'));
       if (!confirmLeave) {
         return;
       }
@@ -285,7 +285,7 @@ const EstimateGenerator = () => {
   };
   
   const handleDeleteEstimate = async (estimateId: string) => {
-    if (!confirm('Are you sure you want to delete this estimate?')) return;
+    if (!confirm(t('estimates.deleteConfirm'))) return;
     
     try {
       const result = await estimateService.deleteEstimate(estimateId);
@@ -670,9 +670,9 @@ const EstimateGenerator = () => {
               </button>
             )}
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Estimate Generator</h1>
+              <h1 className="text-2xl font-bold text-gray-900">{t('estimates.title')}</h1>
               <p className="mt-1 text-sm text-gray-600">
-                Create professional estimates and proposals for your clients
+                {t('estimates.subtitle')}
               </p>
             </div>
           </div>
@@ -686,8 +686,8 @@ const EstimateGenerator = () => {
               className="inline-flex items-center px-4 py-2.5 text-sm font-semibold rounded-lg text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 shadow-sm hover:shadow transition-all duration-200 whitespace-nowrap"
             >
               <Eye className="w-4 h-4 mr-2" />
-              <span className="hidden sm:inline">Preview Invoice</span>
-              <span className="sm:hidden">Preview</span>
+              <span className="hidden sm:inline">{t('estimates.previewInvoice')}</span>
+              <span className="sm:hidden">{t('estimates.preview')}</span>
             </button>
 
             {/* Primary Action - Send */}
@@ -696,8 +696,8 @@ const EstimateGenerator = () => {
               className="inline-flex items-center px-5 py-2.5 text-sm font-semibold rounded-lg text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 whitespace-nowrap"
             >
               <Mail className="w-4 h-4 mr-2" />
-              <span className="hidden sm:inline">Send to Customer</span>
-              <span className="sm:hidden">Send</span>
+              <span className="hidden sm:inline">{t('estimates.sendToCustomer')}</span>
+              <span className="sm:hidden">{t('estimates.send')}</span>
             </button>
 
             {/* Actions Dropdown */}
@@ -707,7 +707,7 @@ const EstimateGenerator = () => {
                 className="inline-flex items-center px-4 py-2.5 text-sm font-medium rounded-lg text-gray-700 bg-white border-2 border-gray-200 hover:border-blue-500 hover:text-blue-600 hover:shadow-md transition-all duration-200 whitespace-nowrap"
               >
                 <Settings className="w-4 h-4 mr-2" />
-                <span>Actions</span>
+                <span>{t('estimates.actions')}</span>
                 <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
@@ -726,7 +726,7 @@ const EstimateGenerator = () => {
                       ) : (
                         <FileDown className="w-5 h-5 mr-3 text-blue-500" />
                       )}
-                      <span className="font-medium">Save Estimate</span>
+                      <span className="font-medium">{t('estimates.saveEstimate')}</span>
                     </button>
 
                     <div className="border-t border-gray-100 my-1"></div>
@@ -739,7 +739,7 @@ const EstimateGenerator = () => {
                       className="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150"
                     >
                       <Download className="w-5 h-5 mr-3 text-green-500" />
-                      <span className="font-medium">Export as PDF</span>
+                      <span className="font-medium">{t('estimates.exportAsPDF')}</span>
                     </button>
 
                     <button
@@ -750,7 +750,7 @@ const EstimateGenerator = () => {
                       className="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150"
                     >
                       <FileText className="w-5 h-5 mr-3 text-green-500" />
-                      <span className="font-medium">Export as Excel</span>
+                      <span className="font-medium">{t('estimates.exportAsExcel')}</span>
                     </button>
                   </div>
                 </div>
@@ -763,7 +763,7 @@ const EstimateGenerator = () => {
                 className="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
                 <Check className="w-4 h-4 mr-2" />
-                Customer Approved
+                {t('estimates.customerApproved')}
               </button>
             ) : (
               <button
@@ -774,10 +774,10 @@ const EstimateGenerator = () => {
                     ? 'bg-gray-400 cursor-not-allowed'
                     : 'bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500'
                 }`}
-                title={currentEstimate.convertedToInvoice ? 'Already converted to invoice' : 'Convert to Invoice'}
+                title={currentEstimate.convertedToInvoice ? t('estimates.alreadyInvoiced') : t('estimates.convertToInvoice')}
               >
                 <Receipt className="w-4 h-4 mr-2" />
-                {currentEstimate.convertedToInvoice ? 'Already Invoiced' : 'Convert to Invoice'}
+                {currentEstimate.convertedToInvoice ? t('estimates.alreadyInvoiced') : t('estimates.convertToInvoice')}
               </button>
             )}
 
@@ -787,7 +787,7 @@ const EstimateGenerator = () => {
                 className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
                 <Edit2 className="w-4 h-4 mr-2" />
-                Edit
+                {t('common.edit')}
               </button>
             )}
             
@@ -798,22 +798,22 @@ const EstimateGenerator = () => {
                   className="inline-flex items-center px-4 py-2.5 text-sm font-semibold rounded-lg text-white bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 whitespace-nowrap"
                 >
                   <Eye className="w-4 h-4 mr-2" />
-                  Preview
+                  {t('estimates.preview')}
                 </button>
 
                 <button
                   onClick={() => {
-                    if (confirm('Clear all data and start fresh?')) {
+                    if (confirm(t('estimates.clearDataConfirm'))) {
                       localStorage.clear();
                       sessionStorage.clear();
                       window.location.href = '/estimates';
                     }
                   }}
                   className="inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg text-red-600 bg-white border-2 border-red-200 hover:border-red-400 hover:bg-red-50 transition-all duration-200 whitespace-nowrap"
-                  title="Clear all cached data and start fresh"
+                  title={t('estimates.clearDataTitle')}
                 >
                   <X className="w-4 h-4 mr-2" />
-                  <span className="hidden sm:inline">Clear Data</span>
+                  <span className="hidden sm:inline">{t('estimates.clearData')}</span>
                 </button>
               </>
             )}
@@ -824,7 +824,7 @@ const EstimateGenerator = () => {
             className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             <Plus className="w-4 h-4 mr-2" />
-            New Estimate
+            {t('estimates.newEstimate')}
           </button>
         )}
       </div>
@@ -832,7 +832,7 @@ const EstimateGenerator = () => {
       {showSaveSuccess && (
         <div className="fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded z-50 flex items-center shadow-md">
           <Check className="w-5 h-5 mr-2" />
-          <span>Estimate saved successfully!</span>
+          <span>{t('estimates.savedSuccessfully')}</span>
         </div>
       )}
 

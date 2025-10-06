@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { DollarSign, Receipt, Calendar, BarChart2, FileText, Download, RefreshCw, Menu, X } from 'lucide-react';
 import ReceiptCapture from '../components/finance/ReceiptCapture';
@@ -13,6 +14,7 @@ import InvoiceManager from '../components/finance/InvoiceManager';
 import { useFinanceStore } from '../stores/financeStoreSupabase';
 
 const FinanceTracker = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
@@ -109,16 +111,16 @@ const FinanceTracker = () => {
     <div className="space-y-4 px-4 sm:px-6 lg:px-0">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Finance Tracker</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{t('finance.title')}</h1>
           <p className="mt-1 text-sm text-gray-600">
-            Manage receipts, track expenses, and monitor your financial health
+            {t('finance.subtitle')}
           </p>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2">
           <button className="inline-flex items-center justify-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
             <Download className="h-4 w-4 sm:mr-2" />
-            <span className="hidden sm:inline">Export</span>
+            <span className="hidden sm:inline">{t('common.export')}</span>
           </button>
           <button
             onClick={handleRefresh}
@@ -126,14 +128,14 @@ const FinanceTracker = () => {
             className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <RefreshCw className={`h-4 w-4 sm:mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-            <span className="hidden sm:inline">{isLoading ? 'Syncing...' : 'Sync'}</span>
+            <span className="hidden sm:inline">{isLoading ? t('finance.syncing') : t('finance.sync')}</span>
           </button>
         </div>
       </div>
       
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
-          <strong className="font-bold">Error: </strong>
+          <strong className="font-bold">{t('common.error')}: </strong>
           <span className="block sm:inline">{error}</span>
         </div>
       )}
@@ -163,7 +165,7 @@ const FinanceTracker = () => {
                 }`}
               >
                 <BarChart2 className="w-4 h-4 mr-3" />
-                Dashboard
+                {t('finance.dashboard')}
               </button>
               <button
                 onClick={() => { setActiveTab('revenue'); setMobileMenuOpen(false); }}
@@ -174,7 +176,7 @@ const FinanceTracker = () => {
                 }`}
               >
                 <DollarSign className="w-4 h-4 mr-3" />
-                Revenue
+                {t('finance.revenue')}
               </button>
               <button
                 onClick={() => { setActiveTab('expenses'); setMobileMenuOpen(false); }}
@@ -185,7 +187,7 @@ const FinanceTracker = () => {
                 }`}
               >
                 <Receipt className="w-4 h-4 mr-3" />
-                Expenses
+                {t('finance.expenses')}
               </button>
               <button
                 onClick={() => { setActiveTab('payments'); setMobileMenuOpen(false); }}
@@ -196,7 +198,7 @@ const FinanceTracker = () => {
                 }`}
               >
                 <DollarSign className="w-4 h-4 mr-3" />
-                Payments
+                {t('finance.payments')}
               </button>
               <button
                 onClick={() => { setActiveTab('invoices'); setMobileMenuOpen(false); }}
@@ -207,7 +209,7 @@ const FinanceTracker = () => {
                 }`}
               >
                 <FileText className="w-4 h-4 mr-3" />
-                Invoices
+                {t('finance.invoices')}
               </button>
               <button
                 onClick={() => { setActiveTab('recurring'); setMobileMenuOpen(false); }}
@@ -218,7 +220,7 @@ const FinanceTracker = () => {
                 }`}
               >
                 <Calendar className="w-4 h-4 mr-3" />
-                Recurring
+                {t('finance.recurring')}
               </button>
               <button
                 onClick={() => { setActiveTab('budget'); setMobileMenuOpen(false); }}
@@ -229,7 +231,7 @@ const FinanceTracker = () => {
                 }`}
               >
                 <DollarSign className="w-4 h-4 mr-3" />
-                Budget
+                {t('finance.budget')}
               </button>
               <button
                 onClick={() => { setActiveTab('reports'); setMobileMenuOpen(false); }}
@@ -240,7 +242,7 @@ const FinanceTracker = () => {
                 }`}
               >
                 <FileText className="w-4 h-4 mr-3" />
-                Reports
+                {t('finance.reports')}
               </button>
             </nav>
           </div>
@@ -258,7 +260,7 @@ const FinanceTracker = () => {
               }`}
             >
               <BarChart2 className="w-4 h-4 md:mr-2" />
-              <span className="hidden md:inline">Dashboard</span>
+              <span className="hidden md:inline">{t('finance.dashboard')}</span>
             </button>
             <button
               onClick={() => setActiveTab('revenue')}
@@ -269,7 +271,7 @@ const FinanceTracker = () => {
               }`}
             >
               <DollarSign className="w-4 h-4 md:mr-2" />
-              <span className="hidden md:inline">Revenue</span>
+              <span className="hidden md:inline">{t('finance.revenue')}</span>
             </button>
             <button
               onClick={() => setActiveTab('expenses')}
@@ -280,7 +282,7 @@ const FinanceTracker = () => {
               }`}
             >
               <Receipt className="w-4 h-4 md:mr-2" />
-              <span className="hidden md:inline">Expenses</span>
+              <span className="hidden md:inline">{t('finance.expenses')}</span>
             </button>
             <button
               onClick={() => setActiveTab('payments')}
@@ -291,7 +293,7 @@ const FinanceTracker = () => {
               }`}
             >
               <DollarSign className="w-4 h-4 md:mr-2" />
-              <span className="hidden md:inline">Payments</span>
+              <span className="hidden md:inline">{t('finance.payments')}</span>
             </button>
             <button
               onClick={() => setActiveTab('invoices')}
@@ -302,7 +304,7 @@ const FinanceTracker = () => {
               }`}
             >
               <FileText className="w-4 h-4 md:mr-2" />
-              <span className="hidden md:inline">Invoices</span>
+              <span className="hidden md:inline">{t('finance.invoices')}</span>
             </button>
             <button
               onClick={() => setActiveTab('recurring')}
@@ -313,7 +315,7 @@ const FinanceTracker = () => {
               }`}
             >
               <Calendar className="w-4 h-4 md:mr-2" />
-              <span className="hidden md:inline">Recurring</span>
+              <span className="hidden md:inline">{t('finance.recurring')}</span>
             </button>
             <button
               onClick={() => setActiveTab('budget')}
@@ -324,7 +326,7 @@ const FinanceTracker = () => {
               }`}
             >
               <DollarSign className="w-4 h-4 md:mr-2" />
-              <span className="hidden md:inline">Budget</span>
+              <span className="hidden md:inline">{t('finance.budget')}</span>
             </button>
             <button
               onClick={() => setActiveTab('reports')}
@@ -335,7 +337,7 @@ const FinanceTracker = () => {
               }`}
             >
               <FileText className="w-4 h-4 md:mr-2" />
-              <span className="hidden md:inline">Reports</span>
+              <span className="hidden md:inline">{t('finance.reports')}</span>
             </button>
           </nav>
         </div>

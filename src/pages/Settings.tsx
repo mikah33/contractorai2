@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Save, Bell, Lock, User, Loader2, Calendar, Upload, X } from 'lucide-react';
+import { Save, Bell, Lock, User, Loader2, Calendar, Upload, X, Globe } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { useData } from '../contexts/DataContext';
+import { useAuthStore } from '../stores/authStore';
 import { requestNotificationPermission, registerServiceWorker, showNotification } from '../utils/notifications';
 
 const Settings = () => {
+  const { t, i18n } = useTranslation();
+  const { user } = useAuthStore();
   const { profile, loading: dataLoading, refreshProfile } = useData();
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
@@ -435,7 +439,7 @@ const Settings = () => {
             <div className="p-6">
               <h2 className="flex items-center text-lg font-medium text-gray-900 mb-4">
                 <Lock className="w-5 h-5 mr-2 text-gray-500" />
-                Security Settings
+                {t('settings.security')}
               </h2>
               <div className="space-y-4">
                 <button
@@ -445,12 +449,54 @@ const Settings = () => {
                   <div className="flex items-center">
                     <Lock className="w-5 h-5 text-gray-500 mr-3" />
                     <div className="text-left">
-                      <p className="font-medium text-gray-900">Change Password</p>
-                      <p className="text-sm text-gray-500">Update your account password</p>
+                      <p className="font-medium text-gray-900">{t('settings.changePassword')}</p>
+                      <p className="text-sm text-gray-500">{t('settings.changePasswordDesc')}</p>
                     </div>
                   </div>
                   <span className="text-gray-400">&rarr;</span>
                 </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Language Settings */}
+          <div className="bg-white shadow rounded-lg">
+            <div className="p-6">
+              <h2 className="flex items-center text-lg font-medium text-gray-900 mb-4">
+                <Globe className="w-5 h-5 mr-2 text-gray-500" />
+                {t('settings.language')}
+              </h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {t('settings.selectLanguage')}
+                  </label>
+                  <select
+                    value={i18n.language}
+                    onChange={async (e) => {
+                      const newLanguage = e.target.value;
+                      i18n.changeLanguage(newLanguage);
+
+                      // Save to user profile
+                      if (user) {
+                        const { error } = await supabase
+                          .from('profiles')
+                          .update({ language: newLanguage })
+                          .eq('id', user.id);
+
+                        if (error) {
+                          console.error('Error saving language preference:', error);
+                        } else {
+                          await refreshProfile();
+                        }
+                      }
+                    }}
+                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm px-3 py-2 border"
+                  >
+                    <option value="en">{t('settings.english')}</option>
+                    <option value="es">{t('settings.spanish')}</option>
+                  </select>
+                </div>
               </div>
             </div>
           </div>

@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { BarChart, Activity, Users, DollarSign, TrendingUp, CalendarRange, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 import ProjectSummaryCard from '../components/dashboard/ProjectSummaryCard';
 import StatCard from '../components/dashboard/StatCard';
@@ -10,6 +11,7 @@ import { useCachedProjects, useCachedEstimates, useCachedEvents } from '../hooks
 import { useFinanceStore } from '../stores/financeStoreSupabase';
 
 const Dashboard = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   // Use React Query cached data - instant loading!
@@ -72,47 +74,47 @@ const Dashboard = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t('dashboard.title')}</h1>
         <div className="flex space-x-3">
-          <button 
+          <button
             onClick={handleNewProject}
             className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            New Project
+            {t('common.newProject')}
           </button>
-          <button 
+          <button
             onClick={handleNewEstimate}
             className="px-4 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-600 rounded-md hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            New Estimate
+            {t('common.newEstimate')}
           </button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
-          title="Active Projects"
+          title={t('dashboard.activeProjects')}
           value={activeProjects.toString()}
           change={`+${activeProjects}`}
           positive={true}
           icon={<Activity className="w-6 h-6 text-blue-600" />}
         />
         <StatCard
-          title="Pending Estimates"
+          title={t('dashboard.pendingEstimates')}
           value={pendingEstimates.toString()}
           change={`+${pendingEstimates}`}
           positive={true}
           icon={<FileText className="w-6 h-6 text-amber-500" />}
         />
         <StatCard
-          title="Total Revenue"
+          title={t('common.totalRevenue')}
           value={`$${totalRevenue.toLocaleString()}`}
           change="+0%"
           positive={true}
           icon={<DollarSign className="w-6 h-6 text-green-600" />}
         />
         <StatCard
-          title="Total Clients"
+          title={t('common.totalClients')}
           value={newClients.toString()}
           change={`+${newClients}`}
           positive={true}
@@ -124,11 +126,11 @@ const Dashboard = () => {
         <div className="lg:col-span-2">
           <div className="p-6 bg-white rounded-lg shadow">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Financial Overview</h2>
+              <h2 className="text-lg font-semibold text-gray-900">{t('dashboard.financialOverview')}</h2>
               <select className="px-3 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option>Last 30 days</option>
-                <option>Last 90 days</option>
-                <option>This Year</option>
+                <option>{t('dashboard.last30Days')}</option>
+                <option>{t('dashboard.last90Days')}</option>
+                <option>{t('dashboard.thisYear')}</option>
               </select>
             </div>
             <FinanceSummaryChart />
@@ -138,12 +140,12 @@ const Dashboard = () => {
         <div className="lg:col-span-1">
           <div className="p-6 bg-white rounded-lg shadow">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Calendar</h2>
+              <h2 className="text-lg font-semibold text-gray-900">{t('dashboard.calendar')}</h2>
               <button
                 onClick={handleViewAllDeadlines}
                 className="text-blue-600 hover:text-blue-800 text-sm"
               >
-                View Full
+                {t('common.viewFull')}
               </button>
             </div>
 
@@ -229,7 +231,7 @@ const Dashboard = () => {
 
               {/* Upcoming events */}
               <div className="mt-4 pt-4 border-t">
-                <h3 className="text-xs font-semibold text-gray-700 mb-2">Upcoming Events</h3>
+                <h3 className="text-xs font-semibold text-gray-700 mb-2">{t('common.upcomingEvents')}</h3>
                 <div className="space-y-2 max-h-32 overflow-y-auto">
                   {events
                     .filter(e => {
@@ -267,7 +269,7 @@ const Dashboard = () => {
                     const eventDate = new Date(e.start_date);
                     return !isNaN(eventDate.getTime()) && eventDate >= new Date();
                   }).length === 0 && (
-                    <p className="text-xs text-gray-500">No upcoming events</p>
+                    <p className="text-xs text-gray-500">{t('common.noUpcomingEvents')}</p>
                   )}
                 </div>
               </div>
@@ -279,12 +281,12 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <div className="p-6 bg-white rounded-lg shadow">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Recent Estimates</h2>
-            <button 
+            <h2 className="text-lg font-semibold text-gray-900">{t('dashboard.recentEstimates')}</h2>
+            <button
               onClick={handleViewAllEstimates}
               className="text-blue-600 hover:text-blue-800"
             >
-              View All
+              {t('common.viewAll')}
             </button>
           </div>
           <RecentEstimatesTable />
@@ -292,12 +294,12 @@ const Dashboard = () => {
 
         <div className="p-6 bg-white rounded-lg shadow">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Project Status</h2>
-            <button 
+            <h2 className="text-lg font-semibold text-gray-900">{t('dashboard.projectStatus')}</h2>
+            <button
               onClick={handleViewAllProjects}
               className="text-blue-600 hover:text-blue-800"
             >
-              View All
+              {t('common.viewAll')}
             </button>
           </div>
           <div className="space-y-4">
@@ -307,14 +309,14 @@ const Dashboard = () => {
                 name: project.name,
                 client: project.client,
                 progress: project.progress,
-                status: project.status === 'active' ? 'In Progress' : 
-                       project.status === 'completed' ? 'Completed' : 
+                status: project.status === 'active' ? 'In Progress' :
+                       project.status === 'completed' ? 'Completed' :
                        project.status === 'on_hold' ? 'On Hold' : 'Cancelled'
               }} />
             ))}
             {projects.length === 0 && (
               <div className="text-center py-8 text-gray-500">
-                No projects yet. Create your first project to get started!
+                {t('dashboard.noProjectsYet')}
               </div>
             )}
           </div>

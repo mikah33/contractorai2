@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Plus, Search, Filter, MoreVertical, Calendar, Users, CheckCircle, Clock, AlertCircle,
   MessageSquare, Upload, Camera, FileText, ChevronDown, ChevronUp, Trash2, Edit,
@@ -52,6 +53,7 @@ interface Comment {
 
 
 const ProjectManager: React.FC = () => {
+  const { t } = useTranslation();
   const {
     projects,
     progressUpdates,
@@ -319,15 +321,15 @@ const ProjectManager: React.FC = () => {
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Project Manager</h1>
-            <p className="text-gray-600">Manage your construction projects efficiently</p>
+            <h1 className="text-2xl font-bold text-gray-900">{t('projects.title')}</h1>
+            <p className="text-gray-600">{t('projects.subtitle')}</p>
           </div>
           <button
             onClick={() => setShowProjectModal(true)}
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
           >
             <Plus className="w-4 h-4" />
-            New Project
+            {t('projects.newProject')}
           </button>
         </div>
 
@@ -337,23 +339,23 @@ const ProjectManager: React.FC = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
               type="text"
-              placeholder="Search projects..."
+              placeholder={t('projects.searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
-          
+
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
-            <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="on_hold">On Hold</option>
-            <option value="cancelled">Cancelled</option>
-            <option value="completed">Completed</option>
+            <option value="all">{t('projects.allStatus')}</option>
+            <option value="active">{t('projects.active')}</option>
+            <option value="on_hold">{t('projects.onHold')}</option>
+            <option value="cancelled">{t('projects.cancelled')}</option>
+            <option value="completed">{t('projects.completed')}</option>
           </select>
 
         </div>
@@ -498,7 +500,7 @@ const ProjectManager: React.FC = () => {
                       : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
                   }`}
                 >
-                  Overview
+                  {t('projects.overview')}
                 </button>
                 <button
                   type="button"
@@ -509,7 +511,7 @@ const ProjectManager: React.FC = () => {
                       : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
                   }`}
                 >
-                  Tasks
+                  {t('projects.tasks')}
                 </button>
                 <button
                   type="button"
@@ -520,7 +522,7 @@ const ProjectManager: React.FC = () => {
                       : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
                   }`}
                 >
-                  Team
+                  {t('projects.team')}
                 </button>
                 <button
                   onClick={() => {
@@ -534,7 +536,7 @@ const ProjectManager: React.FC = () => {
                   }`}
                   type="button"
                 >
-                  Progress
+                  {t('projects.progress')}
                 </button>
                 <button
                   type="button"
@@ -545,7 +547,7 @@ const ProjectManager: React.FC = () => {
                       : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
                   }`}
                 >
-                  Comments
+                  {t('projects.comments')}
                 </button>
                 <button
                   type="button"
@@ -556,7 +558,7 @@ const ProjectManager: React.FC = () => {
                       : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
                   }`}
                 >
-                  Estimates
+                  {t('projects.estimates')}
                 </button>
               </nav>
             </div>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Users, Plus, Search, Download, RefreshCw, UserPlus } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useClientsStore } from '../stores/clientsStore';
 import ClientsList from '../components/clients/ClientsList';
 import AddClientModal from '../components/clients/AddClientModal';
@@ -7,6 +8,7 @@ import EditClientModal from '../components/clients/EditClientModal';
 import { Client } from '../stores/clientsStore';
 
 const Clients = () => {
+  const { t } = useTranslation();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [localSearchTerm, setLocalSearchTerm] = useState('');
@@ -53,7 +55,7 @@ const Clients = () => {
   };
 
   const handleDeleteClient = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this client?')) {
+    if (window.confirm(t('clients.deleteConfirm'))) {
       await deleteClient(id);
     }
   };
@@ -105,9 +107,9 @@ const Clients = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Clients</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t('clients.title')}</h1>
           <p className="mt-1 text-sm text-gray-600">
-            Manage your client relationships and contact information
+            {t('clients.subtitle')}
           </p>
         </div>
         
@@ -117,29 +119,29 @@ const Clients = () => {
             className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             <Download className="h-4 w-4 mr-2" />
-            Export
+            {t('common.export')}
           </button>
-          <button 
+          <button
             onClick={fetchClients}
             disabled={isLoading}
             className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-            Refresh
+            {t('common.refresh')}
           </button>
           <button
             onClick={() => setIsAddModalOpen(true)}
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             <UserPlus className="h-4 w-4 mr-2" />
-            Add Client
+            {t('clients.addClient')}
           </button>
         </div>
       </div>
 
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
-          <strong className="font-bold">Error: </strong>
+          <strong className="font-bold">{t('common.error')}: </strong>
           <span className="block sm:inline">{error}</span>
         </div>
       )}
@@ -152,43 +154,43 @@ const Clients = () => {
               <Users className="h-6 w-6 text-blue-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Clients</p>
+              <p className="text-sm font-medium text-gray-600">{t('clients.totalClients')}</p>
               <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
             </div>
           </div>
         </div>
-        
+
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <div className="w-6 h-6 rounded-full bg-green-500"></div>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Active</p>
+              <p className="text-sm font-medium text-gray-600">{t('clients.active')}</p>
               <p className="text-2xl font-bold text-gray-900">{stats.active}</p>
             </div>
           </div>
         </div>
-        
+
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <div className="w-6 h-6 rounded-full bg-gray-400"></div>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Inactive</p>
+              <p className="text-sm font-medium text-gray-600">{t('clients.inactive')}</p>
               <p className="text-2xl font-bold text-gray-900">{stats.inactive}</p>
             </div>
           </div>
         </div>
-        
+
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <div className="w-6 h-6 rounded-full bg-yellow-500"></div>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Prospects</p>
+              <p className="text-sm font-medium text-gray-600">{t('clients.prospects')}</p>
               <p className="text-2xl font-bold text-gray-900">{stats.prospects}</p>
             </div>
           </div>
@@ -209,7 +211,7 @@ const Clients = () => {
                   value={localSearchTerm}
                   onChange={(e) => setLocalSearchTerm(e.target.value)}
                   className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="Search clients..."
+                  placeholder={t('clients.searchPlaceholder')}
                 />
               </div>
             </div>
@@ -220,10 +222,10 @@ const Clients = () => {
                 onChange={(e) => setStatusFilter(e.target.value as any)}
                 className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
               >
-                <option value="all">All Status</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-                <option value="prospect">Prospects</option>
+                <option value="all">{t('clients.allStatus')}</option>
+                <option value="active">{t('clients.active')}</option>
+                <option value="inactive">{t('clients.inactive')}</option>
+                <option value="prospect">{t('clients.prospects')}</option>
               </select>
             </div>
           </div>

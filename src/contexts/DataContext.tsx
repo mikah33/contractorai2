@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../stores/authStore';
+import i18n from '../i18n';
 
 interface Profile {
   id: string;
@@ -15,6 +16,7 @@ interface Profile {
   security_alerts?: boolean;
   stripe_customer_id?: string;
   default_terms?: string;
+  language?: string;
 }
 
 interface Subscription {
@@ -71,6 +73,10 @@ export const DataProvider = ({ children }: DataProviderProps) => {
         console.error('Error loading profile:', error);
       } else if (data) {
         setProfile(data);
+        // Sync language with i18n
+        if (data.language && data.language !== i18n.language) {
+          i18n.changeLanguage(data.language);
+        }
       }
     } catch (error) {
       console.error('Error refreshing profile:', error);

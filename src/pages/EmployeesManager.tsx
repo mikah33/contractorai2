@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Users, Plus, Search, Filter, Download, RefreshCw, UserPlus, Edit, Trash2, Mail, Phone, Briefcase, DollarSign, StickyNote, X } from 'lucide-react';
 import { useEmployeesStore, Employee } from '../stores/employeesStore';
 
 const EmployeesManager = () => {
+  const { t } = useTranslation();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [localSearchTerm, setLocalSearchTerm] = useState('');
@@ -133,9 +135,9 @@ const EmployeesManager = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Employees</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t('employees.title')}</h1>
           <p className="mt-1 text-sm text-gray-600">
-            Manage your team members and their information
+            {t('employees.subtitle')}
           </p>
         </div>
 
@@ -145,7 +147,7 @@ const EmployeesManager = () => {
             className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             <Download className="h-4 w-4 mr-2" />
-            Export
+            {t('common.export')}
           </button>
           <button
             onClick={fetchEmployees}
@@ -153,7 +155,7 @@ const EmployeesManager = () => {
             className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-            Refresh
+            {t('common.refresh')}
           </button>
           <button
             onClick={() => {
@@ -172,14 +174,14 @@ const EmployeesManager = () => {
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             <UserPlus className="h-4 w-4 mr-2" />
-            Add Employee
+            {t('employees.addEmployee')}
           </button>
         </div>
       </div>
 
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
-          <strong className="font-bold">Error: </strong>
+          <strong className="font-bold">{t('common.error')}: </strong>
           <span className="block sm:inline">{error}</span>
         </div>
       )}
@@ -192,7 +194,7 @@ const EmployeesManager = () => {
               <Users className="h-6 w-6 text-blue-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Employees</p>
+              <p className="text-sm font-medium text-gray-600">{t('employees.totalEmployees')}</p>
               <p className="text-2xl font-semibold text-gray-900">{stats.total}</p>
             </div>
           </div>
@@ -204,7 +206,7 @@ const EmployeesManager = () => {
               <Users className="h-6 w-6 text-green-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Active</p>
+              <p className="text-sm font-medium text-gray-600">{t('employees.active')}</p>
               <p className="text-2xl font-semibold text-gray-900">{stats.active}</p>
             </div>
           </div>
@@ -216,7 +218,7 @@ const EmployeesManager = () => {
               <Users className="h-6 w-6 text-gray-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Inactive</p>
+              <p className="text-sm font-medium text-gray-600">{t('employees.inactive')}</p>
               <p className="text-2xl font-semibold text-gray-900">{stats.inactive}</p>
             </div>
           </div>
@@ -258,12 +260,12 @@ const EmployeesManager = () => {
       ) : filteredEmployees.length === 0 ? (
         <div className="text-center py-12 bg-gray-50 rounded-lg">
           <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-500">No employees found</p>
+          <p className="text-gray-500">{t('employees.noEmployeesFound')}</p>
           <button
             onClick={() => setIsAddModalOpen(true)}
             className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
           >
-            Add First Employee
+            {t('employees.addFirstEmployee')}
           </button>
         </div>
       ) : (
@@ -338,7 +340,7 @@ const EmployeesManager = () => {
           <div className="bg-white rounded-lg max-w-2xl w-full">
             <div className="flex justify-between items-center p-6 border-b border-gray-200">
               <h2 className="text-xl font-semibold text-gray-900">
-                {editingEmployee ? 'Edit Employee' : 'Add New Employee'}
+                {editingEmployee ? t('employees.editEmployee') : t('employees.addNewEmployee')}
               </h2>
               <button
                 onClick={() => {
