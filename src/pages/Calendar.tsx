@@ -25,8 +25,12 @@ const Calendar = () => {
 
   // Fetch events on component mount
   useEffect(() => {
-    fetchEvents();
-  }, []);
+    console.log('Calendar: Fetching events on mount');
+    fetchEvents().then(() => {
+      console.log('Calendar: Events fetched, count:', events.length);
+      console.log('Calendar: Events:', events);
+    });
+  }, [fetchEvents]);
 
   // Check for upcoming events and schedule notifications
   useEffect(() => {
