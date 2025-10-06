@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Trash } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface JunkItem {
   id: string;
@@ -13,6 +14,7 @@ interface JunkItem {
 }
 
 const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
+  const { t } = useTranslation();
   const [items, setItems] = useState<JunkItem[]>([]);
   const [needsLabor, setNeedsLabor] = useState(true);
   const [laborers, setLaborers] = useState<2 | 3 | 4>(2);
@@ -256,7 +258,7 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
       <div className="flex items-center mb-6">
         <Trash className="h-6 w-6 text-orange-500 mr-2" />
-        <h2 className="text-xl font-bold text-slate-800">Junk Removal Calculator</h2>
+        <h2 className="text-xl font-bold text-slate-800">{t('calculators.junkRemoval.title')}</h2>
       </div>
       
       <div className="mb-4">
@@ -549,7 +551,7 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             : 'bg-slate-300 cursor-not-allowed'
         }`}
       >
-        Calculate Removal Cost
+        {t('calculators.calculateMaterials')}
       </button>
     </div>
   );

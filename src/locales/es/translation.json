@@ -400,6 +400,39 @@
     },
     "paint": {
       "title": "Calculadora de Pintura"
+    },
+    "doorsWindows": {
+      "title": "Calculadora de Puertas y Ventanas"
+    },
+    "electrical": {
+      "title": "Calculadora Eléctrica"
+    },
+    "excavation": {
+      "title": "Calculadora de Excavación"
+    },
+    "fencing": {
+      "title": "Calculadora de Cercas"
+    },
+    "framing": {
+      "title": "Calculadora de Enmarcado"
+    },
+    "gutters": {
+      "title": "Calculadora de Canalones"
+    },
+    "hvac": {
+      "title": "Calculadora de HVAC"
+    },
+    "junkRemoval": {
+      "title": "Calculadora de Remoción de Basura"
+    },
+    "plumbing": {
+      "title": "Calculadora de Plomería"
+    },
+    "retainingWall": {
+      "title": "Calculadora de Muros de Contención"
+    },
+    "tile": {
+      "title": "Calculadora de Azulejos"
     }
   }
 }

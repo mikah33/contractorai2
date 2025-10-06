@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Grid } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface Opening {
   width: number;
@@ -19,6 +20,7 @@ type TilePattern = 'straight' | 'diagonal' | 'herringbone' | 'brick' | 'basketwe
 type GroutWidth = 0.125 | 0.25 | 0.375;
 
 const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
+  const { t } = useTranslation();
   const [surfaceType, setSurfaceType] = useState<'floor' | 'wall'>('floor');
   const [inputType, setInputType] = useState<'dimensions' | 'area'>('dimensions');
   const [length, setLength] = useState<number | ''>('');
@@ -247,7 +249,7 @@ const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
       <div className="flex items-center mb-6">
         <Grid className="h-6 w-6 text-orange-500 mr-2" />
-        <h2 className="text-xl font-bold text-slate-800">Tile Calculator</h2>
+        <h2 className="text-xl font-bold text-slate-800">{t('calculators.tile.title')}</h2>
       </div>
       
       <div className="mb-4">
@@ -727,7 +729,7 @@ const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             : 'bg-slate-300 cursor-not-allowed'
         }`}
       >
-        Calculate Materials
+        {t('calculators.calculateMaterials')}
       </button>
     </div>
   );

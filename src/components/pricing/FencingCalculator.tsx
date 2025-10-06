@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Fence } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface Gate {
   id: string;
@@ -17,6 +18,7 @@ interface Corner {
 }
 
 const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
+  const { t } = useTranslation();
   const [fenceType, setFenceType] = useState<'privacy' | 'picket' | 'chain-link' | 'ranch' | 'panel'>('privacy');
   const [material, setMaterial] = useState<'wood' | 'vinyl' | 'metal' | 'composite'>('wood');
   const [length, setLength] = useState<number | ''>('');
@@ -381,7 +383,7 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
       <div className="flex items-center mb-6">
         <Fence className="h-6 w-6 text-orange-500 mr-2" />
-        <h2 className="text-xl font-bold text-slate-800">Fencing Calculator</h2>
+        <h2 className="text-xl font-bold text-slate-800">{t('calculators.fencing.title')}</h2>
       </div>
       
       <div className="mb-4">
@@ -741,7 +743,7 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             : 'bg-slate-300 cursor-not-allowed'
         }`}
       >
-        Calculate Materials
+        {t('calculators.calculateMaterials')}
       </button>
     </div>
   );

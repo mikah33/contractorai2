@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { DoorClosed, AppWindow } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface Opening {
   id: string;
@@ -19,6 +20,7 @@ interface Opening {
 }
 
 const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
+  const { t } = useTranslation();
   const [openings, setOpenings] = useState<Opening[]>([]);
   const [includeInsulation, setIncludeInsulation] = useState(true);
   const [includeFlashing, setIncludeFlashing] = useState(true);
@@ -348,7 +350,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
           <DoorClosed className="h-6 w-6 text-orange-500" />
           <AppWindow className="h-6 w-6 text-orange-500" />
         </div>
-        <h2 className="text-xl font-bold text-slate-800 ml-2">Doors & Windows Calculator</h2>
+        <h2 className="text-xl font-bold text-slate-800 ml-2">{t('calculators.doorsWindows.title')}</h2>
       </div>
       
       <div className="mb-4">
@@ -634,7 +636,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             : 'bg-slate-300 cursor-not-allowed'
         }`}
       >
-        Calculate Materials
+        {t('calculators.calculateMaterials')}
       </button>
     </div>
   );

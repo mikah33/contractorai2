@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Thermometer } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface Room {
   id: string;
@@ -23,6 +24,7 @@ interface Duct {
 }
 
 const HVACCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
+  const { t } = useTranslation();
   const [systemType, setSystemType] = useState<'split' | 'package' | 'mini-split'>('split');
   const [rooms, setRooms] = useState<Room[]>([]);
   const [ducts, setDucts] = useState<Duct[]>([]);
@@ -343,7 +345,7 @@ const HVACCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
       <div className="flex items-center mb-6">
         <Thermometer className="h-6 w-6 text-orange-500 mr-2" />
-        <h2 className="text-xl font-bold text-slate-800">HVAC Calculator</h2>
+        <h2 className="text-xl font-bold text-slate-800">{t('calculators.hvac.title')}</h2>
       </div>
       
       <div className="mb-4">
@@ -752,7 +754,7 @@ const HVACCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             : 'bg-slate-300 cursor-not-allowed'
         }`}
       >
-        Calculate Materials
+        {t('calculators.calculateMaterials')}
       </button>
     </div>
   );
