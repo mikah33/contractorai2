@@ -157,56 +157,25 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       cost: squares * 32
     });
 
-    // 10. Installation Labor
-    const baseHoursPerSquare = 2.0; // Reduced from 3.5 to 2.0 hours per square (industry standard)
-    const pitchMult = pitchMultipliers[pitch] || 1.0;
-    const storyMult = storyMultipliers[stories] || 1.0;
-    const complexMult = complexityMultipliers[roofType] || 1.0;
+    // Labor costs removed - materials only
 
-    const installHours = squares * baseHoursPerSquare * pitchMult * storyMult * complexMult;
-    const laborRate = 75; // Reduced from $85 to $75/hour
-
-    results.push({
-      label: t('calculators.roofing.results.installationLabor'),
-      value: installHours,
-      unit: t('calculators.roofing.units.hours'),
-      cost: installHours * laborRate
-    });
-
-    // 11. Tear-Off Labor (if layers to remove)
-    if (layers && layers > 0) {
-      const tearOffHoursPerSquare = 0.75; // Reduced from 1.2 to 0.75 hours per square
-      const tearOffHours = squares * tearOffHoursPerSquare * Number(layers) * pitchMult * storyMult;
-      results.push({
-        label: t('calculators.roofing.results.tearOffLabor', {
-          count: layers,
-          layers: layers
-        }),
-        value: tearOffHours,
-        unit: t('calculators.roofing.units.hours'),
-        cost: tearOffHours * laborRate
-      });
-    }
-
-    // 12. Chimney Flashing
+    // 12. Chimney Flashing (materials only)
     if (chimneys && chimneys > 0) {
-      const chimneyHours = 3 * Number(chimneys);
       results.push({
         label: t('calculators.roofing.results.chimneyFlashing'),
         value: Number(chimneys),
         unit: t('calculators.roofing.units.chimneys', { count: chimneys }),
-        cost: chimneyHours * laborRate
+        cost: Number(chimneys) * 150 // Material cost only
       });
     }
 
-    // 13. Skylight Flashing
+    // 13. Skylight Flashing (materials only)
     if (skylights && skylights > 0) {
-      const skylightHours = 2 * Number(skylights);
       results.push({
         label: t('calculators.roofing.results.skylightFlashing'),
         value: Number(skylights),
         unit: t('calculators.roofing.units.skylights', { count: skylights }),
-        cost: skylightHours * laborRate
+        cost: Number(skylights) * 85 // Material cost only
       });
     }
 
