@@ -515,7 +515,6 @@ function performRoofingCalculation() {
 
     const results = [];
     const squares = area / 100;
-    const laborRate = 85;
 
     results.push({ label: 'Roof Area', value: area, unit: 'sq ft' });
 
@@ -543,21 +542,14 @@ function performRoofingCalculation() {
     // Nails
     results.push({ label: 'Nails & Fasteners', value: squares.toFixed(2), unit: 'squares', cost: squares * 32 });
 
-    // Installation labor
-    const installHours = squares * 3.5 * pitchMult * storyMult;
-    results.push({ label: 'Installation Labor', value: installHours.toFixed(1), unit: 'hours', cost: installHours * laborRate });
-
-    // Tear-off
+    // Debris disposal (if tear-off needed)
     if (layers > 0) {
-        const tearOffHours = squares * 1.2 * layers * pitchMult * storyMult;
-        results.push({ label: `Tear-Off (${layers} layer${layers > 1 ? 's' : ''})`, value: tearOffHours.toFixed(1), unit: 'hours', cost: tearOffHours * laborRate });
         results.push({ label: 'Debris Disposal', value: squares.toFixed(2), unit: 'squares', cost: squares * 32 });
     }
 
-    // Skylights
+    // Skylights (materials only)
     if (skylights > 0) {
-        const skylightHours = 2 * skylights;
-        results.push({ label: 'Skylight Flashing', value: skylights, unit: skylights > 1 ? 'skylights' : 'skylight', cost: skylightHours * laborRate });
+        results.push({ label: 'Skylight Flashing', value: skylights, unit: skylights > 1 ? 'skylights' : 'skylight', cost: skylights * 85 });
     }
 
     // Options
