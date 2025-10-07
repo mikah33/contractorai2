@@ -48,7 +48,7 @@ serve(async (req) => {
     // Parse request body
     const { widgetKey, calculatorType, domain, visitorIp, referer } = await req.json() as ValidateRequest
 
-    // VALIDATION STEP 1: Get widget key with contractor subscription info
+    // VALIDATION STEP 1: Get widget key with contractor info
     const { data: widget, error: widgetError } = await supabase
       .from('widget_keys')
       .select(`
@@ -63,9 +63,7 @@ serve(async (req) => {
         contractor:profiles(
           id,
           business_name,
-          email,
-          subscription_status,
-          subscription_end_date
+          email
         )
       `)
       .eq('widget_key', widgetKey)
@@ -96,11 +94,17 @@ serve(async (req) => {
       })
     }
 
-    // VALIDATION STEP 3: Check subscription status (CRITICAL - Real-time validation)
-    const contractor = widget.contractor as any
+    // VALIDATION STEP 3: Check subscription status from subscriptions table (CRITICAL - Real-time validation)
+    const { data: subscription, error: subError } = await supabase
+      .from('subscriptions')
+      .select('status, current_period_end, cancel_at_period_end')
+      .eq('user_id', widget.contractor_id)
+      .single()
+
     const subscriptionActive =
-      contractor.subscription_status === 'active' &&
-      new Date(contractor.subscription_end_date) > new Date()
+      subscription &&
+      subscription.status === 'active' &&
+      new Date(subscription.current_period_end) > new Date()
 
     if (!subscriptionActive) {
       await logUsage(supabase, widget.id, widget.contractor_id, calculatorType, 'subscription_inactive', visitorIp, referer, domain)
