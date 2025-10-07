@@ -470,15 +470,12 @@
 
         // Run validation on page load
         window.addEventListener('DOMContentLoaded', async () => {
-            // TEMPORARILY SKIP VALIDATION FOR TESTING
-            console.log('Widget validation temporarily disabled for testing');
-            subscriptionValid = true;
-            // const isValid = await validateWidget();
-            // if (!isValid) {
-            //     // Disable all form inputs
-            //     const inputs = document.querySelectorAll('input, select, button');
-            //     inputs.forEach(input => input.disabled = true);
-            // }
+            const isValid = await validateWidget();
+            if (!isValid) {
+                // Disable all form inputs
+                const inputs = document.querySelectorAll('input, select, button');
+                inputs.forEach(input => input.disabled = true);
+            }
         });
 
         // Address Search Function
