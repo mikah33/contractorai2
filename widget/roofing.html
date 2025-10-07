@@ -251,9 +251,28 @@
         <!-- Calculator Form -->
         <div id="calculator-section" class="calc-section">
             <div class="form-grid">
+                <!-- Address Auto-Detection -->
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label for="address-search">🏠 Find Your Roof Area by Address</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input
+                            type="text"
+                            id="address-search"
+                            placeholder="Enter your address (e.g., 1600 Pennsylvania Ave NW, Washington, DC)"
+                            style="flex: 1;">
+                        <button type="button" id="search-address-btn" class="btn" style="width: auto; padding: 0 20px;">
+                            Search
+                        </button>
+                    </div>
+                    <div id="address-status" style="margin-top: 8px; font-size: 0.9rem;"></div>
+                </div>
+
                 <div class="form-group">
                     <label for="roof-area">Roof Area (sq ft) *</label>
                     <input type="number" id="roof-area" min="0" step="1" placeholder="2000" required>
+                    <span style="font-size: 0.85rem; color: var(--muted); margin-top: 4px; display: block;">
+                        Or search by address above to auto-fill
+                    </span>
                 </div>
 
                 <div class="form-row">
@@ -381,6 +400,72 @@
         const widgetKey = urlParams.get('key') || '';
 
         let calculationResults = null;
+
+        // Address Search Function
+        async function searchAddress() {
+            const address = document.getElementById('address-search').value.trim();
+            const statusDiv = document.getElementById('address-status');
+            const searchBtn = document.getElementById('search-address-btn');
+            const roofAreaInput = document.getElementById('roof-area');
+
+            if (!address) {
+                statusDiv.innerHTML = '<span style="color: var(--danger);">⚠️ Please enter an address</span>';
+                return;
+            }
+
+            // Show loading state
+            searchBtn.disabled = true;
+            searchBtn.textContent = 'Searching...';
+            statusDiv.innerHTML = '<span style="color: var(--muted);">🔍 Analyzing roof from satellite imagery...</span>';
+
+            try {
+                const response = await fetch('https://ujhgwcurllkkeouzwvgk.supabase.co/functions/v1/get-roof-area', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ address })
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.roofAreaSqFeet) {
+                    // Auto-fill roof area
+                    roofAreaInput.value = data.roofAreaSqFeet;
+
+                    statusDiv.innerHTML = `
+                        <span style="color: var(--success);">
+                            ✅ Found ${data.roofAreaSqFeet.toLocaleString()} sq ft roof at ${data.address}
+                            ${data.imageryDate ? `<br><small>Imagery from: ${data.imageryDate}</small>` : ''}
+                        </span>
+                    `;
+
+                    // Trigger calculation
+                    calculateRoofing();
+                } else {
+                    statusDiv.innerHTML = `<span style="color: var(--danger);">⚠️ ${data.error || 'Unable to detect roof area'}</span>`;
+                }
+            } catch (error) {
+                console.error('Address search error:', error);
+                statusDiv.innerHTML = '<span style="color: var(--danger);">⚠️ Error searching address. Please try again.</span>';
+            } finally {
+                searchBtn.disabled = false;
+                searchBtn.textContent = 'Search';
+            }
+        }
+
+        // Add event listener for search button
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('search-address-btn').addEventListener('click', searchAddress);
+
+            // Also allow Enter key in address field
+            document.getElementById('address-search').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    searchAddress();
+                }
+            });
+        });
 
         function calculateRoofing() {
             const area = parseFloat(document.getElementById('roof-area').value) || 0;
