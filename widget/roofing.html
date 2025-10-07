@@ -400,6 +400,76 @@
         const widgetKey = urlParams.get('key') || '';
 
         let calculationResults = null;
+        let subscriptionValid = false;
+
+        // CRITICAL: Validate widget key and subscription on load
+        async function validateWidget() {
+            if (!widgetKey) {
+                showSubscriptionError('No widget key provided. Please contact the website owner.');
+                return false;
+            }
+
+            try {
+                const response = await fetch('https://ujhgwcurllkkeouzwvgk.supabase.co/functions/v1/widget-validate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        widgetKey: widgetKey,
+                        calculatorType: 'roofing',
+                        domain: window.location.hostname,
+                        referer: document.referrer || null
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.valid) {
+                    subscriptionValid = true;
+                    return true;
+                } else {
+                    let errorMessage = 'This calculator is temporarily unavailable.';
+
+                    if (data.reason === 'subscription_inactive') {
+                        errorMessage = '⚠️ Subscription Expired: This roofing calculator is no longer available. The website owner\'s subscription has expired.';
+                    } else if (data.reason === 'invalid_key') {
+                        errorMessage = '⚠️ Invalid Widget: This calculator widget is not properly configured. Please contact the website owner.';
+                    } else if (data.reason === 'key_disabled') {
+                        errorMessage = '⚠️ Widget Disabled: This calculator has been disabled by the website owner.';
+                    } else if (data.reason === 'rate_limited') {
+                        errorMessage = '⚠️ Too Many Requests: Please wait a minute and try again.';
+                    }
+
+                    showSubscriptionError(errorMessage);
+                    return false;
+                }
+            } catch (error) {
+                console.error('Widget validation error:', error);
+                showSubscriptionError('Unable to load calculator. Please try again later.');
+                return false;
+            }
+        }
+
+        function showSubscriptionError(message) {
+            document.getElementById('calculator-section').innerHTML = `
+                <div style="text-align: center; padding: 60px 20px; background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); border-radius: 12px;">
+                    <div style="font-size: 48px; margin-bottom: 20px;">🔒</div>
+                    <h2 style="color: #991b1b; font-size: 24px; margin-bottom: 10px;">Calculator Unavailable</h2>
+                    <p style="color: #7f1d1d; font-size: 16px; max-width: 500px; margin: 0 auto;">${message}</p>
+                </div>
+            `;
+        }
+
+        // Run validation on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            const isValid = await validateWidget();
+            if (!isValid) {
+                // Disable all form inputs
+                const inputs = document.querySelectorAll('input, select, button');
+                inputs.forEach(input => input.disabled = true);
+            }
+        });
 
         // Address Search Function
         async function searchAddress() {
