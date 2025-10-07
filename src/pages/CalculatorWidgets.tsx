@@ -70,6 +70,9 @@ const CalculatorWidgets = () => {
 
       const result = await response.json();
 
+      console.log('Widget key generation response:', result);
+      console.log('Response status:', response.status);
+
       if (!result.success) {
         throw new Error(result.error || 'Failed to generate widget key');
       }
@@ -78,6 +81,7 @@ const CalculatorWidgets = () => {
       await loadWidgetKeys();
     } catch (err: any) {
       console.error('Error generating widget key:', err);
+      console.error('Full error object:', err);
       setError(err.message);
     } finally {
       setGenerating(false);
