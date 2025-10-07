@@ -400,7 +400,6 @@
 
             const results = [];
             const squares = area / 100;
-            const laborRate = 85;
 
             // Material
             const materialCost = squares * materialPrice;
@@ -426,21 +425,14 @@
             // Nails
             results.push({ label: 'Nails & Fasteners', value: squares.toFixed(2) + ' squares', cost: squares * 32 });
 
-            // Installation labor
-            const installHours = squares * 3.5 * pitchMult * storyMult;
-            results.push({ label: 'Installation Labor', value: installHours.toFixed(1) + ' hours', cost: installHours * laborRate });
-
-            // Tear-off
+            // Debris disposal (if tear-off needed)
             if (layers > 0) {
-                const tearOffHours = squares * 1.2 * layers * pitchMult * storyMult;
-                results.push({ label: `Tear-Off (${layers} layer${layers > 1 ? 's' : ''})`, value: tearOffHours.toFixed(1) + ' hours', cost: tearOffHours * laborRate });
                 results.push({ label: 'Debris Disposal', value: squares.toFixed(2) + ' squares', cost: squares * 32 });
             }
 
-            // Skylights
+            // Skylights (materials only)
             if (skylights > 0) {
-                const skylightHours = 2 * skylights;
-                results.push({ label: 'Skylight Flashing', value: skylights + (skylights > 1 ? ' skylights' : ' skylight'), cost: skylightHours * laborRate });
+                results.push({ label: 'Skylight Flashing', value: skylights + (skylights > 1 ? ' skylights' : ' skylight'), cost: skylights * 85 });
             }
 
             // Options
@@ -452,10 +444,8 @@
                 results.push({ label: 'Extended Warranty', value: squares.toFixed(2) + ' squares', cost: squares * 27 });
             }
 
-            // Calculate totals
+            // Calculate totals (materials only, no labor)
             const totalCost = results.reduce((sum, item) => sum + item.cost, 0);
-            const laborCost = results.filter(r => r.label.includes('Labor') || r.label.includes('Tear-Off')).reduce((sum, item) => sum + item.cost, 0);
-            const materialCost_total = totalCost - laborCost;
 
             calculationResults = {
                 area,
@@ -469,8 +459,7 @@
                 includeWarranty,
                 breakdown: results,
                 totalCost,
-                laborCost,
-                materialCost: materialCost_total
+                materialCost: totalCost
             };
 
             displayResults(results, totalCost);
