@@ -771,6 +771,7 @@ function performDeckCalculation() {
         { label: 'Posts & Footings', value: Math.ceil(area / 64), unit: 'posts', cost: Math.ceil(area / 64) * 85 },
         { label: 'Railing', value: perimeter.toFixed(0), unit: 'linear feet', cost: perimeter * railingPrice },
         { label: 'Fasteners & Hardware', value: 1, unit: 'lot', cost: area * 0.85 },
+        { label: 'Installation Labor', value: (area * 0.75).toFixed(1), unit: 'hours', cost: area * 0.75 * 75 }
     ];
 
     displayResults(results, 'Deck');
@@ -831,6 +832,7 @@ function performSidingCalculation() {
         { label: 'House Wrap', value: area.toFixed(0), unit: 'sq ft', cost: area * 0.35 },
         { label: 'Trim & Corners', value: 1, unit: 'lot', cost: area * 1.25 },
         { label: 'Fasteners', value: 1, unit: 'lot', cost: area * 0.45 },
+        { label: 'Installation Labor', value: (area * 0.5).toFixed(1), unit: 'hours', cost: area * 0.5 * 65 }
     ];
 
     displayResults(results, 'Siding');
@@ -896,6 +898,7 @@ function performFencingCalculation() {
         { label: 'Posts', value: posts, unit: 'posts', cost: posts * 45 },
         { label: 'Post Concrete', value: posts, unit: 'bags', cost: posts * 8 },
         { label: 'Hardware & Gates', value: 1, unit: 'lot', cost: 275 },
+        { label: 'Installation Labor', value: (length * 0.5).toFixed(1), unit: 'hours', cost: length * 0.5 * 55 }
     ];
 
     displayResults(results, 'Fencing');
@@ -957,6 +960,7 @@ function performGutterCalculation() {
         { label: 'Gutter Material', value: length.toFixed(0), unit: 'linear feet', cost: length * price },
         { label: 'Downspouts', value: downspouts, unit: 'downspouts', cost: downspouts * 85 },
         { label: 'Hangers & Brackets', value: Math.ceil(length / 2), unit: 'hangers', cost: Math.ceil(length / 2) * 3.5 },
+        { label: 'Installation Labor', value: (length * 0.3).toFixed(1), unit: 'hours', cost: length * 0.3 * 65 }
     ];
 
     displayResults(results, 'Gutters');
@@ -1128,6 +1132,7 @@ function performHVACCalculation() {
         { label: 'System Size', value: tons, unit: 'tons' },
         { label: 'HVAC System', value: 1, unit: 'unit', cost: systemPrice * tons },
         { label: 'Ductwork', value: ductwork.toFixed(0), unit: 'linear feet', cost: ductwork * 25 },
+        { label: 'Installation Labor', value: (tons * 8).toFixed(1), unit: 'hours', cost: tons * 8 * 95 }
     ];
 
     displayResults(results, 'HVAC');
@@ -1194,6 +1199,8 @@ function performDrywallCalculation() {
         { label: 'Joint Compound', value: Math.ceil(area / 100), unit: 'buckets', cost: Math.ceil(area / 100) * 15 },
         { label: 'Tape', value: Math.ceil(area / 100), unit: 'rolls', cost: Math.ceil(area / 100) * 8 },
         { label: 'Screws', value: Math.ceil(sheets / 10), unit: 'boxes', cost: Math.ceil(sheets / 10) * 12 },
+        { label: 'Finishing Labor', value: area.toFixed(0), unit: 'sq ft', cost: area * finishPrice },
+        { label: 'Installation Labor', value: (area * 0.02).toFixed(1), unit: 'hours', cost: area * 0.02 * 55 }
     ];
 
     displayResults(results, 'Drywall');
@@ -1260,6 +1267,7 @@ function performPaintCalculation() {
         { label: 'Paint Needed', value: gallons, unit: 'gallons', cost: gallons * paintPrice },
         { label: 'Primer', value: Math.ceil(area / 400), unit: 'gallons', cost: Math.ceil(area / 400) * 20 },
         { label: 'Supplies', value: 1, unit: 'lot', cost: 75 },
+        { label: 'Painting Labor', value: (area * 0.015 * coats).toFixed(1), unit: 'hours', cost: area * 0.015 * coats * 45 }
     ];
 
     displayResults(results, 'Paint');
@@ -1319,6 +1327,7 @@ function performFlooringCalculation() {
         { label: 'Flooring Material (with waste)', value: wasteArea.toFixed(0), unit: 'sq ft', cost: wasteArea * price },
         { label: 'Underlayment', value: area.toFixed(0), unit: 'sq ft', cost: area * 0.75 },
         { label: 'Transition Strips', value: 1, unit: 'lot', cost: 125 },
+        { label: 'Installation Labor', value: (area * 0.04).toFixed(1), unit: 'hours', cost: area * 0.04 * 55 }
     ];
 
     displayResults(results, 'Flooring');
@@ -1377,6 +1386,7 @@ function performTileCalculation() {
         { label: 'Tile (with waste)', value: wasteArea.toFixed(0), unit: 'sq ft', cost: wasteArea * price },
         { label: 'Thinset Mortar', value: Math.ceil(area / 50), unit: 'bags', cost: Math.ceil(area / 50) * 25 },
         { label: 'Grout', value: Math.ceil(area / 100), unit: 'bags', cost: Math.ceil(area / 100) * 18 },
+        { label: 'Installation Labor', value: (area * 0.08).toFixed(1), unit: 'hours', cost: area * 0.08 * 65 }
     ];
 
     displayResults(results, 'Tile');
@@ -1428,6 +1438,7 @@ function performDoorsWindowsCalculation() {
         { label: 'Interior Doors', value: doors, unit: 'doors', cost: doors * 350 },
         { label: 'Windows', value: windows, unit: 'windows', cost: windows * 450 },
         { label: 'Trim & Casing', value: doors + windows, unit: 'units', cost: (doors + windows) * 85 },
+        { label: 'Installation Labor', value: ((doors * 2) + (windows * 3)).toFixed(1), unit: 'hours', cost: ((doors * 2) + (windows * 3)) * 65 }
     ];
 
     displayResults(results, 'Doors & Windows');
@@ -1664,6 +1675,7 @@ function performPaversCalculation() {
         { label: 'Pavers', value: area.toFixed(0), unit: 'sq ft', cost: area * price },
         { label: 'Base Material', value: (area * 4 / 27).toFixed(2), unit: 'cubic yards', cost: (area * 4 / 27) * 45 },
         { label: 'Sand', value: (area * 1 / 27).toFixed(2), unit: 'cubic yards', cost: (area * 1 / 27) * 35 },
+        { label: 'Installation Labor', value: (area * 0.1).toFixed(1), unit: 'hours', cost: area * 0.1 * 55 }
     ];
 
     displayResults(results, 'Pavers');
