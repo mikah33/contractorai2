@@ -94,9 +94,9 @@ serve(async (req) => {
       })
     }
 
-    // VALIDATION STEP 3: Check subscription status from subscriptions table (CRITICAL - Real-time validation)
+    // VALIDATION STEP 3: Check subscription status from stripe_subscriptions table (CRITICAL - Real-time validation)
     const { data: subscription, error: subError } = await supabase
-      .from('subscriptions')
+      .from('stripe_subscriptions')
       .select('status, current_period_end, cancel_at_period_end')
       .eq('user_id', widget.contractor_id)
       .single()
