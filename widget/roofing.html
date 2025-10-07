@@ -409,6 +409,12 @@
                 return false;
             }
 
+            // Clean the widget key (trim whitespace)
+            const cleanKey = widgetKey.trim();
+            console.log('Widget key from URL:', widgetKey);
+            console.log('Widget key length:', widgetKey.length);
+            console.log('Cleaned key:', cleanKey);
+
             try {
                 const response = await fetch('https://ujhgwcurllkkeouzwvgk.supabase.co/functions/v1/widget-validate', {
                     method: 'POST',
@@ -417,7 +423,7 @@
                         'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqaGd3Y3VybGxra2VvdXp3dmdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcwMzIzMjQsImV4cCI6MjA3MjYwODMyNH0.ez6RDJ2FxgSfb7mo2Xug1lXaynKLR-2nJFO-x64UNnY'
                     },
                     body: JSON.stringify({
-                        widgetKey: widgetKey,
+                        widgetKey: cleanKey,
                         calculatorType: 'roofing',
                         domain: window.location.hostname,
                         referer: document.referrer || null
