@@ -86,7 +86,7 @@ serve(async (req) => {
     const { data: newKey, error: insertError } = await supabaseClient
       .from('widget_keys')
       .insert({
-        contractor_id: user.id,
+        user_id: user.id,
         widget_key: widgetKey,
         calculator_type: calculatorType,
         domain: domain || null,
