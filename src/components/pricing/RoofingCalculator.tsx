@@ -158,13 +158,13 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     });
 
     // 10. Installation Labor
-    const baseHoursPerSquare = 3.5;
+    const baseHoursPerSquare = 2.0; // Reduced from 3.5 to 2.0 hours per square (industry standard)
     const pitchMult = pitchMultipliers[pitch] || 1.0;
     const storyMult = storyMultipliers[stories] || 1.0;
     const complexMult = complexityMultipliers[roofType] || 1.0;
 
     const installHours = squares * baseHoursPerSquare * pitchMult * storyMult * complexMult;
-    const laborRate = 85;
+    const laborRate = 75; // Reduced from $85 to $75/hour
 
     results.push({
       label: t('calculators.roofing.results.installationLabor'),
@@ -175,7 +175,7 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
     // 11. Tear-Off Labor (if layers to remove)
     if (layers && layers > 0) {
-      const tearOffHoursPerSquare = 1.2;
+      const tearOffHoursPerSquare = 0.75; // Reduced from 1.2 to 0.75 hours per square
       const tearOffHours = squares * tearOffHoursPerSquare * Number(layers) * pitchMult * storyMult;
       results.push({
         label: t('calculators.roofing.results.tearOffLabor', {
