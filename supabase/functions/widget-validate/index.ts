@@ -182,9 +182,9 @@ serve(async (req) => {
     return new Response(JSON.stringify({
       valid: true,
       contractor: {
-        id: contractor.id,
-        business_name: contractor.business_name,
-        email: contractor.email
+        id: widget.contractor.id,
+        business_name: widget.contractor.business_name,
+        email: widget.contractor.email
       }
     } as ValidateResponse), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
