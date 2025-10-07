@@ -4,6 +4,7 @@ import Header from './components/layout/Header';
 import Sidebar from './components/layout/Sidebar';
 import Dashboard from './pages/Dashboard';
 import PricingCalculator from './pages/PricingCalculator';
+import CalculatorWidgets from './pages/CalculatorWidgets';
 import FinanceTracker from './pages/FinanceTracker';
 import EstimateGenerator from './pages/EstimateGenerator';
 import ProjectManager from './pages/ProjectManager';
@@ -74,6 +75,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/pricing" element={<PricingCalculator />} />
+                <Route path="/calculator-widgets" element={<CalculatorWidgets />} />
                 <Route path="/finance" element={<FinanceTracker />} />
                 <Route path="/estimates" element={<EstimateGenerator />} />
                 <Route path="/projects" element={<ProjectManager />} />
