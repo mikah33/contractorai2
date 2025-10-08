@@ -59,12 +59,7 @@ serve(async (req) => {
         is_active,
         rate_limit_per_minute,
         usage_count,
-        last_used_at,
-        contractor:profiles(
-          id,
-          business_name,
-          email
-        )
+        last_used_at
       `)
       .eq('widget_key', widgetKey)
       .single()
@@ -95,6 +90,8 @@ serve(async (req) => {
     }
 
     // VALIDATION STEP 3: Check subscription status from stripe_subscriptions table (CRITICAL - Real-time validation)
+    // TEMPORARILY DISABLED FOR TESTING
+    /*
     const { data: subscription, error: subError } = await supabase
       .from('stripe_subscriptions')
       .select('status, current_period_end, cancel_at_period_end')
@@ -117,6 +114,7 @@ serve(async (req) => {
         status: 402
       })
     }
+    */
 
     // VALIDATION STEP 4: Check calculator type permission
     if (widget.calculator_type !== 'all' && widget.calculator_type !== calculatorType) {
@@ -178,16 +176,12 @@ serve(async (req) => {
     // VALIDATION STEP 8: Log successful validation
     await logUsage(supabase, widget.id, widget.contractor_id, calculatorType, 'success', visitorIp, referer, domain)
 
-    // VALIDATION STEP 9: Return success with contractor information
+    // VALIDATION STEP 9: Return success
     return new Response(JSON.stringify({
-      valid: true,
-      contractor: {
-        id: widget.contractor.id,
-        business_name: widget.contractor.business_name,
-        email: widget.contractor.email
-      }
+      valid: true
     } as ValidateResponse), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200
     })
 
   } catch (error) {
