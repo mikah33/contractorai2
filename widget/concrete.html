@@ -199,6 +199,38 @@
             margin-top: 0.25rem;
         }
 
+        .warning-box {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 2px solid #f59e0b;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            display: flex;
+            align-items: start;
+            gap: 0.75rem;
+        }
+
+        .warning-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .warning-content {
+            flex: 1;
+        }
+
+        .warning-title {
+            font-weight: 700;
+            color: #92400e;
+            margin-bottom: 0.25rem;
+        }
+
+        .warning-text {
+            font-size: 0.9rem;
+            color: #78350f;
+            line-height: 1.5;
+        }
+
         @media (max-width: 640px) {
             body {
                 padding: 1rem;
@@ -276,6 +308,16 @@
             </div>
 
             <div class="result-total" id="total-cost"></div>
+
+            <div id="small-load-warning" style="display: none;">
+                <div class="warning-box">
+                    <div class="warning-icon">⚠️</div>
+                    <div class="warning-content">
+                        <div class="warning-title">Small Load Fee Notice</div>
+                        <div class="warning-text">Orders under 3 cubic yards typically incur a $150-$300 small load fee. Please add this to your estimate.</div>
+                    </div>
+                </div>
+            </div>
 
             <div style="text-align: center; color: var(--text-light); font-size: 0.9rem; margin-top: 1rem;">
                 This estimate includes concrete delivery. Ready-mix concrete is $185 per cubic yard.
@@ -441,6 +483,14 @@
 
             // Update total cost
             document.getElementById('total-cost').textContent = `$${totalCost.toFixed(2)}`;
+
+            // Show/hide small load warning
+            const warningElement = document.getElementById('small-load-warning');
+            if (volumeCubicYards < 3) {
+                warningElement.style.display = 'block';
+            } else {
+                warningElement.style.display = 'none';
+            }
 
             // Show results section
             document.getElementById('results-section').classList.add('active');

@@ -220,16 +220,8 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       });
     }
 
-    // 18. Total
-    const totalCost = results.reduce((sum, item) => sum + item.cost, 0);
-    results.push({
-      label: t('calculators.roofing.results.totalEstimate'),
-      value: 1,
-      unit: t('calculators.roofing.units.project'),
-      cost: totalCost,
-      isTotal: true
-    });
-
+    // Don't add total as a line item - CalculatorResults component will calculate it
+    // This prevents double-counting the total cost
     onCalculate(results);
   };
 

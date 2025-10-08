@@ -114,6 +114,8 @@ export interface CalculationResult {
   value: number;
   unit: string;
   cost?: number;
+  isTotal?: boolean; // Flag to mark total line items to prevent double-counting
+  isWarning?: boolean; // Flag to mark warning messages that need special styling
 }
 
 export interface CalculatorProps {

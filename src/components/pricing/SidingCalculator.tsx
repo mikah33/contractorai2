@@ -93,34 +93,34 @@ const SidingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const getSidingPrice = () => {
     const prices = {
       'vinyl': {
-        'lap': 89.98,        // per square (100 sq ft)
-        'dutch-lap': 99.98,  // per square
-        'vertical': 109.98,  // per square
-        'shake': 129.98      // per square
+        'lap': 179.98,        // per square (100 sq ft)
+        'dutch-lap': 199.98,  // per square
+        'vertical': 219.98,   // per square (board and batten)
+        'shake': 259.98       // per square
       },
       'fiber-cement': {
-        'lap': 159.98,       // per square
-        'dutch-lap': 169.98, // per square
-        'vertical': 179.98,  // per square
-        'shake': 199.98      // per square
+        'lap': 319.98,       // per square
+        'dutch-lap': 339.98, // per square
+        'vertical': 359.98,  // per square
+        'shake': 399.98      // per square
       },
       'wood': {
-        'lap': 199.98,       // per square
-        'dutch-lap': 209.98, // per square
-        'vertical': 219.98,  // per square
-        'shake': 239.98      // per square
+        'lap': 399.98,       // per square
+        'dutch-lap': 419.98, // per square
+        'vertical': 439.98,  // per square
+        'shake': 479.98      // per square
       },
       'metal': {
-        'lap': 149.98,       // per square
-        'dutch-lap': 159.98, // per square
-        'vertical': 139.98,  // per square
-        'shake': 189.98      // per square
+        'lap': 299.98,       // per square
+        'dutch-lap': 319.98, // per square
+        'vertical': 279.98,  // per square
+        'shake': 379.98      // per square
       },
       'engineered-wood': {
-        'lap': 179.98,       // per square
-        'dutch-lap': 189.98, // per square
-        'vertical': 199.98,  // per square
-        'shake': 219.98      // per square
+        'lap': 359.98,       // per square
+        'dutch-lap': 379.98, // per square
+        'vertical': 399.98,  // per square
+        'shake': 439.98      // per square
       }
     };
     return prices[sidingType][sidingProfile];
@@ -221,7 +221,7 @@ const SidingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     // Calculate starter strip if included
     if (includeStarter) {
       const starterPieces = Math.ceil(totalPerimeter / 12); // 12ft pieces
-      const starterCost = starterPieces * 6.98;
+      const starterCost = starterPieces * 13.98;
       totalCost += starterCost;
 
       results.push({
@@ -235,7 +235,7 @@ const SidingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     // Calculate J-channel if included
     if (includeJChannel) {
       const jChannelPieces = Math.ceil((totalOpeningsPerimeter + totalPerimeter) / 12.5); // 12.5ft pieces
-      const jChannelCost = jChannelPieces * 8.98;
+      const jChannelCost = jChannelPieces * 17.98;
       totalCost += jChannelCost;
 
       results.push({
@@ -250,7 +250,7 @@ const SidingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     if (includeCorners) {
       const cornerHeight = Math.max(...walls.map(w => w.height));
       const cornerPosts = Math.ceil((cornerHeight * 4) / 10); // 10ft pieces
-      const cornerCost = cornerPosts * 19.98;
+      const cornerCost = cornerPosts * 39.98;
       totalCost += cornerCost;
 
       results.push({
@@ -264,10 +264,10 @@ const SidingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     // Calculate trim if included
     if (includeTrim) {
       const trimPrices = {
-        'vinyl': 8.98,
-        'wood': 12.98,
-        'aluminum': 15.98,
-        'fiber-cement': 19.98
+        'vinyl': 17.98,
+        'wood': 25.98,
+        'aluminum': 31.98,
+        'fiber-cement': 39.98
       };
 
       const trimPieces = Math.ceil(totalOpeningsPerimeter / 16); // 16ft pieces

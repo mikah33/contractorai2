@@ -12,6 +12,7 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
   const [wallType, setWallType] = useState<WallType>('block');
   const [length, setLength] = useState<number | ''>('');
   const [height, setHeight] = useState<number | ''>('');
+  const [concreteWidth, setConcreteWidth] = useState<number | ''>(12); // Default 12 inches for concrete walls
   const [blockType, setBlockType] = useState<BlockType>('standard');
   const [customBlockWidth, setCustomBlockWidth] = useState<number | ''>('');
   const [customBlockHeight, setCustomBlockHeight] = useState<number | ''>('');
@@ -119,7 +120,7 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
         }
 
       } else if (wallType === 'concrete') {
-        const wallThickness = height <= 4 ? 8 : 12; // inches
+        const wallThickness = typeof concreteWidth === 'number' ? concreteWidth : 12; // Use user input or default to 12 inches
         const volumeCuYd = (length * height * (wallThickness / 12)) / 27;
         const concreteCost = volumeCuYd * 185; // $185 per cubic yard
         totalCost += concreteCost;
@@ -440,6 +441,27 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {wallType === 'concrete' && (
+          <div className="mb-6">
+            <label htmlFor="concreteWidth" className="block text-sm font-medium text-slate-700 mb-1">
+              {t('calculators.retainingWall.wallThicknessInches')}
+            </label>
+            <input
+              type="number"
+              id="concreteWidth"
+              min="0"
+              step="1"
+              value={concreteWidth}
+              onChange={(e) => setConcreteWidth(e.target.value ? Number(e.target.value) : '')}
+              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              placeholder={t('calculators.retainingWall.enterWallThicknessPlaceholder')}
+            />
+            <p className="text-sm text-slate-500 mt-1">
+              {t('calculators.retainingWall.typicalThickness')}
+            </p>
           </div>
         )}
 

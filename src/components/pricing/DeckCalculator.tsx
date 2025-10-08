@@ -202,6 +202,12 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const [includeFascia, setIncludeFascia] = useState(false);
   const [fasciaType, setFasciaType] = useState<'pt' | 'azek' | 'metal'>('pt');
   const [fasciaLength, setFasciaLength] = useState<number | ''>('');
+  const [includeTripleBeam, setIncludeTripleBeam] = useState(false);
+  const [tripleBeamLength, setTripleBeamLength] = useState<number | ''>('');
+  const [includeFreestandingPosts, setIncludeFreestandingPosts] = useState(false);
+  const [numFreestandingPosts, setNumFreestandingPosts] = useState<number | ''>('');
+  const [includeLedgerBoard, setIncludeLedgerBoard] = useState(false);
+  const [ledgerBoardLength, setLedgerBoardLength] = useState<number | ''>('');
 
   const calculateOptimalBoardLength = (deckWidth: number) => {
     const availableLengths = [12, 16, 20];
@@ -457,17 +463,59 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       });
     }
 
+    if (includeTripleBeam && typeof tripleBeamLength === 'number') {
+      const tripleBeamPricePerFt = 45;
+      const tripleBeamCost = tripleBeamLength * tripleBeamPricePerFt;
+      totalCost += tripleBeamCost;
+
+      results.push({
+        label: 'Triple Beam (2x12 cantilever support)',
+        value: tripleBeamLength,
+        unit: 'linear feet',
+        cost: tripleBeamCost
+      });
+    }
+
+    if (includeFreestandingPosts && typeof numFreestandingPosts === 'number') {
+      const postPrice = 85;
+      const freestandingPostCost = numFreestandingPosts * postPrice;
+      totalCost += freestandingPostCost;
+
+      results.push({
+        label: 'Freestanding Posts (6x6)',
+        value: numFreestandingPosts,
+        unit: 'posts',
+        cost: freestandingPostCost
+      });
+    }
+
+    if (includeLedgerBoard && typeof ledgerBoardLength === 'number') {
+      const ledgerPricePerFt = 15;
+      const ledgerBoardCost = ledgerBoardLength * ledgerPricePerFt;
+      totalCost += ledgerBoardCost;
+
+      results.push({
+        label: 'Ledger Board (2x12)',
+        value: ledgerBoardLength,
+        unit: 'linear feet',
+        cost: ledgerBoardCost
+      });
+    }
+
     onCalculate(results);
   };
 
-  const isFormValid = 
+  const isFormValid =
     ((inputType === 'dimensions' && typeof length === 'number' && typeof width === 'number') ||
     (inputType === 'area' && typeof area === 'number')) &&
     (!includeStairs || (typeof heightAboveGrade === 'number' && typeof stairWidth === 'number')) &&
     (!includeCantilever || typeof cantileverLength === 'number') &&
     (deckingType !== 'custom' || (typeof customDeckingWidth === 'number' && typeof customDeckingSpacing === 'number')) &&
     (!includeRailing || typeof railingLength === 'number') &&
-    (!includeFascia || typeof fasciaLength === 'number');
+    (!includeFascia || typeof fasciaLength === 'number') &&
+    (!includeTripleBeam || typeof tripleBeamLength === 'number') &&
+    (!includeFreestandingPosts || typeof numFreestandingPosts === 'number') &&
+    (!includeLedgerBoard || typeof ledgerBoardLength === 'number');
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
@@ -878,6 +926,129 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   placeholder={t('calculators.deck.enterFasciaLength')}
                 />
               </div>
+            </div>
+          )}
+        </div>
+
+        <div className="border-t border-slate-200 pt-6">
+          <div className="flex items-center mb-4">
+            <input
+              type="checkbox"
+              id="includeTripleBeam"
+              checked={includeTripleBeam}
+              onChange={(e) => {
+                setIncludeTripleBeam(e.target.checked);
+                if (!e.target.checked) {
+                  setTripleBeamLength('');
+                }
+              }}
+              className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+            />
+            <label htmlFor="includeTripleBeam" className="ml-2 block text-sm font-medium text-slate-700">
+              Include Triple Beam (Cantilever Support)
+            </label>
+          </div>
+
+          {includeTripleBeam && (
+            <div>
+              <label htmlFor="tripleBeamLength" className="block text-sm font-medium text-slate-700 mb-1">
+                Triple Beam Length (feet)
+              </label>
+              <input
+                type="number"
+                id="tripleBeamLength"
+                min="0"
+                step="0.1"
+                value={tripleBeamLength}
+                onChange={(e) => setTripleBeamLength(e.target.value ? Number(e.target.value) : '')}
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                placeholder="Enter triple beam length"
+              />
+              <p className="mt-1 text-sm text-slate-500">
+                2x12 triple beam @ $45/linear foot for cantilever deck support
+              </p>
+            </div>
+          )}
+        </div>
+
+        <div className="border-t border-slate-200 pt-6">
+          <div className="flex items-center mb-4">
+            <input
+              type="checkbox"
+              id="includeFreestandingPosts"
+              checked={includeFreestandingPosts}
+              onChange={(e) => {
+                setIncludeFreestandingPosts(e.target.checked);
+                if (!e.target.checked) {
+                  setNumFreestandingPosts('');
+                }
+              }}
+              className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+            />
+            <label htmlFor="includeFreestandingPosts" className="ml-2 block text-sm font-medium text-slate-700">
+              Freestanding Deck Posts
+            </label>
+          </div>
+
+          {includeFreestandingPosts && (
+            <div>
+              <label htmlFor="numFreestandingPosts" className="block text-sm font-medium text-slate-700 mb-1">
+                Number of Posts
+              </label>
+              <input
+                type="number"
+                id="numFreestandingPosts"
+                min="0"
+                step="1"
+                value={numFreestandingPosts}
+                onChange={(e) => setNumFreestandingPosts(e.target.value ? Number(e.target.value) : '')}
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                placeholder="Enter number of posts"
+              />
+              <p className="mt-1 text-sm text-slate-500">
+                6x6 posts @ $85/post for freestanding deck without ledger board
+              </p>
+            </div>
+          )}
+        </div>
+
+        <div className="border-t border-slate-200 pt-6">
+          <div className="flex items-center mb-4">
+            <input
+              type="checkbox"
+              id="includeLedgerBoard"
+              checked={includeLedgerBoard}
+              onChange={(e) => {
+                setIncludeLedgerBoard(e.target.checked);
+                if (!e.target.checked) {
+                  setLedgerBoardLength('');
+                }
+              }}
+              className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+            />
+            <label htmlFor="includeLedgerBoard" className="ml-2 block text-sm font-medium text-slate-700">
+              Include Ledger Board
+            </label>
+          </div>
+
+          {includeLedgerBoard && (
+            <div>
+              <label htmlFor="ledgerBoardLength" className="block text-sm font-medium text-slate-700 mb-1">
+                Ledger Board Length (feet)
+              </label>
+              <input
+                type="number"
+                id="ledgerBoardLength"
+                min="0"
+                step="0.1"
+                value={ledgerBoardLength}
+                onChange={(e) => setLedgerBoardLength(e.target.value ? Number(e.target.value) : '')}
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                placeholder="Enter ledger board length"
+              />
+              <p className="mt-1 text-sm text-slate-500">
+                2x12 ledger board @ $15/linear foot attached to house
+              </p>
             </div>
           )}
         </div>

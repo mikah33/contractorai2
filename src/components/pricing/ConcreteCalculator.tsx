@@ -82,6 +82,16 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             unit: t('calculators.concrete.minimumLoad')
           });
         }
+
+        // Add small load fee warning for volumes under 3 cubic yards
+        if (volume < 3) {
+          results.push({
+            label: '⚠️ Small Load Fee Notice',
+            value: 0,
+            unit: 'Orders under 3 cubic yards typically incur a $150-$300 small load fee. Please add this to your estimate.',
+            isWarning: true
+          });
+        }
       }
 
       // Add reinforcement calculations

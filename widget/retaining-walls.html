@@ -242,7 +242,7 @@
 
                 <div class="form-group">
                     <label for="wallType">Wall Material</label>
-                    <select id="wallType" required>
+                    <select id="wallType" required onchange="toggleConcreteWidth()">
                         <option value="timber">Timber - Budget Option</option>
                         <option value="concrete-block" selected>Concrete Block - Standard</option>
                         <option value="natural-stone">Natural Stone - Premium</option>
@@ -250,6 +250,12 @@
                         <option value="poured-concrete">Poured Concrete - Heavy Duty</option>
                     </select>
                     <span class="helper-text">Choose your wall material</span>
+                </div>
+
+                <div class="form-group" id="concrete-width-group" style="display: none;">
+                    <label for="concreteWidth">Wall Thickness (inches)</label>
+                    <input type="number" id="concreteWidth" min="0" step="1" placeholder="12" value="12">
+                    <span class="helper-text">Typical: 8-12 inches for walls up to 4ft, 12-18 inches for taller walls</span>
                 </div>
 
                 <div class="form-group">
@@ -310,6 +316,18 @@
 
         let calculationResults = null;
         let subscriptionValid = false;
+
+        // Toggle concrete width input visibility
+        function toggleConcreteWidth() {
+            const wallType = document.getElementById('wallType').value;
+            const concreteWidthGroup = document.getElementById('concrete-width-group');
+
+            if (wallType === 'poured-concrete') {
+                concreteWidthGroup.style.display = 'block';
+            } else {
+                concreteWidthGroup.style.display = 'none';
+            }
+        }
 
         // CRITICAL: Validate widget key and subscription on load
         async function validateWidget() {
@@ -387,13 +405,14 @@
         });
 
         function calculateRetainingWall() {
-            const linear feet = parseFloat(document.getElementById('length').value) || 0;
+            const length = parseFloat(document.getElementById('length').value) || 0;
             const height = parseFloat(document.getElementById('height').value) || 0;
             const wallType = document.getElementById('wallType').value;
             const drainage = document.getElementById('drainage').value;
+            const concreteWidth = parseFloat(document.getElementById('concreteWidth').value) || 12;
 
-            if (!length || linear feet <= 0) {
-                alert('Please enter a valid wall linear feet');
+            if (!length || length <= 0) {
+                alert('Please enter a valid wall length');
                 return;
             }
 
@@ -402,31 +421,47 @@
                 return;
             }
 
-            // Calculate square feet in square feet
-            const square feetSqFeet = linear feet * height;
+            // Calculate area in square feet
+            const areaSqFeet = length * height;
 
-            // Price per square feet based on wall type
-            const pricePerSqFt = {
-                'timber': 18.00,
-                'concrete-block': 28.00,
-                'natural-stone': 45.00,
-                'boulder': 38.00,
-                'poured-concrete': 35.00
-            };
+            let totalCost = 0;
+            let materialDescription = '';
 
-            const typeNames = {
-                'timber': 'Timber',
-                'concrete-block': 'Concrete Block',
-                'natural-stone': 'Natural Stone',
-                'boulder': 'Boulder Wall',
-                'poured-concrete': 'Poured Concrete'
-            };
+            // Calculate costs based on wall type
+            if (wallType === 'poured-concrete') {
+                // For poured concrete, calculate based on volume (length × height × width)
+                const volumeCuYd = (length * height * (concreteWidth / 12)) / 27; // Convert to cubic yards
+                const concreteCost = volumeCuYd * 185; // $185 per cubic yard
+                totalCost = concreteCost;
+                materialDescription = `${volumeCuYd.toFixed(2)} cubic yards concrete (${concreteWidth}" thick)`;
+            } else {
+                // Price per square foot based on wall type
+                const pricePerSqFt = {
+                    'timber': 18.00,
+                    'concrete-block': 28.00,
+                    'natural-stone': 45.00,
+                    'boulder': 38.00
+                };
 
-            // Drainage cost per linear feet
+                // Height complexity multiplier (taller walls are more complex)
+                const heightMultiplier = height <= 4 ? 1.0 : 1 + ((height - 4) * 0.15);
+                const baseCost = areaSqFeet * pricePerSqFt[wallType];
+                totalCost = baseCost * heightMultiplier;
+
+                const typeNames = {
+                    'timber': 'Timber',
+                    'concrete-block': 'Concrete Block',
+                    'natural-stone': 'Natural Stone',
+                    'boulder': 'Boulder Wall'
+                };
+                materialDescription = typeNames[wallType];
+            }
+
+            // Add drainage cost per linear foot
             const drainageCost = {
                 'none': 0,
-                'basic': linear feet * 8,
-                'advanced': linear feet * 15
+                'basic': length * 8,
+                'advanced': length * 15
             };
 
             const drainageNames = {
@@ -435,18 +470,14 @@
                 'advanced': 'Advanced Drainage'
             };
 
-            // Height complexity multiplier (taller walls are more complex)
-            const heightMultiplier = height <= 4 ? 1.0 : 1 + ((height - 4) * 0.15);
-
-            const baseCost = square feetSqFeet * pricePerSqFt[wallType];
-            const totalCost = (baseCost * heightMultiplier) + drainageCost[drainage];
+            totalCost += drainageCost[drainage];
 
             // Store results
             calculationResults = {
-                linear feet,
+                length,
                 height,
-                square feetSqFeet,
-                wallType: typeNames[wallType],
+                areaSqFeet,
+                wallType: materialDescription,
                 drainage: drainageNames[drainage],
                 totalCost
             };
@@ -456,7 +487,7 @@
         }
 
         function displayResults() {
-            const { linear feet, height, square feetSqFeet, wallType, drainage, totalCost } = calculationResults;
+            const { length, height, areaSqFeet, wallType, drainage, totalCost } = calculationResults;
 
             // Update detail rows
             document.getElementById('dimensions-result').textContent = `${length.toFixed(0)}' L × ${height.toFixed(0)}' H`;
@@ -474,10 +505,11 @@
 
         // Add input validation on the fly
         document.addEventListener('DOMContentLoaded', () => {
-            const linear feetInput = document.getElementById('length');
+            const lengthInput = document.getElementById('length');
             const heightInput = document.getElementById('height');
+            const concreteWidthInput = document.getElementById('concreteWidth');
 
-            [lengthInput, heightInput].forEach(input => {
+            [lengthInput, heightInput, concreteWidthInput].forEach(input => {
                 input.addEventListener('input', () => {
                     if (input.value && parseFloat(input.value) <= 0) {
                         input.style.borderColor = 'var(--danger)';
@@ -488,7 +520,7 @@
             });
 
             // Allow Enter key to trigger calculation
-            [lengthInput, heightInput].forEach(input => {
+            [lengthInput, heightInput, concreteWidthInput].forEach(input => {
                 input.addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') {
                         e.preventDefault();
@@ -496,6 +528,9 @@
                     }
                 });
             });
+
+            // Initialize concrete width visibility on load
+            toggleConcreteWidth();
         });
     </script>
 </body>

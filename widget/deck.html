@@ -251,6 +251,51 @@
                     <span class="helper-text">Choose your preferred material</span>
                 </div>
 
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="includeCantilever" onchange="toggleCantilever()">
+                        Include Cantilever (Triple Beam)
+                    </label>
+                </div>
+
+                <div id="cantileverSection" style="display: none;">
+                    <div class="form-group">
+                        <label for="cantileverLength">Cantilever Length (feet)</label>
+                        <input type="number" id="cantileverLength" min="0" step="0.1" placeholder="12">
+                        <span class="helper-text">Length requiring triple beam support</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="includeFreestanding" onchange="toggleFreestanding()">
+                        Freestanding Deck (No Ledger)
+                    </label>
+                </div>
+
+                <div id="freestandingSection" style="display: none;">
+                    <div class="form-group">
+                        <label for="numPosts">Number of Posts</label>
+                        <input type="number" id="numPosts" min="0" step="1" placeholder="6">
+                        <span class="helper-text">Number of 6x6 support posts needed</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="includeLedger" onchange="toggleLedger()">
+                        Include Ledger Board
+                    </label>
+                </div>
+
+                <div id="ledgerSection" style="display: none;">
+                    <div class="form-group">
+                        <label for="ledgerLength">Ledger Board Length (feet)</label>
+                        <input type="number" id="ledgerLength" min="0" step="0.1" placeholder="20">
+                        <span class="helper-text">Length of 2x12 ledger board</span>
+                    </div>
+                </div>
+
                 <button type="button" class="btn" onclick="calculateDeck()">Calculate My Estimate</button>
             </div>
         </div>
@@ -271,6 +316,18 @@
                 <div class="detail-row">
                     <span class="detail-label">Number of boards:</span>
                     <span id="boards-result"></span>
+                </div>
+                <div class="detail-row" id="cantilever-result-row" style="display: none;">
+                    <span class="detail-label">Triple beam:</span>
+                    <span id="cantilever-result"></span>
+                </div>
+                <div class="detail-row" id="freestanding-result-row" style="display: none;">
+                    <span class="detail-label">Freestanding posts:</span>
+                    <span id="freestanding-result"></span>
+                </div>
+                <div class="detail-row" id="ledger-result-row" style="display: none;">
+                    <span class="detail-label">Ledger board:</span>
+                    <span id="ledger-result"></span>
                 </div>
             </div>
 
@@ -373,12 +430,30 @@
             }
         });
 
+        function toggleCantilever() {
+            const checkbox = document.getElementById('includeCantilever');
+            const section = document.getElementById('cantileverSection');
+            section.style.display = checkbox.checked ? 'block' : 'none';
+        }
+
+        function toggleFreestanding() {
+            const checkbox = document.getElementById('includeFreestanding');
+            const section = document.getElementById('freestandingSection');
+            section.style.display = checkbox.checked ? 'block' : 'none';
+        }
+
+        function toggleLedger() {
+            const checkbox = document.getElementById('includeLedger');
+            const section = document.getElementById('ledgerSection');
+            section.style.display = checkbox.checked ? 'block' : 'none';
+        }
+
         function calculateDeck() {
-            const linear feet = parseFloat(document.getElementById('length').value) || 0;
+            const length = parseFloat(document.getElementById('length').value) || 0;
             const width = parseFloat(document.getElementById('width').value) || 0;
             const pricePerSqFt = parseFloat(document.getElementById('boardType').value) || 12;
 
-            if (!length || linear feet <= 0) {
+            if (!length || length <= 0) {
                 alert('Please enter how long your deck will be');
                 return;
             }
@@ -388,20 +463,49 @@
                 return;
             }
 
-            // Calculate square feet in square feet
-            const square feetSqFeet = linear feet * width;
+            // Calculate square feet
+            const areaSqFeet = length * width;
 
             // Add 10% waste factor
             const wasteFactor = 1.1;
-            const totalSqFt = square feetSqFeet * wasteFactor;
+            const totalSqFt = areaSqFeet * wasteFactor;
 
-            // Calculate number of boards (assuming 5.5" wide boards, 6" spacing = 144/6 = 24 boards per 12ft linear feet)
-            // For simplicity, we'll calculate based on square feetage coverage
+            // Calculate number of boards (assuming 5.5" wide boards, 6" spacing = 144/6 = 24 boards per 12ft length)
+            // For simplicity, we'll calculate based on square footage coverage
             const boardsNeeded = Math.ceil(totalSqFt / 0.4583); // Each 6" x 12' board covers ~0.4583 square feet
 
             // Calculate total cost
-            const materialCost = totalSqFt * pricePerSqFt;
-            const totalCost = materialCost;
+            let totalCost = totalSqFt * pricePerSqFt;
+
+            // Triple beam calculation
+            let cantileverCost = 0;
+            const includeCantilever = document.getElementById('includeCantilever').checked;
+            const cantileverLength = parseFloat(document.getElementById('cantileverLength').value) || 0;
+            if (includeCantilever && cantileverLength > 0) {
+                const tripleBeamPricePerFt = 45; // $45 per linear foot for 2x12 triple beam
+                cantileverCost = cantileverLength * tripleBeamPricePerFt;
+                totalCost += cantileverCost;
+            }
+
+            // Freestanding post calculation
+            let freestandingCost = 0;
+            const includeFreestanding = document.getElementById('includeFreestanding').checked;
+            const numPosts = parseInt(document.getElementById('numPosts').value) || 0;
+            if (includeFreestanding && numPosts > 0) {
+                const postPrice = 85; // $85 per 6x6 post
+                freestandingCost = numPosts * postPrice;
+                totalCost += freestandingCost;
+            }
+
+            // Ledger board calculation
+            let ledgerCost = 0;
+            const includeLedger = document.getElementById('includeLedger').checked;
+            const ledgerLength = parseFloat(document.getElementById('ledgerLength').value) || 0;
+            if (includeLedger && ledgerLength > 0) {
+                const ledgerPricePerFt = 15; // $15 per linear foot for 2x12 ledger
+                ledgerCost = ledgerLength * ledgerPricePerFt;
+                totalCost += ledgerCost;
+            }
 
             // Get material name
             let materialName = 'Cedar';
@@ -411,14 +515,23 @@
 
             // Store results
             calculationResults = {
-                linear feet,
+                length,
                 width,
-                square feetSqFeet,
+                areaSqFeet,
                 totalSqFt,
                 boardsNeeded,
                 materialName,
                 pricePerSqFt,
-                totalCost
+                totalCost,
+                includeCantilever,
+                cantileverLength,
+                cantileverCost,
+                includeFreestanding,
+                numPosts,
+                freestandingCost,
+                includeLedger,
+                ledgerLength,
+                ledgerCost
             };
 
             // Display results
@@ -426,12 +539,42 @@
         }
 
         function displayResults() {
-            const { square feetSqFeet, totalSqFt, boardsNeeded, materialName, totalCost } = calculationResults;
+            const { areaSqFeet, totalSqFt, boardsNeeded, materialName, totalCost,
+                    includeCantilever, cantileverLength, cantileverCost,
+                    includeFreestanding, numPosts, freestandingCost,
+                    includeLedger, ledgerLength, ledgerCost } = calculationResults;
 
             // Update detail rows
             document.getElementById('area-result').textContent = `${areaSqFeet.toFixed(0)} square feet`;
             document.getElementById('material-result').textContent = materialName;
             document.getElementById('boards-result').textContent = `${boardsNeeded} boards (includes 10% waste)`;
+
+            // Show/hide and update cantilever result
+            const cantileverRow = document.getElementById('cantilever-result-row');
+            if (includeCantilever && cantileverLength > 0) {
+                cantileverRow.style.display = 'flex';
+                document.getElementById('cantilever-result').textContent = `${cantileverLength}ft @ $45/ft = $${cantileverCost.toFixed(2)}`;
+            } else {
+                cantileverRow.style.display = 'none';
+            }
+
+            // Show/hide and update freestanding post result
+            const freestandingRow = document.getElementById('freestanding-result-row');
+            if (includeFreestanding && numPosts > 0) {
+                freestandingRow.style.display = 'flex';
+                document.getElementById('freestanding-result').textContent = `${numPosts} posts @ $85/post = $${freestandingCost.toFixed(2)}`;
+            } else {
+                freestandingRow.style.display = 'none';
+            }
+
+            // Show/hide and update ledger board result
+            const ledgerRow = document.getElementById('ledger-result-row');
+            if (includeLedger && ledgerLength > 0) {
+                ledgerRow.style.display = 'flex';
+                document.getElementById('ledger-result').textContent = `${ledgerLength}ft @ $15/ft = $${ledgerCost.toFixed(2)}`;
+            } else {
+                ledgerRow.style.display = 'none';
+            }
 
             // Update total cost
             document.getElementById('total-cost').textContent = `$${totalCost.toFixed(2)}`;
@@ -443,7 +586,7 @@
 
         // Add input validation on the fly
         document.addEventListener('DOMContentLoaded', () => {
-            const linear feetInput = document.getElementById('length');
+            const lengthInput = document.getElementById('length');
             const widthInput = document.getElementById('width');
 
             [lengthInput, widthInput].forEach(input => {
