@@ -119,7 +119,7 @@ const Subscriptions: React.FC = () => {
   const plans = [
     {
       name: t('subscriptions.plan1Month'),
-      price: '$49.99',
+      price: '$24.99',
       priceId: import.meta.env.VITE_STRIPE_PRICE_1_MONTH || 'price_1SEXGjGcGCTrlHr7KPva7H7c',
       period: t('subscriptions.perMonth'),
       features: [

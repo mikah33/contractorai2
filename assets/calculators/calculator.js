@@ -267,7 +267,7 @@ function calculateConcrete() {
         fbq('track', 'InitiateCheckout', {
             content_name: 'Concrete Calculator',
             content_category: 'Calculator',
-            value: 39.99,
+            value: 24.99,
             currency: 'USD'
         });
     }
@@ -490,7 +490,7 @@ function calculateRoofing() {
         fbq('track', 'InitiateCheckout', {
             content_name: 'Roofing Calculator',
             content_category: 'Calculator',
-            value: 39.99,
+            value: 24.99,
             currency: 'USD'
         });
     }
@@ -742,7 +742,7 @@ function calculateDeck() {
         fbq('track', 'InitiateCheckout', {
             content_name: 'Deck Calculator',
             content_category: 'Calculator',
-            value: 39.99,
+            value: 24.99,
             currency: 'USD'
         });
     }
@@ -807,7 +807,7 @@ function calculateSiding() {
         fbq('track', 'InitiateCheckout', {
             content_name: 'Siding Calculator',
             content_category: 'Calculator',
-            value: 39.99,
+            value: 24.99,
             currency: 'USD'
         });
     }
@@ -871,7 +871,7 @@ function calculateFencing() {
         fbq('track', 'InitiateCheckout', {
             content_name: 'Fencing Calculator',
             content_category: 'Calculator',
-            value: 39.99,
+            value: 24.99,
             currency: 'USD'
         });
     }
@@ -935,7 +935,7 @@ function calculateGutter() {
         fbq('track', 'InitiateCheckout', {
             content_name: 'Gutter Calculator',
             content_category: 'Calculator',
-            value: 39.99,
+            value: 24.99,
             currency: 'USD'
         });
     }
@@ -992,7 +992,7 @@ function calculateElectrical() {
         fbq('track', 'InitiateCheckout', {
             content_name: 'Electrical Calculator',
             content_category: 'Calculator',
-            value: 39.99,
+            value: 24.99,
             currency: 'USD'
         });
     }
@@ -1048,7 +1048,7 @@ function calculatePlumbing() {
         fbq('track', 'InitiateCheckout', {
             content_name: 'Plumbing Calculator',
             content_category: 'Calculator',
-            value: 39.99,
+            value: 24.99,
             currency: 'USD'
         });
     }
@@ -1105,7 +1105,7 @@ function calculateHVAC() {
         fbq('track', 'InitiateCheckout', {
             content_name: 'HVAC Calculator',
             content_category: 'Calculator',
-            value: 39.99,
+            value: 24.99,
             currency: 'USD'
         });
     }
@@ -1170,7 +1170,7 @@ function calculateDrywall() {
         fbq('track', 'InitiateCheckout', {
             content_name: 'Drywall Calculator',
             content_category: 'Calculator',
-            value: 39.99,
+            value: 24.99,
             currency: 'USD'
         });
     }
@@ -1237,7 +1237,7 @@ function calculatePaint() {
         fbq('track', 'InitiateCheckout', {
             content_name: 'Paint Calculator',
             content_category: 'Calculator',
-            value: 39.99,
+            value: 24.99,
             currency: 'USD'
         });
     }
@@ -1297,7 +1297,7 @@ function calculateFlooring() {
         fbq('track', 'InitiateCheckout', {
             content_name: 'Flooring Calculator',
             content_category: 'Calculator',
-            value: 39.99,
+            value: 24.99,
             currency: 'USD'
         });
     }
@@ -1355,7 +1355,7 @@ function calculateTile() {
         fbq('track', 'InitiateCheckout', {
             content_name: 'Tile Calculator',
             content_category: 'Calculator',
-            value: 39.99,
+            value: 24.99,
             currency: 'USD'
         });
     }
@@ -1408,7 +1408,7 @@ function calculateDoorsWindows() {
         fbq('track', 'InitiateCheckout', {
             content_name: 'Doors & Windows Calculator',
             content_category: 'Calculator',
-            value: 39.99,
+            value: 24.99,
             currency: 'USD'
         });
     }
@@ -1467,7 +1467,7 @@ function calculateFoundation() {
         fbq('track', 'InitiateCheckout', {
             content_name: 'Foundation Calculator',
             content_category: 'Calculator',
-            value: 39.99,
+            value: 24.99,
             currency: 'USD'
         });
     }
@@ -1526,7 +1526,7 @@ function calculateFraming() {
         fbq('track', 'InitiateCheckout', {
             content_name: 'Framing Calculator',
             content_category: 'Calculator',
-            value: 39.99,
+            value: 24.99,
             currency: 'USD'
         });
     }
@@ -1585,7 +1585,7 @@ function calculateExcavation() {
         fbq('track', 'InitiateCheckout', {
             content_name: 'Excavation Calculator',
             content_category: 'Calculator',
-            value: 39.99,
+            value: 24.99,
             currency: 'USD'
         });
     }
@@ -1643,7 +1643,7 @@ function calculatePavers() {
         fbq('track', 'InitiateCheckout', {
             content_name: 'Pavers Calculator',
             content_category: 'Calculator',
-            value: 39.99,
+            value: 24.99,
             currency: 'USD'
         });
     }
@@ -1703,7 +1703,7 @@ function calculateRetainingWalls() {
         fbq('track', 'InitiateCheckout', {
             content_name: 'Retaining Walls Calculator',
             content_category: 'Calculator',
-            value: 39.99,
+            value: 24.99,
             currency: 'USD'
         });
     }
@@ -1763,7 +1763,7 @@ function calculateJunkRemoval() {
         fbq('track', 'InitiateCheckout', {
             content_name: 'Junk Removal Calculator',
             content_category: 'Calculator',
-            value: 39.99,
+            value: 24.99,
             currency: 'USD'
         });
     }
