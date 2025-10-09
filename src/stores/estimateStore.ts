@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
+import { getCachedEstimates } from '../lib/storeQueryBridge';
 
 // Helper to get current user ID
 const getCurrentUserId = async () => {
@@ -28,6 +29,7 @@ interface Estimate {
   title: string;
   client_name?: string;
   project_name?: string;
+  project_id?: string;  // Add project_id to link to projects
   status: 'draft' | 'sent' | 'approved' | 'rejected';
   total: number;
   tax_rate: number;
@@ -46,7 +48,8 @@ interface EstimateStore {
   estimates: Estimate[];
   isLoading: boolean;
   error: string | null;
-  fetchEstimates: () => Promise<void>;
+  hasLoadedOnce: boolean;
+  fetchEstimates: (force?: boolean) => Promise<void>;
   addEstimate: (estimate: Partial<Estimate>) => Promise<Estimate | null>;
   updateEstimate: (id: string, updates: Partial<Estimate>) => Promise<void>;
   deleteEstimate: (id: string) => Promise<void>;
@@ -57,8 +60,28 @@ const useEstimateStore = create<EstimateStore>((set, get) => ({
   estimates: [],
   isLoading: false,
   error: null,
+  hasLoadedOnce: false,
 
-  fetchEstimates: async () => {
+  fetchEstimates: async (force = false) => {
+    // **FIRST: Check React Query cache**
+    const cachedEstimates = getCachedEstimates();
+    if (cachedEstimates && !force) {
+      set({
+        estimates: cachedEstimates,
+        isLoading: false,
+        hasLoadedOnce: true,
+        error: null
+      });
+      return;
+    }
+
+    // Skip if already loaded and not forcing refresh
+    const state = get();
+    if (state.hasLoadedOnce && !force && state.estimates.length > 0) {
+      console.log('✅ Using Zustand cached estimates data');
+      return;
+    }
+
     set({ isLoading: true, error: null });
     try {
       const userId = await getCurrentUserId();
@@ -68,7 +91,7 @@ const useEstimateStore = create<EstimateStore>((set, get) => ({
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      set({ estimates: data || [], isLoading: false });
+      set({ estimates: data || [], isLoading: false, hasLoadedOnce: true });
     } catch (error) {
       console.error('Error fetching estimates:', error);
       set({ error: (error as Error).message, isLoading: false });
@@ -89,6 +112,7 @@ const useEstimateStore = create<EstimateStore>((set, get) => ({
         title: estimate.title || 'New Estimate',
         client_name: estimate.client_name || null,
         project_name: estimate.project_name || null,
+        project_id: estimate.project_id || null,
         status: estimate.status || 'draft',
         subtotal,
         tax_rate: taxRate,
@@ -97,6 +121,7 @@ const useEstimateStore = create<EstimateStore>((set, get) => ({
         notes: estimate.notes || null,
         terms: estimate.terms || 'Valid for 30 days',
         expires_at: estimate.expires_at || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        items: estimate.items || [],
         user_id: userId
       };
 
@@ -121,9 +146,10 @@ const useEstimateStore = create<EstimateStore>((set, get) => ({
   },
 
   updateEstimate: async (id, updates) => {
+    set({ isLoading: true, error: null });
     try {
       const userId = await getCurrentUserId();
-      
+
       // Recalculate if needed
       let updateData: any = { ...updates };
       if (updates.subtotal !== undefined || updates.tax_rate !== undefined) {
@@ -132,7 +158,7 @@ const useEstimateStore = create<EstimateStore>((set, get) => ({
         const taxRate = updates.tax_rate ?? estimate?.tax_rate ?? 0;
         const taxAmount = subtotal * (taxRate / 100);
         const total = subtotal + taxAmount;
-        
+
         updateData = {
           ...updateData,
           tax_amount: taxAmount,
@@ -150,11 +176,12 @@ const useEstimateStore = create<EstimateStore>((set, get) => ({
       set((state) => ({
         estimates: state.estimates.map((estimate) =>
           estimate.id === id ? { ...estimate, ...updateData } : estimate
-        )
+        ),
+        isLoading: false
       }));
     } catch (error) {
       console.error('Error updating estimate:', error);
-      set({ error: (error as Error).message });
+      set({ error: (error as Error).message, isLoading: false });
     }
   },
 
@@ -190,6 +217,7 @@ const useEstimateStore = create<EstimateStore>((set, get) => ({
         title: calculatorData.title || 'Calculator Estimate',
         client_name: calculatorData.clientName || null,
         project_name: calculatorData.projectName || null,
+        project_id: calculatorData.projectId || null,
         status: 'draft' as const,
         subtotal,
         tax_rate: taxRate,
@@ -197,6 +225,7 @@ const useEstimateStore = create<EstimateStore>((set, get) => ({
         total,
         notes: calculatorData.notes || `Generated from Pricing Calculator`,
         terms: calculatorData.terms || 'Valid for 30 days from the date of issue',
+        items: calculatorData.items || [],
         expires_at: calculatorData.expiresAt || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
         user_id: userId
       };

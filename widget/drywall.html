@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drywall Cost Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --purple-primary: #8b5cf6;
+            --purple-secondary: #a78bfa;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --bg: #f8fafc;
+            --panel: #ffffff;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--purple-primary) 0%, var(--purple-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: var(--text-light);
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+        }
+
+        .calc-section {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .section-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--text);
+        }
+
+        .form-grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 0.75rem;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--purple-primary);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--purple-primary) 0%, var(--purple-secondary) 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s;
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results {
+            display: none;
+        }
+
+        .results.active {
+            display: block;
+        }
+
+        .result-total {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--purple-primary) 0%, var(--purple-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+            padding: 2rem 0;
+            margin: 1.5rem 0;
+        }
+
+        .result-details {
+            background: var(--bg);
+            border-radius: 8px;
+            padding: 1.25rem;
+            margin: 1rem 0;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            color: var(--text-light);
+            font-size: 0.95rem;
+        }
+
+        .detail-label {
+            font-weight: 500;
+        }
+
+        .branding {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 2px solid var(--border);
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        .branding-text {
+            background: linear-gradient(135deg, var(--purple-primary) 0%, var(--purple-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+        }
+
+        .error-msg {
+            color: var(--danger);
+            font-size: 0.8125rem;
+            margin-top: 0.25rem;
+        }
+
+        .helper-text {
+            font-size: 0.875rem;
+            color: var(--text-light);
+            margin-top: 0.25rem;
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .result-total {
+                font-size: 1.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Drywall Cost Calculator</h1>
+        <p class="subtitle">Get an instant estimate for your drywall project</p>
+
+        <!-- Calculator Form -->
+        <div id="calculator-section" class="calc-section">
+            <div class="form-grid">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="length">Room linear feet (feet)</label>
+                        <input type="number" id="length" min="0" step="0.1" placeholder="12" required>
+                        <span class="helper-text">Length of the room</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="width">Room width (feet)</label>
+                        <input type="number" id="width" min="0" step="0.1" placeholder="10" required>
+                        <span class="helper-text">Width of the room</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="height">Ceiling height (feet)</label>
+                    <input type="number" id="height" min="0" step="0.1" placeholder="8" required>
+                    <span class="helper-text">How tall are the walls?</span>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="doors">Number of doors</label>
+                        <input type="number" id="doors" min="0" step="1" value="1" required>
+                        <span class="helper-text">Standard doorways</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="windows">Number of windows</label>
+                        <input type="number" id="windows" min="0" step="1" value="1" required>
+                        <span class="helper-text">Windows to account for</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="sheetSize">Drywall sheet size</label>
+                    <select id="sheetSize" required>
+                        <option value="32" selected>4x8 feet (32 square feet) - Standard</option>
+                        <option value="48">4x12 feet (48 square feet) - Longer walls</option>
+                    </select>
+                    <span class="helper-text">4x8 is most common</span>
+                </div>
+
+                <button type="button" class="btn" onclick="calculateDrywall()">Calculate My Estimate</button>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results-section" class="calc-section results">
+            <h2 class="section-title">Your Drywall Estimate</h2>
+
+            <div class="result-details">
+                <div class="detail-row">
+                    <span class="detail-label">Wall square feet to cover:</span>
+                    <span id="area-result"></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Drywall sheets needed:</span>
+                    <span id="sheets-result"></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Joint compound:</span>
+                    <span id="compound-result"></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Drywall screws:</span>
+                    <span id="screws-result"></span>
+                </div>
+            </div>
+
+            <div class="result-total" id="total-cost"></div>
+
+            <div style="text-align: center; color: var(--text-light); font-size: 0.9rem; margin-top: 1rem;">
+                This estimate includes materials (sheets at $15 each, compound, screws, and tape).
+                <br><small>Actual prices may vary by location and supplier.</small>
+            </div>
+        </div>
+
+        <!-- Branding -->
+        <div class="branding">
+            Powered by <span class="branding-text">ContractorAI</span>
+        </div>
+    </div>
+
+    <script>
+        // Get widget key from URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const widgetKey = urlParams.get('key') || '';
+
+        let calculationResults = null;
+        let subscriptionValid = false;
+
+        // CRITICAL: Validate widget key and subscription on load
+        async function validateWidget() {
+            if (!widgetKey) {
+                showSubscriptionError('No widget key provided. Please contact the website owner.');
+                return false;
+            }
+
+            // Clean the widget key (trim whitespace)
+            const cleanKey = widgetKey.trim();
+            console.log('Widget key from URL:', widgetKey);
+            console.log('Widget key linear feet:', widgetKey.length);
+            console.log('Cleaned key:', cleanKey);
+
+            try {
+                const response = await fetch('https://ujhgwcurllkkeouzwvgk.supabase.co/functions/v1/widget-validate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqaGd3Y3VybGxra2VvdXp3dmdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcwMzIzMjQsImV4cCI6MjA3MjYwODMyNH0.ez6RDJ2FxgSfb7mo2Xug1lXaynKLR-2nJFO-x64UNnY',
+                        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqaGd3Y3VybGxra2VvdXp3dmdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcwMzIzMjQsImV4cCI6MjA3MjYwODMyNH0.ez6RDJ2FxgSfb7mo2Xug1lXaynKLR-2nJFO-x64UNnY'
+                    },
+                    body: JSON.stringify({
+                        widgetKey: cleanKey,
+                        calculatorType: 'drywall',
+                        domain: window.location.hostname,
+                        referer: document.referrer || null
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.valid) {
+                    subscriptionValid = true;
+                    return true;
+                } else {
+                    let errorMessage = 'This calculator is temporarily unavailable.';
+
+                    if (data.reason === 'subscription_inactive') {
+                        errorMessage = '⚠️ Subscription Expired: This drywall calculator is no longer available. The website owner\'s subscription has expired.';
+                    } else if (data.reason === 'invalid_key') {
+                        errorMessage = '⚠️ Invalid Widget: This calculator widget is not properly configured. Please contact the website owner.';
+                    } else if (data.reason === 'key_disabled') {
+                        errorMessage = '⚠️ Widget Disabled: This calculator has been disabled by the website owner.';
+                    } else if (data.reason === 'rate_limited') {
+                        errorMessage = '⚠️ Too Many Requests: Please wait a minute and try again.';
+                    }
+
+                    showSubscriptionError(errorMessage);
+                    return false;
+                }
+            } catch (error) {
+                console.error('Widget validation error:', error);
+                showSubscriptionError('Unable to load calculator. Please try again later.');
+                return false;
+            }
+        }
+
+        function showSubscriptionError(message) {
+            document.getElementById('calculator-section').innerHTML = `
+                <div style="text-align: center; padding: 60px 20px; background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); border-radius: 12px;">
+                    <div style="font-size: 48px; margin-bottom: 20px;">🔒</div>
+                    <h2 style="color: #991b1b; font-size: 24px; margin-bottom: 10px;">Calculator Unavailable</h2>
+                    <p style="color: #7f1d1d; font-size: 16px; max-width: 500px; margin: 0 auto;">${message}</p>
+                </div>
+            `;
+        }
+
+        // Run validation on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            const isValid = await validateWidget();
+            if (!isValid) {
+                // Disable all form inputs
+                const inputs = document.querySelectorAll('input, select, button');
+                inputs.forEach(input => input.disabled = true);
+            }
+        });
+
+        function calculateDrywall() {
+            const linear feet = parseFloat(document.getElementById('length').value) || 0;
+            const width = parseFloat(document.getElementById('width').value) || 0;
+            const height = parseFloat(document.getElementById('height').value) || 0;
+            const doors = parseInt(document.getElementById('doors').value) || 0;
+            const windows = parseInt(document.getElementById('windows').value) || 0;
+            const sheetSqFt = parseFloat(document.getElementById('sheetSize').value) || 32;
+
+            if (!length || linear feet <= 0) {
+                alert('Please enter the room linear feet');
+                return;
+            }
+
+            if (!width || width <= 0) {
+                alert('Please enter the room width');
+                return;
+            }
+
+            if (!height || height <= 0) {
+                alert('Please enter the ceiling height');
+                return;
+            }
+
+            // Calculate wall square feet (perimeter * height)
+            const perimeter = 2 * (length + width);
+            const totalWallArea = perimeter * height;
+
+            // Subtract doors (21 square feet each) and windows (15 square feet each)
+            const doorArea = doors * 21;
+            const windowArea = windows * 15;
+            const netWallArea = totalWallArea - doorArea - windowArea;
+
+            // Add 10% waste factor
+            const wasteFactor = 1.1;
+            const square feetWithWaste = netWallArea * wasteFactor;
+
+            // Calculate sheets needed
+            const sheetsNeeded = Math.ceil(areaWithWaste / sheetSqFt);
+
+            // Calculate materials
+            const sheetPrice = 15; // per sheet
+            const sheetsCost = sheetsNeeded * sheetPrice;
+
+            // Joint compound: 1 bucket per 300 square feet at $15/bucket
+            const compoundBuckets = Math.ceil(netWallArea / 300);
+            const compoundCost = compoundBuckets * 15;
+
+            // Screws: 1 lb per 5 sheets at $10/lb
+            const screwsPounds = Math.ceil(sheetsNeeded / 5);
+            const screwsCost = screwsPounds * 10;
+
+            // Tape: 1 roll per 500 square feet at $5/roll
+            const tapeRolls = Math.ceil(netWallArea / 500);
+            const tapeCost = tapeRolls * 5;
+
+            // Total cost
+            const totalCost = sheetsCost + compoundCost + screwsCost + tapeCost;
+
+            // Store results
+            calculationResults = {
+                linear feet,
+                width,
+                height,
+                netWallArea,
+                sheetsNeeded,
+                sheetSqFt,
+                compoundBuckets,
+                screwsPounds,
+                totalCost
+            };
+
+            // Display results
+            displayResults();
+        }
+
+        function displayResults() {
+            const { netWallArea, sheetsNeeded, sheetSqFt, compoundBuckets, screwsPounds, totalCost } = calculationResults;
+
+            const sheetSize = sheetSqFt === 32 ? '4x8' : '4x12';
+
+            // Update detail rows
+            document.getElementById('area-result').textContent = `${netWallArea.toFixed(0)} square feet`;
+            document.getElementById('sheets-result').textContent = `${sheetsNeeded} sheets (${sheetSize})`;
+            document.getElementById('compound-result').textContent = `${compoundBuckets} buckets`;
+            document.getElementById('screws-result').textContent = `${screwsPounds} lbs`;
+
+            // Update total cost
+            document.getElementById('total-cost').textContent = `$${totalCost.toFixed(2)}`;
+
+            // Show results section
+            document.getElementById('results-section').classList.add('active');
+            document.getElementById('results-section').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Add input validation on the fly
+        document.addEventListener('DOMContentLoaded', () => {
+            const linear feetInput = document.getElementById('length');
+            const widthInput = document.getElementById('width');
+            const heightInput = document.getElementById('height');
+
+            [lengthInput, widthInput, heightInput].forEach(input => {
+                input.addEventListener('input', () => {
+                    if (input.value && parseFloat(input.value) <= 0) {
+                        input.style.borderColor = 'var(--danger)';
+                    } else {
+                        input.style.borderColor = '';
+                    }
+                });
+            });
+
+            // Allow Enter key to trigger calculation
+            [lengthInput, widthInput, heightInput].forEach(input => {
+                input.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        calculateDrywall();
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

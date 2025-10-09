@@ -1,0 +1,112 @@
+{
+  "meta": {
+    "instanceId": "1"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "path": "receipt-ocr",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "webhookId": "receipt-ocr"
+    },
+    {
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "gpt-4o-mini"
+            },
+            {
+              "name": "messages",
+              "value": "={{ [{\"role\": \"user\", \"content\": [{\"type\": \"text\", \"text\": \"Extract receipt data as JSON with fields: vendor, amount, date, receiptNumber, taxAmount, subtotal, supplierAddress, supplierPhone, lineItems (array with description, quantity, unitPrice, totalAmount), confidence (vendor, amount, date, overall scores 0-1). Return ONLY valid JSON, no markdown.\"}, {\"type\": \"image_url\", \"image_url\": {\"url\": $json.imageUrl}}]}] }}"
+            },
+            {
+              "name": "max_tokens",
+              "value": "1000"
+            },
+            {
+              "name": "temperature",
+              "value": "0.1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300],
+      "credentials": {
+        "openAiApi": {
+          "id": "1",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst content = response.choices[0].message.content;\n\ntry {\n  let parsed = JSON.parse(content);\n  \n  return [{\n    json: {\n      vendor: parsed.vendor || '',\n      amount: parseFloat(parsed.amount) || 0,\n      date: parsed.date || '',\n      receiptNumber: parsed.receiptNumber,\n      taxAmount: parsed.taxAmount ? parseFloat(parsed.taxAmount) : undefined,\n      subtotal: parsed.subtotal ? parseFloat(parsed.subtotal) : undefined,\n      supplierAddress: parsed.supplierAddress,\n      supplierPhone: parsed.supplierPhone,\n      lineItems: parsed.lineItems || [],\n      confidence: parsed.confidence || {vendor: 0.85, amount: 0.85, date: 0.85, overall: 0.85},\n      method: 'api'\n    }\n  }];\n} catch (e) {\n  return [{\n    json: {\n      vendor: '',\n      amount: 0,\n      date: '',\n      confidence: {vendor: 0, amount: 0, date: 0, overall: 0},\n      method: 'manual',\n      error: e.message\n    }\n  }];\n}"
+      },
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [900, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

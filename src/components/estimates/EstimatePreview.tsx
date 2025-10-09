@@ -1,16 +1,20 @@
 import { DollarSign, Calendar, User, Briefcase, Check } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Estimate } from '../../types/estimates';
 import { format } from 'date-fns';
+import { useData } from '../../contexts/DataContext';
 
 interface EstimatePreviewProps {
   estimate: Estimate;
-  clients: { id: string; name: string }[];
-  projects: { id: string; name: string }[];
+  clients: { id: string; name: string; email?: string; phone?: string; address?: string }[];
+  projects: { id: string; name: string; address?: string }[];
 }
 
 const EstimatePreview: React.FC<EstimatePreviewProps> = ({ estimate, clients, projects }) => {
-  const client = clients.find(c => c.name === estimate.clientName);
-  const project = projects.find(p => p.name === estimate.projectName);
+  const { t } = useTranslation();
+  const { profile } = useData();
+  const client = clients.find(c => c.name === estimate.clientName || c.id === estimate.clientId);
+  const project = projects.find(p => p.name === estimate.projectName || p.id === estimate.projectId);
   
   const formatDate = (dateString: string) => {
     try {
@@ -25,10 +29,10 @@ const EstimatePreview: React.FC<EstimatePreviewProps> = ({ estimate, clients, pr
       {/* Header */}
       <div className="flex justify-between items-start mb-8">
         <div>
-          {estimate.branding?.logo && (
-            <img 
-              src={estimate.branding.logo} 
-              alt="Company Logo" 
+          {profile?.logo_url && (
+            <img
+              src={profile.logo_url}
+              alt="Company Logo"
               className="h-16 w-auto object-contain mb-4"
             />
           )}
@@ -56,18 +60,17 @@ const EstimatePreview: React.FC<EstimatePreviewProps> = ({ estimate, clients, pr
       {/* Client and Project Info */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
         <div className="border rounded-lg p-4">
-          <h2 className="text-sm font-medium text-gray-500 mb-2">CLIENT</h2>
+          <h2 className="text-sm font-medium text-gray-500 mb-2">{t('clients.client')}</h2>
           {client ? (
             <div>
               <p className="font-medium">{client.name}</p>
-              <p className="text-gray-600 text-sm mt-1">client@example.com</p>
-              <p className="text-gray-600 text-sm">555-123-4567</p>
+              {client.email && <p className="text-gray-600 text-sm mt-1">{client.email}</p>}
+              {client.phone && <p className="text-gray-600 text-sm">{client.phone}</p>}
+              {client.address && <p className="text-gray-600 text-sm">{client.address}</p>}
             </div>
-          ) : estimate.clientId ? (
+          ) : estimate.clientName ? (
             <div>
-              <p className="font-medium">{estimate.clientId}</p>
-              <p className="text-gray-600 text-sm mt-1">client@example.com</p>
-              <p className="text-gray-600 text-sm">555-123-4567</p>
+              <p className="font-medium">{estimate.clientName}</p>
             </div>
           ) : (
             <p className="text-gray-500 italic">No client selected</p>
@@ -79,12 +82,11 @@ const EstimatePreview: React.FC<EstimatePreviewProps> = ({ estimate, clients, pr
           {project ? (
             <div>
               <p className="font-medium">{project.name}</p>
-              <p className="text-gray-600 text-sm mt-1">123 Project Address, City, ST 12345</p>
+              {project.address && <p className="text-gray-600 text-sm mt-1">{project.address}</p>}
             </div>
-          ) : estimate.projectId ? (
+          ) : estimate.projectName ? (
             <div>
-              <p className="font-medium">{projects.find(p => p.id === estimate.projectId)?.name || estimate.projectId}</p>
-              <p className="text-gray-600 text-sm mt-1">123 Project Address, City, ST 12345</p>
+              <p className="font-medium">{estimate.projectName}</p>
             </div>
           ) : (
             <p className="text-gray-500 italic">No project selected</p>

@@ -1,0 +1,122 @@
+{
+  "name": "ContractorAI Receipt OCR",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "receipt-ocr",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Analyze this receipt image and extract the following information in JSON format:\n\n{\n  \"vendor\": \"vendor/store name\",\n  \"amount\": total amount as number,\n  \"date\": \"YYYY-MM-DD format\",\n  \"receiptNumber\": \"receipt/invoice number if visible\",\n  \"taxAmount\": tax amount as number,\n  \"subtotal\": subtotal before tax as number,\n  \"supplierAddress\": \"full address if visible\",\n  \"supplierPhone\": \"phone number if visible\",\n  \"lineItems\": [\n    {\n      \"description\": \"item name\",\n      \"quantity\": quantity as number,\n      \"unitPrice\": price per unit as number,\n      \"totalAmount\": line total as number\n    }\n  ],\n  \"confidence\": {\n    \"vendor\": 0.0-1.0,\n    \"amount\": 0.0-1.0,\n    \"date\": 0.0-1.0,\n    \"overall\": 0.0-1.0\n  }\n}\n\nIMPORTANT:\n- Extract ALL line items visible on the receipt\n- If a field is not visible, use empty string or 0\n- Confidence scores should reflect how clear the text is\n- Return ONLY valid JSON, no markdown formatting\n- For contractors: identify building materials, tools, equipment rental",
+              "role": "user"
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0.1
+        },
+        "imageInput": {
+          "values": [
+            {
+              "type": "url",
+              "url": "={{ $json.imageUrl }}"
+            }
+          ]
+        }
+      },
+      "id": "openai-vision",
+      "name": "OpenAI Vision",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [450, 300],
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_OPENAI_CREDENTIAL_ID",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse OpenAI response and ensure proper JSON format\nconst rawResponse = $input.first().json.response;\n\n// Try to extract JSON from markdown code blocks if present\nlet jsonText = rawResponse;\nif (rawResponse.includes('```json')) {\n  const match = rawResponse.match(/```json\\n([\\s\\S]*?)\\n```/);\n  if (match) {\n    jsonText = match[1];\n  }\n} else if (rawResponse.includes('```')) {\n  const match = rawResponse.match(/```\\n([\\s\\S]*?)\\n```/);\n  if (match) {\n    jsonText = match[1];\n  }\n}\n\ntry {\n  const parsed = JSON.parse(jsonText);\n  \n  // Ensure all required fields exist\n  const result = {\n    vendor: parsed.vendor || '',\n    amount: parseFloat(parsed.amount) || 0,\n    date: parsed.date || '',\n    receiptNumber: parsed.receiptNumber || undefined,\n    taxAmount: parsed.taxAmount ? parseFloat(parsed.taxAmount) : undefined,\n    subtotal: parsed.subtotal ? parseFloat(parsed.subtotal) : undefined,\n    supplierAddress: parsed.supplierAddress || undefined,\n    supplierPhone: parsed.supplierPhone || undefined,\n    lineItems: parsed.lineItems || [],\n    confidence: parsed.confidence || {\n      vendor: 0.8,\n      amount: 0.8,\n      date: 0.8,\n      overall: 0.8\n    },\n    method: 'api',\n    rawData: parsed\n  };\n  \n  return { json: result };\n} catch (error) {\n  // Return error format that matches Mindee\n  return {\n    json: {\n      vendor: '',\n      amount: 0,\n      date: '',\n      confidence: { vendor: 0, amount: 0, date: 0, overall: 0 },\n      method: 'manual',\n      error: `Failed to parse OCR response: ${error.message}`\n    }\n  };\n}"
+      },
+      "id": "parse-json",
+      "name": "Parse JSON Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}"
+      },
+      "id": "respond-to-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [850, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "OpenAI Vision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Vision": {
+      "main": [
+        [
+          {
+            "node": "Parse JSON Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse JSON Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2025-10-03T00:00:00.000Z",
+  "versionId": "1"
+}

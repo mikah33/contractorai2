@@ -1,4 +1,5 @@
 import { Phone, Mail, MapPin, Building, Edit, Trash, Users } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Client } from '../../stores/clientsStore';
 
 interface ClientsListProps {
@@ -9,6 +10,8 @@ interface ClientsListProps {
 }
 
 const ClientsList: React.FC<ClientsListProps> = ({ clients, onEdit, onDelete, isLoading }) => {
+  const { t } = useTranslation();
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
@@ -49,22 +52,22 @@ const ClientsList: React.FC<ClientsListProps> = ({ clients, onEdit, onDelete, is
         <thead className="bg-gray-50">
           <tr>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Client
+              {t('clients.client')}
             </th>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Contact
+              {t('clients.contact')}
             </th>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Company
+              {t('common.company')}
             </th>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Location
+              {t('clients.location')}
             </th>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Status
+              {t('common.status')}
             </th>
             <th scope="col" className="relative px-6 py-3">
-              <span className="sr-only">Actions</span>
+              <span className="sr-only">{t('estimates.actions')}</span>
             </th>
           </tr>
         </thead>

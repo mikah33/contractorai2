@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Layout } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
+  const { t } = useTranslation();
   const [inputType, setInputType] = useState<'dimensions' | 'area'>('dimensions');
   const [length, setLength] = useState<number | ''>('');
   const [width, setWidth] = useState<number | ''>('');
@@ -155,7 +157,7 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
       <div className="flex items-center mb-6">
         <Layout className="h-6 w-6 text-orange-500 mr-2" />
-        <h2 className="text-xl font-bold text-slate-800">Pavers Calculator</h2>
+        <h2 className="text-xl font-bold text-slate-800">{t('calculators.pavers.title')}</h2>
       </div>
       
       <div className="mb-4">
@@ -171,7 +173,7 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 } border border-slate-300`}
                 onClick={() => setInputType('dimensions')}
               >
-                Use Dimensions
+                {t('calculators.useDimensions')}
               </button>
               <button
                 type="button"
@@ -182,7 +184,7 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 } border border-slate-300`}
                 onClick={() => setInputType('area')}
               >
-                Use Square Footage
+                {t('calculators.useSquareFootage')}
               </button>
             </div>
           </div>
@@ -191,7 +193,7 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="length" className="block text-sm font-medium text-slate-700 mb-1">
-                  Length (feet)
+                  {t('calculators.lengthFeet')}
                 </label>
                 <input
                   type="number"
@@ -201,13 +203,13 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   value={length}
                   onChange={(e) => setLength(e.target.value ? Number(e.target.value) : '')}
                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  placeholder="Enter length in feet"
+                  placeholder={t('calculators.enterLength')}
                 />
               </div>
-              
+
               <div>
                 <label htmlFor="width" className="block text-sm font-medium text-slate-700 mb-1">
-                  Width (feet)
+                  {t('calculators.widthFeet')}
                 </label>
                 <input
                   type="number"
@@ -217,7 +219,7 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   value={width}
                   onChange={(e) => setWidth(e.target.value ? Number(e.target.value) : '')}
                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  placeholder="Enter width in feet"
+                  placeholder={t('calculators.enterWidth')}
                 />
               </div>
             </div>
@@ -453,7 +455,7 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             : 'bg-slate-300 cursor-not-allowed'
         }`}
       >
-        Calculate Materials
+        {t('calculators.calculateMaterials')}
       </button>
     </div>
   );

@@ -57,15 +57,23 @@ export class CalendarService {
   // Create a new event
   static async createEvent(event: Partial<CalendarEvent>): Promise<CalendarEvent | null> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        console.error('User not authenticated when creating event');
-        throw new Error('User not authenticated');
+      let userId = event.user_id;
+
+      // Try to get authenticated user first
+      if (!userId) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          userId = user.id;
+        } else {
+          // Fallback for development mode
+          console.warn('No authenticated user, using development mode for calendar');
+          userId = '00000000-0000-0000-0000-000000000000';
+        }
       }
 
       const eventData = {
         ...event,
-        user_id: user.id,
+        user_id: userId,
         created_at: new Date().toISOString()
       };
 
@@ -124,7 +132,9 @@ export class CalendarService {
   static async syncProjectDates(projectId: string, projectData: any): Promise<void> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      const userId = user?.id || '00000000-0000-0000-0000-000000000000';
+
+      console.log('Syncing project dates to calendar for project:', projectId, projectData);
 
       // Delete existing auto-generated events for this project
       await supabase
@@ -133,30 +143,41 @@ export class CalendarService {
         .eq('project_id', projectId)
         .eq('auto_generated', true);
 
+      // Support both camelCase and snake_case
+      const startDate = projectData.start_date || projectData.startDate;
+      const endDate = projectData.end_date || projectData.endDate;
+      const projectName = projectData.name || projectData.projectName;
+
       // Create project start event if start_date exists
-      if (projectData.start_date) {
+      if (startDate) {
+        console.log('Creating project start event:', startDate);
         await this.createEvent({
-          title: `Project Start: ${projectData.name}`,
-          description: `${projectData.name} project begins`,
-          start_date: projectData.start_date,
+          title: `Project Start: ${projectName}`,
+          start_date: startDate,
           event_type: 'project_start',
           status: 'pending',
+          user_id: userId,
           project_id: projectId,
           auto_generated: true,
         });
+      } else {
+        console.log('No start date found for project');
       }
 
       // Create project deadline event if end_date exists
-      if (projectData.end_date) {
+      if (endDate) {
+        console.log('Creating project end event:', endDate);
         await this.createEvent({
-          title: `Project Deadline: ${projectData.name}`,
-          description: `${projectData.name} project deadline`,
-          start_date: projectData.end_date,
+          title: `Project Deadline: ${projectName}`,
+          start_date: endDate,
           event_type: 'project_end',
           status: 'pending',
+          user_id: userId,
           project_id: projectId,
           auto_generated: true,
         });
+      } else {
+        console.log('No end date found for project');
       }
     } catch (error) {
       console.error('Error syncing project dates:', error);

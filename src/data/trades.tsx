@@ -1,10 +1,10 @@
-import { Home, Hammer, Wrench, PaintBucket, Lightbulb, Maximize, Scale, Construction, Square as SquareFoot, Footprints, Trash2, Router, Layers, BellOff as WallOff, Thermometer, Droplet, Columns, DoorOpen as Door, Radiation as Foundation, Cloud } from 'lucide-react';
+import { Home, Hammer, Wrench, PaintBucket, Lightbulb, Maximize, Scale, Construction, Square as SquareFoot, Footprints, Trash2, Router, Layers, BellOff as WallOff, Thermometer, Droplet, Columns, DoorOpen as Door, Radiation as Foundation, Cloud, Warehouse } from 'lucide-react';
 import { Trade } from '../types';
 
 export const trades: Trade[] = [
   {
     id: 'deck',
-    name: 'Deck',
+    name: 'trades.deck',
     category: 'Exterior',
     icon: <Construction />,
     description: 'Custom deck building and installation',
@@ -85,7 +85,7 @@ export const trades: Trade[] = [
   },
   {
     id: 'siding',
-    name: 'Siding',
+    name: 'trades.siding',
     category: 'Exterior',
     icon: <Home />,
     description: 'Siding installation and replacement',
@@ -130,7 +130,7 @@ export const trades: Trade[] = [
   },
   {
     id: 'concrete',
-    name: 'Concrete',
+    name: 'trades.concrete',
     category: 'Exterior',
     icon: <Maximize />,
     description: 'Concrete slabs, driveways, and patios',
@@ -170,7 +170,7 @@ export const trades: Trade[] = [
   },
   {
     id: 'pavers',
-    name: 'Pavers',
+    name: 'trades.pavers',
     category: 'Exterior',
     icon: <SquareFoot />,
     description: 'Paver patios, walkways, and driveways',
@@ -187,7 +187,7 @@ export const trades: Trade[] = [
   },
   {
     id: 'drywall',
-    name: 'Drywall',
+    name: 'trades.drywall',
     category: 'Interior',
     icon: <WallOff />,
     description: 'Drywall installation and repair',
@@ -204,7 +204,7 @@ export const trades: Trade[] = [
   },
   {
     id: 'paint',
-    name: 'Paint',
+    name: 'trades.paint',
     category: 'Interior',
     icon: <PaintBucket />,
     description: 'Interior and exterior painting',
@@ -231,7 +231,7 @@ export const trades: Trade[] = [
   },
   {
     id: 'framing',
-    name: 'Framing',
+    name: 'trades.framing',
     category: 'Construction',
     icon: <Hammer />,
     description: 'Structural framing for new construction or remodels',
@@ -248,7 +248,7 @@ export const trades: Trade[] = [
   },
   {
     id: 'retaining_walls',
-    name: 'Retaining Walls',
+    name: 'trades.retainingWalls',
     category: 'Exterior',
     icon: <Columns />,
     description: 'Retaining wall construction',
@@ -273,7 +273,7 @@ export const trades: Trade[] = [
   },
   {
     id: 'excavation',
-    name: 'Excavation',
+    name: 'trades.excavation',
     category: 'Site Work',
     icon: <Construction />,
     description: 'Site excavation and grading',
@@ -290,7 +290,7 @@ export const trades: Trade[] = [
   },
   {
     id: 'flooring',
-    name: 'Flooring',
+    name: 'trades.flooring',
     category: 'Interior',
     icon: <Footprints />,
     description: 'Flooring installation including hardwood, tile, carpet, and vinyl',
@@ -320,7 +320,7 @@ export const trades: Trade[] = [
   },
   {
     id: 'tile',
-    name: 'Tile',
+    name: 'trades.tile',
     category: 'Interior',
     icon: <SquareFoot />,
     description: 'Tile installation for floors, walls, showers, and backsplashes',
@@ -349,7 +349,7 @@ export const trades: Trade[] = [
   },
   {
     id: 'electrical',
-    name: 'Electrical',
+    name: 'trades.electrical',
     category: 'Systems',
     icon: <Lightbulb />,
     description: 'Electrical installation and repairs',
@@ -378,7 +378,7 @@ export const trades: Trade[] = [
   },
   {
     id: 'hvac',
-    name: 'HVAC',
+    name: 'trades.hvac',
     category: 'Systems',
     icon: <Thermometer />,
     description: 'Heating, ventilation, and air conditioning',
@@ -407,7 +407,7 @@ export const trades: Trade[] = [
   },
   {
     id: 'plumbing',
-    name: 'Plumbing',
+    name: 'trades.plumbing',
     category: 'Systems',
     icon: <Droplet />,
     description: 'Plumbing installation and repairs',
@@ -428,7 +428,7 @@ export const trades: Trade[] = [
   },
   {
     id: 'doors_windows',
-    name: 'Doors & Windows',
+    name: 'trades.doorsWindows',
     category: 'Exterior',
     icon: <Door />,
     description: 'Door and window installation and replacement',
@@ -457,7 +457,7 @@ export const trades: Trade[] = [
   },
   {
     id: 'fence',
-    name: 'Fence',
+    name: 'trades.fence',
     category: 'Exterior',
     icon: <Layers />,
     description: 'Fence installation and replacement',
@@ -498,7 +498,7 @@ export const trades: Trade[] = [
   },
   {
     id: 'foundation',
-    name: 'Foundation',
+    name: 'trades.foundation',
     category: 'Construction',
     icon: <Foundation />,
     description: 'Foundation construction and repair',
@@ -549,7 +549,7 @@ export const trades: Trade[] = [
   },
   {
     id: 'gutter',
-    name: 'Gutters',
+    name: 'trades.gutters',
     category: 'Exterior',
     icon: <Cloud />,
     description: 'Gutter installation and replacement',
@@ -600,7 +600,7 @@ export const trades: Trade[] = [
   },
   {
     id: 'junk_removal',
-    name: 'Junk Removal',
+    name: 'trades.junkRemoval',
     category: 'Site Work',
     icon: <Trash2 />,
     description: 'Removal and disposal of junk and debris',
@@ -648,6 +648,132 @@ export const trades: Trade[] = [
         label: 'Sorting',
         type: 'checkbox',
         checkboxLabel: 'Include sorting and recycling'
+      }
+    ]
+  },
+  {
+    id: 'roofing',
+    name: 'trades.roofing',
+    category: 'Exterior',
+    icon: <Warehouse />,
+    description: 'Roof installation, replacement, and repair with AI-powered estimation',
+    requiredFields: [
+      {
+        id: 'address',
+        label: 'Property Address',
+        type: 'text',
+        required: true,
+        placeholder: 'Enter full address for AI analysis',
+        helpText: 'AI will analyze satellite imagery to estimate roof details'
+      },
+      {
+        id: 'roof_type',
+        label: 'Roof Type',
+        type: 'select',
+        required: true,
+        options: [
+          { value: 'gable', label: 'Gable' },
+          { value: 'hip', label: 'Hip' },
+          { value: 'flat', label: 'Flat' },
+          { value: 'mansard', label: 'Mansard' },
+          { value: 'gambrel', label: 'Gambrel' },
+          { value: 'shed', label: 'Shed' }
+        ],
+        helpText: 'Can be auto-detected by AI'
+      },
+      {
+        id: 'material',
+        label: 'Roofing Material',
+        type: 'select',
+        required: true,
+        options: [
+          { value: 'asphalt', label: 'Asphalt Shingles' },
+          { value: 'metal', label: 'Metal Roofing' },
+          { value: 'tile', label: 'Clay/Concrete Tile' },
+          { value: 'slate', label: 'Slate' },
+          { value: 'tpo', label: 'TPO (Flat Roof)' },
+          { value: 'epdm', label: 'EPDM Rubber' },
+          { value: 'wood', label: 'Wood Shakes' }
+        ]
+      },
+      {
+        id: 'pitch',
+        label: 'Roof Pitch',
+        type: 'select',
+        required: true,
+        options: [
+          { value: '1:12', label: '1:12 (Nearly Flat)' },
+          { value: '2:12', label: '2:12' },
+          { value: '3:12', label: '3:12' },
+          { value: '4:12', label: '4:12 (Low Pitch)' },
+          { value: '5:12', label: '5:12' },
+          { value: '6:12', label: '6:12 (Standard)' },
+          { value: '7:12', label: '7:12' },
+          { value: '8:12', label: '8:12 (Steep)' },
+          { value: '9:12', label: '9:12' },
+          { value: '10:12', label: '10:12' },
+          { value: '12:12', label: '12:12 (45°)' }
+        ],
+        helpText: 'Can be estimated by AI'
+      }
+    ],
+    optionalFields: [
+      {
+        id: 'layers',
+        label: 'Layers to Remove',
+        type: 'number',
+        placeholder: 'Number of existing roof layers',
+        unit: 'layers',
+        helpText: 'Additional charge for removal'
+      },
+      {
+        id: 'skylights',
+        label: 'Skylights',
+        type: 'number',
+        placeholder: 'Number of skylights',
+        unit: 'units'
+      },
+      {
+        id: 'chimneys',
+        label: 'Chimneys',
+        type: 'number',
+        placeholder: 'Number of chimneys',
+        unit: 'units'
+      },
+      {
+        id: 'valleys',
+        label: 'Valleys',
+        type: 'number',
+        placeholder: 'Number of valleys',
+        unit: 'units'
+      },
+      {
+        id: 'stories',
+        label: 'Stories',
+        type: 'select',
+        options: [
+          { value: '1', label: '1 Story' },
+          { value: '2', label: '2 Stories' },
+          { value: '3', label: '3+ Stories' }
+        ]
+      },
+      {
+        id: 'ventilation',
+        label: 'Ventilation Upgrade',
+        type: 'checkbox',
+        checkboxLabel: 'Include ridge vent and soffit vents'
+      },
+      {
+        id: 'ice_shield',
+        label: 'Ice & Water Shield',
+        type: 'checkbox',
+        checkboxLabel: 'Include ice & water shield (recommended)'
+      },
+      {
+        id: 'warranty',
+        label: 'Extended Warranty',
+        type: 'checkbox',
+        checkboxLabel: 'Include extended manufacturer warranty'
       }
     ]
   }

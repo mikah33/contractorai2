@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { FileDown, Copy, RotateCw, Calculator } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import TradeSelector from '../components/pricing/TradeSelector';
 import ProjectSpecifications from '../components/pricing/ProjectSpecifications';
 import PricingResults from '../components/pricing/PricingResults';
@@ -22,26 +23,38 @@ import PlumbingCalculator from '../components/pricing/PlumbingCalculator';
 import RetainingWallCalculator from '../components/pricing/RetainingWallCalculator';
 import SidingCalculator from '../components/pricing/SidingCalculator';
 import TileCalculator from '../components/pricing/TileCalculator';
+import RoofingCalculator from '../components/pricing/RoofingCalculator';
 import CalculatorResults from '../components/pricing/CalculatorResults';
 import { Trade, CalculationResult } from '../types';
 import { trades } from '../data/trades';
 
 const PricingCalculator = () => {
+  const { t } = useTranslation();
   const [selectedTrade, setSelectedTrade] = useState<Trade | null>(null);
   const [specifications, setSpecifications] = useState<Record<string, any>>({});
   const [calculationComplete, setCalculationComplete] = useState(false);
   const [calculating, setCalculating] = useState(false);
   const [calculatorResults, setCalculatorResults] = useState<CalculationResult[]>([]);
   const [showSpecializedCalculator, setShowSpecializedCalculator] = useState(false);
-  
+  const calculatorRef = useRef<HTMLDivElement>(null);
+
   const handleTradeSelect = (trade: Trade) => {
     setSelectedTrade(trade);
     setCalculationComplete(false);
     setSpecifications({});
     setCalculatorResults([]);
-    // Show specialized calculator for concrete, deck, doors_windows, drywall, electrical, excavation, fence, flooring, framing, hvac, and paint
-    setShowSpecializedCalculator(['concrete', 'deck', 'doors_windows', 'drywall', 'electrical', 'excavation', 'fence', 'flooring', 'foundation', 'framing', 'gutter', 'hvac', 'junk_removal', 'paint', 'pavers', 'plumbing', 'retaining_walls', 'siding', 'tile'].includes(trade.id));
+    // Show specialized calculator for concrete, deck, doors_windows, drywall, electrical, excavation, fence, flooring, framing, hvac, paint, and roofing
+    setShowSpecializedCalculator(['concrete', 'deck', 'doors_windows', 'drywall', 'electrical', 'excavation', 'fence', 'flooring', 'foundation', 'framing', 'gutter', 'hvac', 'junk_removal', 'paint', 'pavers', 'plumbing', 'retaining_walls', 'roofing', 'siding', 'tile'].includes(trade.id));
   };
+
+  // Scroll to calculator when trade is selected
+  useEffect(() => {
+    if (selectedTrade && calculatorRef.current) {
+      setTimeout(() => {
+        calculatorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+  }, [selectedTrade]);
   
   const handleSpecificationChange = (key: string, value: any) => {
     setSpecifications(prev => ({
@@ -117,31 +130,33 @@ const PricingCalculator = () => {
         return <SidingCalculator onCalculate={handleSpecializedCalculation} />;
       case 'tile':
         return <TileCalculator onCalculate={handleSpecializedCalculation} />;
+      case 'roofing':
+        return <RoofingCalculator onCalculate={handleSpecializedCalculation} />;
       default:
         return null;
     }
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 px-4 sm:px-6 lg:px-0">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Pricing Calculator</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{t('calculator.title')}</h1>
           <p className="mt-1 text-sm text-gray-600">
-            Get accurate, AI-powered pricing estimates for your construction projects
+            {t('calculator.subtitle')}
           </p>
         </div>
-        
-        <div className="flex space-x-2">
+
+        <div className="flex flex-col sm:flex-row gap-2">
           {(calculationComplete || calculatorResults.length > 0) && (
             <>
-              <button className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-teal-600 border border-transparent rounded-md shadow-sm hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
+              <button className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-teal-600 border border-transparent rounded-md shadow-sm hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 w-full sm:w-auto">
                 <FileDown className="w-4 h-4 mr-2" />
-                Export PDF
+                {t('calculator.exportPDF')}
               </button>
-              <button className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+              <button className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 w-full sm:w-auto">
                 <Copy className="w-4 h-4 mr-2" />
-                Copy to Estimate
+                {t('calculator.copyToEstimate')}
               </button>
             </>
           )}
@@ -150,10 +165,10 @@ const PricingCalculator = () => {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="lg:col-span-1">
-          <div className="p-6 bg-white rounded-lg shadow">
+          <div className="p-4 sm:p-6 bg-white rounded-lg shadow">
             <h2 className="flex items-center text-lg font-medium text-gray-900 mb-4">
               <Calculator className="w-5 h-5 mr-2 text-blue-600" />
-              Select Trade
+              {t('calculator.selectTrade')}
             </h2>
             
             <TradeSelector 
@@ -165,7 +180,7 @@ const PricingCalculator = () => {
             {selectedTrade && !showSpecializedCalculator && (
               <div className="mt-6">
                 <h3 className="text-md font-medium text-gray-900 mb-3">
-                  Project Specifications
+                  {t('calculator.projectSpecifications')}
                 </h3>
                 
                 <ProjectSpecifications 
@@ -186,10 +201,10 @@ const PricingCalculator = () => {
                   {calculating ? (
                     <>
                       <RotateCw className="w-4 h-4 mr-2 animate-spin" />
-                      Calculating...
+                      {t('calculator.calculating')}
                     </>
                   ) : (
-                    'Calculate Pricing'
+                    t('calculator.calculatePricing')
                   )}
                 </button>
               </div>
@@ -197,14 +212,14 @@ const PricingCalculator = () => {
           </div>
         </div>
         
-        <div className="lg:col-span-2">
-          <div className="p-6 bg-white rounded-lg shadow h-full">
+        <div className="lg:col-span-2" ref={calculatorRef}>
+          <div className="p-4 sm:p-6 bg-white rounded-lg shadow h-full overflow-x-auto">
             {!selectedTrade ? (
               <div className="flex flex-col items-center justify-center h-full text-center p-8">
                 <Calculator className="w-16 h-16 text-gray-400 mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Select a Trade to Begin</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">{t('calculator.selectTradeToBegin')}</h3>
                 <p className="text-gray-600 max-w-md">
-                  Choose from 20+ trades to get accurate, AI-powered pricing for your project. We'll analyze current material and labor costs to provide you with detailed estimates.
+                  {t('calculator.selectTradeDescription')}
                 </p>
               </div>
             ) : showSpecializedCalculator ? (
@@ -223,12 +238,12 @@ const PricingCalculator = () => {
                   <Calculator className="w-12 h-12 text-blue-600" />
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  {calculating ? 'Calculating Pricing...' : 'Ready to Calculate'}
+                  {calculating ? t('calculator.calculatingPricing') : t('calculator.readyToCalculate')}
                 </h3>
                 <p className="text-gray-600 max-w-md">
-                  {calculating 
-                    ? 'Our AI is analyzing current material and labor costs for your project...'
-                    : 'Fill in the project specifications and click "Calculate Pricing" to get your detailed estimate.'}
+                  {calculating
+                    ? t('calculator.aiAnalyzing')
+                    : t('calculator.fillSpecifications')}
                 </p>
                 {calculating && (
                   <div className="mt-4 w-full max-w-xs h-2 bg-gray-200 rounded-full overflow-hidden">

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { DollarSign, Receipt, Calendar, BarChart2, FileText, Download, Filter, RefreshCw } from 'lucide-react';
+import { DollarSign, Receipt, Calendar, BarChart2, FileText, Download, RefreshCw, Menu, X } from 'lucide-react';
 import ReceiptCapture from '../components/finance/ReceiptCapture';
 import ExpenseList from '../components/finance/ExpenseList';
 import PaymentTracker from '../components/finance/PaymentTracker';
@@ -8,10 +9,14 @@ import FinanceDashboard from '../components/finance/FinanceDashboard';
 import RecurringExpenses from '../components/finance/RecurringExpenses';
 import BudgetTracker from '../components/finance/BudgetTracker';
 import ReportGenerator from '../components/finance/ReportGenerator';
+import RevenueTracker from '../components/finance/RevenueTracker';
+import InvoiceManager from '../components/finance/InvoiceManager';
 import { useFinanceStore } from '../stores/financeStoreSupabase';
 
 const FinanceTracker = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   const {
     receipts,
@@ -62,18 +67,23 @@ const FinanceTracker = () => {
   // Fetch data when component mounts
   useEffect(() => {
     const loadData = async () => {
-      await Promise.all([
-        fetchReceipts(),
-        fetchPayments(),
-        fetchRecurringExpenses(),
-        fetchBudgetItems(),
-        fetchProjects(),
-        fetchClients(),
-        fetchInvoices()
-      ]);
+      try {
+        await Promise.all([
+          fetchReceipts(),
+          fetchPayments(),
+          fetchRecurringExpenses(),
+          fetchBudgetItems(),
+          fetchProjects(),
+          fetchClients(),
+          fetchInvoices()
+        ]);
+      } catch (err) {
+        console.error('Error loading finance data:', err);
+      }
     };
-    
+
     loadData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleExportData = (format: 'csv' | 'pdf') => {
@@ -98,124 +108,259 @@ const FinanceTracker = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 px-4 sm:px-6 lg:px-0">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Finance Tracker</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{t('finance.title')}</h1>
           <p className="mt-1 text-sm text-gray-600">
-            Manage receipts, track expenses, and monitor your financial health
+            {t('finance.subtitle')}
           </p>
         </div>
-        
-        <div className="flex space-x-2">
-          <button className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-            <Filter className="h-4 w-4 mr-2" />
-            Filter
+
+        <div className="flex flex-col sm:flex-row gap-2">
+          <button className="inline-flex items-center justify-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            <Download className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">{t('common.export')}</span>
           </button>
-          <button className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </button>
-          <button 
+          <button
             onClick={handleRefresh}
             disabled={isLoading}
-            className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-            {isLoading ? 'Syncing...' : 'Sync'}
+            <RefreshCw className={`h-4 w-4 sm:mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">{isLoading ? t('finance.syncing') : t('finance.sync')}</span>
           </button>
         </div>
       </div>
       
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
-          <strong className="font-bold">Error: </strong>
+          <strong className="font-bold">{t('common.error')}: </strong>
           <span className="block sm:inline">{error}</span>
         </div>
       )}
 
       <div className="bg-white rounded-lg shadow">
-        <div className="border-b border-gray-200">
-          <nav className="flex space-x-8 px-6" aria-label="Tabs">
+        {/* Mobile Menu Button */}
+        <div className="md:hidden border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="flex items-center space-x-2 text-gray-700 font-medium"
+          >
+            <Menu className="h-5 w-5" />
+            <span className="capitalize">{activeTab}</span>
+          </button>
+        </div>
+
+        {/* Mobile Dropdown Menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-b border-gray-200 bg-gray-50">
+            <nav className="px-4 py-2 space-y-1">
+              <button
+                onClick={() => { setActiveTab('dashboard'); setMobileMenuOpen(false); }}
+                className={`w-full flex items-center px-3 py-2 rounded-md text-sm font-medium ${
+                  activeTab === 'dashboard'
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <BarChart2 className="w-4 h-4 mr-3" />
+                {t('finance.dashboard')}
+              </button>
+              <button
+                onClick={() => { setActiveTab('revenue'); setMobileMenuOpen(false); }}
+                className={`w-full flex items-center px-3 py-2 rounded-md text-sm font-medium ${
+                  activeTab === 'revenue'
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <DollarSign className="w-4 h-4 mr-3" />
+                {t('finance.revenue')}
+              </button>
+              <button
+                onClick={() => { setActiveTab('expenses'); setMobileMenuOpen(false); }}
+                className={`w-full flex items-center px-3 py-2 rounded-md text-sm font-medium ${
+                  activeTab === 'expenses'
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <Receipt className="w-4 h-4 mr-3" />
+                {t('finance.expenses')}
+              </button>
+              <button
+                onClick={() => { setActiveTab('payments'); setMobileMenuOpen(false); }}
+                className={`w-full flex items-center px-3 py-2 rounded-md text-sm font-medium ${
+                  activeTab === 'payments'
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <DollarSign className="w-4 h-4 mr-3" />
+                {t('finance.payments')}
+              </button>
+              <button
+                onClick={() => { setActiveTab('invoices'); setMobileMenuOpen(false); }}
+                className={`w-full flex items-center px-3 py-2 rounded-md text-sm font-medium ${
+                  activeTab === 'invoices'
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <FileText className="w-4 h-4 mr-3" />
+                {t('finance.invoices')}
+              </button>
+              <button
+                onClick={() => { setActiveTab('recurring'); setMobileMenuOpen(false); }}
+                className={`w-full flex items-center px-3 py-2 rounded-md text-sm font-medium ${
+                  activeTab === 'recurring'
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <Calendar className="w-4 h-4 mr-3" />
+                {t('finance.recurring')}
+              </button>
+              <button
+                onClick={() => { setActiveTab('budget'); setMobileMenuOpen(false); }}
+                className={`w-full flex items-center px-3 py-2 rounded-md text-sm font-medium ${
+                  activeTab === 'budget'
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <DollarSign className="w-4 h-4 mr-3" />
+                {t('finance.budget')}
+              </button>
+              <button
+                onClick={() => { setActiveTab('reports'); setMobileMenuOpen(false); }}
+                className={`w-full flex items-center px-3 py-2 rounded-md text-sm font-medium ${
+                  activeTab === 'reports'
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <FileText className="w-4 h-4 mr-3" />
+                {t('finance.reports')}
+              </button>
+            </nav>
+          </div>
+        )}
+
+        {/* Desktop Tabs */}
+        <div className="hidden md:block border-b border-gray-200 overflow-x-auto">
+          <nav className="flex space-x-4 md:space-x-8 px-4 sm:px-6 min-w-max md:min-w-0" aria-label="Tabs">
             <button
               onClick={() => setActiveTab('dashboard')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center ${
+              className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center whitespace-nowrap ${
                 activeTab === 'dashboard'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              <BarChart2 className="w-4 h-4 mr-2" />
-              Dashboard
+              <BarChart2 className="w-4 h-4 md:mr-2" />
+              <span className="hidden md:inline">{t('finance.dashboard')}</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('revenue')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center whitespace-nowrap ${
+                activeTab === 'revenue'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <DollarSign className="w-4 h-4 md:mr-2" />
+              <span className="hidden md:inline">{t('finance.revenue')}</span>
             </button>
             <button
               onClick={() => setActiveTab('expenses')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center ${
+              className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center whitespace-nowrap ${
                 activeTab === 'expenses'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              <Receipt className="w-4 h-4 mr-2" />
-              Expenses
+              <Receipt className="w-4 h-4 md:mr-2" />
+              <span className="hidden md:inline">{t('finance.expenses')}</span>
             </button>
             <button
               onClick={() => setActiveTab('payments')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center ${
+              className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center whitespace-nowrap ${
                 activeTab === 'payments'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              <DollarSign className="w-4 h-4 mr-2" />
-              Payments
+              <DollarSign className="w-4 h-4 md:mr-2" />
+              <span className="hidden md:inline">{t('finance.payments')}</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('invoices')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center whitespace-nowrap ${
+                activeTab === 'invoices'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <FileText className="w-4 h-4 md:mr-2" />
+              <span className="hidden md:inline">{t('finance.invoices')}</span>
             </button>
             <button
               onClick={() => setActiveTab('recurring')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center ${
+              className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center whitespace-nowrap ${
                 activeTab === 'recurring'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              <Calendar className="w-4 h-4 mr-2" />
-              Recurring
+              <Calendar className="w-4 h-4 md:mr-2" />
+              <span className="hidden md:inline">{t('finance.recurring')}</span>
             </button>
             <button
               onClick={() => setActiveTab('budget')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center ${
+              className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center whitespace-nowrap ${
                 activeTab === 'budget'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              <DollarSign className="w-4 h-4 mr-2" />
-              Budget
+              <DollarSign className="w-4 h-4 md:mr-2" />
+              <span className="hidden md:inline">{t('finance.budget')}</span>
             </button>
             <button
               onClick={() => setActiveTab('reports')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center ${
+              className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center whitespace-nowrap ${
                 activeTab === 'reports'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              <FileText className="w-4 h-4 mr-2" />
-              Reports
+              <FileText className="w-4 h-4 md:mr-2" />
+              <span className="hidden md:inline">{t('finance.reports')}</span>
             </button>
           </nav>
         </div>
 
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {activeTab === 'dashboard' && (
-            <FinanceDashboard 
+            <FinanceDashboard
               summary={financialSummary}
               dateRange={dateRange}
               onChangeDateRange={setDateRange}
               onExport={(format) => handleExportData(format)}
             />
           )}
-          
+
+          {activeTab === 'revenue' && (
+            <RevenueTracker
+              projects={projects}
+              receipts={receipts}
+              payments={payments}
+              recurringExpenses={recurringExpenses}
+            />
+          )}
+
           {activeTab === 'expenses' && (
             <div className="space-y-6">
               <ReceiptCapture 
@@ -245,8 +390,14 @@ const FinanceTracker = () => {
               />
           )}
           
+          {activeTab === 'invoices' && (
+            <div className="p-6">
+              <InvoiceManager />
+            </div>
+          )}
+
           {activeTab === 'recurring' && (
-            <RecurringExpenses 
+            <RecurringExpenses
               expenses={recurringExpenses}
               projects={projects}
               onAdd={addRecurringExpense}
@@ -257,9 +408,11 @@ const FinanceTracker = () => {
           )}
           
           {activeTab === 'budget' && (
-            <BudgetTracker 
+            <BudgetTracker
               projects={projects}
               budgetItems={budgetItems}
+              receipts={receipts}
+              payments={payments}
               onAddBudgetItem={addBudgetItem}
               onUpdateBudgetItem={updateBudgetItem}
               onDeleteBudgetItem={deleteBudgetItem}
