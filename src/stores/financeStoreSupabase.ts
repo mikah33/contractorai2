@@ -127,6 +127,7 @@ export interface Invoice {
   status: 'draft' | 'sent' | 'outstanding' | 'partial' | 'paid' | 'overdue';
   lineItems?: LineItem[];
   notes?: string;
+  payment_link?: string | null; // Stripe payment link
   userId?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -1145,6 +1146,7 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
         status: inv.status,
         lineItems: inv.line_items,
         notes: inv.notes,
+        payment_link: inv.payment_link,
         userId: inv.user_id,
         createdAt: inv.created_at,
         updatedAt: inv.updated_at

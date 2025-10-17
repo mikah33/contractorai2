@@ -29,6 +29,8 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const [includeDrainage, setIncludeDrainage] = useState(true);
   const [concreteStrength, setConcreteStrength] = useState<3000 | 3500 | 4000 | 4500>(3500);
   const [gravelBaseDepth, setGravelBaseDepth] = useState<number | ''>('');
+  const [includeICF, setIncludeICF] = useState(false);
+  const [icfWallHeight, setIcfWallHeight] = useState<number | ''>('');
 
   const handleCalculate = () => {
     if (typeof length === 'number' && typeof width === 'number' && 
@@ -231,6 +233,38 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
           value: Number(drainageGravelVolume.toFixed(2)),
           unit: t('calculators.foundation.cubicYards'),
           cost: drainageGravelCost
+        });
+      }
+
+      // 10. ICF Walls Calculation
+      // Formula: (L×2 + W×2) × H × 12 = Estimation total for ICF forms (materials only)
+      if (includeICF && typeof icfWallHeight === 'number') {
+        const totalSqFtage = perimeter * icfWallHeight;
+        const icfEstimation = totalSqFtage * 12;
+        totalCost += icfEstimation;
+
+        results.push({
+          label: 'ICF Walls (Materials Only)',
+          value: Number(totalSqFtage.toFixed(2)),
+          unit: 'sq ft',
+          cost: icfEstimation
+        });
+
+        // Note: Concrete yardage must still be calculated separately
+        const icfConcreteVolume = (perimeter * icfWallHeight * (6 / 12)) / 27; // Assuming 6" ICF wall
+        const icfConcreteCost = icfConcreteVolume * {
+          3000: 125,
+          3500: 135,
+          4000: 145,
+          4500: 155
+        }[concreteStrength];
+        totalCost += icfConcreteCost;
+
+        results.push({
+          label: `ICF Wall Concrete (${concreteStrength} PSI)`,
+          value: Number(icfConcreteVolume.toFixed(2)),
+          unit: t('calculators.foundation.cubicYards'),
+          cost: icfConcreteCost
         });
       }
 
@@ -645,6 +679,44 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               </label>
             </div>
           </div>
+        </div>
+
+        <div className="border-t border-slate-200 pt-6">
+          <h3 className="text-lg font-medium text-slate-800 mb-4">ICF Walls</h3>
+          <div className="flex items-center mb-4">
+            <input
+              type="checkbox"
+              id="includeICF"
+              checked={includeICF}
+              onChange={(e) => setIncludeICF(e.target.checked)}
+              className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+            />
+            <label htmlFor="includeICF" className="ml-2 block text-sm font-medium text-slate-700">
+              Include ICF Walls (Insulated Concrete Forms)
+            </label>
+          </div>
+
+          {includeICF && (
+            <div>
+              <label htmlFor="icfWallHeight" className="block text-sm font-medium text-slate-700 mb-1">
+                ICF Wall Height (ft)
+              </label>
+              <input
+                type="number"
+                id="icfWallHeight"
+                min="0"
+                step="0.1"
+                value={icfWallHeight}
+                onChange={(e) => setIcfWallHeight(e.target.value ? Number(e.target.value) : '')}
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                placeholder="Enter ICF wall height in feet"
+              />
+              <p className="mt-2 text-xs text-slate-500">
+                Formula: (Length × 2 + Width × 2) × Height = Total SqFt<br/>
+                Estimation = Total SqFt × $12/sqft (materials only, concrete calculated separately)
+              </p>
+            </div>
+          )}
         </div>
       </div>
       

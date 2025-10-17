@@ -97,7 +97,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
             <X className="w-6 h-6" />
           </button>
         </div>
-        <nav className="mt-5 px-2 space-y-1">
+        <nav className="mt-5 px-2 space-y-1 pb-48 overflow-y-auto">
           {navigation.map((item) => {
             const isActive = location.pathname === item.href;
             return (
@@ -110,8 +110,8 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                     : 'text-blue-100 hover:bg-blue-800 hover:text-white'
                 }`}
               >
-                <item.icon className="w-5 h-5 mr-3 text-blue-300" />
-                {item.name}
+                <item.icon className="w-5 h-5 mr-3 text-blue-300 flex-shrink-0" />
+                <span className="truncate">{item.name}</span>
               </Link>
             );
           })}

@@ -18,11 +18,13 @@ export default function GeneratePaymentLinkButton({
   const [copied, setCopied] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
-  // Update local link state when existingLink prop changes
+  // Initialize link from existingLink on mount only - don't re-sync after generation
   useEffect(() => {
-    console.log('🔵 existingLink changed:', existingLink);
-    setLink(existingLink);
-  }, [existingLink]);
+    if (existingLink && !link) {
+      console.log('🔵 Initializing link from existingLink:', existingLink);
+      setLink(existingLink);
+    }
+  }, []); // Empty deps - run once on mount
 
   console.log('🔵 GeneratePaymentLinkButton render - link:', link, 'existingLink:', existingLink);
 
