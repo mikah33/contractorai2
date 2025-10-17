@@ -1,5 +1,11 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
-import { Trade } from '../types';
+import { Trade, CalculationResult } from '../types';
+
+interface CalculatorImport {
+  trade: string;
+  results: CalculationResult[];
+  timestamp: number;
+}
 
 interface PricingContextType {
   selectedTrade: Trade | null;
@@ -10,6 +16,9 @@ interface PricingContextType {
   setPricingResults: (results: any | null) => void;
   savedEstimates: any[];
   saveEstimate: (estimate: any) => void;
+  saveCalculatorResults: (trade: string, results: CalculationResult[]) => void;
+  getPendingCalculatorImport: () => CalculatorImport | null;
+  clearPendingCalculatorImport: () => void;
 }
 
 const PricingContext = createContext<PricingContextType | undefined>(undefined);
@@ -24,6 +33,40 @@ export function PricingProvider({ children }: { children: ReactNode }) {
     setSavedEstimates(prev => [...prev, { ...estimate, id: Date.now().toString() }]);
   };
 
+  const saveCalculatorResults = (trade: string, results: CalculationResult[]) => {
+    const importData: CalculatorImport = {
+      trade,
+      results,
+      timestamp: Date.now()
+    };
+    localStorage.setItem('pendingCalculatorImport', JSON.stringify(importData));
+  };
+
+  const getPendingCalculatorImport = (): CalculatorImport | null => {
+    try {
+      const stored = localStorage.getItem('pendingCalculatorImport');
+      if (!stored) return null;
+
+      const data: CalculatorImport = JSON.parse(stored);
+
+      // Check if import is less than 1 hour old
+      const oneHourAgo = Date.now() - (60 * 60 * 1000);
+      if (data.timestamp < oneHourAgo) {
+        localStorage.removeItem('pendingCalculatorImport');
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error getting pending calculator import:', error);
+      return null;
+    }
+  };
+
+  const clearPendingCalculatorImport = () => {
+    localStorage.removeItem('pendingCalculatorImport');
+  };
+
   return (
     <PricingContext.Provider
       value={{
@@ -35,6 +78,9 @@ export function PricingProvider({ children }: { children: ReactNode }) {
         setPricingResults,
         savedEstimates,
         saveEstimate,
+        saveCalculatorResults,
+        getPendingCalculatorImport,
+        clearPendingCalculatorImport,
       }}
     >
       {children}

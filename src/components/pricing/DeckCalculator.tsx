@@ -184,18 +184,21 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const [length, setLength] = useState<number | ''>('');
   const [width, setWidth] = useState<number | ''>('');
   const [area, setArea] = useState<number | ''>('');
-  const [heightAboveGrade, setHeightAboveGrade] = useState<number | ''>('');
   const [joistsSpacing, setJoistsSpacing] = useState<12 | 16>(16);
   const [joistSize, setJoistSize] = useState<'2x6' | '2x8' | '2x10' | '2x12'>('2x10');
   const [beamSpan, setBeamSpan] = useState<number | ''>('');
-  const [stairRun, setStairRun] = useState<10 | 12>(10);
   const [includeStairs, setIncludeStairs] = useState(false);
+  const [numberOfStaircases, setNumberOfStaircases] = useState<number>(1);
+  const [staircases, setStaircases] = useState<Array<{
+    width: number;
+    heightAboveGrade: number;
+    stairRun: 10 | 12;
+  }>>([{ width: 36, heightAboveGrade: 0, stairRun: 10 }]);
   const [includeCantilever, setIncludeCantilever] = useState(false);
   const [cantileverLength, setCantileverLength] = useState<number | ''>('');
   const [deckingType, setDeckingType] = useState<string>('5/4-deck');
   const [customDeckingWidth, setCustomDeckingWidth] = useState<number | ''>('');
   const [customDeckingSpacing, setCustomDeckingSpacing] = useState<number | ''>('');
-  const [stairWidth, setStairWidth] = useState<number | ''>('');
   const [includeRailing, setIncludeRailing] = useState(false);
   const [railingType, setRailingType] = useState<'pt' | 'trex'>('pt');
   const [railingLength, setRailingLength] = useState<number | ''>('');
@@ -377,53 +380,63 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       });
     }
 
-    if (includeStairs && typeof heightAboveGrade === 'number' && typeof stairWidth === 'number') {
-      const totalRise = heightAboveGrade;
-      const riserHeight = 7.5;
-      const numRisers = Math.ceil(totalRise / riserHeight);
-      const actualRiserHeight = totalRise / numRisers;
-      const numTreads = numRisers - 1;
-      const totalRun = numTreads * stairRun;
-      const numStringers = Math.max(3, Math.ceil(stairWidth / joistsSpacing));
-      const stringerLength = Math.sqrt(Math.pow(totalRun, 2) + Math.pow(totalRise, 2)) / 12;
-      const optimalStringerLength = calculateOptimalBoardLength(stringerLength);
-      
-      const stringerCost = numStringers * materialPrices['2x12'][optimalStringerLength.toString()];
-      totalCost += stringerCost;
+    if (includeStairs) {
+      // Loop through all staircases
+      staircases.forEach((staircase, index) => {
+        const { width: stairWidth, heightAboveGrade, stairRun } = staircase;
 
-      results.push(
-        {
-          label: 'Number of Steps',
-          value: numTreads,
-          unit: 'steps'
-        },
-        {
-          label: 'Riser Height',
-          value: Number(actualRiserHeight.toFixed(2)),
-          unit: 'inches'
-        },
-        {
-          label: 'Total Stair Run',
-          value: Number(totalRun.toFixed(2)),
-          unit: 'inches'
-        },
-        {
-          label: 'Stair Width',
-          value: stairWidth,
-          unit: 'inches'
-        },
-        {
-          label: `Stringers Needed (${joistsSpacing}" o.c.)`,
-          value: numStringers,
-          unit: 'pieces'
-        },
-        {
-          label: `2x12 Stringer Boards (${optimalStringerLength}ft)`,
-          value: numStringers,
-          unit: `${optimalStringerLength}ft boards`,
-          cost: stringerCost
+        // Validate that all required fields are filled
+        if (heightAboveGrade > 0 && stairWidth > 0) {
+          const totalRise = heightAboveGrade;
+          const riserHeight = 7.5;
+          const numRisers = Math.ceil(totalRise / riserHeight);
+          const actualRiserHeight = totalRise / numRisers;
+          const numTreads = numRisers - 1;
+          const totalRun = numTreads * stairRun;
+          const numStringers = Math.max(3, Math.ceil(stairWidth / joistsSpacing));
+          const stringerLength = Math.sqrt(Math.pow(totalRun, 2) + Math.pow(totalRise, 2)) / 12;
+          const optimalStringerLength = calculateOptimalBoardLength(stringerLength);
+
+          const stringerCost = numStringers * materialPrices['2x12'][optimalStringerLength.toString()];
+          totalCost += stringerCost;
+
+          const staircaseLabel = numberOfStaircases > 1 ? ` (Staircase ${index + 1})` : '';
+
+          results.push(
+            {
+              label: `Number of Steps${staircaseLabel}`,
+              value: numTreads,
+              unit: 'steps'
+            },
+            {
+              label: `Riser Height${staircaseLabel}`,
+              value: Number(actualRiserHeight.toFixed(2)),
+              unit: 'inches'
+            },
+            {
+              label: `Total Stair Run${staircaseLabel}`,
+              value: Number(totalRun.toFixed(2)),
+              unit: 'inches'
+            },
+            {
+              label: `Stair Width${staircaseLabel}`,
+              value: stairWidth,
+              unit: 'inches'
+            },
+            {
+              label: `Stringers Needed (${joistsSpacing}" o.c.)${staircaseLabel}`,
+              value: numStringers,
+              unit: 'pieces'
+            },
+            {
+              label: `2x12 Stringer Boards (${optimalStringerLength}ft)${staircaseLabel}`,
+              value: numStringers,
+              unit: `${optimalStringerLength}ft boards`,
+              cost: stringerCost
+            }
+          );
         }
-      );
+      });
     }
 
     if (includeRailing && typeof railingLength === 'number') {
@@ -464,14 +477,15 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     }
 
     if (includeTripleBeam && typeof tripleBeamLength === 'number') {
-      const tripleBeamPricePerFt = 45;
-      const tripleBeamCost = tripleBeamLength * tripleBeamPricePerFt;
+      // Triple beam = 3 stacked 2x12 boards
+      const beamBoardsNeeded = Math.ceil(tripleBeamLength / 16) * 3; // 3 boards per 16ft section
+      const tripleBeamCost = beamBoardsNeeded * materialPrices['2x12']['16'];
       totalCost += tripleBeamCost;
 
       results.push({
-        label: 'Triple Beam (2x12 cantilever support)',
-        value: tripleBeamLength,
-        unit: 'linear feet',
+        label: 'Triple Beam (3x 2x12 @ 16ft)',
+        value: beamBoardsNeeded,
+        unit: '16ft boards',
         cost: tripleBeamCost
       });
     }
@@ -508,7 +522,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const isFormValid =
     ((inputType === 'dimensions' && typeof length === 'number' && typeof width === 'number') ||
     (inputType === 'area' && typeof area === 'number')) &&
-    (!includeStairs || (typeof heightAboveGrade === 'number' && typeof stairWidth === 'number')) &&
+    (!includeStairs || staircases.every(s => s.heightAboveGrade > 0 && s.width > 0)) &&
     (!includeCantilever || typeof cantileverLength === 'number') &&
     (deckingType !== 'custom' || (typeof customDeckingWidth === 'number' && typeof customDeckingSpacing === 'number')) &&
     (!includeRailing || typeof railingLength === 'number') &&
@@ -765,56 +779,101 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
           {includeStairs && (
             <div className="space-y-4">
               <div>
-                <label htmlFor="heightAboveGrade" className="block text-sm font-medium text-slate-700 mb-1">
-                  {t('calculators.deck.heightAboveGrade')}
-                </label>
-                <input
-                  type="number"
-                  id="heightAboveGrade"
-                  min="0"
-                  step="1"
-                  value={heightAboveGrade}
-                  onChange={(e) => setHeightAboveGrade(e.target.value ? Number(e.target.value) : '')}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  placeholder={t('calculators.deck.enterHeightInches')}
-                />
-              </div>
-
-              <div>
-                <label htmlFor="stairWidth" className="block text-sm font-medium text-slate-700 mb-1">
-                  {t('calculators.deck.stairWidth')}
-                </label>
-                <input
-                  type="number"
-                  id="stairWidth"
-                  min="36"
-                  step="1"
-                  value={stairWidth}
-                  onChange={(e) => setStairWidth(e.target.value ? Number(e.target.value) : '')}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  placeholder={t('calculators.deck.enterStairWidth')}
-                />
-                {typeof stairWidth === 'number' && stairWidth < 36 && (
-                  <p className="mt-1 text-sm text-red-600">
-                    {t('calculators.deck.stairWidthWarning')}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="stairRun" className="block text-sm font-medium text-slate-700 mb-1">
-                  {t('calculators.deck.stairRun')}
+                <label htmlFor="numberOfStaircases" className="block text-sm font-medium text-slate-700 mb-1">
+                  Number of Staircases
                 </label>
                 <select
-                  id="stairRun"
-                  value={stairRun}
-                  onChange={(e) => setStairRun(Number(e.target.value) as 10 | 12)}
+                  id="numberOfStaircases"
+                  value={numberOfStaircases}
+                  onChange={(e) => {
+                    const num = Number(e.target.value);
+                    setNumberOfStaircases(num);
+                    // Adjust staircases array
+                    const newStaircases = Array.from({length: num}, (_, i) =>
+                      staircases[i] || { width: 36, heightAboveGrade: 0, stairRun: 10 }
+                    );
+                    setStaircases(newStaircases);
+                  }}
                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 >
-                  <option value={10}>{t('calculators.deck.stairRun10')}</option>
-                  <option value={12}>{t('calculators.deck.stairRun12')}</option>
+                  <option value={1}>1 Staircase</option>
+                  <option value={2}>2 Staircases</option>
+                  <option value={3}>3 Staircases</option>
+                  <option value={4}>4 Staircases</option>
                 </select>
               </div>
+
+              {staircases.map((staircase, index) => (
+                <div key={index} className="border border-slate-200 rounded-md p-4 space-y-4">
+                  <h4 className="font-medium text-slate-800">
+                    {numberOfStaircases > 1 ? `Staircase ${index + 1}` : 'Staircase Details'}
+                  </h4>
+
+                  <div>
+                    <label htmlFor={`heightAboveGrade-${index}`} className="block text-sm font-medium text-slate-700 mb-1">
+                      {t('calculators.deck.heightAboveGrade')}
+                    </label>
+                    <input
+                      type="number"
+                      id={`heightAboveGrade-${index}`}
+                      min="0"
+                      step="1"
+                      value={staircase.heightAboveGrade}
+                      onChange={(e) => {
+                        const newStaircases = [...staircases];
+                        newStaircases[index].heightAboveGrade = e.target.value ? Number(e.target.value) : 0;
+                        setStaircases(newStaircases);
+                      }}
+                      className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      placeholder={t('calculators.deck.enterHeightInches')}
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor={`stairWidth-${index}`} className="block text-sm font-medium text-slate-700 mb-1">
+                      {t('calculators.deck.stairWidth')}
+                    </label>
+                    <input
+                      type="number"
+                      id={`stairWidth-${index}`}
+                      min="36"
+                      step="1"
+                      value={staircase.width}
+                      onChange={(e) => {
+                        const newStaircases = [...staircases];
+                        newStaircases[index].width = e.target.value ? Number(e.target.value) : 0;
+                        setStaircases(newStaircases);
+                      }}
+                      className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      placeholder={t('calculators.deck.enterStairWidth')}
+                    />
+                    {staircase.width < 36 && staircase.width > 0 && (
+                      <p className="mt-1 text-sm text-red-600">
+                        {t('calculators.deck.stairWidthWarning')}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label htmlFor={`stairRun-${index}`} className="block text-sm font-medium text-slate-700 mb-1">
+                      {t('calculators.deck.stairRun')}
+                    </label>
+                    <select
+                      id={`stairRun-${index}`}
+                      value={staircase.stairRun}
+                      onChange={(e) => {
+                        const newStaircases = [...staircases];
+                        newStaircases[index].stairRun = Number(e.target.value) as 10 | 12;
+                        setStaircases(newStaircases);
+                      }}
+                      className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    >
+                      <option value={10}>{t('calculators.deck.stairRun10')}</option>
+                      <option value={12}>{t('calculators.deck.stairRun12')}</option>
+                    </select>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>

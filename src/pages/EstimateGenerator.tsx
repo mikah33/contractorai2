@@ -15,12 +15,14 @@ import SendEstimateModal from '../components/estimates/SendEstimateModal';
 import { Estimate, EstimateItem } from '../types/estimates';
 import { estimateService } from '../services/estimateService';
 import { useData } from '../contexts/DataContext';
+import { usePricing } from '../contexts/PricingContext';
 
 const EstimateGenerator = () => {
   const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const { profile } = useData();
+  const { getPendingCalculatorImport, clearPendingCalculatorImport } = usePricing();
   const [activeTab, setActiveTab] = useState<'editor' | 'preview'>('editor');
   const [currentEstimate, setCurrentEstimate] = useState<Estimate | null>(null);
   const [showAIAssistant, setShowAIAssistant] = useState(false);
@@ -129,6 +131,77 @@ const EstimateGenerator = () => {
     saveCalculatorData();
   }, [location.state?.fromCalculator, location.state?.calculatorData]); // eslint-disable-line react-hooks/exhaustive-deps
   
+  // Check for pending calculator import on mount
+  useEffect(() => {
+    const handleCalculatorImport = () => {
+      const pendingImport = getPendingCalculatorImport();
+
+      if (pendingImport && !currentEstimate) {
+        console.log('Found pending calculator import:', pendingImport);
+
+        // Convert CalculationResult[] to EstimateItem[]
+        const items: EstimateItem[] = pendingImport.results
+          .filter(result => result.cost && result.cost > 0) // Only include items with costs
+          .map((result, index) => ({
+            id: `calc-item-${Date.now()}-${index}`,
+            description: result.label,
+            quantity: result.value,
+            unit: result.unit,
+            unitPrice: result.cost ? result.cost / result.value : 0,
+            totalPrice: result.cost || 0,
+            type: 'material' as const
+          }));
+
+        // Calculate totals
+        const subtotal = items.reduce((sum, item) => sum + item.totalPrice, 0);
+        const taxRate = 0;
+        const taxAmount = 0;
+        const total = subtotal;
+
+        // Create new estimate from calculator results
+        // Format trade name properly (remove 'trades.' prefix and capitalize)
+        const tradeName = pendingImport.trade
+          .replace(/^trades\./, '')
+          .split(/(?=[A-Z])/)
+          .join(' ')
+          .replace(/^\w/, c => c.toUpperCase());
+
+        const calculatorEstimate: Estimate = {
+          id: generateUUID(),
+          title: `${tradeName} Estimate`,
+          clientName: '',
+          projectName: '',
+          status: 'draft',
+          createdAt: new Date().toISOString(),
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          items,
+          subtotal,
+          taxRate,
+          taxAmount,
+          total,
+          notes: `Generated from ${pendingImport.trade} calculator`,
+          terms: profile?.default_terms || 'Valid for 30 days from the date of issue.',
+          branding: {
+            logo: profile?.logo_url || '',
+            primaryColor: '#3B82F6',
+            fontFamily: 'Inter'
+          }
+        };
+
+        setCurrentEstimate(calculatorEstimate);
+        setActiveTab('editor');
+
+        // Clear the pending import
+        clearPendingCalculatorImport();
+
+        // Show success message
+        alert(`Successfully imported ${items.length} items from ${pendingImport.trade} calculator!`);
+      }
+    };
+
+    handleCalculatorImport();
+  }, []); // Only run on mount
+
   // Fetch projects, clients, and estimates on component mount
   useEffect(() => {
     console.log('EstimateGenerator mounted, fetching data...');

@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { Plus, Trash2, Image, Settings, Palette, DollarSign, Calendar, User, Briefcase, FileText, Tag, Info, Edit2, Users } from 'lucide-react';
+import { Plus, Trash2, Image, Settings, Palette, DollarSign, Calendar, User, Briefcase, FileText, Tag, Info, Edit2, Users, X } from 'lucide-react';
 import { Estimate, EstimateItem } from '../../types/estimates';
 import { supabase } from '../../lib/supabase';
 import { useData } from '../../contexts/DataContext';
 import { useNavigate } from 'react-router-dom';
+import { useClientsStore } from '../../stores/clientsStore';
+import useProjectStore from '../../stores/projectStore';
 
 interface EstimateEditorProps {
   estimate: Estimate;
@@ -28,6 +30,8 @@ const EstimateEditor: React.FC<EstimateEditorProps> = ({
 }) => {
   const { profile } = useData();
   const navigate = useNavigate();
+  const { addClient } = useClientsStore();
+  const { addProject } = useProjectStore();
   // Early return if no estimate provided
   if (!estimate) {
     return <div className="p-6 text-center text-gray-500">No estimate data available</div>;
@@ -61,8 +65,22 @@ const EstimateEditor: React.FC<EstimateEditorProps> = ({
     totalPrice: 0,
     type: 'material'
   });
-  
+
   const [activeSection, setActiveSection] = useState<'details' | 'items' | 'branding' | 'terms'>('details');
+
+  // Quick-create states
+  const [showQuickClientForm, setShowQuickClientForm] = useState(false);
+  const [showQuickProjectForm, setShowQuickProjectForm] = useState(false);
+  const [quickClientData, setQuickClientData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    company: ''
+  });
+  const [quickProjectData, setQuickProjectData] = useState({
+    name: '',
+    description: ''
+  });
   
   const handleUpdateField = (field: keyof Estimate, value: any) => {
     onUpdateEstimate({
@@ -122,6 +140,95 @@ const EstimateEditor: React.FC<EstimateEditorProps> = ({
         [field]: value
       }
     });
+  };
+
+  const handleClientChange = (value: string) => {
+    if (value === '__CREATE_NEW__') {
+      setShowQuickClientForm(true);
+    } else {
+      handleUpdateField('clientName', value);
+      setShowQuickClientForm(false);
+    }
+  };
+
+  const handleProjectChange = (value: string) => {
+    if (value === '__CREATE_NEW__') {
+      setShowQuickProjectForm(true);
+    } else {
+      handleUpdateField('projectId', value);
+      setShowQuickProjectForm(false);
+    }
+  };
+
+  const handleQuickCreateClient = async () => {
+    if (!quickClientData.name.trim()) {
+      alert('Client name is required');
+      return;
+    }
+    if (!quickClientData.email.trim()) {
+      alert('Email is required');
+      return;
+    }
+    if (!quickClientData.phone.trim()) {
+      alert('Phone number is required');
+      return;
+    }
+
+    try {
+      console.log('🟢 Creating client with data:', quickClientData);
+      await addClient({
+        name: quickClientData.name,
+        email: quickClientData.email,
+        phone: quickClientData.phone,
+        company: quickClientData.company,
+        status: 'active'
+      });
+      console.log('🟢 Client created successfully!');
+
+      // Update estimate with new client name
+      handleUpdateField('clientName', quickClientData.name);
+
+      // Reset and close form
+      setQuickClientData({ name: '', email: '', phone: '', company: '' });
+      setShowQuickClientForm(false);
+    } catch (error) {
+      console.error('Error creating client:', error);
+    }
+  };
+
+  const handleQuickCreateProject = async () => {
+    if (!quickProjectData.name.trim()) {
+      alert('Project name is required');
+      return;
+    }
+
+    if (!safeEstimate.clientName) {
+      alert('Please select a client first before creating a project');
+      return;
+    }
+
+    try {
+      await addProject({
+        name: quickProjectData.name,
+        client: safeEstimate.clientName,
+        description: quickProjectData.description,
+        status: 'active',
+        priority: 'medium',
+        startDate: new Date().toISOString(),
+        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        budget: 0
+      });
+
+      // Note: We can't immediately update projectId without fetching the new project
+      // The projects list will refresh and user can select it
+      alert('Project created successfully! Please select it from the dropdown.');
+
+      // Reset and close form
+      setQuickProjectData({ name: '', description: '' });
+      setShowQuickProjectForm(false);
+    } catch (error) {
+      console.error('Error creating project:', error);
+    }
   };
 
   const handleAutoPopulateLabor = async () => {
@@ -241,18 +348,76 @@ const EstimateEditor: React.FC<EstimateEditorProps> = ({
                     <User className="h-5 w-5 text-gray-400" />
                   </div>
                   <select
-                    value={safeEstimate.clientName || ''}
-                    onChange={(e) => handleUpdateField('clientName', e.target.value)}
+                    value={showQuickClientForm ? '__CREATE_NEW__' : (safeEstimate.clientName || '')}
+                    onChange={(e) => handleClientChange(e.target.value)}
                     className="block w-full pl-10 pr-3 py-2 border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   >
                     <option value="">Select Client</option>
+                    <option value="__CREATE_NEW__" className="font-semibold text-blue-600">+ Create New Client</option>
                     {clients.map(client => (
                       <option key={client.id} value={client.name}>{client.name}</option>
                     ))}
                   </select>
                 </div>
+
+                {/* Quick Create Client Form */}
+                {showQuickClientForm && (
+                  <div className="mt-3 p-4 bg-blue-50 border border-blue-200 rounded-md">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-sm font-medium text-blue-900">Quick Create Client</h4>
+                      <button
+                        onClick={() => {
+                          setShowQuickClientForm(false);
+                          setQuickClientData({ name: '', email: '', phone: '', company: '' });
+                        }}
+                        className="text-blue-600 hover:text-blue-800"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                    <div className="space-y-2">
+                      <input
+                        type="text"
+                        placeholder="Client Name *"
+                        value={quickClientData.name}
+                        onChange={(e) => setQuickClientData({ ...quickClientData, name: e.target.value })}
+                        className="block w-full px-3 py-2 text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      />
+                      <input
+                        type="email"
+                        placeholder="Email *"
+                        value={quickClientData.email}
+                        onChange={(e) => setQuickClientData({ ...quickClientData, email: e.target.value })}
+                        className="block w-full px-3 py-2 text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                        required
+                      />
+                      <input
+                        type="tel"
+                        placeholder="Phone *"
+                        value={quickClientData.phone}
+                        onChange={(e) => setQuickClientData({ ...quickClientData, phone: e.target.value })}
+                        className="block w-full px-3 py-2 text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                        required
+                      />
+                      <input
+                        type="text"
+                        placeholder="Company"
+                        value={quickClientData.company}
+                        onChange={(e) => setQuickClientData({ ...quickClientData, company: e.target.value })}
+                        className="block w-full px-3 py-2 text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      />
+                      <button
+                        onClick={handleQuickCreateClient}
+                        disabled={!quickClientData.name.trim() || !quickClientData.email.trim() || !quickClientData.phone.trim()}
+                        className="w-full px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                      >
+                        Create Client
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700">Project</label>
                 <div className="mt-1 relative rounded-md shadow-sm">
@@ -260,16 +425,65 @@ const EstimateEditor: React.FC<EstimateEditorProps> = ({
                     <Briefcase className="h-5 w-5 text-gray-400" />
                   </div>
                   <select
-                    value={safeEstimate.projectId}
-                    onChange={(e) => handleUpdateField('projectId', e.target.value)}
+                    value={showQuickProjectForm ? '__CREATE_NEW__' : (safeEstimate.projectId || '')}
+                    onChange={(e) => handleProjectChange(e.target.value)}
                     className="block w-full pl-10 pr-3 py-2 border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    disabled={!safeEstimate.clientName}
                   >
                     <option value="">Select Project</option>
+                    <option value="__CREATE_NEW__" className="font-semibold text-blue-600">+ Create New Project</option>
                     {projects.map(project => (
                       <option key={project.id} value={project.id}>{project.name}</option>
                     ))}
                   </select>
                 </div>
+                {!safeEstimate.clientName && (
+                  <p className="mt-1 text-xs text-gray-500">Select a client first</p>
+                )}
+
+                {/* Quick Create Project Form */}
+                {showQuickProjectForm && (
+                  <div className="mt-3 p-4 bg-blue-50 border border-blue-200 rounded-md">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-sm font-medium text-blue-900">Quick Create Project</h4>
+                      <button
+                        onClick={() => {
+                          setShowQuickProjectForm(false);
+                          setQuickProjectData({ name: '', description: '' });
+                        }}
+                        className="text-blue-600 hover:text-blue-800"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                    <div className="space-y-2">
+                      <input
+                        type="text"
+                        placeholder="Project Name *"
+                        value={quickProjectData.name}
+                        onChange={(e) => setQuickProjectData({ ...quickProjectData, name: e.target.value })}
+                        className="block w-full px-3 py-2 text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      />
+                      <textarea
+                        placeholder="Description (optional)"
+                        value={quickProjectData.description}
+                        onChange={(e) => setQuickProjectData({ ...quickProjectData, description: e.target.value })}
+                        rows={2}
+                        className="block w-full px-3 py-2 text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      />
+                      <p className="text-xs text-blue-700">
+                        Client: <strong>{safeEstimate.clientName}</strong>
+                      </p>
+                      <button
+                        onClick={handleQuickCreateProject}
+                        disabled={!quickProjectData.name.trim()}
+                        className="w-full px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                      >
+                        Create Project
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
             

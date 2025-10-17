@@ -252,7 +252,11 @@ const PricingCalculator = () => {
                 )}
               </div>
             ) : (
-              <PricingResults trade={selectedTrade} specifications={specifications} />
+              <PricingResults
+                trade={selectedTrade}
+                specifications={specifications}
+                calculationResults={calculatorResults}
+              />
             )}
           </div>
         </div>
