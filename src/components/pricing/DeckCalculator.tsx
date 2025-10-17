@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Grid } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import CalculatorEstimateHeader from '../calculators/CalculatorEstimateHeader';
 
 type DeckingType = {
   id: string;
@@ -213,6 +214,105 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const [postHeight, setPostHeight] = useState<number | ''>('');
   const [includeLedgerBoard, setIncludeLedgerBoard] = useState(false);
   const [ledgerBoardLength, setLedgerBoardLength] = useState<number | ''>('');
+
+  // Gather all current calculator inputs for saving
+  const getCurrentInputs = () => ({
+    inputType,
+    length,
+    width,
+    area,
+    joistsSpacing,
+    joistSize,
+    beamSpan,
+    includeStairs,
+    numberOfStaircases,
+    staircases,
+    includeCantilever,
+    cantileverLength,
+    deckingType,
+    customDeckingWidth,
+    customDeckingSpacing,
+    includeRailing,
+    railingType,
+    railingLength,
+    includeFascia,
+    fasciaType,
+    fasciaLength,
+    includeTripleBeam,
+    tripleBeamLength,
+    includeFreestandingPosts,
+    numFreestandingPosts,
+    postSize,
+    postHeight,
+    includeLedgerBoard,
+    ledgerBoardLength
+  });
+
+  // Load saved estimate inputs
+  const handleLoadEstimate = (inputs: Record<string, any>) => {
+    setInputType(inputs.inputType || 'dimensions');
+    setLength(inputs.length ?? '');
+    setWidth(inputs.width ?? '');
+    setArea(inputs.area ?? '');
+    setJoistsSpacing(inputs.joistsSpacing || 16);
+    setJoistSize(inputs.joistSize || '2x10');
+    setBeamSpan(inputs.beamSpan ?? '');
+    setIncludeStairs(inputs.includeStairs || false);
+    setNumberOfStaircases(inputs.numberOfStaircases || 1);
+    setStaircases(inputs.staircases || [{ width: 36, heightAboveGrade: 0, stairRun: 10 }]);
+    setIncludeCantilever(inputs.includeCantilever || false);
+    setCantileverLength(inputs.cantileverLength ?? '');
+    setDeckingType(inputs.deckingType || '5/4-deck');
+    setCustomDeckingWidth(inputs.customDeckingWidth ?? '');
+    setCustomDeckingSpacing(inputs.customDeckingSpacing ?? '');
+    setIncludeRailing(inputs.includeRailing || false);
+    setRailingType(inputs.railingType || 'pt');
+    setRailingLength(inputs.railingLength ?? '');
+    setIncludeFascia(inputs.includeFascia || false);
+    setFasciaType(inputs.fasciaType || 'pt');
+    setFasciaLength(inputs.fasciaLength ?? '');
+    setIncludeTripleBeam(inputs.includeTripleBeam || false);
+    setTripleBeamLength(inputs.tripleBeamLength ?? '');
+    setIncludeFreestandingPosts(inputs.includeFreestandingPosts || false);
+    setNumFreestandingPosts(inputs.numFreestandingPosts ?? '');
+    setPostSize(inputs.postSize || '6x6');
+    setPostHeight(inputs.postHeight ?? '');
+    setIncludeLedgerBoard(inputs.includeLedgerBoard || false);
+    setLedgerBoardLength(inputs.ledgerBoardLength ?? '');
+  };
+
+  // Reset all inputs to defaults for new estimate
+  const handleNewEstimate = () => {
+    setInputType('dimensions');
+    setLength('');
+    setWidth('');
+    setArea('');
+    setJoistsSpacing(16);
+    setJoistSize('2x10');
+    setBeamSpan('');
+    setIncludeStairs(false);
+    setNumberOfStaircases(1);
+    setStaircases([{ width: 36, heightAboveGrade: 0, stairRun: 10 }]);
+    setIncludeCantilever(false);
+    setCantileverLength('');
+    setDeckingType('5/4-deck');
+    setCustomDeckingWidth('');
+    setCustomDeckingSpacing('');
+    setIncludeRailing(false);
+    setRailingType('pt');
+    setRailingLength('');
+    setIncludeFascia(false);
+    setFasciaType('pt');
+    setFasciaLength('');
+    setIncludeTripleBeam(false);
+    setTripleBeamLength('');
+    setIncludeFreestandingPosts(false);
+    setNumFreestandingPosts('');
+    setPostSize('6x6');
+    setPostHeight('');
+    setIncludeLedgerBoard(false);
+    setLedgerBoardLength('');
+  };
 
   const calculateOptimalBoardLength = (deckWidth: number) => {
     const availableLengths = [12, 16, 20];
@@ -547,7 +647,14 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         <Grid className="h-6 w-6 text-orange-500 mr-2" />
         <h2 className="text-xl font-bold text-slate-800">{t('calculators.deck.title')}</h2>
       </div>
-      
+
+      <CalculatorEstimateHeader
+        calculatorType="deck"
+        currentInputs={getCurrentInputs()}
+        onLoadEstimate={handleLoadEstimate}
+        onNewEstimate={handleNewEstimate}
+      />
+
       <div className="mb-4">
         <div className="flex justify-start mb-4">
           <div className="inline-flex rounded-md shadow-sm">

@@ -39,6 +39,8 @@ interface Estimate {
   terms?: string;
   expires_at?: string;
   items?: EstimateItem[];
+  calculator_type?: string;
+  calculator_data?: any;
   user_id?: string;
   created_at?: string;
   updated_at?: string;
@@ -122,6 +124,8 @@ const useEstimateStore = create<EstimateStore>((set, get) => ({
         terms: estimate.terms || 'Valid for 30 days',
         expires_at: estimate.expires_at || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
         items: estimate.items || [],
+        calculator_type: estimate.calculator_type || null,
+        calculator_data: estimate.calculator_data || null,
         user_id: userId
       };
 
@@ -226,6 +230,8 @@ const useEstimateStore = create<EstimateStore>((set, get) => ({
         notes: calculatorData.notes || `Generated from Pricing Calculator`,
         terms: calculatorData.terms || 'Valid for 30 days from the date of issue',
         items: calculatorData.items || [],
+        calculator_type: calculatorData.calculatorType || null,
+        calculator_data: calculatorData.calculatorData || null,
         expires_at: calculatorData.expiresAt || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
         user_id: userId
       };

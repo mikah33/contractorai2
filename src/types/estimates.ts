@@ -50,4 +50,6 @@ export interface Estimate {
   branding?: EstimateBranding;
   convertedToInvoice?: boolean;  // Track if converted to invoice
   invoiceId?: string;            // Reference to the created invoice
+  calculatorType?: string;       // Type of calculator used (e.g., 'concrete', 'roofing')
+  calculatorData?: any;          // Original calculator input data for recalculation
 }

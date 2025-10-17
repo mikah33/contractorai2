@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FileText, Plus, Download, Trash2, Edit2, Image, Copy, Check, X, Settings, Palette, Layout, FileUp, FileDown, Sparkles, DollarSign, Printer, Eye, RefreshCw, Receipt, ArrowLeft, Mail } from 'lucide-react';
+import { FileText, Plus, Download, Trash2, Edit2, Image, Copy, Check, X, Settings, Palette, Layout, FileUp, FileDown, Sparkles, DollarSign, Printer, Eye, RefreshCw, Receipt, ArrowLeft, Mail, Calculator } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -225,7 +225,9 @@ const EstimateGenerator = () => {
           project: est.projectName || est.title,
           amount: `$${est.total?.toFixed(2) || '0.00'}`,
           status: est.status || 'draft',
-          date: new Date(est.createdAt).toLocaleDateString()
+          date: new Date(est.createdAt).toLocaleDateString(),
+          calculatorType: est.calculatorType,
+          calculatorData: est.calculatorData
         }));
         setRecentEstimates(transformedEstimates);
       }
@@ -262,6 +264,15 @@ const EstimateGenerator = () => {
     setCurrentEstimate(null);
     initialEstimateRef.current = '';
     setHasUnsavedChanges(false);
+  };
+
+  const handleRecalculate = (estimate: any) => {
+    if (!estimate.calculatorType) {
+      alert('This estimate was not created with a calculator');
+      return;
+    }
+    // Navigate to pricing calculator with calculator type and estimate ID
+    navigate(`/pricing?calculator=${estimate.calculatorType}&estimateId=${estimate.id}`);
   };
 
   // Debug: Log data to see what we're working with
@@ -773,14 +784,14 @@ const EstimateGenerator = () => {
               <span className="sm:hidden">{t('estimates.send')}</span>
             </button>
 
-            {/* Actions Dropdown */}
+            {/* Download Dropdown */}
             <div className="relative">
               <button
                 onClick={() => setShowExportMenu(!showExportMenu)}
                 className="inline-flex items-center px-4 py-2.5 text-sm font-medium rounded-lg text-gray-700 bg-white border-2 border-gray-200 hover:border-blue-500 hover:text-blue-600 hover:shadow-md transition-all duration-200 whitespace-nowrap"
               >
-                <Settings className="w-4 h-4 mr-2" />
-                <span>{t('estimates.actions')}</span>
+                <Download className="w-4 h-4 mr-2" />
+                <span>Download</span>
                 <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
@@ -933,7 +944,7 @@ const EstimateGenerator = () => {
                         {t('estimates.date')}
                       </th>
                       <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {t('estimates.actions')}
+                        Download
                       </th>
                     </tr>
                   </thead>
@@ -955,8 +966,18 @@ const EstimateGenerator = () => {
                     recentEstimates.map((estimate) => (
                       <tr key={estimate.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4">
-                          <div className="text-sm font-medium text-gray-900">{estimate.client}</div>
-                          <div className="text-sm text-gray-500">{estimate.project}</div>
+                          <div className="flex items-center gap-2">
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">{estimate.client}</div>
+                              <div className="text-sm text-gray-500">{estimate.project}</div>
+                            </div>
+                            {estimate.calculatorType && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800" title={`Created with ${estimate.calculatorType} calculator`}>
+                                <Calculator className="w-3 h-3 mr-1" />
+                                {estimate.calculatorType}
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-900">{estimate.amount}</td>
                         <td className="px-6 py-4">
@@ -967,6 +988,15 @@ const EstimateGenerator = () => {
                         <td className="px-6 py-4 text-sm text-gray-500">{estimate.date}</td>
                         <td className="px-6 py-4 text-right text-sm font-medium">
                           <div className="flex items-center justify-end space-x-3">
+                            {estimate.calculatorType && (
+                              <button
+                                onClick={() => handleRecalculate(estimate)}
+                                className="text-blue-600 hover:text-blue-900"
+                                title="Recalculate in Calculator"
+                              >
+                                <Calculator className="w-4 h-4" />
+                              </button>
+                            )}
                             <button
                               onClick={() => handleEditEstimate(estimate.id)}
                               className="text-blue-600 hover:text-blue-900"
@@ -1056,15 +1086,6 @@ const EstimateGenerator = () => {
           <div className="p-6 bg-gray-50 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-medium text-gray-900">Estimate Preview</h2>
-              <div className="flex space-x-2">
-                <button 
-                  onClick={() => window.print()}
-                  className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  <Printer className="w-4 h-4 mr-2" />
-                  Print
-                </button>
-              </div>
             </div>
           </div>
           

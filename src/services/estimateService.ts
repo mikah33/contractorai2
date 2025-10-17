@@ -46,6 +46,8 @@ export const estimateService = {
         terms: estimate.terms || null,
         expires_at: estimate.expiresAt || null,
         items: estimate.items || [],
+        calculator_type: estimate.calculatorType || null,
+        calculator_data: estimate.calculatorData || null,
         user_id: user.id,
         updated_at: new Date().toISOString()
       };
@@ -140,7 +142,9 @@ export const estimateService = {
         terms: estimate.terms,
         items: estimate.items || [],  // Load items from database
         convertedToInvoice: estimate.converted_to_invoice || false,
-        invoiceId: estimate.invoice_id || undefined
+        invoiceId: estimate.invoice_id || undefined,
+        calculatorType: estimate.calculator_type || undefined,
+        calculatorData: estimate.calculator_data || undefined
       };
 
       return { success: true, data: transformedEstimate };
@@ -184,7 +188,9 @@ export const estimateService = {
         terms: estimate.terms,
         items: estimate.items || [],
         convertedToInvoice: estimate.converted_to_invoice || false,
-        invoiceId: estimate.invoice_id || undefined
+        invoiceId: estimate.invoice_id || undefined,
+        calculatorType: estimate.calculator_type || undefined,
+        calculatorData: estimate.calculator_data || undefined
       }));
 
       return { success: true, data: transformedEstimates };
