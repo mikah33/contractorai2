@@ -477,15 +477,14 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     }
 
     if (includeTripleBeam && typeof tripleBeamLength === 'number') {
-      // Triple beam = 3 stacked 2x12 boards
-      const beamBoardsNeeded = Math.ceil(tripleBeamLength / 16) * 3; // 3 boards per 16ft section
-      const tripleBeamCost = beamBoardsNeeded * materialPrices['2x12']['16'];
+      // Triple beam at $16 per linear foot
+      const tripleBeamCost = tripleBeamLength * 16;
       totalCost += tripleBeamCost;
 
       results.push({
-        label: 'Triple Beam (3x 2x12 @ 16ft)',
-        value: beamBoardsNeeded,
-        unit: '16ft boards',
+        label: 'Triple Beam (Cantilever Support)',
+        value: tripleBeamLength,
+        unit: 'linear feet',
         cost: tripleBeamCost
       });
     }
@@ -1024,7 +1023,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 placeholder="Enter triple beam length"
               />
               <p className="mt-1 text-sm text-slate-500">
-                2x12 triple beam @ $45/linear foot for cantilever deck support
+                Triple beam @ $16/linear foot for cantilever deck support
               </p>
             </div>
           )}

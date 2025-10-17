@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useFinanceStore } from '../../stores/financeStoreSupabase';
 import { FileText, DollarSign, Calendar, CheckCircle, Clock, AlertCircle, History, Trash2 } from 'lucide-react';
 import type { InvoicePayment } from '../../stores/financeStoreSupabase';
+import GeneratePaymentLinkButton from '../stripe/GeneratePaymentLinkButton';
 
 export default function InvoiceManager() {
   const { invoices, fetchInvoices, recordInvoicePayment, fetchInvoicePayments, deleteInvoice, isLoading } = useFinanceStore();
@@ -97,28 +98,19 @@ export default function InvoiceManager() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Invoice #
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Issued Date
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Due Date
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Total
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Paid
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Balance
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Actions
                 </th>
               </tr>
@@ -126,53 +118,51 @@ export default function InvoiceManager() {
             <tbody className="bg-white divide-y divide-gray-200">
               {invoices.map((invoice) => (
                 <tr key={invoice.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <td className="px-3 py-4 text-sm font-medium text-gray-900">
                     {invoice.invoiceNumber || invoice.id.slice(0, 8)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 py-4">
                     {getStatusBadge(invoice.status)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(invoice.issuedDate).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(invoice.dueDate).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-3 py-4 text-sm text-gray-900">
                     ${invoice.totalAmount.toLocaleString()}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">
-                    ${invoice.paidAmount.toLocaleString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-orange-600">
+                  <td className="px-3 py-4 text-sm font-medium text-orange-600">
                     ${invoice.balance.toLocaleString()}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <div className="flex space-x-3">
-                      {invoice.status !== 'paid' && (
+                  <td className="px-3 py-4 text-sm">
+                    <div className="flex flex-col space-y-2">
+                      <div className="flex flex-wrap gap-2">
+                        {invoice.status !== 'paid' && (
+                          <button
+                            onClick={() => setSelectedInvoice(invoice.id)}
+                            className="text-xs text-blue-600 hover:text-blue-900 font-medium"
+                          >
+                            Pay
+                          </button>
+                        )}
+                        {invoice.paidAmount > 0 && (
+                          <button
+                            onClick={() => handleViewHistory(invoice.id)}
+                            className="text-xs text-green-600 hover:text-green-900"
+                          >
+                            History
+                          </button>
+                        )}
                         <button
-                          onClick={() => setSelectedInvoice(invoice.id)}
-                          className="text-blue-600 hover:text-blue-900 font-medium"
+                          onClick={() => handleDeleteInvoice(invoice.id)}
+                          className="text-xs text-red-600 hover:text-red-900"
                         >
-                          Record Payment
+                          Delete
                         </button>
+                      </div>
+                      {invoice.status !== 'paid' && invoice.status !== 'draft' && (
+                        <GeneratePaymentLinkButton
+                          invoiceId={invoice.id}
+                          existingLink={invoice.payment_link}
+                          onLinkGenerated={() => fetchInvoices()}
+                        />
                       )}
-                      {invoice.paidAmount > 0 && (
-                        <button
-                          onClick={() => handleViewHistory(invoice.id)}
-                          className="text-green-600 hover:text-green-900 flex items-center"
-                        >
-                          <History className="w-4 h-4 mr-1" />
-                          History
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handleDeleteInvoice(invoice.id)}
-                        className="text-red-600 hover:text-red-900 flex items-center"
-                        title="Delete invoice"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
                     </div>
                   </td>
                 </tr>
@@ -380,7 +370,7 @@ export default function InvoiceManager() {
                     </button>
                   </div>
                 </div>
-              ) : null;
+              ) : null
             })()}
           </div>
         </div>
