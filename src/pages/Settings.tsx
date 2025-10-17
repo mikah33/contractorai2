@@ -17,7 +17,6 @@ const Settings = () => {
 
   const [notifications, setNotifications] = useState({
     calendarReminders: true,
-    marketingEmails: false,
     securityAlerts: true
   });
 
@@ -42,7 +41,6 @@ const Settings = () => {
       setLogoUrl(profile.logo_url || null);
       setNotifications({
         calendarReminders: profile.calendar_reminders ?? true,
-        marketingEmails: profile.marketing_emails ?? false,
         securityAlerts: profile.security_alerts ?? true
       });
     }
@@ -189,7 +187,6 @@ const Settings = () => {
           address: localProfile.address,
           default_terms: localProfile.defaultTerms,
           calendar_reminders: notifications.calendarReminders,
-          marketing_emails: notifications.marketingEmails,
           security_alerts: notifications.securityAlerts,
           updated_at: new Date().toISOString()
         });
@@ -390,25 +387,6 @@ const Settings = () => {
                     <span
                       className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
                         notifications.calendarReminders ? 'translate-x-5' : 'translate-x-0'
-                      }`}
-                    />
-                  </button>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-gray-900">Marketing Emails</p>
-                    <p className="text-sm text-gray-500">Receive news and special offers</p>
-                  </div>
-                  <button
-                    onClick={() => handleNotificationChange('marketingEmails')}
-                    className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 ${
-                      notifications.marketingEmails ? 'bg-orange-600' : 'bg-gray-200'
-                    }`}
-                  >
-                    <span
-                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                        notifications.marketingEmails ? 'translate-x-5' : 'translate-x-0'
                       }`}
                     />
                   </button>

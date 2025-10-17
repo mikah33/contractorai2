@@ -209,6 +209,8 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const [tripleBeamLength, setTripleBeamLength] = useState<number | ''>('');
   const [includeFreestandingPosts, setIncludeFreestandingPosts] = useState(false);
   const [numFreestandingPosts, setNumFreestandingPosts] = useState<number | ''>('');
+  const [postSize, setPostSize] = useState<'4x4' | '6x6'>('6x6');
+  const [postHeight, setPostHeight] = useState<number | ''>('');
   const [includeLedgerBoard, setIncludeLedgerBoard] = useState(false);
   const [ledgerBoardLength, setLedgerBoardLength] = useState<number | ''>('');
 
@@ -489,26 +491,35 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       });
     }
 
-    if (includeFreestandingPosts && typeof numFreestandingPosts === 'number') {
-      const postPrice = 85;
-      const freestandingPostCost = numFreestandingPosts * postPrice;
+    if (includeFreestandingPosts && typeof numFreestandingPosts === 'number' && typeof postHeight === 'number') {
+      // Price per foot: 6x6 @ $9/ft, 4x4 @ $6/ft
+      const pricePerFoot = postSize === '6x6' ? 9 : 6;
+      const freestandingPostCost = numFreestandingPosts * postHeight * pricePerFoot;
       totalCost += freestandingPostCost;
 
       results.push({
-        label: 'Freestanding Posts (6x6)',
+        label: `Freestanding Posts (${postSize})`,
         value: numFreestandingPosts,
-        unit: 'posts',
+        unit: `posts @ ${postHeight}ft height`,
         cost: freestandingPostCost
       });
     }
 
     if (includeLedgerBoard && typeof ledgerBoardLength === 'number') {
-      const ledgerPricePerFt = 15;
+      // Ledger board matches selected joist size
+      // Pricing: 2x8 @ $2.00/ft, 2x10 @ $2.32/ft, 2x12 @ $2.89/ft
+      const ledgerPrices: Record<'2x6' | '2x8' | '2x10' | '2x12', number> = {
+        '2x6': 1.75,
+        '2x8': 2.00,
+        '2x10': 2.32,
+        '2x12': 2.89
+      };
+      const ledgerPricePerFt = ledgerPrices[joistSize];
       const ledgerBoardCost = ledgerBoardLength * ledgerPricePerFt;
       totalCost += ledgerBoardCost;
 
       results.push({
-        label: 'Ledger Board (2x12)',
+        label: `Ledger Board (${joistSize})`,
         value: ledgerBoardLength,
         unit: 'linear feet',
         cost: ledgerBoardCost
@@ -527,7 +538,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     (!includeRailing || typeof railingLength === 'number') &&
     (!includeFascia || typeof fasciaLength === 'number') &&
     (!includeTripleBeam || typeof tripleBeamLength === 'number') &&
-    (!includeFreestandingPosts || typeof numFreestandingPosts === 'number') &&
+    (!includeFreestandingPosts || (typeof numFreestandingPosts === 'number' && typeof postHeight === 'number')) &&
     (!includeLedgerBoard || typeof ledgerBoardLength === 'number');
 
   return (
@@ -1049,23 +1060,56 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
           </div>
 
           {includeFreestandingPosts && (
-            <div>
-              <label htmlFor="numFreestandingPosts" className="block text-sm font-medium text-slate-700 mb-1">
-                Number of Posts
-              </label>
-              <input
-                type="number"
-                id="numFreestandingPosts"
-                min="0"
-                step="1"
-                value={numFreestandingPosts}
-                onChange={(e) => setNumFreestandingPosts(e.target.value ? Number(e.target.value) : '')}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                placeholder="Enter number of posts"
-              />
-              <p className="mt-1 text-sm text-slate-500">
-                6x6 posts @ $85/post for freestanding deck without ledger board
-              </p>
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="postSize" className="block text-sm font-medium text-slate-700 mb-1">
+                  Post Size
+                </label>
+                <select
+                  id="postSize"
+                  value={postSize}
+                  onChange={(e) => setPostSize(e.target.value as '4x4' | '6x6')}
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                >
+                  <option value="6x6">6x6 Posts ($9 per foot)</option>
+                  <option value="4x4">4x4 Posts ($6 per foot)</option>
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="numFreestandingPosts" className="block text-sm font-medium text-slate-700 mb-1">
+                  Number of Posts
+                </label>
+                <input
+                  type="number"
+                  id="numFreestandingPosts"
+                  min="0"
+                  step="1"
+                  value={numFreestandingPosts}
+                  onChange={(e) => setNumFreestandingPosts(e.target.value ? Number(e.target.value) : '')}
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="Enter number of posts"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="postHeight" className="block text-sm font-medium text-slate-700 mb-1">
+                  Post Height (feet)
+                </label>
+                <input
+                  type="number"
+                  id="postHeight"
+                  min="0"
+                  step="0.1"
+                  value={postHeight}
+                  onChange={(e) => setPostHeight(e.target.value ? Number(e.target.value) : '')}
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="Enter post height in feet"
+                />
+                <p className="mt-1 text-sm text-slate-500">
+                  {postSize === '6x6' ? '6x6 posts @ $9/linear foot' : '4x4 posts @ $6/linear foot'}
+                </p>
+              </div>
             </div>
           )}
         </div>
@@ -1105,7 +1149,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 placeholder="Enter ledger board length"
               />
               <p className="mt-1 text-sm text-slate-500">
-                2x12 ledger board @ $15/linear foot attached to house
+                {joistSize} ledger board matches joist size (2x8 @ $2.00/ft, 2x10 @ $2.32/ft, 2x12 @ $2.89/ft)
               </p>
             </div>
           )}

@@ -275,9 +275,22 @@
 
                 <div id="freestandingSection" style="display: none;">
                     <div class="form-group">
+                        <label for="postSize">Post Size</label>
+                        <select id="postSize" onchange="updatePostPricing()">
+                            <option value="6x6" selected>6x6 Posts</option>
+                            <option value="4x4">4x4 Posts</option>
+                        </select>
+                        <span class="helper-text" id="postPricing">$9 per foot of height</span>
+                    </div>
+                    <div class="form-group">
                         <label for="numPosts">Number of Posts</label>
                         <input type="number" id="numPosts" min="0" step="1" placeholder="6">
-                        <span class="helper-text">Number of 6x6 support posts needed</span>
+                        <span class="helper-text">Number of support posts needed</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="postHeight">Post Height (feet)</label>
+                        <input type="number" id="postHeight" min="0" step="0.5" placeholder="8">
+                        <span class="helper-text">Height of each post in feet</span>
                     </div>
                 </div>
 
@@ -442,6 +455,12 @@
             section.style.display = checkbox.checked ? 'block' : 'none';
         }
 
+        function updatePostPricing() {
+            const postSize = document.getElementById('postSize').value;
+            const pricingText = postSize === '6x6' ? '$9 per foot of height' : '$6 per foot of height';
+            document.getElementById('postPricing').textContent = pricingText;
+        }
+
         function toggleLedger() {
             const checkbox = document.getElementById('includeLedger');
             const section = document.getElementById('ledgerSection');
@@ -491,9 +510,12 @@
             let freestandingCost = 0;
             const includeFreestanding = document.getElementById('includeFreestanding').checked;
             const numPosts = parseInt(document.getElementById('numPosts').value) || 0;
-            if (includeFreestanding && numPosts > 0) {
-                const postPrice = 85; // $85 per 6x6 post
-                freestandingCost = numPosts * postPrice;
+            const postHeight = parseFloat(document.getElementById('postHeight').value) || 0;
+            const postSize = document.getElementById('postSize').value;
+            if (includeFreestanding && numPosts > 0 && postHeight > 0) {
+                // Price per foot: 6x6 @ $9/ft, 4x4 @ $6/ft
+                const pricePerFoot = postSize === '6x6' ? 9 : 6;
+                freestandingCost = numPosts * postHeight * pricePerFoot;
                 totalCost += freestandingCost;
             }
 
@@ -528,6 +550,8 @@
                 cantileverCost,
                 includeFreestanding,
                 numPosts,
+                postHeight,
+                postSize,
                 freestandingCost,
                 includeLedger,
                 ledgerLength,
@@ -541,7 +565,7 @@
         function displayResults() {
             const { areaSqFeet, totalSqFt, boardsNeeded, materialName, totalCost,
                     includeCantilever, cantileverLength, cantileverCost,
-                    includeFreestanding, numPosts, freestandingCost,
+                    includeFreestanding, numPosts, postHeight, postSize, freestandingCost,
                     includeLedger, ledgerLength, ledgerCost } = calculationResults;
 
             // Update detail rows
@@ -560,9 +584,10 @@
 
             // Show/hide and update freestanding post result
             const freestandingRow = document.getElementById('freestanding-result-row');
-            if (includeFreestanding && numPosts > 0) {
+            if (includeFreestanding && numPosts > 0 && postHeight > 0) {
+                const pricePerFoot = postSize === '6x6' ? 9 : 6;
                 freestandingRow.style.display = 'flex';
-                document.getElementById('freestanding-result').textContent = `${numPosts} posts @ $85/post = $${freestandingCost.toFixed(2)}`;
+                document.getElementById('freestanding-result').textContent = `${numPosts} ${postSize} posts @ ${postHeight}ft × $${pricePerFoot}/ft = $${freestandingCost.toFixed(2)}`;
             } else {
                 freestandingRow.style.display = 'none';
             }

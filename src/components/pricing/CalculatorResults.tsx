@@ -2,6 +2,7 @@ import React from 'react';
 import { CalculationResult } from '../../types';
 import { DollarSign, Package, Info, FileText, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 interface CalculatorResultsProps {
   results: CalculationResult[];
@@ -10,6 +11,7 @@ interface CalculatorResultsProps {
 
 const CalculatorResults: React.FC<CalculatorResultsProps> = ({ results, title }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   // Filter out any items marked as isTotal to prevent double-counting
   const totalCost = results
     .filter(result => !result.isTotal)
@@ -44,10 +46,13 @@ const CalculatorResults: React.FC<CalculatorResultsProps> = ({ results, title })
 
     console.log('Generated items:', items);
 
+    // Translate the title if it's a translation key
+    const translatedTitle = title.startsWith('trades.') ? t(title) : title;
+
     // Create new estimate with simple schema fields
     const newEstimate = {
       id: generateUUID(),
-      title: `${title} Estimate`,
+      title: `${translatedTitle} Estimate`,
       clientName: '',
       projectName: '',
       items: items,
@@ -56,7 +61,7 @@ const CalculatorResults: React.FC<CalculatorResultsProps> = ({ results, title })
       taxAmount: 0,
       total: totalCost,
       status: 'draft' as const,
-      notes: `Generated from ${title} Calculator`,
+      notes: `Generated from ${translatedTitle} Calculator`,
       terms: 'Valid for 30 days from the date of issue.',
       createdAt: new Date().toISOString(),
       expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toDateString()
@@ -69,9 +74,12 @@ const CalculatorResults: React.FC<CalculatorResultsProps> = ({ results, title })
     navigate('/estimates', { state: { fromCalculator: true, calculatorData: newEstimate } });
   };
 
+  // Translate the title for display
+  const displayTitle = title.startsWith('trades.') ? t(title) : title;
+
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
-      <h3 className="text-xl font-bold text-gray-900 mb-6">{title} Results</h3>
+      <h3 className="text-xl font-bold text-gray-900 mb-6">{displayTitle} Results</h3>
       
       <div className="space-y-4">
         {results.map((result, index) => {
