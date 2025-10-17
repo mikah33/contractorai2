@@ -16,6 +16,7 @@ const Calendar = () => {
   const [view, setView] = useState<ViewType>('month');
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [showEventModal, setShowEventModal] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const { profile } = useData();
   const {
     events,
@@ -103,6 +104,21 @@ const Calendar = () => {
     setSelectedDate(date);
   };
 
+  const handleEventClick = (event: CalendarEvent, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent date click from triggering
+    console.log('🔵 Event clicked:', event);
+    console.log('🔵 Event start_date:', event.start_date);
+    console.log('🔵 Event end_date:', event.end_date);
+    console.log('🔵 Event type:', typeof event.start_date);
+    setSelectedEvent(event);
+    setShowEventModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowEventModal(false);
+    setSelectedEvent(null);
+  };
+
   const renderMonthView = () => {
     const weeks = [];
     let currentWeek = startOfWeek(currentDate);
@@ -131,9 +147,10 @@ const Calendar = () => {
               {dayEvents.slice(0, 2).map(event => (
                 <div
                   key={event.id}
+                  onClick={(e) => handleEventClick(event, e)}
                   className={`px-1 sm:px-2 py-0.5 sm:py-1 text-xs rounded-md border ${getEventColor(event.event_type)} ${
                     event.auto_generated ? 'border-blue-500' : ''
-                  } hover:opacity-75 truncate`}
+                  } hover:opacity-75 hover:shadow-md cursor-pointer truncate transition-all`}
                 >
                   <div className="flex items-center">
                     <span className="hidden sm:inline">{getStatusIcon(event.status)}</span>
@@ -187,9 +204,10 @@ const Calendar = () => {
                   .map(event => (
                     <div
                       key={event.id}
+                      onClick={(e) => handleEventClick(event, e)}
                       className={`absolute w-full p-2 rounded-md border ${getEventColor(event.event_type)} ${
                         event.auto_generated ? 'border-blue-500' : ''
-                      } hover:opacity-75`}
+                      } hover:opacity-75 hover:shadow-md cursor-pointer transition-all`}
                       style={{
                         top: `${parseISO(event.start_date).getMinutes()}%`,
                         height: '48px'
@@ -239,9 +257,10 @@ const Calendar = () => {
                 .map(event => (
                   <div
                     key={event.id}
+                    onClick={(e) => handleEventClick(event, e)}
                     className={`p-3 rounded-lg border ${getEventColor(event.event_type)} ${
                       event.auto_generated ? 'border-blue-500' : ''
-                    } hover:opacity-75`}
+                    } hover:opacity-75 hover:shadow-md cursor-pointer transition-all`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="font-medium">{event.title}</div>
@@ -254,7 +273,7 @@ const Calendar = () => {
                         </div>
                       )}
                       <div className="text-sm opacity-75 mt-1">
-                        {format(parseISO(event.start_date), 'h:mm a')} - 
+                        {format(parseISO(event.start_date), 'h:mm a')} -
                         {format(parseISO(event.end_date), 'h:mm a')}
                       </div>
                       {event.location && (
@@ -380,10 +399,11 @@ const Calendar = () => {
         </div>
       </div>
 
-      <EventModal 
+      <EventModal
         isOpen={showEventModal}
-        onClose={() => setShowEventModal(false)}
+        onClose={handleCloseModal}
         selectedDate={selectedDate || currentDate}
+        event={selectedEvent}
       />
     </div>
   );

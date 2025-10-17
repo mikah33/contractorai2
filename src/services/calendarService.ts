@@ -5,9 +5,9 @@ export interface CalendarEvent {
   title: string;
   description?: string;
   start_date: string;
-  end_date?: string;
-  event_type: 'task' | 'meeting' | 'deadline' | 'milestone' | 'project_start' | 'project_end' | 'estimate_expires' | 'custom';
-  status: 'pending' | 'completed' | 'cancelled';
+  end_date: string | null;
+  event_type: 'task' | 'meeting' | 'deadline' | 'milestone' | 'project_start' | 'project_end' | 'estimate_expires' | 'custom' | 'delivery' | 'inspection';
+  status: 'pending' | 'completed' | 'cancelled' | 'in_progress' | 'delayed';
   user_id: string;
   project_id?: string;
   estimate_id?: string;
@@ -15,6 +15,7 @@ export interface CalendarEvent {
   weather_sensitive?: boolean;
   auto_generated?: boolean;
   created_at?: string;
+  location?: string;
 }
 
 export class CalendarService {
