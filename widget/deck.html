@@ -482,7 +482,7 @@
             const includeCantilever = document.getElementById('includeCantilever').checked;
             const cantileverLength = parseFloat(document.getElementById('cantileverLength').value) || 0;
             if (includeCantilever && cantileverLength > 0) {
-                const tripleBeamPricePerFt = 45; // $45 per linear foot for 2x12 triple beam
+                const tripleBeamPricePerFt = 16; // $16 per linear foot for triple beam cantilever support
                 cantileverCost = cantileverLength * tripleBeamPricePerFt;
                 totalCost += cantileverCost;
             }
@@ -553,7 +553,7 @@
             const cantileverRow = document.getElementById('cantilever-result-row');
             if (includeCantilever && cantileverLength > 0) {
                 cantileverRow.style.display = 'flex';
-                document.getElementById('cantilever-result').textContent = `${cantileverLength}ft @ $45/ft = $${cantileverCost.toFixed(2)}`;
+                document.getElementById('cantilever-result').textContent = `${cantileverLength}ft @ $16/ft = $${cantileverCost.toFixed(2)}`;
             } else {
                 cantileverRow.style.display = 'none';
             }
