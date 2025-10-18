@@ -1,12 +1,25 @@
-import { FileDown, DollarSign, Package, Hammer, Info, Truck, Clock } from 'lucide-react';
-import { Trade } from '../../types';
+import { FileDown, DollarSign, Package, Hammer, Info, Truck, Clock, FileText } from 'lucide-react';
+import { Trade, CalculationResult } from '../../types';
+import { usePricing } from '../../contexts/PricingContext';
+import { useNavigate } from 'react-router-dom';
 
 interface PricingResultsProps {
   trade: Trade;
   specifications: Record<string, any>;
+  calculationResults?: CalculationResult[];
 }
 
-const PricingResults = ({ trade, specifications }: PricingResultsProps) => {
+const PricingResults = ({ trade, specifications, calculationResults }: PricingResultsProps) => {
+  const { saveCalculatorResults } = usePricing();
+  const navigate = useNavigate();
+
+  const handleImportToEstimate = () => {
+    if (calculationResults) {
+      saveCalculatorResults(trade.name, calculationResults);
+      navigate('/estimates');
+    }
+  };
+
   // In a real app, this would come from an API
   // We're using mock data for the demo
   const pricingData = {
@@ -59,10 +72,21 @@ const PricingResults = ({ trade, specifications }: PricingResultsProps) => {
     <div>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold text-gray-900">Pricing Results: {trade.name}</h2>
-        <button className="flex items-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <FileDown className="w-4 h-4 mr-2" />
-          Export Report
-        </button>
+        <div className="flex gap-2">
+          {calculationResults && (
+            <button
+              onClick={handleImportToEstimate}
+              className="flex items-center px-3 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+            >
+              <FileText className="w-4 h-4 mr-2" />
+              Import to New Estimate
+            </button>
+          )}
+          <button className="flex items-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <FileDown className="w-4 h-4 mr-2" />
+            Export Report
+          </button>
+        </div>
       </div>
 
       <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-6 flex justify-between items-center">

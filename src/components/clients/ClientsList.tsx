@@ -1,5 +1,7 @@
 import { Phone, Mail, MapPin, Building, Edit, Trash, Users } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Client } from '../../stores/clientsStore';
+import MapLink from '../common/MapLink';
 
 interface ClientsListProps {
   clients: Client[];
@@ -9,6 +11,8 @@ interface ClientsListProps {
 }
 
 const ClientsList: React.FC<ClientsListProps> = ({ clients, onEdit, onDelete, isLoading }) => {
+  const { t } = useTranslation();
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
@@ -49,22 +53,22 @@ const ClientsList: React.FC<ClientsListProps> = ({ clients, onEdit, onDelete, is
         <thead className="bg-gray-50">
           <tr>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Client
+              {t('clients.client')}
             </th>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Contact
+              {t('clients.contact')}
             </th>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Company
+              {t('common.company')}
             </th>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Location
+              {t('clients.location')}
             </th>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Status
+              {t('common.status')}
             </th>
             <th scope="col" className="relative px-6 py-3">
-              <span className="sr-only">Actions</span>
+              <span className="sr-only">{t('estimates.actions')}</span>
             </th>
           </tr>
         </thead>
@@ -106,14 +110,14 @@ const ClientsList: React.FC<ClientsListProps> = ({ clients, onEdit, onDelete, is
                 )}
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                {client.city || client.state ? (
-                  <div className="flex items-center text-sm text-gray-900">
-                    <MapPin className="h-3 w-3 mr-1 text-gray-400" />
-                    {[client.city, client.state].filter(Boolean).join(', ')}
-                  </div>
-                ) : (
-                  <span className="text-sm text-gray-400">—</span>
-                )}
+                {(() => {
+                  const fullAddress = [client.address, client.city, client.state, client.zip].filter(Boolean).join(', ');
+                  return fullAddress ? (
+                    <MapLink address={fullAddress} className="text-sm" />
+                  ) : (
+                    <span className="text-sm text-gray-400">—</span>
+                  );
+                })()}
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(client.status)}`}>

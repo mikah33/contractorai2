@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { Download, FileText, BarChart2, PieChart, Calendar, Filter, RefreshCw } from 'lucide-react';
+import { useFinanceStore } from '../../stores/financeStoreSupabase';
 
 interface ReportGeneratorProps {
   onGenerateReport: (options: ReportOptions) => void;
 }
 
 interface ReportOptions {
-  type: 'comprehensive'; // Changed to single comprehensive report
+  type: 'whole' | 'project'; // whole = all expenses, project = specific project
   dateRange: {
     start: string;
     end: string;
@@ -19,8 +20,10 @@ interface ReportOptions {
 }
 
 const ReportGenerator: React.FC<ReportGeneratorProps> = ({ onGenerateReport }) => {
+  const { projects } = useFinanceStore();
+
   const [options, setOptions] = useState<ReportOptions>({
-    type: 'comprehensive',
+    type: 'whole',
     dateRange: {
       start: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
       end: new Date().toISOString().split('T')[0]
@@ -42,19 +45,37 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ onGenerateReport }) =
     }, 1500);
   };
 
-  // Single comprehensive report that includes all sections
-  const reportDescription = {
-    title: 'Comprehensive Financial Report',
-    icon: <FileText className="h-5 w-5" />,
-    sections: [
-      'Profit & Loss Statement',
-      'Expense Summary by Category',
-      'Project Profitability Analysis',
-      'Tax Summary',
-      'Client Statements',
-      'Cash Flow Analysis'
-    ]
+  // Report type descriptions
+  const reportTypes = {
+    whole: {
+      title: 'Whole Company Report',
+      icon: <BarChart2 className="h-5 w-5" />,
+      description: 'All expenses from Finance tab',
+      sections: [
+        'All Receipts & Expenses',
+        'Budget Items & Tracking',
+        'Recurring Expenses',
+        'Payments & Income',
+        'Expense Summary by Category',
+        'Project Profitability'
+      ]
+    },
+    project: {
+      title: 'Project-Based Report',
+      icon: <FileText className="h-5 w-5" />,
+      description: 'Expenses filtered by specific project',
+      sections: [
+        'Project Expenses Only',
+        'Project Budget vs Actual',
+        'Project Profitability',
+        'Project Timeline',
+        'Project Payments',
+        'Project Cost Breakdown'
+      ]
+    }
   };
+
+  const currentReport = reportTypes[options.type];
 
   return (
     <div className="bg-white rounded-lg shadow-md">
@@ -66,26 +87,62 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ onGenerateReport }) =
         <div className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Report Type</label>
-            <div className="border border-blue-500 bg-blue-50 rounded-lg p-4">
-              <div className="flex items-center mb-3">
-                <div className="p-2 rounded-full bg-blue-100 mr-3">
-                  {reportDescription.icon}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {Object.entries(reportTypes).map(([key, report]) => (
+                <div
+                  key={key}
+                  onClick={() => setOptions({...options, type: key as 'whole' | 'project'})}
+                  className={`cursor-pointer border rounded-lg p-4 transition-all ${
+                    options.type === key
+                      ? 'border-blue-500 bg-blue-50 shadow-md'
+                      : 'border-gray-300 hover:border-blue-300 hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="flex items-center mb-2">
+                    <div className={`p-2 rounded-full mr-3 ${
+                      options.type === key ? 'bg-blue-100' : 'bg-gray-100'
+                    }`}>
+                      {report.icon}
+                    </div>
+                    <h3 className="text-base font-medium text-gray-900">{report.title}</h3>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-2">{report.description}</p>
+                  <ul className="space-y-1 text-xs text-gray-700">
+                    {report.sections.slice(0, 3).map((section, idx) => (
+                      <li key={idx} className="flex items-center">
+                        <svg className="w-3 h-3 text-green-500 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                        {section}
+                      </li>
+                    ))}
+                    <li className="text-gray-500 italic ml-4">...and {report.sections.length - 3} more</li>
+                  </ul>
                 </div>
-                <h3 className="text-lg font-medium text-gray-900">{reportDescription.title}</h3>
-              </div>
-              <p className="text-sm text-gray-600 mb-2">This comprehensive report includes:</p>
-              <ul className="grid grid-cols-2 gap-2 text-sm text-gray-700">
-                {reportDescription.sections.map((section, idx) => (
-                  <li key={idx} className="flex items-center">
-                    <svg className="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                    {section}
-                  </li>
-                ))}
-              </ul>
+              ))}
             </div>
           </div>
+
+          {options.type === 'project' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Select Project</label>
+              <select
+                value={options.projectId || ''}
+                onChange={(e) => setOptions({...options, projectId: e.target.value})}
+                className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              >
+                <option value="">-- Select a Project --</option>
+                {projects.map(project => (
+                  <option key={project.id} value={project.id}>
+                    {project.name}
+                  </option>
+                ))}
+              </select>
+              {projects.length === 0 && (
+                <p className="mt-2 text-sm text-gray-500">No projects available. Create a project first.</p>
+              )}
+            </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>

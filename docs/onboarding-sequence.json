@@ -1,0 +1,287 @@
+{
+  "onboardingSequence": {
+    "metadata": {
+      "version": "1.0.0",
+      "totalSteps": 16,
+      "estimatedDuration": "3-5 minutes",
+      "canSkip": true,
+      "showProgress": true
+    },
+    "steps": [
+      {
+        "stepNumber": 1,
+        "id": "welcome-intro",
+        "page": "dashboard",
+        "category": "navigation",
+        "element": null,
+        "title": "Welcome to ContractorAI",
+        "description": "Your all-in-one platform for managing contracting projects, clients, and finances.",
+        "position": "center-modal",
+        "action": "START_TOUR",
+        "nextTrigger": "button-click",
+        "screenshot": "welcome-modal.png"
+      },
+      {
+        "stepNumber": 2,
+        "id": "dashboard-overview",
+        "page": "dashboard",
+        "category": "navigation",
+        "element": "nav[class*='flex px-6']",
+        "selector": "nav.flex.px-6",
+        "title": "Your Command Center",
+        "description": "The dashboard shows your active projects, pending estimates, revenue, and upcoming deadlines at a glance.",
+        "position": "bottom",
+        "highlightArea": "dashboard-stats",
+        "action": "HIGHLIGHT_STATS",
+        "nextTrigger": "auto-3s",
+        "screenshot": "dashboard-stats.png"
+      },
+      {
+        "stepNumber": 3,
+        "id": "sidebar-navigation",
+        "page": "dashboard",
+        "category": "navigation",
+        "element": "nav.mt-5.px-2",
+        "selector": "aside nav",
+        "title": "Navigate Your Workspace",
+        "description": "Use the sidebar to access all features: Dashboard, Projects, Clients, Estimates, Calendar, Finance, and more.",
+        "position": "right",
+        "highlightArea": "sidebar",
+        "action": "PULSE_SIDEBAR",
+        "nextTrigger": "button-click",
+        "screenshot": "sidebar-nav.png"
+      },
+      {
+        "stepNumber": 4,
+        "id": "clients-intro",
+        "page": "clients",
+        "category": "core-feature",
+        "element": "button[class*='bg-blue-600']",
+        "selector": "button:has-text('New Client')",
+        "title": "Build Your Client Base",
+        "description": "Add and manage client information including contact details, company, and communication history.",
+        "position": "bottom-right",
+        "highlightArea": "add-client-button",
+        "action": "NAVIGATE_CLIENTS",
+        "nextTrigger": "button-click",
+        "screenshot": "clients-page.png"
+      },
+      {
+        "stepNumber": 5,
+        "id": "projects-intro",
+        "page": "projects",
+        "category": "core-feature",
+        "element": "button:contains('New Project')",
+        "selector": "button[class*='bg-blue-600']",
+        "title": "Organize Your Work",
+        "description": "Track projects with tasks, team members, budgets, and progress updates all in one place.",
+        "position": "bottom",
+        "highlightArea": "project-grid",
+        "action": "NAVIGATE_PROJECTS",
+        "nextTrigger": "button-click",
+        "screenshot": "projects-page.png"
+      },
+      {
+        "stepNumber": 6,
+        "id": "project-details",
+        "page": "projects",
+        "category": "core-feature",
+        "element": "div[class*='bg-white rounded-xl']",
+        "selector": ".project-card:first-child",
+        "title": "Deep Project Management",
+        "description": "Click any project to view tasks, team, progress photos, comments, and linked estimates.",
+        "position": "left",
+        "highlightArea": "project-card",
+        "action": "SHOW_PROJECT_TABS",
+        "nextTrigger": "button-click",
+        "screenshot": "project-details-modal.png"
+      },
+      {
+        "stepNumber": 7,
+        "id": "calculator-intro",
+        "page": "pricing",
+        "category": "core-feature",
+        "element": "div[class*='grid']",
+        "selector": ".trade-selector",
+        "title": "Quick Price Estimates",
+        "description": "Use specialized calculators for roofing, electrical, plumbing, and 15+ other trades to generate accurate quotes.",
+        "position": "top",
+        "highlightArea": "calculator-grid",
+        "action": "NAVIGATE_PRICING",
+        "nextTrigger": "button-click",
+        "screenshot": "pricing-calculator.png"
+      },
+      {
+        "stepNumber": 8,
+        "id": "estimates-intro",
+        "page": "estimates",
+        "category": "core-feature",
+        "element": "button:contains('New Estimate')",
+        "selector": "button[class*='bg-blue-600']",
+        "title": "Professional Proposals",
+        "description": "Create detailed estimates with line items, tax calculations, and custom branding to send to clients.",
+        "position": "bottom",
+        "highlightArea": "estimate-editor",
+        "action": "NAVIGATE_ESTIMATES",
+        "nextTrigger": "button-click",
+        "screenshot": "estimates-page.png"
+      },
+      {
+        "stepNumber": 9,
+        "id": "estimate-workflow",
+        "page": "estimates",
+        "category": "advanced",
+        "element": "div[class*='flex items-center gap-3']",
+        "selector": ".estimate-actions",
+        "title": "Estimate to Invoice",
+        "description": "Preview, send to clients, mark as approved, then convert estimates into invoices with one click.",
+        "position": "top-right",
+        "highlightArea": "estimate-actions",
+        "action": "SHOW_ESTIMATE_FLOW",
+        "nextTrigger": "button-click",
+        "screenshot": "estimate-workflow.png"
+      },
+      {
+        "stepNumber": 10,
+        "id": "calendar-intro",
+        "page": "calendar",
+        "category": "core-feature",
+        "element": "button:contains('Add Event')",
+        "selector": "button[class*='bg-blue-600']",
+        "title": "Schedule Everything",
+        "description": "Track appointments, deadlines, and tasks in one calendar view with reminders.",
+        "position": "bottom-left",
+        "highlightArea": "calendar-view",
+        "action": "NAVIGATE_CALENDAR",
+        "nextTrigger": "button-click",
+        "screenshot": "calendar-page.png"
+      },
+      {
+        "stepNumber": 11,
+        "id": "finance-intro",
+        "page": "finance",
+        "category": "core-feature",
+        "element": "div[class*='grid grid-cols']",
+        "selector": ".finance-dashboard",
+        "title": "Financial Control",
+        "description": "Monitor income, track expenses, manage invoices, and analyze cash flow to keep your business profitable.",
+        "position": "top",
+        "highlightArea": "finance-summary",
+        "action": "NAVIGATE_FINANCE",
+        "nextTrigger": "button-click",
+        "screenshot": "finance-page.png"
+      },
+      {
+        "stepNumber": 12,
+        "id": "invoice-management",
+        "page": "finance",
+        "category": "advanced",
+        "element": "div[class*='tabs']",
+        "selector": ".finance-tabs",
+        "title": "Track Payments",
+        "description": "Create invoices from estimates, monitor payment status, and send reminders for overdue invoices.",
+        "position": "left",
+        "highlightArea": "invoice-tab",
+        "action": "SHOW_INVOICE_TAB",
+        "nextTrigger": "button-click",
+        "screenshot": "invoices-tab.png"
+      },
+      {
+        "stepNumber": 13,
+        "id": "expense-tracking",
+        "page": "finance",
+        "category": "advanced",
+        "element": "button:contains('Add Expense')",
+        "selector": "button[class*='expense']",
+        "title": "Expense Management",
+        "description": "Log materials, labor, and overhead costs to track profitability per project and overall business health.",
+        "position": "right",
+        "highlightArea": "expense-section",
+        "action": "SHOW_EXPENSE_TAB",
+        "nextTrigger": "button-click",
+        "screenshot": "expenses-tab.png"
+      },
+      {
+        "stepNumber": 14,
+        "id": "team-management",
+        "page": "employees",
+        "category": "advanced",
+        "element": "button:contains('Add Employee')",
+        "selector": "button[class*='bg-blue-600']",
+        "title": "Manage Your Team",
+        "description": "Add team members, assign them to projects, and track their roles and contact information.",
+        "position": "bottom",
+        "highlightArea": "employee-list",
+        "action": "NAVIGATE_EMPLOYEES",
+        "nextTrigger": "button-click",
+        "screenshot": "employees-page.png"
+      },
+      {
+        "stepNumber": 15,
+        "id": "settings-intro",
+        "page": "settings",
+        "category": "advanced",
+        "element": "div[class*='tabs']",
+        "selector": ".settings-tabs",
+        "title": "Customize Your Experience",
+        "description": "Configure your company profile, branding, default terms, and notification preferences.",
+        "position": "top",
+        "highlightArea": "settings-panel",
+        "action": "NAVIGATE_SETTINGS",
+        "nextTrigger": "button-click",
+        "screenshot": "settings-page.png"
+      },
+      {
+        "stepNumber": 16,
+        "id": "completion",
+        "page": "dashboard",
+        "category": "navigation",
+        "element": null,
+        "title": "You're All Set!",
+        "description": "Start by adding your first client or project. Access this tour anytime from Settings > Help.",
+        "position": "center-modal",
+        "action": "COMPLETE_TOUR",
+        "nextTrigger": "button-click",
+        "screenshot": "completion-modal.png"
+      }
+    ],
+    "progressGroups": [
+      {
+        "name": "Getting Started",
+        "steps": [1, 2, 3],
+        "description": "Learn the basics"
+      },
+      {
+        "name": "Core Workflows",
+        "steps": [4, 5, 6, 7, 8, 9, 10, 11],
+        "description": "Master daily tasks"
+      },
+      {
+        "name": "Advanced Features",
+        "steps": [12, 13, 14, 15],
+        "description": "Optimize your process"
+      }
+    ],
+    "userActions": {
+      "skip": {
+        "enabled": true,
+        "showReminder": true,
+        "reminderText": "You can restart this tour anytime from Settings"
+      },
+      "previous": {
+        "enabled": true,
+        "allowFrom": 2
+      },
+      "restart": {
+        "enabled": true,
+        "location": "settings-page"
+      }
+    },
+    "analytics": {
+      "trackCompletion": true,
+      "trackStepViews": true,
+      "trackSkips": true,
+      "trackDropoff": true
+    }
+  }
+}

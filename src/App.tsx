@@ -4,6 +4,7 @@ import Header from './components/layout/Header';
 import Sidebar from './components/layout/Sidebar';
 import Dashboard from './pages/Dashboard';
 import PricingCalculator from './pages/PricingCalculator';
+import CalculatorWidgets from './pages/CalculatorWidgets';
 import FinanceTracker from './pages/FinanceTracker';
 import EstimateGenerator from './pages/EstimateGenerator';
 import ProjectManager from './pages/ProjectManager';
@@ -11,20 +12,39 @@ import Calendar from './pages/Calendar';
 import AdAnalyzer from './pages/AdAnalyzer';
 import Settings from './pages/Settings';
 import Clients from './pages/Clients';
+import EmployeesManager from './pages/EmployeesManager';
+import AdAccountsSetup from './pages/AdAccountsSetup';
+import AdOAuthCallback from './pages/AdOAuthCallback';
+import MetaOAuthCallback from './pages/MetaOAuthCallback';
+import AnalyticsDashboard from './pages/AnalyticsDashboard';
+import Subscriptions from './pages/Subscriptions';
+import ResetPassword from './pages/ResetPassword';
 import LoginPage from './pages/auth/LoginPage';
 import SignupPage from './pages/auth/SignupPage';
 import { PricingProvider } from './contexts/PricingContext';
 import { ProjectProvider } from './contexts/ProjectContext';
+import { DataProvider } from './contexts/DataContext';
 import { useAuthStore } from './stores/authStore';
+import { useAppInitialization } from './hooks/useAppInitialization';
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, initialized } = useAuthStore();
+  const { isInitialized: dataInitialized, initError } = useAppInitialization();
 
-  if (!initialized) {
+  // Show loading while auth or data initializes
+  if (!initialized || (user && !dataInitialized)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">
+            {!initialized ? 'Checking authentication...' : 'Loading your data...'}
+          </p>
+          {initError && (
+            <p className="text-red-500 text-sm mt-2">Error: {initError}</p>
+          )}
+        </div>
       </div>
     );
   }
@@ -42,9 +62,10 @@ function App() {
 
   // Show main app when user is logged in
   return (
-    <div className="flex h-screen bg-gray-50">
-      <PricingProvider>
-        <ProjectProvider>
+    <DataProvider>
+      <div className="flex h-screen bg-gray-50">
+        <PricingProvider>
+          <ProjectProvider>
           <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
           
           <div className="flex flex-col flex-1 overflow-hidden">
@@ -54,20 +75,29 @@ function App() {
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/pricing" element={<PricingCalculator />} />
+                <Route path="/calculator-widgets" element={<CalculatorWidgets />} />
                 <Route path="/finance" element={<FinanceTracker />} />
                 <Route path="/estimates" element={<EstimateGenerator />} />
                 <Route path="/projects" element={<ProjectManager />} />
                 <Route path="/clients" element={<Clients />} />
+                <Route path="/employees" element={<EmployeesManager />} />
                 <Route path="/calendar" element={<Calendar />} />
                 <Route path="/ad-analyzer" element={<AdAnalyzer />} />
+                <Route path="/ad-accounts" element={<AdAccountsSetup />} />
+                <Route path="/ad-oauth-callback" element={<AdOAuthCallback />} />
+                <Route path="/meta-oauth-callback" element={<MetaOAuthCallback />} />
+                <Route path="/analytics" element={<AnalyticsDashboard />} />
+                <Route path="/subscriptions" element={<Subscriptions />} />
                 <Route path="/settings" element={<Settings />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </main>
           </div>
         </ProjectProvider>
       </PricingProvider>
-    </div>
+      </div>
+    </DataProvider>
   );
 }
 

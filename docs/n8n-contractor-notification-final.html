@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Estimate Response Notification</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      background-color: #f4f7fa;
+    }
+    .email-wrapper {
+      background-color: #f4f7fa;
+      padding: 50px 20px;
+    }
+    .email-container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+    }
+    .header-accepted {
+      background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+      padding: 50px 40px;
+      text-align: center;
+    }
+    .header-declined {
+      background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
+      padding: 50px 40px;
+      text-align: center;
+    }
+    .header-icon {
+      font-size: 72px;
+      margin-bottom: 20px;
+    }
+    .header-title {
+      margin: 0;
+      color: #ffffff;
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+    .header-subtitle {
+      margin: 12px 0 0;
+      color: rgba(255, 255, 255, 0.95);
+      font-size: 17px;
+      font-weight: 400;
+    }
+    .content {
+      padding: 45px 40px;
+    }
+    .alert-accepted {
+      background-color: #f0fdf4;
+      border-left: 4px solid #48bb78;
+      border-radius: 8px;
+      margin-bottom: 35px;
+      padding: 20px 25px;
+    }
+    .alert-declined {
+      background-color: #fef2f2;
+      border-left: 4px solid #e53e3e;
+      border-radius: 8px;
+      margin-bottom: 35px;
+      padding: 20px 25px;
+    }
+    .alert-text-accepted {
+      margin: 0;
+      font-size: 15px;
+      color: #065f46;
+      line-height: 1.6;
+      font-weight: 600;
+    }
+    .alert-text-declined {
+      margin: 0;
+      font-size: 15px;
+      color: #991b1b;
+      line-height: 1.6;
+      font-weight: 600;
+    }
+    .section-title {
+      margin: 0 0 20px;
+      font-size: 20px;
+      color: #1a202c;
+      font-weight: 700;
+    }
+    .info-card {
+      background-color: #f9fafb;
+      border-radius: 12px;
+      margin-bottom: 30px;
+      overflow: hidden;
+      padding: 25px;
+    }
+    .info-row {
+      padding: 12px 0;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .info-row:last-child {
+      border-bottom: none;
+    }
+    .info-label {
+      margin: 0 0 5px;
+      font-size: 13px;
+      color: #6b7280;
+      font-weight: 600;
+    }
+    .info-value {
+      margin: 0;
+      font-size: 16px;
+      color: #111827;
+    }
+    .info-value-bold {
+      margin: 0;
+      font-size: 16px;
+      color: #111827;
+      font-weight: 600;
+    }
+    .info-value-mono {
+      margin: 0;
+      font-size: 16px;
+      color: #111827;
+      font-family: monospace;
+    }
+    .status-badge-accepted {
+      display: inline-block;
+      padding: 6px 14px;
+      background-color: #48bb78;
+      color: #ffffff;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .status-badge-declined {
+      display: inline-block;
+      padding: 6px 14px;
+      background-color: #e53e3e;
+      color: #ffffff;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .divider {
+      height: 1px;
+      background: linear-gradient(to right, transparent, #cbd5e0, transparent);
+      margin: 35px 0;
+    }
+    .next-steps-title {
+      margin: 0 0 20px;
+      font-size: 18px;
+      color: #1a202c;
+      font-weight: 700;
+    }
+    .next-steps-list {
+      margin: 0 0 30px;
+      padding-left: 20px;
+      color: #4a5568;
+      line-height: 1.8;
+    }
+    .next-steps-list li {
+      margin-bottom: 8px;
+    }
+    .button-container {
+      text-align: center;
+      margin: 30px 0;
+    }
+    .btn {
+      display: inline-block;
+      padding: 16px 32px;
+      color: #ffffff;
+      text-decoration: none;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 15px;
+      margin: 0 8px;
+    }
+    .btn-email {
+      background-color: #2c5282;
+      box-shadow: 0 4px 12px rgba(44, 82, 130, 0.4);
+    }
+    .btn-dashboard {
+      background-color: #718096;
+      box-shadow: 0 4px 12px rgba(113, 128, 150, 0.4);
+    }
+    .footer {
+      border-top: 2px solid #e2e8f0;
+      padding-top: 25px;
+      margin-top: 40px;
+      text-align: center;
+    }
+    .footer-text {
+      margin: 0 0 8px;
+      font-size: 13px;
+      color: #6b7280;
+      line-height: 1.6;
+    }
+    .footer-small {
+      margin: 0;
+      font-size: 12px;
+      color: #a0aec0;
+      line-height: 1.5;
+    }
+    .email-footer {
+      max-width: 600px;
+      margin: 25px auto 0;
+      text-align: center;
+      padding: 0 20px;
+    }
+    .email-footer-text {
+      margin: 0;
+      font-size: 12px;
+      color: #a0aec0;
+      line-height: 1.6;
+    }
+    a {
+      color: #2c5282;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="email-wrapper">
+    <div class="email-container">
+
+      <!-- Header -->
+      <div class="header-{{ $json.body.accepted ? 'accepted' : 'declined' }}">
+        <div class="header-icon">{{ $json.body.accepted ? '✅' : '❌' }}</div>
+        <h1 class="header-title">Estimate {{ $json.body.accepted ? 'Accepted!' : 'Declined' }}</h1>
+        <p class="header-subtitle">{{ $json.body.accepted ? 'Great news - your customer has approved the estimate' : 'Customer has declined this estimate' }}</p>
+      </div>
+
+      <!-- Content -->
+      <div class="content">
+
+        <!-- Alert Box -->
+        <div class="alert-{{ $json.body.accepted ? 'accepted' : 'declined' }}">
+          <p class="alert-text-{{ $json.body.accepted ? 'accepted' : 'declined' }}">
+            {{ $json.body.accepted ? '🎉 Customer has accepted your estimate and is ready to proceed!' : '⚠️ Customer has declined this estimate. Consider following up to understand their concerns.' }}
+          </p>
+        </div>
+
+        <!-- Customer Information -->
+        <h2 class="section-title">Customer Information</h2>
+
+        <div class="info-card">
+          <div class="info-row">
+            <p class="info-label">Customer Name</p>
+            <p class="info-value-bold">{{ $json.body.customerName }}</p>
+          </div>
+          <div class="info-row">
+            <p class="info-label">Email Address</p>
+            <p class="info-value">
+              <a href="mailto:{{ $json.body.customerEmail }}">{{ $json.body.customerEmail }}</a>
+            </p>
+          </div>
+          <div class="info-row">
+            <p class="info-label">Estimate ID</p>
+            <p class="info-value-mono">{{ $json.body.estimateId }}</p>
+          </div>
+          <div class="info-row">
+            <p class="info-label">Response Status</p>
+            <p class="info-value">
+              <span class="status-badge-{{ $json.body.accepted ? 'accepted' : 'declined' }}">
+                {{ $json.body.accepted ? 'ACCEPTED' : 'DECLINED' }}
+              </span>
+            </p>
+          </div>
+          <div class="info-row">
+            <p class="info-label">Responded At</p>
+            <p class="info-value">{{ $json.body.respondedAt }}</p>
+          </div>
+        </div>
+
+        <!-- Divider -->
+        <div class="divider"></div>
+
+        <!-- Next Steps -->
+        <h3 class="next-steps-title">{{ $json.body.accepted ? '✓ Recommended Next Steps' : '💡 Suggested Actions' }}</h3>
+
+        <ul class="next-steps-list">
+          <li><strong>{{ $json.body.accepted ? 'Contact the customer' : 'Follow up' }}</strong> {{ $json.body.accepted ? 'to schedule a start date' : 'with the customer to understand their concerns' }}</li>
+          <li><strong>{{ $json.body.accepted ? 'Review project details' : 'Ask' }}</strong> {{ $json.body.accepted ? 'and materials needed' : 'if they would like to discuss alternative options or pricing' }}</li>
+          <li><strong>{{ $json.body.accepted ? 'Convert estimate to invoice' : 'Keep estimate on file' }}</strong> {{ $json.body.accepted ? 'when ready to begin' : 'in case they reconsider' }}</li>
+          <li><strong>{{ $json.body.accepted ? 'Begin work' : 'Request feedback' }}</strong> {{ $json.body.accepted ? 'as scheduled' : 'to improve future estimates' }}</li>
+        </ul>
+
+        <!-- Action Buttons -->
+        <div class="button-container">
+          <a href="mailto:{{ $json.body.customerEmail }}" class="btn btn-email">📧 Email Customer</a>
+          <a href="https://contractorai.work/estimates" class="btn btn-dashboard">📋 View in Dashboard</a>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+          <p class="footer-text">This notification was automatically generated by ContractorAI</p>
+          <p class="footer-small">Estimate ID: {{ $json.body.estimateId }}</p>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Email Footer -->
+    <div class="email-footer">
+      <p class="email-footer-text">
+        You're receiving this because you're set as the contractor notification email.<br>
+        Update your notification preferences in ContractorAI Settings.
+      </p>
+    </div>
+
+  </div>
+</body>
+</html>

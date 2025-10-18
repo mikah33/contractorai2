@@ -23,3 +23,12 @@ dist-ssr
 *.sln
 *.sw?
 .env
+docs/NETLIFY-ENV-VARS.md
+
+# Test files
+*.test.html
+debug-*.html
+setup-*.html
+test-*.html
+.env
+scripts/apply-client-columns.ts

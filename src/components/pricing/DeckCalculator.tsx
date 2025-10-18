@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Grid } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { CalculatorEstimateHeader } from '../calculators/CalculatorEstimateHeader';
 
 type DeckingType = {
   id: string;
@@ -178,28 +180,139 @@ interface BoardOption {
 }
 
 const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
+  const { t } = useTranslation();
   const [inputType, setInputType] = useState<'dimensions' | 'area'>('dimensions');
   const [length, setLength] = useState<number | ''>('');
   const [width, setWidth] = useState<number | ''>('');
   const [area, setArea] = useState<number | ''>('');
-  const [heightAboveGrade, setHeightAboveGrade] = useState<number | ''>('');
   const [joistsSpacing, setJoistsSpacing] = useState<12 | 16>(16);
   const [joistSize, setJoistSize] = useState<'2x6' | '2x8' | '2x10' | '2x12'>('2x10');
   const [beamSpan, setBeamSpan] = useState<number | ''>('');
-  const [stairRun, setStairRun] = useState<10 | 12>(10);
   const [includeStairs, setIncludeStairs] = useState(false);
+  const [numberOfStaircases, setNumberOfStaircases] = useState<number>(1);
+  const [staircases, setStaircases] = useState<Array<{
+    width: number;
+    heightAboveGrade: number;
+    stairRun: 10 | 12;
+  }>>([{ width: 36, heightAboveGrade: 0, stairRun: 10 }]);
   const [includeCantilever, setIncludeCantilever] = useState(false);
   const [cantileverLength, setCantileverLength] = useState<number | ''>('');
   const [deckingType, setDeckingType] = useState<string>('5/4-deck');
   const [customDeckingWidth, setCustomDeckingWidth] = useState<number | ''>('');
   const [customDeckingSpacing, setCustomDeckingSpacing] = useState<number | ''>('');
-  const [stairWidth, setStairWidth] = useState<number | ''>('');
   const [includeRailing, setIncludeRailing] = useState(false);
   const [railingType, setRailingType] = useState<'pt' | 'trex'>('pt');
   const [railingLength, setRailingLength] = useState<number | ''>('');
   const [includeFascia, setIncludeFascia] = useState(false);
   const [fasciaType, setFasciaType] = useState<'pt' | 'azek' | 'metal'>('pt');
   const [fasciaLength, setFasciaLength] = useState<number | ''>('');
+  const [includeTripleBeam, setIncludeTripleBeam] = useState(false);
+  const [tripleBeamLength, setTripleBeamLength] = useState<number | ''>('');
+  const [includeFreestandingPosts, setIncludeFreestandingPosts] = useState(false);
+  const [numFreestandingPosts, setNumFreestandingPosts] = useState<number | ''>('');
+  const [postSize, setPostSize] = useState<'4x4' | '6x6'>('6x6');
+  const [postHeight, setPostHeight] = useState<number | ''>('');
+  const [includeLedgerBoard, setIncludeLedgerBoard] = useState(false);
+  const [ledgerBoardLength, setLedgerBoardLength] = useState<number | ''>('');
+
+  // Gather all current calculator inputs for saving
+  const getCurrentInputs = () => ({
+    inputType,
+    length,
+    width,
+    area,
+    joistsSpacing,
+    joistSize,
+    beamSpan,
+    includeStairs,
+    numberOfStaircases,
+    staircases,
+    includeCantilever,
+    cantileverLength,
+    deckingType,
+    customDeckingWidth,
+    customDeckingSpacing,
+    includeRailing,
+    railingType,
+    railingLength,
+    includeFascia,
+    fasciaType,
+    fasciaLength,
+    includeTripleBeam,
+    tripleBeamLength,
+    includeFreestandingPosts,
+    numFreestandingPosts,
+    postSize,
+    postHeight,
+    includeLedgerBoard,
+    ledgerBoardLength
+  });
+
+  // Load saved estimate inputs
+  const handleLoadEstimate = (inputs: Record<string, any>) => {
+    setInputType(inputs.inputType || 'dimensions');
+    setLength(inputs.length ?? '');
+    setWidth(inputs.width ?? '');
+    setArea(inputs.area ?? '');
+    setJoistsSpacing(inputs.joistsSpacing || 16);
+    setJoistSize(inputs.joistSize || '2x10');
+    setBeamSpan(inputs.beamSpan ?? '');
+    setIncludeStairs(inputs.includeStairs || false);
+    setNumberOfStaircases(inputs.numberOfStaircases || 1);
+    setStaircases(inputs.staircases || [{ width: 36, heightAboveGrade: 0, stairRun: 10 }]);
+    setIncludeCantilever(inputs.includeCantilever || false);
+    setCantileverLength(inputs.cantileverLength ?? '');
+    setDeckingType(inputs.deckingType || '5/4-deck');
+    setCustomDeckingWidth(inputs.customDeckingWidth ?? '');
+    setCustomDeckingSpacing(inputs.customDeckingSpacing ?? '');
+    setIncludeRailing(inputs.includeRailing || false);
+    setRailingType(inputs.railingType || 'pt');
+    setRailingLength(inputs.railingLength ?? '');
+    setIncludeFascia(inputs.includeFascia || false);
+    setFasciaType(inputs.fasciaType || 'pt');
+    setFasciaLength(inputs.fasciaLength ?? '');
+    setIncludeTripleBeam(inputs.includeTripleBeam || false);
+    setTripleBeamLength(inputs.tripleBeamLength ?? '');
+    setIncludeFreestandingPosts(inputs.includeFreestandingPosts || false);
+    setNumFreestandingPosts(inputs.numFreestandingPosts ?? '');
+    setPostSize(inputs.postSize || '6x6');
+    setPostHeight(inputs.postHeight ?? '');
+    setIncludeLedgerBoard(inputs.includeLedgerBoard || false);
+    setLedgerBoardLength(inputs.ledgerBoardLength ?? '');
+  };
+
+  // Reset all inputs to defaults for new estimate
+  const handleNewEstimate = () => {
+    setInputType('dimensions');
+    setLength('');
+    setWidth('');
+    setArea('');
+    setJoistsSpacing(16);
+    setJoistSize('2x10');
+    setBeamSpan('');
+    setIncludeStairs(false);
+    setNumberOfStaircases(1);
+    setStaircases([{ width: 36, heightAboveGrade: 0, stairRun: 10 }]);
+    setIncludeCantilever(false);
+    setCantileverLength('');
+    setDeckingType('5/4-deck');
+    setCustomDeckingWidth('');
+    setCustomDeckingSpacing('');
+    setIncludeRailing(false);
+    setRailingType('pt');
+    setRailingLength('');
+    setIncludeFascia(false);
+    setFasciaType('pt');
+    setFasciaLength('');
+    setIncludeTripleBeam(false);
+    setTripleBeamLength('');
+    setIncludeFreestandingPosts(false);
+    setNumFreestandingPosts('');
+    setPostSize('6x6');
+    setPostHeight('');
+    setIncludeLedgerBoard(false);
+    setLedgerBoardLength('');
+  };
 
   const calculateOptimalBoardLength = (deckWidth: number) => {
     const availableLengths = [12, 16, 20];
@@ -369,53 +482,63 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       });
     }
 
-    if (includeStairs && typeof heightAboveGrade === 'number' && typeof stairWidth === 'number') {
-      const totalRise = heightAboveGrade;
-      const riserHeight = 7.5;
-      const numRisers = Math.ceil(totalRise / riserHeight);
-      const actualRiserHeight = totalRise / numRisers;
-      const numTreads = numRisers - 1;
-      const totalRun = numTreads * stairRun;
-      const numStringers = Math.max(3, Math.ceil(stairWidth / joistsSpacing));
-      const stringerLength = Math.sqrt(Math.pow(totalRun, 2) + Math.pow(totalRise, 2)) / 12;
-      const optimalStringerLength = calculateOptimalBoardLength(stringerLength);
-      
-      const stringerCost = numStringers * materialPrices['2x12'][optimalStringerLength.toString()];
-      totalCost += stringerCost;
+    if (includeStairs) {
+      // Loop through all staircases
+      staircases.forEach((staircase, index) => {
+        const { width: stairWidth, heightAboveGrade, stairRun } = staircase;
 
-      results.push(
-        {
-          label: 'Number of Steps',
-          value: numTreads,
-          unit: 'steps'
-        },
-        {
-          label: 'Riser Height',
-          value: Number(actualRiserHeight.toFixed(2)),
-          unit: 'inches'
-        },
-        {
-          label: 'Total Stair Run',
-          value: Number(totalRun.toFixed(2)),
-          unit: 'inches'
-        },
-        {
-          label: 'Stair Width',
-          value: stairWidth,
-          unit: 'inches'
-        },
-        {
-          label: `Stringers Needed (${joistsSpacing}" o.c.)`,
-          value: numStringers,
-          unit: 'pieces'
-        },
-        {
-          label: `2x12 Stringer Boards (${optimalStringerLength}ft)`,
-          value: numStringers,
-          unit: `${optimalStringerLength}ft boards`,
-          cost: stringerCost
+        // Validate that all required fields are filled
+        if (heightAboveGrade > 0 && stairWidth > 0) {
+          const totalRise = heightAboveGrade;
+          const riserHeight = 7.5;
+          const numRisers = Math.ceil(totalRise / riserHeight);
+          const actualRiserHeight = totalRise / numRisers;
+          const numTreads = numRisers - 1;
+          const totalRun = numTreads * stairRun;
+          const numStringers = Math.max(3, Math.ceil(stairWidth / joistsSpacing));
+          const stringerLength = Math.sqrt(Math.pow(totalRun, 2) + Math.pow(totalRise, 2)) / 12;
+          const optimalStringerLength = calculateOptimalBoardLength(stringerLength);
+
+          const stringerCost = numStringers * materialPrices['2x12'][optimalStringerLength.toString()];
+          totalCost += stringerCost;
+
+          const staircaseLabel = numberOfStaircases > 1 ? ` (Staircase ${index + 1})` : '';
+
+          results.push(
+            {
+              label: `Number of Steps${staircaseLabel}`,
+              value: numTreads,
+              unit: 'steps'
+            },
+            {
+              label: `Riser Height${staircaseLabel}`,
+              value: Number(actualRiserHeight.toFixed(2)),
+              unit: 'inches'
+            },
+            {
+              label: `Total Stair Run${staircaseLabel}`,
+              value: Number(totalRun.toFixed(2)),
+              unit: 'inches'
+            },
+            {
+              label: `Stair Width${staircaseLabel}`,
+              value: stairWidth,
+              unit: 'inches'
+            },
+            {
+              label: `Stringers Needed (${joistsSpacing}" o.c.)${staircaseLabel}`,
+              value: numStringers,
+              unit: 'pieces'
+            },
+            {
+              label: `2x12 Stringer Boards (${optimalStringerLength}ft)${staircaseLabel}`,
+              value: numStringers,
+              unit: `${optimalStringerLength}ft boards`,
+              cost: stringerCost
+            }
+          );
         }
-      );
+      });
     }
 
     if (includeRailing && typeof railingLength === 'number') {
@@ -455,25 +578,83 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       });
     }
 
+    if (includeTripleBeam && typeof tripleBeamLength === 'number') {
+      // Triple beam at $16 per linear foot
+      const tripleBeamCost = tripleBeamLength * 16;
+      totalCost += tripleBeamCost;
+
+      results.push({
+        label: 'Triple Beam (Cantilever Support)',
+        value: tripleBeamLength,
+        unit: 'linear feet',
+        cost: tripleBeamCost
+      });
+    }
+
+    if (includeFreestandingPosts && typeof numFreestandingPosts === 'number' && typeof postHeight === 'number') {
+      // Price per foot: 6x6 @ $9/ft, 4x4 @ $6/ft
+      const pricePerFoot = postSize === '6x6' ? 9 : 6;
+      const freestandingPostCost = numFreestandingPosts * postHeight * pricePerFoot;
+      totalCost += freestandingPostCost;
+
+      results.push({
+        label: `Freestanding Posts (${postSize})`,
+        value: numFreestandingPosts,
+        unit: `posts @ ${postHeight}ft height`,
+        cost: freestandingPostCost
+      });
+    }
+
+    if (includeLedgerBoard && typeof ledgerBoardLength === 'number') {
+      // Ledger board matches selected joist size
+      // Pricing: 2x8 @ $2.00/ft, 2x10 @ $2.32/ft, 2x12 @ $2.89/ft
+      const ledgerPrices: Record<'2x6' | '2x8' | '2x10' | '2x12', number> = {
+        '2x6': 1.75,
+        '2x8': 2.00,
+        '2x10': 2.32,
+        '2x12': 2.89
+      };
+      const ledgerPricePerFt = ledgerPrices[joistSize];
+      const ledgerBoardCost = ledgerBoardLength * ledgerPricePerFt;
+      totalCost += ledgerBoardCost;
+
+      results.push({
+        label: `Ledger Board (${joistSize})`,
+        value: ledgerBoardLength,
+        unit: 'linear feet',
+        cost: ledgerBoardCost
+      });
+    }
+
     onCalculate(results);
   };
 
-  const isFormValid = 
+  const isFormValid =
     ((inputType === 'dimensions' && typeof length === 'number' && typeof width === 'number') ||
     (inputType === 'area' && typeof area === 'number')) &&
-    (!includeStairs || (typeof heightAboveGrade === 'number' && typeof stairWidth === 'number')) &&
+    (!includeStairs || staircases.every(s => s.heightAboveGrade > 0 && s.width > 0)) &&
     (!includeCantilever || typeof cantileverLength === 'number') &&
     (deckingType !== 'custom' || (typeof customDeckingWidth === 'number' && typeof customDeckingSpacing === 'number')) &&
     (!includeRailing || typeof railingLength === 'number') &&
-    (!includeFascia || typeof fasciaLength === 'number');
+    (!includeFascia || typeof fasciaLength === 'number') &&
+    (!includeTripleBeam || typeof tripleBeamLength === 'number') &&
+    (!includeFreestandingPosts || (typeof numFreestandingPosts === 'number' && typeof postHeight === 'number')) &&
+    (!includeLedgerBoard || typeof ledgerBoardLength === 'number');
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
       <div className="flex items-center mb-6">
         <Grid className="h-6 w-6 text-orange-500 mr-2" />
-        <h2 className="text-xl font-bold text-slate-800">Deck Calculator</h2>
+        <h2 className="text-xl font-bold text-slate-800">{t('calculators.deck.title')}</h2>
       </div>
-      
+
+      <CalculatorEstimateHeader
+        calculatorType="deck"
+        currentInputs={getCurrentInputs()}
+        onLoadEstimate={handleLoadEstimate}
+        onNewEstimate={handleNewEstimate}
+      />
+
       <div className="mb-4">
         <div className="flex justify-start mb-4">
           <div className="inline-flex rounded-md shadow-sm">
@@ -486,7 +667,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               } border border-slate-300`}
               onClick={() => setInputType('dimensions')}
             >
-              Use Dimensions
+              {t('calculators.deck.useDimensions')}
             </button>
             <button
               type="button"
@@ -497,7 +678,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               } border border-slate-300`}
               onClick={() => setInputType('area')}
             >
-              Use Square Footage
+              {t('calculators.deck.useSquareFootage')}
             </button>
           </div>
         </div>
@@ -506,7 +687,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label htmlFor="length" className="block text-sm font-medium text-slate-700 mb-1">
-                Length (feet)
+                {t('calculators.deck.length')}
               </label>
               <input
                 type="number"
@@ -516,13 +697,13 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 value={length}
                 onChange={(e) => setLength(e.target.value ? Number(e.target.value) : '')}
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                placeholder="Enter length in feet"
+                placeholder={t('calculators.deck.lengthPlaceholder')}
               />
             </div>
-            
+
             <div>
               <label htmlFor="width" className="block text-sm font-medium text-slate-700 mb-1">
-                Width (feet)
+                {t('calculators.deck.width')}
               </label>
               <input
                 type="number"
@@ -532,14 +713,14 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 value={width}
                 onChange={(e) => setWidth(e.target.value ? Number(e.target.value) : '')}
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                placeholder="Enter width in feet"
+                placeholder={t('calculators.deck.widthPlaceholder')}
               />
             </div>
           </div>
         ) : (
           <div>
             <label htmlFor="area" className="block text-sm font-medium text-slate-700 mb-1">
-              Total Area (square feet)
+              {t('calculators.deck.totalArea')}
             </label>
             <input
               type="number"
@@ -549,14 +730,14 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               value={area}
               onChange={(e) => setArea(e.target.value ? Number(e.target.value) : '')}
               className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-              placeholder="Enter total area in square feet"
+              placeholder={t('calculators.deck.totalAreaPlaceholder')}
             />
           </div>
         )}
 
         <div className="mb-6">
           <label htmlFor="deckingType" className="block text-sm font-medium text-slate-700 mb-1">
-            Decking Type
+            {t('calculators.deck.deckingType')}
           </label>
           <select
             id="deckingType"
@@ -574,7 +755,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div>
               <label htmlFor="customDeckingWidth" className="block text-sm font-medium text-slate-700 mb-1">
-                Custom Board Width (inches)
+                {t('calculators.deck.customBoardWidth')}
               </label>
               <input
                 type="number"
@@ -584,12 +765,12 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 value={customDeckingWidth}
                 onChange={(e) => setCustomDeckingWidth(e.target.value ? Number(e.target.value) : '')}
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                placeholder="Enter board width"
+                placeholder={t('calculators.deck.enterBoardWidth')}
               />
             </div>
             <div>
               <label htmlFor="customDeckingSpacing" className="block text-sm font-medium text-slate-700 mb-1">
-                Board Spacing (inches)
+                {t('calculators.deck.boardSpacing')}
               </label>
               <input
                 type="number"
@@ -599,18 +780,18 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 value={customDeckingSpacing}
                 onChange={(e) => setCustomDeckingSpacing(e.target.value ? Number(e.target.value) : '')}
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                placeholder="Enter spacing between boards"
+                placeholder={t('calculators.deck.enterSpacing')}
               />
             </div>
           </div>
         )}
 
         <div className="border-t border-slate-200 pt-6 mb-6">
-          <h3 className="text-lg font-medium text-slate-800 mb-4">Framing Details</h3>
+          <h3 className="text-lg font-medium text-slate-800 mb-4">{t('calculators.deck.framingDetails')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div>
               <label htmlFor="joistsSpacing" className="block text-sm font-medium text-slate-700 mb-1">
-                Joist Spacing
+                {t('calculators.deck.joistSpacing')}
               </label>
               <select
                 id="joistsSpacing"
@@ -618,13 +799,13 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 onChange={(e) => setJoistsSpacing(Number(e.target.value) as 12 | 16)}
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               >
-                <option value={12}>12" on center</option>
-                <option value={16}>16" on center</option>
+                <option value={12}>{t('calculators.deck.joistSpacing12')}</option>
+                <option value={16}>{t('calculators.deck.joistSpacing16')}</option>
               </select>
             </div>
             <div>
               <label htmlFor="joistSize" className="block text-sm font-medium text-slate-700 mb-1">
-                Joist Size
+                {t('calculators.deck.joistSize')}
               </label>
               <select
                 id="joistSize"
@@ -632,15 +813,15 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 onChange={(e) => setJoistSize(e.target.value as typeof joistSize)}
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               >
-                <option value="2x6">2x6 Joists</option>
-                <option value="2x8">2x8 Joists</option>
-                <option value="2x10">2x10 Joists</option>
-                <option value="2x12">2x12 Joists</option>
+                <option value="2x6">{t('calculators.deck.joists2x6')}</option>
+                <option value="2x8">{t('calculators.deck.joists2x8')}</option>
+                <option value="2x10">{t('calculators.deck.joists2x10')}</option>
+                <option value="2x12">{t('calculators.deck.joists2x12')}</option>
               </select>
             </div>
             <div>
               <label htmlFor="beamSpan" className="block text-sm font-medium text-slate-700 mb-1">
-                Beam Span (feet)
+                {t('calculators.deck.beamSpan')}
               </label>
               <input
                 type="number"
@@ -650,7 +831,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 value={beamSpan}
                 onChange={(e) => setBeamSpan(e.target.value ? Number(e.target.value) : '')}
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                placeholder="Enter beam span"
+                placeholder={t('calculators.deck.enterBeamSpan')}
               />
             </div>
           </div>
@@ -671,14 +852,14 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
             />
             <label htmlFor="includeCantilever" className="ml-2 block text-sm font-medium text-slate-700">
-              Include Cantilever
+              {t('calculators.deck.includeCantilever')}
             </label>
           </div>
 
           {includeCantilever && (
             <div className="mb-6">
               <label htmlFor="cantileverLength" className="block text-sm font-medium text-slate-700 mb-1">
-                Cantilever Length (inches) - Max 24 inches
+                {t('calculators.deck.cantileverLength')}
               </label>
               <input
                 type="number"
@@ -689,11 +870,11 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 value={cantileverLength}
                 onChange={(e) => setCantileverLength(e.target.value ? Number(e.target.value) : '')}
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                placeholder="Enter cantilever length (max 24 inches)"
+                placeholder={t('calculators.deck.enterCantilever')}
               />
               {typeof cantileverLength === 'number' && cantileverLength > 24 && (
                 <p className="mt-1 text-sm text-red-600">
-                  Warning: Maximum recommended cantilever is 24 inches
+                  {t('calculators.deck.cantileverWarning')}
                 </p>
               )}
             </div>
@@ -708,63 +889,108 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
             />
             <label htmlFor="includeStairs" className="ml-2 block text-sm font-medium text-slate-700">
-              Include Stairs
+              {t('calculators.deck.includeStairs')}
             </label>
           </div>
 
           {includeStairs && (
             <div className="space-y-4">
               <div>
-                <label htmlFor="heightAboveGrade" className="block text-sm font-medium text-slate-700 mb-1">
-                  Height Above Grade (inches)
-                </label>
-                <input
-                  type="number"
-                  id="heightAboveGrade"
-                  min="0"
-                  step="1"
-                  value={heightAboveGrade}
-                  onChange={(e) => setHeightAboveGrade(e.target.value ? Number(e.target.value) : '')}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  placeholder="Enter height in inches"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="stairWidth" className="block text-sm font-medium text-slate-700 mb-1">
-                  Stair Width (inches)
-                </label>
-                <input
-                  type="number"
-                  id="stairWidth"
-                  min="36"
-                  step="1"
-                  value={stairWidth}
-                  onChange={(e) => setStairWidth(e.target.value ? Number(e.target.value) : '')}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  placeholder="Enter stair width (min. 36 inches)"
-                />
-                {typeof stairWidth === 'number' && stairWidth < 36 && (
-                  <p className="mt-1 text-sm text-red-600">
-                    Warning: Minimum recommended stair width is 36 inches
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="stairRun" className="block text-sm font-medium text-slate-700 mb-1">
-                  Stair Run (inches)
+                <label htmlFor="numberOfStaircases" className="block text-sm font-medium text-slate-700 mb-1">
+                  Number of Staircases
                 </label>
                 <select
-                  id="stairRun"
-                  value={stairRun}
-                  onChange={(e) => setStairRun(Number(e.target.value) as 10 | 12)}
+                  id="numberOfStaircases"
+                  value={numberOfStaircases}
+                  onChange={(e) => {
+                    const num = Number(e.target.value);
+                    setNumberOfStaircases(num);
+                    // Adjust staircases array
+                    const newStaircases = Array.from({length: num}, (_, i) =>
+                      staircases[i] || { width: 36, heightAboveGrade: 0, stairRun: 10 }
+                    );
+                    setStaircases(newStaircases);
+                  }}
                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 >
-                  <option value={10}>10" (Standard)</option>
-                  <option value={12}>12" (Extended)</option>
+                  <option value={1}>1 Staircase</option>
+                  <option value={2}>2 Staircases</option>
+                  <option value={3}>3 Staircases</option>
+                  <option value={4}>4 Staircases</option>
                 </select>
               </div>
+
+              {staircases.map((staircase, index) => (
+                <div key={index} className="border border-slate-200 rounded-md p-4 space-y-4">
+                  <h4 className="font-medium text-slate-800">
+                    {numberOfStaircases > 1 ? `Staircase ${index + 1}` : 'Staircase Details'}
+                  </h4>
+
+                  <div>
+                    <label htmlFor={`heightAboveGrade-${index}`} className="block text-sm font-medium text-slate-700 mb-1">
+                      {t('calculators.deck.heightAboveGrade')}
+                    </label>
+                    <input
+                      type="number"
+                      id={`heightAboveGrade-${index}`}
+                      min="0"
+                      step="1"
+                      value={staircase.heightAboveGrade}
+                      onChange={(e) => {
+                        const newStaircases = [...staircases];
+                        newStaircases[index].heightAboveGrade = e.target.value ? Number(e.target.value) : 0;
+                        setStaircases(newStaircases);
+                      }}
+                      className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      placeholder={t('calculators.deck.enterHeightInches')}
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor={`stairWidth-${index}`} className="block text-sm font-medium text-slate-700 mb-1">
+                      {t('calculators.deck.stairWidth')}
+                    </label>
+                    <input
+                      type="number"
+                      id={`stairWidth-${index}`}
+                      min="36"
+                      step="1"
+                      value={staircase.width}
+                      onChange={(e) => {
+                        const newStaircases = [...staircases];
+                        newStaircases[index].width = e.target.value ? Number(e.target.value) : 0;
+                        setStaircases(newStaircases);
+                      }}
+                      className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      placeholder={t('calculators.deck.enterStairWidth')}
+                    />
+                    {staircase.width < 36 && staircase.width > 0 && (
+                      <p className="mt-1 text-sm text-red-600">
+                        {t('calculators.deck.stairWidthWarning')}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label htmlFor={`stairRun-${index}`} className="block text-sm font-medium text-slate-700 mb-1">
+                      {t('calculators.deck.stairRun')}
+                    </label>
+                    <select
+                      id={`stairRun-${index}`}
+                      value={staircase.stairRun}
+                      onChange={(e) => {
+                        const newStaircases = [...staircases];
+                        newStaircases[index].stairRun = Number(e.target.value) as 10 | 12;
+                        setStaircases(newStaircases);
+                      }}
+                      className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    >
+                      <option value={10}>{t('calculators.deck.stairRun10')}</option>
+                      <option value={12}>{t('calculators.deck.stairRun12')}</option>
+                    </select>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
@@ -784,7 +1010,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
             />
             <label htmlFor="includeRailing" className="ml-2 block text-sm font-medium text-slate-700">
-              Include Railing
+              {t('calculators.deck.includeRailing')}
             </label>
           </div>
 
@@ -792,7 +1018,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             <div className="space-y-4">
               <div>
                 <label htmlFor="railingType" className="block text-sm font-medium text-slate-700 mb-1">
-                  Railing Type
+                  {t('calculators.deck.railingType')}
                 </label>
                 <select
                   id="railingType"
@@ -800,14 +1026,14 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   onChange={(e) => setRailingType(e.target.value as 'pt' | 'trex')}
                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 >
-                  <option value="pt">Pressure Treated</option>
-                  <option value="trex">Trex Composite</option>
+                  <option value="pt">{t('calculators.deck.pressureTreated')}</option>
+                  <option value="trex">{t('calculators.deck.trexComposite')}</option>
                 </select>
               </div>
 
               <div>
                 <label htmlFor="railingLength" className="block text-sm font-medium text-slate-700 mb-1">
-                  Total Railing Length (feet)
+                  {t('calculators.deck.railingLength')}
                 </label>
                 <input
                   type="number"
@@ -817,7 +1043,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   value={railingLength}
                   onChange={(e) => setRailingLength(e.target.value ? Number(e.target.value) : '')}
                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  placeholder="Enter total railing length in feet"
+                  placeholder={t('calculators.deck.enterRailingLength')}
                 />
               </div>
             </div>
@@ -839,7 +1065,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
             />
             <label htmlFor="includeFascia" className="ml-2 block text-sm font-medium text-slate-700">
-              Include Fascia Boards
+              {t('calculators.deck.includeFascia')}
             </label>
           </div>
 
@@ -847,7 +1073,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             <div className="space-y-4">
               <div>
                 <label htmlFor="fasciaType" className="block text-sm font-medium text-slate-700 mb-1">
-                  Fascia Material
+                  {t('calculators.deck.fasciaMaterial')}
                 </label>
                 <select
                   id="fasciaType"
@@ -855,15 +1081,15 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   onChange={(e) => setFasciaType(e.target.value as 'pt' | 'azek' | 'metal')}
                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 >
-                  <option value="pt">Pressure Treated</option>
-                  <option value="azek">Azek PVC</option>
-                  <option value="metal">Metal Stock</option>
+                  <option value="pt">{t('calculators.deck.pressureTreated')}</option>
+                  <option value="azek">{t('calculators.deck.azekPVC')}</option>
+                  <option value="metal">{t('calculators.deck.metalStock')}</option>
                 </select>
               </div>
 
               <div>
                 <label htmlFor="fasciaLength" className="block text-sm font-medium text-slate-700 mb-1">
-                  Total Fascia Length (feet)
+                  {t('calculators.deck.fasciaLength')}
                 </label>
                 <input
                   type="number"
@@ -873,9 +1099,165 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   value={fasciaLength}
                   onChange={(e) => setFasciaLength(e.target.value ? Number(e.target.value) : '')}
                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  placeholder="Enter total fascia length in feet"
+                  placeholder={t('calculators.deck.enterFasciaLength')}
                 />
               </div>
+            </div>
+          )}
+        </div>
+
+        <div className="border-t border-slate-200 pt-6">
+          <div className="flex items-center mb-4">
+            <input
+              type="checkbox"
+              id="includeTripleBeam"
+              checked={includeTripleBeam}
+              onChange={(e) => {
+                setIncludeTripleBeam(e.target.checked);
+                if (!e.target.checked) {
+                  setTripleBeamLength('');
+                }
+              }}
+              className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+            />
+            <label htmlFor="includeTripleBeam" className="ml-2 block text-sm font-medium text-slate-700">
+              Include Triple Beam (Cantilever Support)
+            </label>
+          </div>
+
+          {includeTripleBeam && (
+            <div>
+              <label htmlFor="tripleBeamLength" className="block text-sm font-medium text-slate-700 mb-1">
+                Triple Beam Length (feet)
+              </label>
+              <input
+                type="number"
+                id="tripleBeamLength"
+                min="0"
+                step="0.1"
+                value={tripleBeamLength}
+                onChange={(e) => setTripleBeamLength(e.target.value ? Number(e.target.value) : '')}
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                placeholder="Enter triple beam length"
+              />
+              <p className="mt-1 text-sm text-slate-500">
+                Triple beam @ $16/linear foot for cantilever deck support
+              </p>
+            </div>
+          )}
+        </div>
+
+        <div className="border-t border-slate-200 pt-6">
+          <div className="flex items-center mb-4">
+            <input
+              type="checkbox"
+              id="includeFreestandingPosts"
+              checked={includeFreestandingPosts}
+              onChange={(e) => {
+                setIncludeFreestandingPosts(e.target.checked);
+                if (!e.target.checked) {
+                  setNumFreestandingPosts('');
+                }
+              }}
+              className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+            />
+            <label htmlFor="includeFreestandingPosts" className="ml-2 block text-sm font-medium text-slate-700">
+              Freestanding Deck Posts
+            </label>
+          </div>
+
+          {includeFreestandingPosts && (
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="postSize" className="block text-sm font-medium text-slate-700 mb-1">
+                  Post Size
+                </label>
+                <select
+                  id="postSize"
+                  value={postSize}
+                  onChange={(e) => setPostSize(e.target.value as '4x4' | '6x6')}
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                >
+                  <option value="6x6">6x6 Posts ($9 per foot)</option>
+                  <option value="4x4">4x4 Posts ($6 per foot)</option>
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="numFreestandingPosts" className="block text-sm font-medium text-slate-700 mb-1">
+                  Number of Posts
+                </label>
+                <input
+                  type="number"
+                  id="numFreestandingPosts"
+                  min="0"
+                  step="1"
+                  value={numFreestandingPosts}
+                  onChange={(e) => setNumFreestandingPosts(e.target.value ? Number(e.target.value) : '')}
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="Enter number of posts"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="postHeight" className="block text-sm font-medium text-slate-700 mb-1">
+                  Post Height (feet)
+                </label>
+                <input
+                  type="number"
+                  id="postHeight"
+                  min="0"
+                  step="0.1"
+                  value={postHeight}
+                  onChange={(e) => setPostHeight(e.target.value ? Number(e.target.value) : '')}
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="Enter post height in feet"
+                />
+                <p className="mt-1 text-sm text-slate-500">
+                  {postSize === '6x6' ? '6x6 posts @ $9/linear foot' : '4x4 posts @ $6/linear foot'}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="border-t border-slate-200 pt-6">
+          <div className="flex items-center mb-4">
+            <input
+              type="checkbox"
+              id="includeLedgerBoard"
+              checked={includeLedgerBoard}
+              onChange={(e) => {
+                setIncludeLedgerBoard(e.target.checked);
+                if (!e.target.checked) {
+                  setLedgerBoardLength('');
+                }
+              }}
+              className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+            />
+            <label htmlFor="includeLedgerBoard" className="ml-2 block text-sm font-medium text-slate-700">
+              Include Ledger Board
+            </label>
+          </div>
+
+          {includeLedgerBoard && (
+            <div>
+              <label htmlFor="ledgerBoardLength" className="block text-sm font-medium text-slate-700 mb-1">
+                Ledger Board Length (feet)
+              </label>
+              <input
+                type="number"
+                id="ledgerBoardLength"
+                min="0"
+                step="0.1"
+                value={ledgerBoardLength}
+                onChange={(e) => setLedgerBoardLength(e.target.value ? Number(e.target.value) : '')}
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                placeholder="Enter ledger board length"
+              />
+              <p className="mt-1 text-sm text-slate-500">
+                {joistSize} ledger board matches joist size (2x8 @ $2.00/ft, 2x10 @ $2.32/ft, 2x12 @ $2.89/ft)
+              </p>
             </div>
           )}
         </div>
@@ -890,7 +1272,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             : 'bg-slate-300 cursor-not-allowed'
         }`}
       >
-        Calculate Materials
+        {t('calculators.calculateMaterials')}
       </button>
     </div>
   );
