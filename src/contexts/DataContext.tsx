@@ -58,7 +58,6 @@ export const DataProvider = ({ children }: DataProviderProps) => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
-  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
 
   const refreshProfile = async () => {
     if (!user) return;
@@ -72,6 +71,22 @@ export const DataProvider = ({ children }: DataProviderProps) => {
 
       if (error && error.code !== 'PGRST116') {
         console.error('Error loading profile:', error);
+        // Retry once after a delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        const { data: retryData, error: retryError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+        if (retryError && retryError.code !== 'PGRST116') {
+          console.error('Profile retry failed:', retryError);
+        } else if (retryData) {
+          setProfile(retryData);
+          if (retryData.language && retryData.language !== i18n.language) {
+            i18n.changeLanguage(retryData.language);
+          }
+        }
       } else if (data) {
         setProfile(data);
         // Sync language with i18n
@@ -89,46 +104,84 @@ export const DataProvider = ({ children }: DataProviderProps) => {
 
     try {
       // Get Stripe customer record
-      const { data: customer } = await supabase
+      const { data: customer, error: customerError } = await supabase
         .from('stripe_customers')
         .select('customer_id')
         .eq('user_id', user.id)
         .single();
 
+      if (customerError) {
+        console.error('Error loading customer:', customerError);
+        // Retry once after a delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        const { data: retryCustomer } = await supabase
+          .from('stripe_customers')
+          .select('customer_id')
+          .eq('user_id', user.id)
+          .single();
+
+        if (!retryCustomer?.customer_id) return;
+
+        const { data: sub } = await supabase
+          .from('stripe_subscriptions')
+          .select('*')
+          .eq('customer_id', retryCustomer.customer_id)
+          .eq('status', 'active')
+          .single();
+
+        setSubscription(sub);
+        return;
+      }
+
       if (!customer?.customer_id) return;
 
       // Get active subscription
-      const { data: sub } = await supabase
+      const { data: sub, error: subError } = await supabase
         .from('stripe_subscriptions')
         .select('*')
         .eq('customer_id', customer.customer_id)
         .eq('status', 'active')
         .single();
 
-      setSubscription(sub);
+      if (subError) {
+        console.error('Error loading subscription:', subError);
+        // Retry once
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        const { data: retrySub } = await supabase
+          .from('stripe_subscriptions')
+          .select('*')
+          .eq('customer_id', customer.customer_id)
+          .eq('status', 'active')
+          .single();
+
+        setSubscription(retrySub);
+      } else {
+        setSubscription(sub);
+      }
     } catch (error) {
       console.error('Error refreshing subscription:', error);
     }
   };
 
   const refreshAll = async () => {
+    console.log('Refreshing all data...');
     setLoading(true);
     await Promise.all([refreshProfile(), refreshSubscription()]);
     setLoading(false);
-    setHasLoadedOnce(true);
   };
 
-  // Load data ONLY ONCE when user first logs in
+  // Load data whenever user changes - always refresh
   useEffect(() => {
-    if (user && !hasLoadedOnce) {
+    if (user) {
+      console.log('User detected, loading data for user:', user.id);
       refreshAll();
-    } else if (!user) {
+    } else {
+      console.log('No user, clearing data');
       setProfile(null);
       setSubscription(null);
       setLoading(false);
-      setHasLoadedOnce(false);
     }
-  }, [user]);
+  }, [user?.id]); // Depend on user.id to reload when user changes
 
   return (
     <DataContext.Provider
