@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
-import { Calculator, Save } from 'lucide-react';
+import { Calculator } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import SaveCalculationModal from './SaveCalculationModal';
+import CalculatorEstimateHeader from '../calculators/CalculatorEstimateHeader';
 
 const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSuccess }) => {
   const { t } = useTranslation();
@@ -21,7 +21,61 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucc
   const [addFiber, setAddFiber] = useState<boolean>(false);
   const [fiberPricePerYard, setFiberPricePerYard] = useState<number | ''>('');
   const [lastCalculation, setLastCalculation] = useState<CalculationResult[] | null>(null);
-  const [showSaveModal, setShowSaveModal] = useState(false);
+
+  // Get current inputs for saving
+  const getCurrentInputs = () => ({
+    concreteType,
+    length,
+    width,
+    height,
+    thickness,
+    unit,
+    reinforcement,
+    rebarSpacing,
+    meshType,
+    deliveryMethod,
+    addColor,
+    colorPricePerYard,
+    addFiber,
+    fiberPricePerYard
+  });
+
+  // Load saved estimate inputs
+  const handleLoadEstimate = (inputs: Record<string, any>) => {
+    setConcreteType(inputs.concreteType || 'flatwork');
+    setLength(inputs.length ?? '');
+    setWidth(inputs.width ?? '');
+    setHeight(inputs.height ?? '');
+    setThickness(inputs.thickness ?? '');
+    setUnit(inputs.unit || 'imperial');
+    setReinforcement(inputs.reinforcement || 'none');
+    setRebarSpacing(inputs.rebarSpacing ?? 12);
+    setMeshType(inputs.meshType || '6x6');
+    setDeliveryMethod(inputs.deliveryMethod || 'truck');
+    setAddColor(inputs.addColor ?? false);
+    setColorPricePerYard(inputs.colorPricePerYard ?? '');
+    setAddFiber(inputs.addFiber ?? false);
+    setFiberPricePerYard(inputs.fiberPricePerYard ?? '');
+  };
+
+  // Reset all inputs to defaults for new estimate
+  const handleNewEstimate = () => {
+    setConcreteType('flatwork');
+    setLength('');
+    setWidth('');
+    setHeight('');
+    setThickness('');
+    setUnit('imperial');
+    setReinforcement('none');
+    setRebarSpacing(12);
+    setMeshType('6x6');
+    setDeliveryMethod('truck');
+    setAddColor(false);
+    setColorPricePerYard('');
+    setAddFiber(false);
+    setFiberPricePerYard('');
+    setLastCalculation(null);
+  };
 
   const handleCalculate = () => {
     if (typeof length === 'number' &&
@@ -177,6 +231,13 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucc
         <Calculator className="h-6 w-6 text-orange-500 mr-2" />
         <h2 className="text-xl font-bold text-slate-800">{t('calculators.concrete.title')}</h2>
       </div>
+
+      <CalculatorEstimateHeader
+        calculatorType="concrete"
+        currentData={getCurrentInputs()}
+        onLoad={handleLoadEstimate}
+        onNewEstimate={handleNewEstimate}
+      />
 
       <div className="mb-4">
         <div className="flex flex-col sm:flex-row sm:justify-between gap-3 mb-4">
@@ -486,54 +547,17 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucc
         </div>
       </div>
 
-      <div className="flex gap-3">
-        <button
-          onClick={handleCalculate}
-          disabled={!isFormValid}
-          className={`flex-1 py-3 px-4 rounded-md font-medium text-white ${
-            isFormValid
-              ? 'bg-orange-500 hover:bg-orange-600 transition-colors'
-              : 'bg-slate-300 cursor-not-allowed'
-          }`}
-        >
-          {t('calculators.calculateMaterials')}
-        </button>
-
-        {lastCalculation && lastCalculation.length > 0 && (
-          <button
-            onClick={() => setShowSaveModal(true)}
-            className="px-6 py-3 border-2 border-green-600 text-base font-medium rounded-md text-green-600 bg-white hover:bg-green-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors flex items-center gap-2"
-          >
-            <Save className="w-5 h-5" />
-            Save
-          </button>
-        )}
-      </div>
-
-      <SaveCalculationModal
-        isOpen={showSaveModal}
-        onClose={() => setShowSaveModal(false)}
-        calculatorType="concrete"
-        calculatorName="Concrete"
-        results={lastCalculation || []}
-        calculatorData={{
-          concreteType,
-          length,
-          width,
-          height,
-          thickness,
-          unit,
-          reinforcement,
-          rebarSpacing,
-          meshType,
-          deliveryMethod,
-          addColor,
-          colorPricePerYard,
-          addFiber,
-          fiberPricePerYard
-        }}
-        onSaveSuccess={onSaveSuccess}
-      />
+      <button
+        onClick={handleCalculate}
+        disabled={!isFormValid}
+        className={`w-full py-3 px-4 rounded-md font-medium text-white ${
+          isFormValid
+            ? 'bg-orange-500 hover:bg-orange-600 transition-colors'
+            : 'bg-slate-300 cursor-not-allowed'
+        }`}
+      >
+        {t('calculators.calculateMaterials')}
+      </button>
     </div>
   );
 };
