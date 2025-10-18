@@ -17,6 +17,7 @@ interface Profile {
   stripe_customer_id?: string;
   default_terms?: string;
   language?: string;
+  contractor_notification_email?: string;
 }
 
 interface Subscription {

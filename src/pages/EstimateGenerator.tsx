@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FileText, Plus, Download, Trash2, Edit2, Image, Copy, Check, X, Settings, Palette, Layout, FileUp, FileDown, Sparkles, DollarSign, Printer, Eye, RefreshCw, Receipt, ArrowLeft, Mail, Calculator } from 'lucide-react';
+import { FileText, Plus, Download, Trash2, Edit2, Image, Copy, Check, X, Settings, Palette, Layout, FileUp, FileDown, Sparkles, DollarSign, Printer, Eye, RefreshCw, Receipt, ArrowLeft, Mail, Calculator, CheckCircle, XCircle, Clock, Search } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -14,6 +14,7 @@ import AIEstimateAssistant from '../components/estimates/AIEstimateAssistant';
 import SendEstimateModal from '../components/estimates/SendEstimateModal';
 import { Estimate, EstimateItem } from '../types/estimates';
 import { estimateService } from '../services/estimateService';
+import { estimateResponseService } from '../services/estimateResponseService';
 import { useData } from '../contexts/DataContext';
 import { usePricing } from '../contexts/PricingContext';
 
@@ -33,6 +34,8 @@ const EstimateGenerator = () => {
   const [recentEstimates, setRecentEstimates] = useState<any[]>([]);
   const [loadingEstimates, setLoadingEstimates] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [estimateResponses, setEstimateResponses] = useState<Map<string, any>>(new Map());
+  const [searchQuery, setSearchQuery] = useState('');
   const hasSavedCalculator = useRef(false); // PREVENT DOUBLE SAVES
   const initialEstimateRef = useRef<string>(''); // Track initial state
 
@@ -211,6 +214,20 @@ const EstimateGenerator = () => {
     fetchEstimatesFromStore();
   }, []);
   
+  // Fetch estimate responses from database
+  const fetchEstimateResponses = async () => {
+    try {
+      const responses = await estimateResponseService.getAllResponsesForUser();
+      const responseMap = new Map();
+      responses.forEach((response: any) => {
+        responseMap.set(response.estimate_id, response);
+      });
+      setEstimateResponses(responseMap);
+    } catch (error) {
+      console.error('Error fetching estimate responses:', error);
+    }
+  };
+
   // Fetch estimates from Supabase
   const fetchEstimates = async () => {
     setLoadingEstimates(true);
@@ -231,6 +248,9 @@ const EstimateGenerator = () => {
         }));
         setRecentEstimates(transformedEstimates);
       }
+
+      // Also fetch response statuses
+      await fetchEstimateResponses();
     } catch (error) {
       console.error('Error fetching estimates:', error);
     } finally {
@@ -409,6 +429,11 @@ const EstimateGenerator = () => {
     // Auto-save to database if estimate has an ID
     if (estimateWithTotals.id) {
       try {
+        console.log('🔄 Auto-saving estimate...', {
+          id: estimateWithTotals.id,
+          total: estimateWithTotals.total
+        });
+
         await updateEstimate(estimateWithTotals.id, {
           title: estimateWithTotals.title,
           client_name: estimateWithTotals.clientName,
@@ -424,13 +449,23 @@ const EstimateGenerator = () => {
           terms: estimateWithTotals.terms,
           expires_at: estimateWithTotals.expiresAt
         });
-        console.log('Auto-saved estimate to database');
+
+        console.log('✅ Auto-save completed');
+
         // Reset unsaved changes flag after successful save
         initialEstimateRef.current = currentState;
         setHasUnsavedChanges(false);
-      } catch (error) {
-        console.error('Error auto-saving estimate:', error);
+      } catch (error: any) {
+        console.error('❌ Error auto-saving estimate:', error);
+        console.error('Auto-save error details:', {
+          message: error?.message,
+          code: error?.code
+        });
+        // Keep unsaved changes flag set on error
+        setHasUnsavedChanges(true);
       }
+    } else {
+      console.warn('⚠️ Cannot auto-save: estimate has no ID');
     }
   };
 
@@ -474,13 +509,22 @@ const EstimateGenerator = () => {
   };
 
   const handleSaveEstimate = async () => {
-    if (!currentEstimate) return;
+    if (!currentEstimate) {
+      console.error('❌ No estimate to save');
+      return;
+    }
+
+    console.log('💾 Starting estimate save...', {
+      id: currentEstimate.id,
+      title: currentEstimate.title,
+      total: currentEstimate.total
+    });
 
     setIsGenerating(true);
 
     try {
-      // Use the same update method as auto-save to avoid duplicates
-      await updateEstimate(currentEstimate.id, {
+      // Prepare the estimate data
+      const estimateData = {
         title: currentEstimate.title,
         client_name: currentEstimate.clientName,
         project_name: currentEstimate.projectName,
@@ -494,19 +538,50 @@ const EstimateGenerator = () => {
         notes: currentEstimate.notes,
         terms: currentEstimate.terms,
         expires_at: currentEstimate.expiresAt
+      };
+
+      console.log('📝 Estimate data prepared:', estimateData);
+
+      // Use updateEstimate which handles both insert and update
+      await updateEstimate(currentEstimate.id, estimateData);
+
+      console.log('✅ Database operation completed');
+
+      // Verify the save by fetching the estimate back
+      const result = await estimateService.getEstimate(currentEstimate.id);
+
+      if (result.success && result.data) {
+        console.log('✅ Estimate verified in database:', result.data);
+
+        // Update local state with saved data
+        setCurrentEstimate(result.data);
+        initialEstimateRef.current = JSON.stringify(result.data);
+        setHasUnsavedChanges(false);
+
+        // Show success message
+        setShowSaveSuccess(true);
+        console.log('✅ Estimate saved successfully to Supabase!');
+
+        // Refresh the estimates list
+        await fetchEstimates();
+
+        setTimeout(() => {
+          setShowSaveSuccess(false);
+        }, 3000);
+      } else {
+        throw new Error('Failed to verify estimate save: ' + (result.error?.message || 'Unknown error'));
+      }
+
+      setIsGenerating(false);
+    } catch (error: any) {
+      setIsGenerating(false);
+      console.error('❌ Error saving estimate:', error);
+      console.error('Error details:', {
+        message: error?.message,
+        code: error?.code,
+        details: error?.details
       });
-
-      setIsGenerating(false);
-      setShowSaveSuccess(true);
-      console.log('Estimate saved successfully to Supabase!');
-
-      setTimeout(() => {
-        setShowSaveSuccess(false);
-      }, 3000);
-    } catch (error) {
-      setIsGenerating(false);
-      console.error('Error saving estimate:', error);
-      alert(`Error saving estimate: ${error.message || 'Unknown error'}`);
+      alert(`Error saving estimate: ${error?.message || 'Unknown error'}`);
     }
   };
 
@@ -739,6 +814,66 @@ const EstimateGenerator = () => {
     }
   };
 
+  const getResponseStatusBadge = (estimateId: string) => {
+    const response = estimateResponses.get(estimateId);
+
+    if (!response) {
+      return null; // No email sent yet
+    }
+
+    if (response.accepted === true) {
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 ml-2">
+          <CheckCircle className="w-3 h-3 mr-1" />
+          Customer Approved
+        </span>
+      );
+    }
+
+    if (response.declined === true) {
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 ml-2">
+          <XCircle className="w-3 h-3 mr-1" />
+          Customer Declined
+        </span>
+      );
+    }
+
+    // Sent but no response yet
+    return (
+      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 ml-2">
+        <Clock className="w-3 h-3 mr-1" />
+        Pending Response
+      </span>
+    );
+  };
+
+  // Filter estimates based on search query
+  const filteredEstimates = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return recentEstimates;
+    }
+
+    const query = searchQuery.toLowerCase().trim();
+    return recentEstimates.filter(estimate => {
+      // Search by estimate ID
+      if (estimate.id.toLowerCase().includes(query)) {
+        return true;
+      }
+      // Also search by client name, project name, or amount
+      if (estimate.client.toLowerCase().includes(query)) {
+        return true;
+      }
+      if (estimate.project.toLowerCase().includes(query)) {
+        return true;
+      }
+      if (estimate.amount.toLowerCase().includes(query)) {
+        return true;
+      }
+      return false;
+    });
+  }, [recentEstimates, searchQuery]);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -841,15 +976,7 @@ const EstimateGenerator = () => {
               )}
             </div>
 
-            {currentEstimate.status !== 'approved' ? (
-              <button
-                onClick={handleMarkAsApproved}
-                className="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                <Check className="w-4 h-4 mr-2" />
-                {t('estimates.customerApproved')}
-              </button>
-            ) : (
+            {currentEstimate.status === 'approved' && (
               <button
                 onClick={handleConvertToInvoice}
                 disabled={currentEstimate.convertedToInvoice}
@@ -925,7 +1052,30 @@ const EstimateGenerator = () => {
           {!currentEstimate && (
             <div className="bg-white rounded-lg shadow mb-6">
               <div className="p-6 border-b border-gray-200">
-                <h2 className="text-lg font-medium text-gray-900">{t('estimates.yourEstimates')}</h2>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-medium text-gray-900">{t('estimates.yourEstimates')}</h2>
+                </div>
+                {/* Search Bar */}
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Search className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    placeholder="Search by Estimate ID, Client, Project, or Amount..."
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    >
+                      <X className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                    </button>
+                  )}
+                </div>
               </div>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
@@ -956,19 +1106,34 @@ const EstimateGenerator = () => {
                           Loading estimates...
                         </td>
                       </tr>
-                    ) : recentEstimates.length === 0 ? (
+                    ) : filteredEstimates.length === 0 ? (
                       <tr>
                         <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
-                          {t('estimates.noEstimatesYet')}
+                          {searchQuery ? (
+                            <>
+                              No estimates found matching "{searchQuery}"
+                              <button
+                                onClick={() => setSearchQuery('')}
+                                className="block mx-auto mt-2 text-blue-600 hover:text-blue-800"
+                              >
+                                Clear search
+                              </button>
+                            </>
+                          ) : (
+                            t('estimates.noEstimatesYet')
+                          )}
                         </td>
                       </tr>
                     ) : (
-                    recentEstimates.map((estimate) => (
+                    filteredEstimates.map((estimate) => (
                       <tr key={estimate.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <div>
-                              <div className="text-sm font-medium text-gray-900">{estimate.client}</div>
+                              <div className="flex items-center">
+                                <div className="text-sm font-medium text-gray-900">{estimate.client}</div>
+                                {getResponseStatusBadge(estimate.id)}
+                              </div>
                               <div className="text-sm text-gray-500">{estimate.project}</div>
                             </div>
                             {estimate.calculatorType && (
@@ -1090,7 +1255,7 @@ const EstimateGenerator = () => {
           </div>
           
           <div id="estimate-preview">
-            <EstimatePreview estimate={currentEstimate} clients={clients} projects={projects} />
+            <EstimatePreview estimate={currentEstimate} clients={clients} projects={projects} hideStatus={true} />
           </div>
         </div>
       )}
@@ -1106,6 +1271,8 @@ const EstimateGenerator = () => {
           phone: profile?.phone || '',
           address: profile?.address || ''
         }}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
       />
     </div>
   );

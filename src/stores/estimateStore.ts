@@ -152,6 +152,7 @@ const useEstimateStore = create<EstimateStore>((set, get) => ({
   updateEstimate: async (id, updates) => {
     set({ isLoading: true, error: null });
     try {
+      console.log('📊 updateEstimate called with id:', id);
       const userId = await getCurrentUserId();
 
       // Recalculate if needed
@@ -170,22 +171,86 @@ const useEstimateStore = create<EstimateStore>((set, get) => ({
         };
       }
 
-      const { error } = await supabase
+      console.log('📝 Update data:', updateData);
+
+      // Check if estimate exists first
+      const { data: existingEstimate, error: checkError } = await supabase
         .from('estimates')
-        .update(updateData)
-        .eq('id', id);
+        .select('id')
+        .eq('id', id)
+        .single();
 
-      if (error) throw error;
+      if (checkError && checkError.code !== 'PGRST116') {
+        console.error('❌ Error checking for existing estimate:', checkError);
+      }
 
-      set((state) => ({
-        estimates: state.estimates.map((estimate) =>
-          estimate.id === id ? { ...estimate, ...updateData } : estimate
-        ),
-        isLoading: false
-      }));
+      let savedEstimate;
+
+      if (existingEstimate) {
+        // Update existing estimate
+        console.log('✏️ Updating existing estimate...');
+        const { data, error } = await supabase
+          .from('estimates')
+          .update(updateData)
+          .eq('id', id)
+          .select()
+          .single();
+
+        if (error) {
+          console.error('❌ Update error:', error);
+          throw error;
+        }
+        savedEstimate = data;
+        console.log('✅ Estimate updated successfully');
+      } else {
+        // Insert new estimate
+        console.log('➕ Inserting new estimate...');
+        const insertData = {
+          id,
+          ...updateData,
+          user_id: userId
+        };
+
+        const { data, error } = await supabase
+          .from('estimates')
+          .insert(insertData)
+          .select()
+          .single();
+
+        if (error) {
+          console.error('❌ Insert error:', error);
+          throw error;
+        }
+        savedEstimate = data;
+        console.log('✅ Estimate inserted successfully');
+      }
+
+      // Update local state
+      set((state) => {
+        const existingIndex = state.estimates.findIndex(e => e.id === id);
+        let newEstimates;
+
+        if (existingIndex >= 0) {
+          // Update existing estimate in state
+          newEstimates = state.estimates.map((estimate) =>
+            estimate.id === id ? { ...estimate, ...updateData } : estimate
+          );
+        } else {
+          // Add new estimate to state
+          newEstimates = [savedEstimate, ...state.estimates];
+        }
+
+        return {
+          estimates: newEstimates,
+          isLoading: false
+        };
+      });
+
+      console.log('✅ Local state updated');
     } catch (error) {
-      console.error('Error updating estimate:', error);
+      console.error('❌ Error in updateEstimate:', error);
       set({ error: (error as Error).message, isLoading: false });
+      throw error; // Re-throw so caller can handle it
     }
   },
 

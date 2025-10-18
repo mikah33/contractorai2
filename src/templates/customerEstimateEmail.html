@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Estimate from {{companyName}}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #ffffff;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .header p {
+            margin: 10px 0 0 0;
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px 30px;
+        }
+
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #333333;
+        }
+
+        .message-body {
+            font-size: 16px;
+            line-height: 1.8;
+            margin-bottom: 30px;
+            color: #555555;
+        }
+
+        .estimate-details {
+            background-color: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 30px 0;
+            border-radius: 4px;
+        }
+
+        .estimate-details h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #333333;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+            font-weight: 600;
+            font-size: 18px;
+            padding-top: 15px;
+        }
+
+        .detail-label {
+            color: #666666;
+            font-weight: 500;
+        }
+
+        .detail-value {
+            color: #333333;
+            font-weight: 600;
+        }
+
+        .pdf-button-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .pdf-button {
+            display: inline-block;
+            background-color: #667eea;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 15px 40px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .pdf-button:hover {
+            background-color: #5568d3;
+            box-shadow: 0 6px 8px rgba(102, 126, 234, 0.4);
+        }
+
+        .action-section {
+            background-color: #f8f9fa;
+            padding: 30px;
+            border-radius: 8px;
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .action-section h3 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #333333;
+        }
+
+        .action-section p {
+            color: #666666;
+            margin-bottom: 25px;
+            font-size: 15px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .action-button {
+            display: inline-block;
+            text-decoration: none;
+            padding: 15px 35px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            min-width: 180px;
+        }
+
+        .accept-button {
+            background-color: #10b981;
+            color: #ffffff;
+            box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);
+        }
+
+        .accept-button:hover {
+            background-color: #059669;
+            box-shadow: 0 6px 8px rgba(16, 185, 129, 0.4);
+        }
+
+        .decline-button {
+            background-color: #ef4444;
+            color: #ffffff;
+            box-shadow: 0 4px 6px rgba(239, 68, 68, 0.3);
+        }
+
+        .decline-button:hover {
+            background-color: #dc2626;
+            box-shadow: 0 6px 8px rgba(239, 68, 68, 0.4);
+        }
+
+        .disclaimer {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #856404;
+        }
+
+        .disclaimer strong {
+            font-weight: 600;
+        }
+
+        .footer {
+            background-color: #2d3748;
+            color: #ffffff;
+            padding: 30px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .footer-content {
+            margin-bottom: 15px;
+        }
+
+        .footer-links {
+            margin: 20px 0;
+        }
+
+        .footer-links a {
+            color: #a0aec0;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+
+        .footer-links a:hover {
+            color: #ffffff;
+        }
+
+        .footer-divider {
+            border-top: 1px solid #4a5568;
+            margin: 20px 0;
+        }
+
+        .footer-copyright {
+            color: #a0aec0;
+            font-size: 13px;
+        }
+
+        @media only screen and (max-width: 600px) {
+            .header {
+                padding: 30px 20px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .content {
+                padding: 30px 20px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .action-button {
+                width: 100%;
+            }
+
+            .detail-row {
+                flex-direction: column;
+                gap: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Header -->
+        <div class="header">
+            <h1>Your Estimate is Ready!</h1>
+            <p>Review and respond to your estimate below</p>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <div class="greeting">
+                Hello {{customerName}},
+            </div>
+
+            <div class="message-body">
+                {{body}}
+            </div>
+
+            <!-- Estimate Details -->
+            <div class="estimate-details">
+                <h2>Estimate Summary</h2>
+                <div class="detail-row">
+                    <span class="detail-label">Estimate Number:</span>
+                    <span class="detail-value">{{estimateNumber}}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Subject:</span>
+                    <span class="detail-value">{{subject}}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Total Amount:</span>
+                    <span class="detail-value">${{totalAmount}}</span>
+                </div>
+            </div>
+
+            <!-- PDF Download Button -->
+            <div class="pdf-button-container">
+                <a href="{{pdfUrl}}" class="pdf-button" target="_blank">
+                    📄 View Complete Estimate PDF
+                </a>
+            </div>
+
+            <!-- Action Section -->
+            <div class="action-section">
+                <h3>Ready to Proceed?</h3>
+                <p>Please review the estimate and let us know your decision</p>
+
+                <div class="action-buttons">
+                    <a href="{{acceptUrl}}" class="action-button accept-button">
+                        ✓ Accept Price
+                    </a>
+                    <a href="{{declineUrl}}" class="action-button decline-button">
+                        ✗ Decline Price
+                    </a>
+                </div>
+
+                <div class="disclaimer">
+                    <strong>Important:</strong> You can only select one option. Once you click either Accept or Decline, your response will be recorded and sent to us.
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <div class="footer-content">
+                <strong>{{companyName}}</strong><br>
+                {{companyAddress}}<br>
+                {{companyPhone}} | {{companyEmail}}
+            </div>
+
+            <div class="footer-links">
+                <a href="{{websiteUrl}}">Website</a> |
+                <a href="{{contactUrl}}">Contact Us</a> |
+                <a href="{{privacyUrl}}">Privacy Policy</a>
+            </div>
+
+            <div class="footer-divider"></div>
+
+            <div class="footer-copyright">
+                &copy; {{year}} {{companyName}}. All rights reserved.
+            </div>
+        </div>
+    </div>
+</body>
+</html>

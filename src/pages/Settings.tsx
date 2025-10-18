@@ -25,7 +25,8 @@ const Settings = () => {
     phone: '',
     company: '',
     address: '',
-    defaultTerms: ''
+    defaultTerms: '',
+    contractorNotificationEmail: ''
   });
 
   // Load profile data when it becomes available
@@ -36,7 +37,8 @@ const Settings = () => {
         phone: profile.phone || '',
         company: profile.company || '',
         address: profile.address || '',
-        defaultTerms: profile.default_terms || ''
+        defaultTerms: profile.default_terms || '',
+        contractorNotificationEmail: profile.contractor_notification_email || ''
       });
       setLogoUrl(profile.logo_url || null);
       setNotifications({
@@ -186,6 +188,7 @@ const Settings = () => {
           company: localProfile.company,
           address: localProfile.address,
           default_terms: localProfile.defaultTerms,
+          contractor_notification_email: localProfile.contractorNotificationEmail,
           calendar_reminders: notifications.calendarReminders,
           security_alerts: notifications.securityAlerts,
           updated_at: new Date().toISOString()
@@ -301,6 +304,20 @@ const Settings = () => {
                   rows={3}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm px-3 py-2 border"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Contractor Notification Email</label>
+                <input
+                  type="email"
+                  value={localProfile.contractorNotificationEmail}
+                  onChange={(e) => handleProfileChange('contractorNotificationEmail', e.target.value)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm px-3 py-2 border"
+                  placeholder="notifications@yourcompany.com"
+                />
+                <p className="mt-2 text-xs text-gray-500">
+                  Email address to receive notifications when customers respond to estimates. This will be pre-filled when sending estimates.
+                </p>
               </div>
 
               <div>

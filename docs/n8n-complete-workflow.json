@@ -1,0 +1,111 @@
+{
+  "name": "Send Estimate Email with PDF",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "2ee2784c-a873-476f-aa5f-90caca848ab8",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-node",
+      "name": "Webhook - Receive Estimate Data",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.body.pdfUrl }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        },
+        "binaryPropertyOutput": "pdf"
+      },
+      "id": "http-download",
+      "name": "Download PDF from Storage",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.body.customerEmail }}",
+        "subject": "={{ $json.body.subject }}",
+        "emailType": "html",
+        "message": "<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>Estimate from {{ $json.body.subject }}</title>\n</head>\n<body style=\"margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;\">\n  <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background-color: #f5f5f5; padding: 40px 20px;\">\n    <tr>\n      <td align=\"center\">\n        <table width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);\">\n          \n          <tr>\n            <td style=\"background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center;\">\n              <h1 style=\"margin: 0; color: #ffffff; font-size: 28px; font-weight: 600;\">New Estimate Ready</h1>\n              <p style=\"margin: 10px 0 0; color: rgba(255, 255, 255, 0.9); font-size: 16px;\">Please review your estimate below</p>\n            </td>\n          </tr>\n          \n          <tr>\n            <td style=\"padding: 40px 30px;\">\n              \n              <p style=\"margin: 0 0 20px; font-size: 16px; color: #333333; line-height: 1.6;\">\n                Dear <strong>{{ $json.body.customerName }}</strong>,\n              </p>\n              \n              <p style=\"margin: 0 0 30px; font-size: 15px; color: #666666; line-height: 1.6; white-space: pre-line;\">{{ $json.body.body }}</p>\n              \n              <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background-color: #f8f9fa; border-radius: 8px; border-left: 4px solid #667eea; margin-bottom: 30px;\">\n                <tr>\n                  <td style=\"padding: 20px;\">\n                    <h2 style=\"margin: 0 0 15px; font-size: 18px; color: #333333; font-weight: 600;\">📄 Estimate Details</h2>\n                    <p style=\"margin: 0 0 8px; font-size: 14px; color: #666666;\">\n                      <strong>Estimate ID:</strong> {{ $json.body.estimateId }}\n                    </p>\n                    <p style=\"margin: 0; font-size: 14px; color: #666666;\">\n                      <strong>Valid for:</strong> 30 days\n                    </p>\n                  </td>\n                </tr>\n              </table>\n              \n              <div style=\"text-align: center; margin-bottom: 30px;\">\n                <a href=\"{{ $json.body.pdfUrl }}\" style=\"display: inline-block; padding: 12px 24px; background-color: #f8f9fa; color: #667eea; text-decoration: none; border-radius: 6px; font-weight: 500; font-size: 14px; border: 2px solid #667eea;\">\n                  📥 Download Full Estimate PDF\n                </a>\n              </div>\n              \n              <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom: 30px;\">\n                <tr>\n                  <td align=\"center\">\n                    <h3 style=\"margin: 0 0 20px; font-size: 18px; color: #333333; font-weight: 600;\">Your Response</h3>\n                  </td>\n                </tr>\n                <tr>\n                  <td align=\"center\">\n                    <table cellpadding=\"0\" cellspacing=\"0\">\n                      <tr>\n                        <td style=\"padding: 0 10px;\">\n                          <a href=\"https://ujhgwcurllkkeouzwvgk.supabase.co/functions/v1/estimate-response?id={{ $json.body.estimateId }}&action=accept\" style=\"display: inline-block; padding: 16px 40px; background-color: #4caf50; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);\">\n                            ✓ Accept Estimate\n                          </a>\n                        </td>\n                        \n                        <td style=\"padding: 0 10px;\">\n                          <a href=\"https://ujhgwcurllkkeouzwvgk.supabase.co/functions/v1/estimate-response?id={{ $json.body.estimateId }}&action=decline\" style=\"display: inline-block; padding: 16px 40px; background-color: #f44336; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 2px 4px rgba(244, 67, 54, 0.3);\">\n                            ✗ Decline Estimate\n                          </a>\n                        </td>\n                      </tr>\n                    </table>\n                  </td>\n                </tr>\n              </table>\n              \n              <div style=\"border-top: 1px solid #e0e0e0; padding-top: 20px; margin-top: 30px;\">\n                <p style=\"margin: 0; font-size: 13px; color: #999999; text-align: center; line-height: 1.6;\">\n                  If you have any questions about this estimate, please contact us.<br>\n                  This email was sent regarding Estimate #{{ $json.body.estimateId }}\n                </p>\n              </div>\n              \n            </td>\n          </tr>\n          \n        </table>\n      </td>\n    </tr>\n  </table>\n</body>\n</html>",
+        "options": {
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {
+                "binary": "pdf",
+                "fileName": "=estimate-{{ $json.body.estimateId }}.pdf"
+              }
+            ]
+          }
+        }
+      },
+      "id": "gmail-send",
+      "name": "Send Email with PDF",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [650, 300],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "WH7y9OA2vxYSoAb0",
+          "name": "madgmail"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"success\": true, \"message\": \"Email sent successfully\", \"emailTo\": $json.body.customerEmail, \"estimateId\": $json.body.estimateId } }}"
+      },
+      "id": "webhook-response",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [850, 300]
+    }
+  ],
+  "connections": {
+    "Webhook - Receive Estimate Data": {
+      "main": [
+        [
+          {
+            "node": "Download PDF from Storage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download PDF from Storage": {
+      "main": [
+        [
+          {
+            "node": "Send Email with PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email with PDF": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

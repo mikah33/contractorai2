@@ -8,9 +8,10 @@ interface EstimatePreviewProps {
   estimate: Estimate;
   clients: { id: string; name: string; email?: string; phone?: string; address?: string }[];
   projects: { id: string; name: string; address?: string }[];
+  hideStatus?: boolean; // Hide status badge for PDFs
 }
 
-const EstimatePreview: React.FC<EstimatePreviewProps> = ({ estimate, clients, projects }) => {
+const EstimatePreview: React.FC<EstimatePreviewProps> = ({ estimate, clients, projects, hideStatus = false }) => {
   const { t } = useTranslation();
   const { profile } = useData();
   const client = clients.find(c => c.name === estimate.clientName || c.id === estimate.clientId);
@@ -43,14 +44,16 @@ const EstimatePreview: React.FC<EstimatePreviewProps> = ({ estimate, clients, pr
         </div>
         
         <div className="text-right">
-          <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mb-2">
-            {estimate.status.toUpperCase()}
-          </div>
-          <div className="flex items-center text-gray-600 text-sm mt-2">
+          {!hideStatus && (
+            <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mb-2">
+              {estimate.status.toUpperCase()}
+            </div>
+          )}
+          <div className={`flex items-center text-gray-600 text-sm font-semibold ${!hideStatus ? 'mt-2' : ''}`}>
             <Calendar className="h-4 w-4 mr-1" />
             <span>Created: {formatDate(estimate.createdAt)}</span>
           </div>
-          <div className="flex items-center text-gray-600 text-sm mt-1">
+          <div className="flex items-center text-gray-600 text-sm font-semibold mt-1">
             <Calendar className="h-4 w-4 mr-1" />
             <span>Valid until: {formatDate(estimate.expiresAt)}</span>
           </div>
@@ -59,34 +62,34 @@ const EstimatePreview: React.FC<EstimatePreviewProps> = ({ estimate, clients, pr
       
       {/* Client and Project Info */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-        <div className="border rounded-lg p-4">
-          <h2 className="text-sm font-medium text-gray-500 mb-2">{t('clients.client')}</h2>
+        <div className="border-2 border-gray-300 rounded-lg p-4">
+          <h2 className="text-sm font-bold text-gray-700 mb-2">{t('clients.client')}</h2>
           {client ? (
             <div>
-              <p className="font-medium">{client.name}</p>
-              {client.email && <p className="text-gray-600 text-sm mt-1">{client.email}</p>}
-              {client.phone && <p className="text-gray-600 text-sm">{client.phone}</p>}
-              {client.address && <p className="text-gray-600 text-sm">{client.address}</p>}
+              <p className="font-bold text-gray-900">{client.name}</p>
+              {client.email && <p className="text-gray-700 text-sm mt-1 font-medium">{client.email}</p>}
+              {client.phone && <p className="text-gray-700 text-sm font-medium">{client.phone}</p>}
+              {client.address && <p className="text-gray-700 text-sm font-medium">{client.address}</p>}
             </div>
           ) : estimate.clientName ? (
             <div>
-              <p className="font-medium">{estimate.clientName}</p>
+              <p className="font-bold text-gray-900">{estimate.clientName}</p>
             </div>
           ) : (
             <p className="text-gray-500 italic">No client selected</p>
           )}
         </div>
-        
-        <div className="border rounded-lg p-4">
-          <h2 className="text-sm font-medium text-gray-500 mb-2">PROJECT</h2>
+
+        <div className="border-2 border-gray-300 rounded-lg p-4">
+          <h2 className="text-sm font-bold text-gray-700 mb-2">PROJECT</h2>
           {project ? (
             <div>
-              <p className="font-medium">{project.name}</p>
-              {project.address && <p className="text-gray-600 text-sm mt-1">{project.address}</p>}
+              <p className="font-bold text-gray-900">{project.name}</p>
+              {project.address && <p className="text-gray-700 text-sm mt-1 font-medium">{project.address}</p>}
             </div>
           ) : estimate.projectName ? (
             <div>
-              <p className="font-medium">{estimate.projectName}</p>
+              <p className="font-bold text-gray-900">{estimate.projectName}</p>
             </div>
           ) : (
             <p className="text-gray-500 italic">No project selected</p>
@@ -98,16 +101,16 @@ const EstimatePreview: React.FC<EstimatePreviewProps> = ({ estimate, clients, pr
       {(estimate.customFields?.field1Name || estimate.customFields?.field2Name) && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
           {estimate.customFields?.field1Name && (
-            <div className="border rounded-lg p-4">
-              <h2 className="text-sm font-medium text-gray-500 mb-2">{estimate.customFields.field1Name.toUpperCase()}</h2>
-              <p className="font-medium">{estimate.customFields.field1Value || 'N/A'}</p>
+            <div className="border-2 border-gray-300 rounded-lg p-4">
+              <h2 className="text-sm font-bold text-gray-700 mb-2">{estimate.customFields.field1Name.toUpperCase()}</h2>
+              <p className="font-bold text-gray-900">{estimate.customFields.field1Value || 'N/A'}</p>
             </div>
           )}
-          
+
           {estimate.customFields?.field2Name && (
-            <div className="border rounded-lg p-4">
-              <h2 className="text-sm font-medium text-gray-500 mb-2">{estimate.customFields.field2Name.toUpperCase()}</h2>
-              <p className="font-medium">{estimate.customFields.field2Value || 'N/A'}</p>
+            <div className="border-2 border-gray-300 rounded-lg p-4">
+              <h2 className="text-sm font-bold text-gray-700 mb-2">{estimate.customFields.field2Name.toUpperCase()}</h2>
+              <p className="font-bold text-gray-900">{estimate.customFields.field2Value || 'N/A'}</p>
             </div>
           )}
         </div>
@@ -115,27 +118,27 @@ const EstimatePreview: React.FC<EstimatePreviewProps> = ({ estimate, clients, pr
       
       {/* Line Items */}
       <div className="mb-8">
-        <table className="min-w-full divide-y divide-gray-200">
+        <table className="min-w-full divide-y-2 divide-gray-300 border-2 border-gray-300">
           <thead>
-            <tr style={{ backgroundColor: (estimate.branding?.primaryColor || '#3B82F6') + '10' }}>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: estimate.branding?.primaryColor || '#3B82F6' }}>
+            <tr style={{ backgroundColor: (estimate.branding?.primaryColor || '#3B82F6') + '20' }}>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider" style={{ color: estimate.branding?.primaryColor || '#3B82F6' }}>
                 Description
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: estimate.branding?.primaryColor || '#3B82F6' }}>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider" style={{ color: estimate.branding?.primaryColor || '#3B82F6' }}>
                 Quantity
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: estimate.branding?.primaryColor || '#3B82F6' }}>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider" style={{ color: estimate.branding?.primaryColor || '#3B82F6' }}>
                 Unit
               </th>
-              <th scope="col" className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider" style={{ color: estimate.branding?.primaryColor || '#3B82F6' }}>
+              <th scope="col" className="px-6 py-3 text-right text-xs font-bold uppercase tracking-wider" style={{ color: estimate.branding?.primaryColor || '#3B82F6' }}>
                 Unit Price
               </th>
-              <th scope="col" className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider" style={{ color: estimate.branding?.primaryColor || '#3B82F6' }}>
+              <th scope="col" className="px-6 py-3 text-right text-xs font-bold uppercase tracking-wider" style={{ color: estimate.branding?.primaryColor || '#3B82F6' }}>
                 Total
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white divide-y-2 divide-gray-200">
             {estimate.items.length === 0 ? (
               <tr>
                 <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">
@@ -147,23 +150,23 @@ const EstimatePreview: React.FC<EstimatePreviewProps> = ({ estimate, clients, pr
                 <tr key={item.id} className={item.type === 'section' ? 'bg-gray-50' : ''}>
                   <td className="px-6 py-4">
                     {item.type === 'section' ? (
-                      <h3 className="font-medium" style={{ color: estimate.branding?.secondaryColor || '#6B7280' }}>
+                      <h3 className="font-bold text-base" style={{ color: estimate.branding?.secondaryColor || '#6B7280' }}>
                         {item.description}
                       </h3>
                     ) : (
-                      <div className="text-sm text-gray-900">{item.description}</div>
+                      <div className="text-sm text-gray-900 font-medium">{item.description}</div>
                     )}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">
                     {item.type !== 'section' ? item.quantity : ''}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">
                     {item.type !== 'section' ? item.unit : ''}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-semibold">
                     {item.type !== 'section' ? `$${item.unitPrice.toFixed(2)}` : ''}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-bold">
                     {item.type !== 'section' ? `$${item.totalPrice.toFixed(2)}` : ''}
                   </td>
                 </tr>
@@ -171,27 +174,27 @@ const EstimatePreview: React.FC<EstimatePreviewProps> = ({ estimate, clients, pr
             )}
           </tbody>
           <tfoot>
-            <tr className="border-t-2 border-gray-200">
-              <td colSpan={4} className="px-6 py-4 text-right text-sm font-medium text-gray-900">
+            <tr className="border-t-2 border-gray-300">
+              <td colSpan={4} className="px-6 py-4 text-right text-sm font-bold text-gray-900">
                 Subtotal
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
+              <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 text-right">
                 ${estimate.subtotal.toFixed(2)}
               </td>
             </tr>
-            <tr>
-              <td colSpan={4} className="px-6 py-4 text-right text-sm font-medium text-gray-900">
+            <tr className="border-t border-gray-200">
+              <td colSpan={4} className="px-6 py-4 text-right text-sm font-bold text-gray-900">
                 Tax ({estimate.taxRate}%)
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
+              <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 text-right">
                 ${estimate.taxAmount.toFixed(2)}
               </td>
             </tr>
-            <tr>
-              <td colSpan={4} className="px-6 py-4 text-right text-sm font-bold text-gray-900">
-                Total
+            <tr className="border-t-2 border-gray-300 bg-gray-50">
+              <td colSpan={4} className="px-6 py-4 text-right text-base font-extrabold text-gray-900">
+                TOTAL
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-lg font-bold text-right" style={{ color: estimate.branding?.primaryColor || '#3B82F6' }}>
+              <td className="px-6 py-4 whitespace-nowrap text-xl font-extrabold text-right" style={{ color: estimate.branding?.primaryColor || '#3B82F6' }}>
                 ${estimate.total.toFixed(2)}
               </td>
             </tr>
@@ -202,16 +205,16 @@ const EstimatePreview: React.FC<EstimatePreviewProps> = ({ estimate, clients, pr
       {/* Notes & Terms */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
         {estimate.notes && (
-          <div className="border rounded-lg p-4">
-            <h2 className="text-sm font-medium mb-2" style={{ color: estimate.branding?.secondaryColor || '#6B7280' }}>NOTES</h2>
-            <p className="text-sm text-gray-600">{estimate.notes}</p>
+          <div className="border-2 border-gray-300 rounded-lg p-4">
+            <h2 className="text-sm font-bold mb-2 text-gray-700">NOTES</h2>
+            <p className="text-sm text-gray-800 font-medium">{estimate.notes}</p>
           </div>
         )}
-        
+
         {estimate.terms && (
-          <div className="border rounded-lg p-4">
-            <h2 className="text-sm font-medium mb-2" style={{ color: estimate.branding?.secondaryColor || '#6B7280' }}>TERMS & CONDITIONS</h2>
-            <p className="text-sm text-gray-600">{estimate.terms}</p>
+          <div className="border-2 border-gray-300 rounded-lg p-4">
+            <h2 className="text-sm font-bold mb-2 text-gray-700">TERMS & CONDITIONS</h2>
+            <p className="text-sm text-gray-800 font-medium">{estimate.terms}</p>
           </div>
         )}
       </div>

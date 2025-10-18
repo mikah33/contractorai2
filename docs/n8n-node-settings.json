@@ -1,0 +1,80 @@
+{
+  "workflow": {
+    "name": "Send Estimate Email with PDF",
+    "nodes": [
+      {
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "position": [250, 300],
+        "parameters": {
+          "path": "2ee2784c-a873-476f-aa5f-90caca848ab8",
+          "httpMethod": "POST",
+          "responseMode": "responseNode"
+        }
+      },
+      {
+        "name": "Download PDF",
+        "type": "n8n-nodes-base.httpRequest",
+        "position": [450, 300],
+        "parameters": {
+          "url": "={{ $json.body.pdfUrl }}",
+          "method": "GET",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "file",
+                "outputPropertyName": "data"
+              }
+            }
+          },
+          "binaryPropertyOutput": "pdf"
+        }
+      },
+      {
+        "name": "Send Email",
+        "type": "n8n-nodes-base.gmail",
+        "position": [650, 300],
+        "parameters": {
+          "sendTo": "={{ $json.body.customerEmail }}",
+          "subject": "={{ $json.body.subject }}",
+          "emailType": "html",
+          "message": "=<!-- Paste HTML template here -->",
+          "attachments": {
+            "attachmentsBinary": [
+              {
+                "binary": "pdf",
+                "fileName": "=estimate-{{ $json.body.estimateId }}.pdf"
+              }
+            ]
+          }
+        },
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "YOUR_GMAIL_CREDENTIAL_ID",
+            "name": "Gmail account"
+          }
+        }
+      },
+      {
+        "name": "Respond to Webhook",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "position": [850, 300],
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ { \"success\": true, \"message\": \"Email sent successfully\", \"emailTo\": $json.body.customerEmail } }}"
+        }
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [[{ "node": "Download PDF", "type": "main", "index": 0 }]]
+      },
+      "Download PDF": {
+        "main": [[{ "node": "Send Email", "type": "main", "index": 0 }]]
+      },
+      "Send Email": {
+        "main": [[{ "node": "Respond to Webhook", "type": "main", "index": 0 }]]
+      }
+    }
+  }
+}

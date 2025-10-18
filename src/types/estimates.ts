@@ -52,4 +52,10 @@ export interface Estimate {
   invoiceId?: string;            // Reference to the created invoice
   calculatorType?: string;       // Type of calculator used (e.g., 'concrete', 'roofing')
   calculatorData?: any;          // Original calculator input data for recalculation
+
+  // Response tracking
+  responseStatus?: 'pending' | 'accepted' | 'declined' | 'not_sent';
+  sentAt?: string;              // When estimate was sent to client
+  respondedAt?: string;         // When client responded
+  pdfUrl?: string;              // URL to the estimate PDF
 }

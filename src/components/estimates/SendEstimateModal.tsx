@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
-import { X, Mail, User, FileText } from 'lucide-react';
+import { X, Mail, User, FileText, Loader2, CheckCircle, Bell } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { uploadPdfToStorage } from '../../services/supabaseStorage';
+import { useData } from '../../contexts/DataContext';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
@@ -22,30 +24,57 @@ interface SendEstimateModalProps {
     phone: string;
     address?: string;
   };
+  activeTab?: 'editor' | 'preview';
+  setActiveTab?: (tab: 'editor' | 'preview') => void;
 }
+
+interface EstimateEmailResponseInsert {
+  customer_name: string;
+  customer_email: string;
+  email_subject: string;
+  email_body: string;
+  pdf_url: string;
+  estimate_id: string;
+  client_id: string | null;
+}
+
+// Use Edge Function instead of direct webhook call to avoid CORS issues
+const EDGE_FUNCTION_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-estimate-email`;
 
 const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
   isOpen,
   onClose,
   estimate,
-  companyInfo
+  companyInfo,
+  activeTab,
+  setActiveTab
 }) => {
+  const { profile } = useData();
   const [clients, setClients] = useState<Client[]>([]);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [manualEmail, setManualEmail] = useState('');
+  const [manualName, setManualName] = useState('');
+  const [contractorEmail, setContractorEmail] = useState('');
   const [emailSubject, setEmailSubject] = useState('');
   const [emailBody, setEmailBody] = useState('');
   const [useManual, setUseManual] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [pdfUrl, setPdfUrl] = useState('');
 
   useEffect(() => {
     if (isOpen) {
       fetchClients();
+      resetForm();
+      // Pre-fill contractor email from profile
+      setContractorEmail(profile?.contractor_notification_email || '');
+    }
+  }, [isOpen, profile]);
 
+  useEffect(() => {
+    if (isOpen) {
       // Get customer name
-      const customerName = selectedClient?.name || 'Customer';
-
-      // Debug: Log company info
-      console.log('Company Info:', companyInfo);
+      const customerName = useManual ? manualName || 'Customer' : selectedClient?.name || 'Customer';
 
       // Get company name - use email as fallback if name is empty
       const companyName = companyInfo.name && companyInfo.name !== 'Your Company'
@@ -54,9 +83,15 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
 
       // Set default email subject and body with actual company name
       setEmailSubject(`Estimate #${estimate?.estimateNumber || 'NEW'} from ${companyName}`);
-      setEmailBody(`Dear ${customerName},\n\nPlease find attached your estimate for the proposed work.\n\nEstimate Details:\n- Estimate #: ${estimate?.estimateNumber || 'NEW'}\n- Total Amount: $${estimate?.total?.toFixed(2) || '0.00'}\n\nThis estimate is valid for 30 days. Please feel free to contact us if you have any questions.\n\nBest regards,\n${companyName}\n${companyInfo.phone}\n${companyInfo.email}`);
+      setEmailBody(`Dear ${customerName},\n\nPlease find attached your estimate for the proposed work.\n\nEstimate Details:\n- Estimate #: ${estimate?.estimateNumber || 'NEW'}\n- Total Amount: $${estimate?.total?.toFixed(2) || '0.00'}\n\nThis estimate is valid for 30 days. Please review and click Accept or Decline in the email to let us know your decision.\n\nIf you have any questions, please don't hesitate to contact us.\n\nBest regards,\n${companyName}\n${companyInfo.phone}\n${companyInfo.email}`);
     }
-  }, [isOpen, estimate, companyInfo, selectedClient, useManual]);
+  }, [estimate, companyInfo, selectedClient, useManual, manualName, isOpen]);
+
+  const resetForm = () => {
+    setSuccessMessage('');
+    setPdfUrl('');
+    setIsLoading(false);
+  };
 
   const fetchClients = async () => {
     try {
@@ -72,79 +107,222 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
     }
   };
 
+  const generatePdfBlob = async (): Promise<Blob> => {
+    // Wait for preview element to be available
+    const waitForPreview = async (maxAttempts = 10): Promise<HTMLElement | null> => {
+      for (let i = 0; i < maxAttempts; i++) {
+        const element = document.getElementById('estimate-preview');
+        if (element) return element;
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      return null;
+    };
+
+    const previewElement = await waitForPreview();
+
+    if (previewElement) {
+      // Generate from preview with proper scaling
+      const canvas = await html2canvas(previewElement, {
+        scale: 1.5,
+        logging: false,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        windowWidth: previewElement.scrollWidth,
+        windowHeight: previewElement.scrollHeight
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+
+      // Calculate proper scaling to fit on page
+      const ratio = Math.min(pdfWidth / (imgWidth * 0.264583), pdfHeight / (imgHeight * 0.264583));
+      const scaledWidth = imgWidth * 0.264583 * ratio;
+      const scaledHeight = imgHeight * 0.264583 * ratio;
+
+      // Center the image on the page
+      const x = (pdfWidth - scaledWidth) / 2;
+      const y = 0;
+
+      pdf.addImage(imgData, 'PNG', x, y, scaledWidth, scaledHeight);
+      return pdf.output('blob');
+    } else {
+      // Generate basic PDF without preview
+      const pdf = new jsPDF();
+      pdf.setFontSize(20);
+      pdf.text(`Estimate #${estimate.estimateNumber}`, 20, 20);
+      pdf.setFontSize(12);
+      pdf.text(`Total: $${estimate.total?.toFixed(2) || '0.00'}`, 20, 40);
+      pdf.text('Unable to generate formatted PDF. Please try again.', 20, 60);
+      return pdf.output('blob');
+    }
+  };
+
   const handleSendEstimate = async () => {
     const recipientEmail = useManual ? manualEmail : selectedClient?.email;
-    const customerName = selectedClient?.name || 'Customer';
+    const customerName = useManual ? manualName : selectedClient?.name || 'Customer';
+    const clientId = selectedClient?.id || null;
 
     if (!recipientEmail) {
       alert('Please select a client or enter an email address');
       return;
     }
 
-    // Update email body with selected customer name if it still says "Dear Customer"
-    if (emailBody.includes('Dear Customer,')) {
-      setEmailBody(emailBody.replace('Dear Customer,', `Dear ${customerName},`));
+    if (useManual && !manualName) {
+      alert('Please enter customer name');
+      return;
     }
 
+    setIsLoading(true);
+    setSuccessMessage('');
+    setPdfUrl('');
+
+    // Remember original tab to switch back later
+    const originalTab = activeTab;
+    let switchedTab = false;
+
     try {
-      // Try to use existing PDF from preview element, or create basic PDF
-      let pdfBlob: Blob;
+      // Get authenticated user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.id) {
+        throw new Error('User not authenticated');
+      }
 
-      const previewElement = document.getElementById('estimate-preview');
-      if (previewElement) {
-        // Generate from preview
-        const canvas = await html2canvas(previewElement, {
-          scale: 2,
-          logging: false,
-          useCORS: true
-        });
+      // CRITICAL FIX: Check if estimate exists in database, if not, save it first
+      let estimateId = estimate.id || estimate.estimateNumber;
 
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      console.log('🔍 Checking if estimate exists in database...', { estimateId });
 
-        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-        pdfBlob = pdf.output('blob');
+      const { data: existingEstimate, error: checkError } = await supabase
+        .from('estimates')
+        .select('id')
+        .eq('id', estimateId)
+        .single();
+
+      if (checkError && checkError.code === 'PGRST116') {
+        // Estimate doesn't exist in database - save it first
+        console.log('💾 Estimate not found in database, saving it first...');
+
+        const estimateToSave = {
+          id: estimateId,
+          user_id: user.id,
+          estimate_number: estimate.estimateNumber || estimateId,
+          client_name: customerName,
+          client_email: recipientEmail,
+          project_id: estimate.projectId || null,
+          date: new Date().toISOString().split('T')[0], // Required field: current date as DATE
+          valid_until: estimate.validUntil || null,
+          status: estimate.status || 'draft',
+          subtotal: estimate.subtotal || 0,
+          tax_rate: estimate.taxRate || 0,
+          tax_amount: estimate.taxAmount || 0,
+          total: estimate.total || 0,
+          notes: estimate.notes || '',
+          items: estimate.items || [],
+          calculator_type: estimate.calculatorType || null,
+          calculator_data: estimate.calculatorData || null
+        };
+
+        const { error: saveError } = await supabase
+          .from('estimates')
+          .insert(estimateToSave);
+
+        if (saveError) {
+          console.error('❌ Failed to save estimate to database:', saveError);
+          throw new Error(`Failed to save estimate: ${saveError.message}`);
+        }
+
+        console.log('✅ Estimate saved to database successfully');
+      } else if (checkError) {
+        // Other database error
+        console.error('❌ Error checking estimate:', checkError);
+        throw new Error(`Database error: ${checkError.message}`);
       } else {
-        // Generate basic PDF without preview
-        const pdf = new jsPDF();
-        pdf.setFontSize(20);
-        pdf.text(`Estimate #${estimate.estimateNumber}`, 20, 20);
-        pdf.setFontSize(12);
-        pdf.text(`Total: $${estimate.total?.toFixed(2) || '0.00'}`, 20, 40);
-        pdf.text('Please switch to Preview tab for a formatted estimate.', 20, 60);
-        pdfBlob = pdf.output('blob');
+        console.log('✅ Estimate already exists in database');
       }
 
-      // Download PDF
-      const url = URL.createObjectURL(pdfBlob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `estimate-${estimate.estimateNumber}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-
-      // Copy PDF blob URL to clipboard
-      try {
-        await navigator.clipboard.writeText(url);
-        console.log('PDF URL copied to clipboard');
-      } catch (clipErr) {
-        console.log('Clipboard copy not supported');
+      // Step 1: Automatically switch to preview tab if not already there
+      if (activeTab !== 'preview' && setActiveTab) {
+        console.log('🔄 Switching to Preview tab for PDF generation...');
+        setActiveTab('preview');
+        switchedTab = true;
+        // Wait for tab to render
+        await new Promise(resolve => setTimeout(resolve, 300));
       }
 
-      // Open default mail app with prefilled content immediately
-      const mailtoLink = `mailto:${recipientEmail}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
-      window.location.href = mailtoLink;
+      // Step 2: Generate PDF
+      console.log('📄 Generating PDF from preview...');
+      const pdfBlob = await generatePdfBlob();
 
-      // Close modal and show success
-      onClose();
-      alert('✅ PDF downloaded! Check your Downloads folder and attach it to the email.');
+      // Step 2: Upload to Supabase Storage
+      const fileName = `estimate-${estimate.id || estimate.estimateNumber}-${Date.now()}.pdf`;
+      const uploadedPdfUrl = await uploadPdfToStorage(pdfBlob, fileName);
+      setPdfUrl(uploadedPdfUrl);
+
+      // Step 3: Send to Edge Function (it will create the database record and forward to webhook)
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No active session');
+      }
+
+      const emailPayload = {
+        customerName,
+        customerEmail: recipientEmail,
+        subject: emailSubject,
+        body: emailBody,
+        pdfUrl: uploadedPdfUrl,
+        estimateId: estimate.id || estimate.estimateNumber,
+        clientId: clientId,
+        contractorEmail: contractorEmail || null,
+        totalAmount: estimate?.total?.toFixed(2) || '0.00'
+      };
+
+      const edgeFunctionResponse = await fetch(EDGE_FUNCTION_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify(emailPayload)
+      });
+
+      if (!edgeFunctionResponse.ok) {
+        const errorData = await edgeFunctionResponse.json();
+        throw new Error(`Email sending failed: ${errorData.error || edgeFunctionResponse.statusText}`);
+      }
+
+      // Success!
+      setSuccessMessage(`Email sent successfully to ${recipientEmail}!`);
+
+      // Switch back to original tab if we switched
+      if (switchedTab && originalTab && setActiveTab) {
+        console.log(`🔄 Switching back to ${originalTab} tab...`);
+        setTimeout(() => setActiveTab(originalTab), 500);
+      }
+
+      // Auto-close after 3 seconds
+      setTimeout(() => {
+        onClose();
+      }, 3000);
+
     } catch (error) {
-      console.error('Error generating PDF:', error);
-      alert('Error generating PDF. Please try again.');
+      console.error('Error sending estimate:', error);
+      alert(`Error sending estimate: ${error instanceof Error ? error.message : 'Unknown error'}`);
+
+      // Switch back to original tab on error too
+      if (switchedTab && originalTab && setActiveTab) {
+        setActiveTab(originalTab);
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -162,33 +340,71 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
               <Mail className="w-6 h-6 text-blue-600" />
               <h3 className="text-lg font-medium text-gray-900">Send Estimate to Customer</h3>
             </div>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-500">
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-500" disabled={isLoading}>
               <X className="w-6 h-6" />
             </button>
           </div>
 
           {/* Body */}
           <div className="px-6 py-4 space-y-4">
+            {/* Success Message */}
+            {successMessage && (
+              <div className="bg-green-50 border border-green-200 rounded-md p-4">
+                <div className="flex items-start space-x-3">
+                  <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-green-900">{successMessage}</p>
+                    {pdfUrl && (
+                      <p className="mt-1 text-xs text-green-700">
+                        PDF URL: <a href={pdfUrl} target="_blank" rel="noopener noreferrer" className="underline">{pdfUrl}</a>
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Contractor Email Input */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <Bell className="inline w-4 h-4 mr-1 text-orange-600" />
+                Your Email (for notifications)
+              </label>
+              <input
+                type="email"
+                value={contractorEmail}
+                onChange={(e) => setContractorEmail(e.target.value)}
+                placeholder="your-email@company.com"
+                disabled={isLoading}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                You'll receive notifications when the customer responds to this estimate
+              </p>
+            </div>
+
             {/* Client Selection Toggle */}
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => setUseManual(false)}
+                disabled={isLoading}
                 className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
                   !useManual
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 <User className="inline w-4 h-4 mr-2" />
                 Select from CRM
               </button>
               <button
                 onClick={() => setUseManual(true)}
+                disabled={isLoading}
                 className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
                   useManual
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 <Mail className="inline w-4 h-4 mr-2" />
                 Manual Email
@@ -207,7 +423,8 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
                     const client = clients.find(c => c.id === e.target.value);
                     setSelectedClient(client || null);
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={isLoading}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <option value="">Choose a client...</option>
                   {clients.map(client => (
@@ -218,17 +435,33 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
                 </select>
               </div>
             ) : (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Customer Email
-                </label>
-                <input
-                  type="email"
-                  value={manualEmail}
-                  onChange={(e) => setManualEmail(e.target.value)}
-                  placeholder="customer@example.com"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Customer Name
+                  </label>
+                  <input
+                    type="text"
+                    value={manualName}
+                    onChange={(e) => setManualName(e.target.value)}
+                    placeholder="John Smith"
+                    disabled={isLoading}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Customer Email
+                  </label>
+                  <input
+                    type="email"
+                    value={manualEmail}
+                    onChange={(e) => setManualEmail(e.target.value)}
+                    placeholder="customer@example.com"
+                    disabled={isLoading}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  />
+                </div>
               </div>
             )}
 
@@ -241,7 +474,8 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
                 type="text"
                 value={emailSubject}
                 onChange={(e) => setEmailSubject(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={isLoading}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
 
@@ -254,20 +488,22 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
                 value={emailBody}
                 onChange={(e) => setEmailBody(e.target.value)}
                 rows={8}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={isLoading}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
 
-            {/* Preview Info */}
+            {/* Info Box */}
             <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
               <div className="flex items-start space-x-3">
                 <FileText className="w-5 h-5 text-blue-600 mt-0.5" />
                 <div className="flex-1">
                   <p className="text-sm font-medium text-blue-900">What happens when you click "Send":</p>
                   <ul className="mt-2 text-sm text-blue-700 list-disc list-inside space-y-1">
-                    <li>PDF estimate will be downloaded to your computer</li>
-                    <li>Your default email app will open with the message pre-filled</li>
-                    <li>You'll need to manually attach the downloaded PDF</li>
+                    <li>PDF estimate will be uploaded to secure storage</li>
+                    <li>Email will be sent to customer with Accept/Decline buttons</li>
+                    <li>Customer can respond directly from the email</li>
+                    <li>You'll be notified of their decision</li>
                   </ul>
                 </div>
               </div>
@@ -278,17 +514,27 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
           <div className="flex items-center justify-end px-6 py-4 space-x-3 bg-gray-50 border-t border-gray-200">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              disabled={isLoading}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
             <button
               onClick={handleSendEstimate}
-              disabled={!useManual && !selectedClient && !manualEmail}
+              disabled={isLoading || (!useManual && !selectedClient) || (useManual && (!manualEmail || !manualName))}
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Mail className="inline w-4 h-4 mr-2" />
-              Send to Customer
+              {isLoading ? (
+                <>
+                  <Loader2 className="inline w-4 h-4 mr-2 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Mail className="inline w-4 h-4 mr-2" />
+                  Send to Customer
+                </>
+              )}
             </button>
           </div>
         </div>

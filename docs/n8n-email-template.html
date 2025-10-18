@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Estimate from {{ $json.body.subject }}</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f4f4f4; padding: 20px;">
+    <tr>
+      <td align="center">
+        <!-- Main Container -->
+        <table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+
+          <!-- Header -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 8px 8px 0 0;">
+              <h1 style="color: #ffffff; margin: 0; font-size: 24px; text-align: center;">New Estimate</h1>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding: 40px 30px;">
+              <!-- Greeting -->
+              <p style="font-size: 16px; color: #333333; margin: 0 0 20px 0;">
+                Dear {{ $json.body.customerName }},
+              </p>
+
+              <!-- Message -->
+              <p style="font-size: 14px; color: #666666; line-height: 1.6; margin: 0 0 25px 0;">
+                Thank you for your interest! We've prepared an estimate for your project. Please review the details below and let us know your decision.
+              </p>
+
+              <!-- Estimate Details Box -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f8f9fa; border-radius: 6px; margin-bottom: 25px;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <h2 style="margin: 0 0 15px 0; font-size: 18px; color: #333333;">Estimate Details</h2>
+                    <table width="100%" cellpadding="5" cellspacing="0" border="0">
+                      <tr>
+                        <td style="color: #666666; font-size: 14px;">Estimate #:</td>
+                        <td style="color: #333333; font-size: 14px; font-weight: bold;">{{ $json.body.estimateId }}</td>
+                      </tr>
+                      <tr>
+                        <td style="color: #666666; font-size: 14px;">Valid Until:</td>
+                        <td style="color: #333333; font-size: 14px; font-weight: bold;">30 days from today</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- PDF Preview Notice -->
+              <div style="background-color: #e3f2fd; border-left: 4px solid #2196f3; padding: 15px; margin-bottom: 25px; border-radius: 4px;">
+                <p style="margin: 0; color: #1565c0; font-size: 14px;">
+                  📄 <strong>Your Estimate PDF is attached to this email</strong><br>
+                  <span style="font-size: 13px; color: #1976d2;">You can also <a href="{{ $json.body.pdfUrl }}" style="color: #1976d2; text-decoration: underline;">view it online here</a></span>
+                </p>
+              </div>
+
+              <!-- Action Buttons -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 25px;">
+                <tr>
+                  <td align="center">
+                    <h3 style="font-size: 16px; color: #333333; margin: 0 0 15px 0;">Ready to proceed?</h3>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center">
+                    <table cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <!-- Accept Button -->
+                        <td style="padding: 0 10px;">
+                          <a href="https://ujhgwcurllkkeouzwvgk.supabase.co/functions/v1/estimate-response?id={{ $json.body.estimateId }}&action=accept"
+                             style="display: inline-block; padding: 14px 32px; background-color: #4caf50; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px;">
+                            ✓ Accept Estimate
+                          </a>
+                        </td>
+                        <!-- Decline Button -->
+                        <td style="padding: 0 10px;">
+                          <a href="https://ujhgwcurllkkeouzwvgk.supabase.co/functions/v1/estimate-response?id={{ $json.body.estimateId }}&action=decline"
+                             style="display: inline-block; padding: 14px 32px; background-color: #f44336; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px;">
+                            ✗ Decline Estimate
+                          </a>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Additional Info -->
+              <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+                <p style="font-size: 14px; color: #666666; line-height: 1.6; margin: 0;">
+                  If you have any questions or would like to discuss the estimate, please don't hesitate to contact us. We're here to help!
+                </p>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #f8f9fa; padding: 20px 30px; border-radius: 0 0 8px 8px;">
+              <p style="margin: 0; font-size: 12px; color: #999999; text-align: center;">
+                This estimate was generated automatically. Please do not reply to this email.<br>
+                For questions, contact us directly.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
