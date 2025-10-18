@@ -13,7 +13,11 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const [reinforcement, setReinforcement] = useState<'none' | 'rebar' | 'mesh'>('none');
   const [rebarSpacing, setRebarSpacing] = useState<number>(12); // inches or 30cm
   const [meshType, setMeshType] = useState<'6x6' | '4x4'>('6x6');
-  const [deliveryMethod, setDeliveryMethod] = useState<'bags' | 'truck'>('bags');
+  const [deliveryMethod, setDeliveryMethod] = useState<'bags' | 'truck'>('truck'); // Default to ready-mix truck
+  const [addColor, setAddColor] = useState<boolean>(false);
+  const [colorPricePerYard, setColorPricePerYard] = useState<number | ''>('');
+  const [addFiber, setAddFiber] = useState<boolean>(false);
+  const [fiberPricePerYard, setFiberPricePerYard] = useState<number | ''>('');
 
   const handleCalculate = () => {
     if (typeof length === 'number' && typeof width === 'number' &&
@@ -66,7 +70,33 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         const minLoad = 1; // Minimum load in cubic yards
         const truckPrice = 185; // Price per cubic yard
         const deliveryFee = volume < minLoad ? 150 : 0; // Additional fee for small loads
-        const truckCost = (Math.max(volume, minLoad) * truckPrice) + deliveryFee;
+        let truckCost = (Math.max(volume, minLoad) * truckPrice) + deliveryFee;
+
+        // Add color cost if selected
+        if (addColor && typeof colorPricePerYard === 'number') {
+          const colorCost = Math.max(volume, minLoad) * colorPricePerYard;
+          truckCost += colorCost;
+
+          results.push({
+            label: 'Concrete Color Additive',
+            value: Math.max(volume, minLoad),
+            unit: volumeUnit,
+            cost: colorCost
+          });
+        }
+
+        // Add fiber cost if selected
+        if (addFiber && typeof fiberPricePerYard === 'number') {
+          const fiberCost = Math.max(volume, minLoad) * fiberPricePerYard;
+          truckCost += fiberCost;
+
+          results.push({
+            label: 'Fiber Reinforcement Additive',
+            value: Math.max(volume, minLoad),
+            unit: volumeUnit,
+            cost: fiberCost
+          });
+        }
 
         results.push({
           label: t('calculators.concrete.readyMix'),
@@ -269,6 +299,78 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             />
           </div>
         </div>
+
+        {/* Color and Fiber Add-ons - Only show for Ready-Mix Truck */}
+        {deliveryMethod === 'truck' && (
+          <div className="mt-6 border-t border-slate-200 pt-6">
+            <h3 className="text-lg font-medium text-slate-800 mb-4">Concrete Add-ons</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex items-start space-x-3">
+                <input
+                  type="checkbox"
+                  id="addColor"
+                  checked={addColor}
+                  onChange={(e) => setAddColor(e.target.checked)}
+                  className="mt-1 h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                />
+                <div className="flex-1">
+                  <label htmlFor="addColor" className="block text-sm font-medium text-slate-700 mb-1">
+                    Add Color to Concrete
+                  </label>
+                  {addColor && (
+                    <div className="mt-2">
+                      <label htmlFor="colorPrice" className="block text-xs text-slate-600 mb-1">
+                        Price per Cubic Yard ($)
+                      </label>
+                      <input
+                        type="number"
+                        id="colorPrice"
+                        min="0"
+                        step="0.01"
+                        value={colorPricePerYard}
+                        onChange={(e) => setColorPricePerYard(e.target.value ? Number(e.target.value) : '')}
+                        className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        placeholder="e.g., 15.00"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-3">
+                <input
+                  type="checkbox"
+                  id="addFiber"
+                  checked={addFiber}
+                  onChange={(e) => setAddFiber(e.target.checked)}
+                  className="mt-1 h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                />
+                <div className="flex-1">
+                  <label htmlFor="addFiber" className="block text-sm font-medium text-slate-700 mb-1">
+                    Add Fiber Reinforcement
+                  </label>
+                  {addFiber && (
+                    <div className="mt-2">
+                      <label htmlFor="fiberPrice" className="block text-xs text-slate-600 mb-1">
+                        Price per Cubic Yard ($)
+                      </label>
+                      <input
+                        type="number"
+                        id="fiberPrice"
+                        min="0"
+                        step="0.01"
+                        value={fiberPricePerYard}
+                        onChange={(e) => setFiberPricePerYard(e.target.value ? Number(e.target.value) : '')}
+                        className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        placeholder="e.g., 8.00"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="mt-6 border-t border-slate-200 pt-6">
           <h3 className="text-lg font-medium text-slate-800 mb-4">{t('calculators.concrete.reinforcementOptions')}</h3>

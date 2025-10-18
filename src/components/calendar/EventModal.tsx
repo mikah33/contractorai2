@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
-import { X, Calendar as CalendarIcon, Clock, MapPin, Users, FileText, AlertTriangle, Trash2, Edit3 } from 'lucide-react';
+import { X, Calendar as CalendarIcon, Clock, MapPin, Users, FileText, AlertTriangle, Trash2, Edit3, Bell, BellOff } from 'lucide-react';
 import { useCalendarStoreSupabase } from '../../stores/calendarStoreSupabase';
 import { CalendarEvent } from '../../services/calendarService';
 import { format, parseISO } from 'date-fns';
 import MapLink from '../common/MapLink';
+import NotificationWebhookModal from './NotificationWebhookModal';
+import ManageNotificationsModal from './ManageNotificationsModal';
 
 interface EventModalProps {
   isOpen: boolean;
@@ -14,6 +16,8 @@ interface EventModalProps {
 
 const EventModal = ({ isOpen, onClose, selectedDate, event }: EventModalProps) => {
   const [isEditing, setIsEditing] = useState(false);
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [showManageNotificationsModal, setShowManageNotificationsModal] = useState(false);
 
   // Helper function to set time to 9:00 AM (using local time)
   const getDefaultStartTime = (date?: Date) => {
@@ -154,6 +158,20 @@ const EventModal = ({ isOpen, onClose, selectedDate, event }: EventModalProps) =
             <div className="flex items-center gap-2">
               {event && !isEditing && (
                 <>
+                  <button
+                    onClick={() => setShowNotificationModal(true)}
+                    className="text-green-600 hover:text-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 rounded-full p-1"
+                    title="Send Notification"
+                  >
+                    <Bell className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={() => setShowManageNotificationsModal(true)}
+                    className="text-orange-600 hover:text-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 rounded-full p-1"
+                    title="Manage Scheduled Notifications"
+                  >
+                    <BellOff className="w-5 h-5" />
+                  </button>
                   <button
                     onClick={() => setIsEditing(true)}
                     className="text-blue-600 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full p-1"
@@ -344,6 +362,18 @@ const EventModal = ({ isOpen, onClose, selectedDate, event }: EventModalProps) =
           </form>
         </div>
       </div>
+
+      <NotificationWebhookModal
+        isOpen={showNotificationModal}
+        onClose={() => setShowNotificationModal(false)}
+        event={event}
+      />
+
+      <ManageNotificationsModal
+        isOpen={showManageNotificationsModal}
+        onClose={() => setShowManageNotificationsModal(false)}
+        event={event}
+      />
     </div>
   );
 };

@@ -19,8 +19,9 @@ interface Corner {
 
 const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const { t } = useTranslation();
-  const [fenceType, setFenceType] = useState<'privacy' | 'picket' | 'chain-link' | 'ranch' | 'panel'>('privacy');
+  const [fenceType, setFenceType] = useState<'privacy' | 'picket' | 'chain-link' | 'ranch' | 'panel' | 'custom'>('privacy');
   const [material, setMaterial] = useState<'wood' | 'vinyl' | 'metal' | 'composite'>('wood');
+  const [postMaterial, setPostMaterial] = useState<'wood' | 'vinyl-5x5' | 'vinyl-4x4' | 'metal'>('wood');
   const [length, setLength] = useState<number | ''>('');
   const [height, setHeight] = useState<number | ''>('');
   const [postSpacing, setPostSpacing] = useState<6 | 8>(8);
@@ -34,29 +35,37 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const [concreteDepth, setConcreteDepth] = useState<number | ''>('');
   const [wasteFactor, setWasteFactor] = useState<10 | 15 | 20>(15);
 
+  // Custom fencing options
+  const [customLinearFeet, setCustomLinearFeet] = useState<number | ''>('');
+  const [customPricePerFoot, setCustomPricePerFoot] = useState<number | ''>('');
+
+  // Post material prices
+  const postMaterialPrices = {
+    'wood': 24.98,
+    'vinyl-5x5': 42.00,
+    'vinyl-4x4': 27.00,
+    'metal': 42.00
+  };
+
   const materialPrices = {
     'privacy': {
       'wood': {
         'panel': 45.98,
-        'post': 24.98,
         'rail': 12.98,
         'cap': 4.98
       },
       'vinyl': {
         'panel': 89.98,
-        'post': 34.98,
         'rail': 19.98,
         'cap': 6.98
       },
       'metal': {
         'panel': 79.98,
-        'post': 29.98,
         'rail': 16.98,
         'cap': 5.98
       },
       'composite': {
         'panel': 129.98,
-        'post': 49.98,
         'rail': 24.98,
         'cap': 8.98
       }
@@ -64,25 +73,21 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     'picket': {
       'wood': {
         'picket': 2.98,
-        'post': 19.98,
         'rail': 9.98,
         'cap': 3.98
       },
       'vinyl': {
         'picket': 4.98,
-        'post': 29.98,
         'rail': 14.98,
         'cap': 5.98
       },
       'metal': {
         'picket': 3.98,
-        'post': 24.98,
         'rail': 12.98,
         'cap': 4.98
       },
       'composite': {
         'picket': 6.98,
-        'post': 39.98,
         'rail': 19.98,
         'cap': 7.98
       }
@@ -90,7 +95,6 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     'chain-link': {
       'metal': {
         'fabric': 5.98,
-        'post': 19.98,
         'rail': 8.98,
         'cap': 2.98
       }
@@ -98,29 +102,24 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     'ranch': {
       'wood': {
         'rail': 14.98,
-        'post': 24.98,
         'cap': 4.98
       },
       'vinyl': {
         'rail': 24.98,
-        'post': 34.98,
         'cap': 6.98
       }
     },
     'panel': {
       'wood': {
         'panel': 69.98,
-        'post': 24.98,
         'cap': 4.98
       },
       'vinyl': {
         'panel': 129.98,
-        'post': 34.98,
         'cap': 6.98
       },
       'composite': {
         'panel': 189.98,
-        'post': 49.98,
         'cap': 8.98
       }
     }
@@ -197,6 +196,31 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   };
 
   const handleCalculate = () => {
+    // For custom fencing, use different validation
+    if (fenceType === 'custom') {
+      if (typeof customLinearFeet === 'number' && typeof customPricePerFoot === 'number') {
+        const results: CalculationResult[] = [];
+        const totalCost = customLinearFeet * customPricePerFoot;
+
+        results.push({
+          label: 'Custom Fencing',
+          value: customLinearFeet,
+          unit: 'Linear Feet',
+          cost: totalCost
+        });
+
+        results.push({
+          label: t('calculators.fencing.totalEstimatedCost'),
+          value: Number(totalCost.toFixed(2)),
+          unit: t('calculators.fencing.currencyUnit'),
+          isTotal: true
+        });
+
+        onCalculate(results);
+      }
+      return;
+    }
+
     if (typeof length === 'number' && typeof height === 'number') {
       const results: CalculationResult[] = [];
       let totalCost = 0;
@@ -204,12 +228,16 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       // Calculate posts needed
       const postCount = Math.ceil(length / postSpacing) + 1 + corners.length;
       const postHeight = height + (postMountType === 'concrete' ? 24 : 0); // Add 2ft for concrete depth
-      const postPrice = materialPrices[fenceType][material]?.post || 0;
+      const postPrice = postMaterialPrices[postMaterial];
       const postCost = postCount * postPrice;
       totalCost += postCost;
 
+      const postMaterialLabel = postMaterial === 'vinyl-5x5' ? 'Vinyl 5x5' :
+                               postMaterial === 'vinyl-4x4' ? 'Vinyl 4x4' :
+                               postMaterial.charAt(0).toUpperCase() + postMaterial.slice(1);
+
       results.push({
-        label: `${material.charAt(0).toUpperCase() + material.slice(1)} ${t('calculators.fencing.posts')}`,
+        label: `${postMaterialLabel} ${t('calculators.fencing.posts')}`,
         value: postCount,
         unit: t('calculators.fencing.postsUnit'),
         cost: postCost
@@ -373,11 +401,12 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     }
   };
 
-  const isFormValid =
-    typeof length === 'number' &&
-    typeof height === 'number' &&
-    (!includeKickboard || typeof height === 'number') &&
-    (postMountType !== 'concrete' || typeof concreteDepth === 'number');
+  const isFormValid = fenceType === 'custom'
+    ? typeof customLinearFeet === 'number' && typeof customPricePerFoot === 'number'
+    : typeof length === 'number' &&
+      typeof height === 'number' &&
+      (!includeKickboard || typeof height === 'number') &&
+      (postMountType !== 'concrete' || typeof concreteDepth === 'number');
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
@@ -403,35 +432,101 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               <option value="chain-link">{t('calculators.fencing.chainLinkFence')}</option>
               <option value="ranch">{t('calculators.fencing.ranchRailFence')}</option>
               <option value="panel">{t('calculators.fencing.panelFence')}</option>
+              <option value="custom">Custom Fencing (Linear Footage)</option>
             </select>
           </div>
 
-          <div>
-            <label htmlFor="material" className="block text-sm font-medium text-slate-700 mb-1">
-              {t('calculators.fencing.material')}
-            </label>
-            <select
-              id="material"
-              value={material}
-              onChange={(e) => setMaterial(e.target.value as typeof material)}
-              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-            >
-              {fenceType !== 'chain-link' && (
-                <>
-                  <option value="wood">{t('calculators.fencing.wood')}</option>
-                  <option value="vinyl">{t('calculators.fencing.vinyl')}</option>
-                  {fenceType !== 'ranch' && <option value="composite">{t('calculators.fencing.composite')}</option>}
-                </>
-              )}
-              {(fenceType === 'chain-link' || fenceType === 'picket') && (
-                <option value="metal">{t('calculators.fencing.metal')}</option>
-              )}
-            </select>
-          </div>
+          {fenceType !== 'custom' && (
+            <div>
+              <label htmlFor="material" className="block text-sm font-medium text-slate-700 mb-1">
+                {t('calculators.fencing.material')}
+              </label>
+              <select
+                id="material"
+                value={material}
+                onChange={(e) => setMaterial(e.target.value as typeof material)}
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              >
+                {fenceType !== 'chain-link' && (
+                  <>
+                    <option value="wood">{t('calculators.fencing.wood')}</option>
+                    <option value="vinyl">{t('calculators.fencing.vinyl')}</option>
+                    {fenceType !== 'ranch' && <option value="composite">{t('calculators.fencing.composite')}</option>}
+                  </>
+                )}
+                {(fenceType === 'chain-link' || fenceType === 'picket') && (
+                  <option value="metal">{t('calculators.fencing.metal')}</option>
+                )}
+              </select>
+            </div>
+          )}
+
+          {fenceType !== 'custom' && (
+            <div>
+              <label htmlFor="postMaterial" className="block text-sm font-medium text-slate-700 mb-1">
+                Post Material
+              </label>
+              <select
+                id="postMaterial"
+                value={postMaterial}
+                onChange={(e) => setPostMaterial(e.target.value as typeof postMaterial)}
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              >
+                <option value="wood">Wood ($24.98)</option>
+                <option value="vinyl-5x5">Vinyl 5x5 ($42.00)</option>
+                <option value="vinyl-4x4">Vinyl 4x4 ($27.00)</option>
+                <option value="metal">Metal ($42.00)</option>
+              </select>
+            </div>
+          )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div>
+        {fenceType === 'custom' && (
+          <div className="mb-6 p-6 bg-blue-50 rounded-lg border border-blue-200">
+            <h3 className="text-lg font-medium text-slate-800 mb-4">Custom Fencing Calculator</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="customLinearFeet" className="block text-sm font-medium text-slate-700 mb-1">
+                  Total Linear Feet
+                </label>
+                <input
+                  type="number"
+                  id="customLinearFeet"
+                  min="0"
+                  step="0.1"
+                  value={customLinearFeet}
+                  onChange={(e) => setCustomLinearFeet(e.target.value ? Number(e.target.value) : '')}
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="Enter total linear feet"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="customPricePerFoot" className="block text-sm font-medium text-slate-700 mb-1">
+                  Price Per Linear Foot ($)
+                </label>
+                <input
+                  type="number"
+                  id="customPricePerFoot"
+                  min="0"
+                  step="0.01"
+                  value={customPricePerFoot}
+                  onChange={(e) => setCustomPricePerFoot(e.target.value ? Number(e.target.value) : '')}
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="e.g., 25.00"
+                />
+              </div>
+            </div>
+            <p className="mt-4 text-sm text-slate-600">
+              <strong>Note:</strong> Custom fencing allows you to quickly calculate total cost based on your known linear footage and price per foot.
+            </p>
+          </div>
+        )}
+
+        {fenceType !== 'custom' && (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div>
             <label htmlFor="length" className="block text-sm font-medium text-slate-700 mb-1">
               {t('calculators.fencing.totalLength')}
             </label>
@@ -476,10 +571,10 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               <option value={6}>{t('calculators.fencing.sixFeet')}</option>
               <option value={8}>{t('calculators.fencing.eightFeet')}</option>
             </select>
+            </div>
           </div>
-        </div>
 
-        <div className="border-t border-slate-200 pt-6 mb-6">
+          <div className="border-t border-slate-200 pt-6 mb-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-medium text-slate-800">{t('calculators.fencing.gates')}</h3>
             <div className="flex space-x-2">
@@ -732,6 +827,8 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             </div>
           </div>
         </div>
+          </>
+        )}
       </div>
 
       <button

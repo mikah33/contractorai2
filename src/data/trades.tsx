@@ -1,4 +1,4 @@
-import { Home, Hammer, Wrench, PaintBucket, Lightbulb, Maximize, Scale, Construction, Square as SquareFoot, Footprints, Trash2, Router, Layers, BellOff as WallOff, Thermometer, Droplet, Columns, DoorOpen as Door, Radiation as Foundation, Cloud, Warehouse } from 'lucide-react';
+import { Home, Hammer, Wrench, PaintBucket, Lightbulb, Maximize, Scale, Construction, Square as SquareFoot, Footprints, Trash2, Router, Layers, BellOff as WallOff, Thermometer, Droplet, Columns, DoorOpen as Door, Radiation as Foundation, Cloud, Warehouse, Blocks } from 'lucide-react';
 import { Trade } from '../types';
 
 export const trades: Trade[] = [
@@ -774,6 +774,39 @@ export const trades: Trade[] = [
         label: 'Extended Warranty',
         type: 'checkbox',
         checkboxLabel: 'Include extended manufacturer warranty'
+      }
+    ]
+  },
+  {
+    id: 'veneer',
+    name: 'trades.veneer',
+    category: 'Exterior',
+    icon: <Blocks />,
+    description: 'Veneer installation for walls and facades',
+    requiredFields: [
+      {
+        id: 'length',
+        label: 'Length',
+        type: 'number',
+        required: true,
+        placeholder: 'Enter length in feet',
+        unit: 'ft'
+      },
+      {
+        id: 'height',
+        label: 'Height',
+        type: 'number',
+        required: true,
+        placeholder: 'Enter height in feet',
+        unit: 'ft'
+      },
+      {
+        id: 'cost_per_sqft',
+        label: 'Cost Per Square Foot',
+        type: 'number',
+        required: true,
+        placeholder: 'e.g., 12.50',
+        unit: '$/sq ft'
       }
     ]
   }

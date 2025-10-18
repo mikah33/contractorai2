@@ -17,7 +17,8 @@ import {
   DoorOpen,
   Building2,
   Cloud,
-  Warehouse
+  Warehouse,
+  Blocks
 } from 'lucide-react';
 
 export interface CalculatorInfo {
@@ -210,6 +211,15 @@ export const calculatorRegistry: CalculatorInfo[] = [
     description: 'Junk and debris removal',
     category: 'Site Work',
     route: '/pricing?calculator=junk_removal'
+  },
+  {
+    id: 'veneer',
+    name: 'Veneer Calculator',
+    translationKey: 'trades.veneer',
+    icon: Blocks,
+    description: 'Veneer installation for walls and facades',
+    category: 'Exterior',
+    route: '/pricing?calculator=veneer'
   }
 ];
 

@@ -1,350 +1,487 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
-import { Warehouse } from 'lucide-react';
+import { Warehouse, Search, Loader2, CheckCircle2, AlertCircle, Save, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { estimateService } from '../../services/estimateService';
+import { useClientsStore } from '../../stores/clientsStore';
 
-type RoofMaterial = 'asphalt' | 'metal' | 'tile' | 'slate' | 'tpo' | 'epdm' | 'wood';
-type RoofType = 'gable' | 'hip' | 'flat' | 'mansard' | 'gambrel' | 'shed';
+type RoofMaterial = 'asphalt' | 'architectural' | 'metal' | 'tile' | 'composite';
+type RoofPitch = 'low' | 'medium' | 'high' | 'steep';
 
-const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
+const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSuccess }) => {
   const { t } = useTranslation();
+  const { clients, fetchClients, isLoading: clientsLoading } = useClientsStore();
+
   // State management
+  const [address, setAddress] = useState('');
+  const [searching, setSearching] = useState(false);
+  const [addressStatus, setAddressStatus] = useState<{ type: 'success' | 'error' | 'info' | null, message: string }>({ type: null, message: '' });
   const [roofArea, setRoofArea] = useState<number | ''>('');
-  const [roofType, setRoofType] = useState<RoofType>('gable');
   const [material, setMaterial] = useState<RoofMaterial>('asphalt');
-  const [pitch, setPitch] = useState('6:12');
+  const [pitch, setPitch] = useState<RoofPitch>('medium');
   const [stories, setStories] = useState('1');
   const [layers, setLayers] = useState<number | ''>('');
   const [skylights, setSkylights] = useState<number | ''>('');
-  const [chimneys, setChimneys] = useState<number | ''>('');
-  const [valleys, setValleys] = useState<number | ''>('');
   const [includeVentilation, setIncludeVentilation] = useState(false);
   const [includeIceShield, setIncludeIceShield] = useState(true);
   const [includeWarranty, setIncludeWarranty] = useState(false);
 
-  // Material pricing (price per square - 100 sq ft)
+  // Save modal state
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [saveTitle, setSaveTitle] = useState('');
+  const [selectedClientId, setSelectedClientId] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [lastCalculation, setLastCalculation] = useState<CalculationResult[] | null>(null);
+
+  // Fetch clients when modal opens
+  useEffect(() => {
+    if (showSaveModal) {
+      fetchClients();
+    }
+  }, [showSaveModal, fetchClients]);
+
+  // Material pricing (price per square - 100 sq ft) - MATCHES WIDGET
   const materialPrices: Record<RoofMaterial, number> = {
-    asphalt: 130,
-    metal: 575,
-    tile: 450,
-    slate: 800,
-    tpo: 280,
-    epdm: 220,
-    wood: 400
+    asphalt: 350,           // Asphalt Shingles
+    architectural: 475,     // Architectural Shingles
+    metal: 850,            // Metal Roofing
+    tile: 625,             // Tile Roofing
+    composite: 425         // Composite Shingles
   };
 
-  // Pitch multipliers (affects labor difficulty)
-  const pitchMultipliers: Record<string, number> = {
-    '1:12': 1.0,
-    '2:12': 1.0,
-    '3:12': 1.0,
-    '4:12': 1.0,
-    '5:12': 1.0,
-    '6:12': 1.15,
-    '7:12': 1.15,
-    '8:12': 1.35,
-    '9:12': 1.35,
-    '10:12': 1.6,
-    '11:12': 1.6,
-    '12:12': 1.6
+  // Pitch multipliers - MATCHES WIDGET
+  const pitchMultipliers: Record<RoofPitch, number> = {
+    low: 1.0,      // 0-4/12
+    medium: 1.15,  // 5-8/12
+    high: 1.35,    // 9-12/12
+    steep: 1.6     // 12+/12
   };
 
-  // Story height multipliers (affects labor cost)
+  // Story height multipliers - MATCHES WIDGET
   const storyMultipliers: Record<string, number> = {
     '1': 1.0,
-    '2': 1.25,
-    '3': 1.5
+    '2': 1.15,
+    '3': 1.3
   };
 
-  // Complexity multipliers based on roof type
-  const complexityMultipliers: Record<RoofType, number> = {
-    'flat': 1.0,
-    'gable': 1.0,
-    'shed': 1.0,
-    'hip': 1.15,
-    'mansard': 1.3,
-    'gambrel': 1.3
+  // Address search using Google Solar API (matches widget)
+  const handleAddressSearch = async () => {
+    if (!address.trim()) {
+      setAddressStatus({ type: 'error', message: '⚠️ Please enter an address' });
+      return;
+    }
+
+    setSearching(true);
+    setAddressStatus({ type: 'info', message: '🔍 Analyzing roof from satellite imagery...' });
+
+    try {
+      const response = await fetch('https://ujhgwcurllkkeouzwvgk.supabase.co/functions/v1/get-roof-area', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ address: address.trim() })
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.roofAreaSqFeet) {
+        setRoofArea(data.roofAreaSqFeet);
+        setAddressStatus({
+          type: 'success',
+          message: `✅ Found ${data.roofAreaSqFeet.toLocaleString()} sq ft roof at ${data.address}${data.imageryDate ? `\nImagery from: ${data.imageryDate}` : ''}`
+        });
+
+        // Auto-calculate after successful address search
+        setTimeout(() => {
+          if (data.roofAreaSqFeet > 0) {
+            handleCalculateWithArea(data.roofAreaSqFeet);
+          }
+        }, 500);
+      } else {
+        setAddressStatus({
+          type: 'error',
+          message: `⚠️ ${data.error || 'Unable to detect roof area'}`
+        });
+      }
+    } catch (error) {
+      console.error('Address search error:', error);
+      setAddressStatus({
+        type: 'error',
+        message: '⚠️ Error searching address. Please try again.'
+      });
+    } finally {
+      setSearching(false);
+    }
   };
 
-  const handleCalculate = () => {
-    if (!roofArea || roofArea <= 0) {
-      alert(t('calculators.roofing.alerts.enterRoofArea'));
+  const handleCalculateWithArea = (area?: number) => {
+    const areaToUse = area || roofArea;
+    if (!areaToUse || areaToUse <= 0) {
+      alert('Please enter a valid roof area or search by address');
       return;
     }
 
     const results: CalculationResult[] = [];
-    const area = Number(roofArea);
-    const squares = area / 100; // Convert to roofing squares
+    const sqft = Number(areaToUse);
+    const squares = sqft / 100; // Convert to roofing squares
 
-    // 1. Roof Area
-    results.push({
-      label: t('calculators.roofing.results.roofArea'),
-      value: area,
-      unit: t('calculators.roofing.units.sqft'),
-      cost: 0
-    });
-
-    // 2. Roofing Material
+    // 1. Roofing Material - MATCHES WIDGET
     const materialCost = squares * materialPrices[material];
     results.push({
-      label: getMaterialName(material),
+      label: 'Roofing Material',
       value: squares,
-      unit: t('calculators.roofing.units.squares'),
+      unit: 'squares',
       cost: materialCost
     });
 
-    // 3. Underlayment
-    const underlaymentCost = squares * 26;
+    // 2. Underlayment - MATCHES WIDGET
     results.push({
-      label: t('calculators.roofing.results.syntheticUnderlayment'),
+      label: 'Underlayment',
       value: squares,
-      unit: t('calculators.roofing.units.squares'),
-      cost: underlaymentCost
+      unit: 'squares',
+      cost: squares * 26
     });
 
-    // 4. Ice & Water Shield
+    // 3. Ice & Water Shield - MATCHES WIDGET
     if (includeIceShield) {
-      const rolls = Math.ceil(area / 200);
+      const rolls = Math.ceil(sqft / 200);
       results.push({
-        label: t('calculators.roofing.results.iceWaterShield'),
+        label: 'Ice & Water Shield',
         value: rolls,
-        unit: t('calculators.roofing.units.rolls'),
+        unit: 'rolls',
         cost: rolls * 70
       });
     }
 
-    // 5. Ridge Cap (estimate 10% of area as linear feet)
-    const ridgeFeet = area * 0.1;
+    // 4. Ridge Cap - MATCHES WIDGET
+    const ridgeFeet = sqft * 0.1;
     results.push({
-      label: t('calculators.roofing.results.ridgeCapShingles'),
+      label: 'Ridge Cap',
       value: ridgeFeet,
-      unit: t('calculators.roofing.units.linearFeet'),
+      unit: 'linear feet',
       cost: ridgeFeet * 3.25
     });
 
-    // 6. Drip Edge (estimate perimeter)
-    const dripEdgeFeet = Math.sqrt(area) * 4; // Rough perimeter estimate
+    // 5. Drip Edge - MATCHES WIDGET
+    const dripEdge = Math.sqrt(sqft) * 4;
     results.push({
-      label: t('calculators.roofing.results.dripEdge'),
-      value: dripEdgeFeet,
-      unit: t('calculators.roofing.units.linearFeet'),
-      cost: dripEdgeFeet * 2.5
+      label: 'Drip Edge',
+      value: dripEdge,
+      unit: 'linear feet',
+      cost: dripEdge * 2.5
     });
 
-    // 7. Starter Strips
-    const starterBundles = Math.ceil(dripEdgeFeet / 90);
+    // 6. Nails & Fasteners - MATCHES WIDGET
     results.push({
-      label: t('calculators.roofing.results.starterStrips'),
-      value: starterBundles,
-      unit: t('calculators.roofing.units.bundles'),
-      cost: starterBundles * 37
-    });
-
-    // 8. Pipe Boots (estimate 2-4 based on area)
-    const pipeBoots = area > 2000 ? 4 : 2;
-    results.push({
-      label: t('calculators.roofing.results.pipeBoots'),
-      value: pipeBoots,
-      unit: t('calculators.roofing.units.each'),
-      cost: pipeBoots * 12
-    });
-
-    // 9. Nails & Fasteners
-    results.push({
-      label: t('calculators.roofing.results.nailsFasteners'),
+      label: 'Nails & Fasteners',
       value: squares,
-      unit: t('calculators.roofing.units.squares'),
+      unit: 'squares',
       cost: squares * 32
     });
 
-    // Labor costs removed - materials only
-
-    // 12. Chimney Flashing (materials only)
-    if (chimneys && chimneys > 0) {
-      results.push({
-        label: t('calculators.roofing.results.chimneyFlashing'),
-        value: Number(chimneys),
-        unit: t('calculators.roofing.units.chimneys', { count: chimneys }),
-        cost: Number(chimneys) * 150 // Material cost only
-      });
-    }
-
-    // 13. Skylight Flashing (materials only)
-    if (skylights && skylights > 0) {
-      results.push({
-        label: t('calculators.roofing.results.skylightFlashing'),
-        value: Number(skylights),
-        unit: t('calculators.roofing.units.skylights', { count: skylights }),
-        cost: Number(skylights) * 85 // Material cost only
-      });
-    }
-
-    // 14. Valley Flashing
-    if (valleys && valleys > 0) {
-      const valleyFeet = Number(valleys) * 20; // Estimate 20 LF per valley
-      results.push({
-        label: t('calculators.roofing.results.valleyFlashing'),
-        value: valleyFeet,
-        unit: t('calculators.roofing.units.linearFeet'),
-        cost: valleyFeet * 3.5
-      });
-    }
-
-    // 15. Ventilation System
-    if (includeVentilation) {
-      results.push({
-        label: t('calculators.roofing.results.ventilationSystem'),
-        value: 1,
-        unit: t('calculators.roofing.units.system'),
-        cost: 625
-      });
-    }
-
-    // 16. Extended Warranty
-    if (includeWarranty) {
-      results.push({
-        label: t('calculators.roofing.results.extendedWarranty'),
-        value: squares,
-        unit: t('calculators.roofing.units.squares'),
-        cost: squares * 27
-      });
-    }
-
-    // 17. Disposal (if tear-off)
+    // 7. Debris Disposal (if tear-off needed) - MATCHES WIDGET
     if (layers && layers > 0) {
       results.push({
-        label: t('calculators.roofing.results.debrisDisposal'),
+        label: 'Debris Disposal',
         value: squares,
-        unit: t('calculators.roofing.units.squares'),
+        unit: 'squares',
         cost: squares * 32
       });
     }
 
-    // Don't add total as a line item - CalculatorResults component will calculate it
-    // This prevents double-counting the total cost
+    // 8. Skylight Flashing - MATCHES WIDGET
+    if (skylights && skylights > 0) {
+      results.push({
+        label: 'Skylight Flashing',
+        value: Number(skylights),
+        unit: skylights > 1 ? 'skylights' : 'skylight',
+        cost: Number(skylights) * 85
+      });
+    }
+
+    // 9. Ventilation System - MATCHES WIDGET
+    if (includeVentilation) {
+      results.push({
+        label: 'Ventilation System',
+        value: 1,
+        unit: 'system',
+        cost: 625
+      });
+    }
+
+    // 10. Extended Warranty - MATCHES WIDGET
+    if (includeWarranty) {
+      results.push({
+        label: 'Extended Warranty',
+        value: squares,
+        unit: 'squares',
+        cost: squares * 27
+      });
+    }
+
+    setLastCalculation(results);
     onCalculate(results);
   };
 
-  const getMaterialName = (mat: RoofMaterial): string => {
-    return t(`calculators.roofing.materials.${mat}`);
+  const handleCalculate = () => {
+    handleCalculateWithArea();
+  };
+
+  const handleSaveCalculation = async () => {
+    if (!lastCalculation || lastCalculation.length === 0) {
+      alert('Please calculate an estimate first');
+      return;
+    }
+
+    if (!saveTitle.trim()) {
+      alert('Please enter a title for this calculation');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      // Calculate total from results
+      const total = lastCalculation.reduce((sum, item) => sum + item.cost, 0);
+
+      // Generate UUID for new estimate
+      const generateUUID = () => {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+          const r = Math.random() * 16 | 0;
+          const v = c === 'x' ? r : (r & 0x3 | 0x8);
+          return v.toString(16);
+        });
+      };
+
+      // Get selected client info
+      const selectedClient = clients.find(c => c.id === selectedClientId);
+
+      const estimate = {
+        id: generateUUID(),
+        title: saveTitle.trim(),
+        clientId: selectedClientId || undefined,
+        clientName: selectedClient?.name || undefined,
+        status: 'draft' as const,
+        subtotal: total,
+        taxRate: 0,
+        taxAmount: 0,
+        total: total,
+        items: lastCalculation.map(item => ({
+          id: Math.random().toString(36).substr(2, 9),
+          description: item.label,
+          quantity: item.value,
+          unit: item.unit,
+          unitPrice: item.cost / item.value,
+          total: item.cost
+        })),
+        calculatorType: 'roofing',
+        calculatorData: {
+          address,
+          roofArea,
+          material,
+          pitch,
+          stories,
+          layers,
+          skylights,
+          includeVentilation,
+          includeIceShield,
+          includeWarranty
+        }
+      };
+
+      const result = await estimateService.saveEstimate(estimate);
+
+      if (result.success) {
+        alert('✅ Calculation saved successfully!');
+        setShowSaveModal(false);
+        setSaveTitle('');
+        setSelectedClientId('');
+
+        // Trigger refresh of saved calculations list
+        if (onSaveSuccess) {
+          onSaveSuccess();
+        }
+      } else {
+        throw new Error('Failed to save calculation');
+      }
+    } catch (error) {
+      console.error('Error saving calculation:', error);
+      alert('❌ Failed to save calculation. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddressSearch();
+    }
+  };
+
+  const getStatusIcon = () => {
+    if (!addressStatus.type) return null;
+    switch (addressStatus.type) {
+      case 'success':
+        return <CheckCircle2 className="w-4 h-4 text-green-600" />;
+      case 'error':
+        return <AlertCircle className="w-4 h-4 text-red-600" />;
+      case 'info':
+        return <Loader2 className="w-4 h-4 text-blue-600 animate-spin" />;
+      default:
+        return null;
+    }
+  };
+
+  const getStatusColor = () => {
+    switch (addressStatus.type) {
+      case 'success':
+        return 'text-green-600 bg-green-50 border-green-200';
+      case 'error':
+        return 'text-red-600 bg-red-50 border-red-200';
+      case 'info':
+        return 'text-blue-600 bg-blue-50 border-blue-200';
+      default:
+        return '';
+    }
   };
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
       <div className="flex items-center mb-6">
         <Warehouse className="h-6 w-6 text-orange-600 mr-2" />
-        <h2 className="text-xl font-bold text-gray-900">{t('calculators.roofing.title')}</h2>
+        <h2 className="text-xl font-bold text-gray-900">Roofing Cost Calculator</h2>
       </div>
 
       <div className="space-y-6">
+        {/* Address Auto-Detection */}
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4 border-2 border-blue-200">
+          <label className="block text-sm font-semibold text-gray-900 mb-2">
+            🏠 Find Your Roof Area by Address
+          </label>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Enter your address (e.g., 1600 Pennsylvania Ave NW, Washington, DC)"
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <button
+              type="button"
+              onClick={handleAddressSearch}
+              disabled={searching || !address.trim()}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap"
+            >
+              {searching ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Searching...
+                </>
+              ) : (
+                <>
+                  <Search className="w-4 h-4" />
+                  Search
+                </>
+              )}
+            </button>
+          </div>
+
+          {addressStatus.type && (
+            <div className={`mt-2 p-2 rounded-md border flex items-start gap-2 ${getStatusColor()}`}>
+              {getStatusIcon()}
+              <p className="text-sm whitespace-pre-line">{addressStatus.message}</p>
+            </div>
+          )}
+        </div>
+
         {/* Manual Input Fields */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              {t('calculators.roofing.roofArea')}
+              Roof Area (sq ft) *
             </label>
             <input
               type="number"
               value={roofArea}
               onChange={(e) => setRoofArea(e.target.value ? parseFloat(e.target.value) : '')}
-              placeholder={t('calculators.roofing.roofAreaPlaceholder')}
+              placeholder="2000"
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               required
             />
+            <span className="text-xs text-gray-500 mt-1 block">
+              Or search by address above to auto-fill
+            </span>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              {t('calculators.roofing.roofType')}
-            </label>
-            <select
-              value={roofType}
-              onChange={(e) => setRoofType(e.target.value as RoofType)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-            >
-              <option value="gable">{t('calculators.roofing.roofTypes.gable')}</option>
-              <option value="hip">{t('calculators.roofing.roofTypes.hip')}</option>
-              <option value="flat">{t('calculators.roofing.roofTypes.flat')}</option>
-              <option value="mansard">{t('calculators.roofing.roofTypes.mansard')}</option>
-              <option value="gambrel">{t('calculators.roofing.roofTypes.gambrel')}</option>
-              <option value="shed">{t('calculators.roofing.roofTypes.shed')}</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              {t('calculators.roofing.roofingMaterial')}
+              Material Type *
             </label>
             <select
               value={material}
               onChange={(e) => setMaterial(e.target.value as RoofMaterial)}
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             >
-              <option value="asphalt">{t('calculators.roofing.materialOptions.asphalt')}</option>
-              <option value="metal">{t('calculators.roofing.materialOptions.metal')}</option>
-              <option value="tile">{t('calculators.roofing.materialOptions.tile')}</option>
-              <option value="slate">{t('calculators.roofing.materialOptions.slate')}</option>
-              <option value="tpo">{t('calculators.roofing.materialOptions.tpo')}</option>
-              <option value="epdm">{t('calculators.roofing.materialOptions.epdm')}</option>
-              <option value="wood">{t('calculators.roofing.materialOptions.wood')}</option>
+              <option value="asphalt">Asphalt Shingles - ${materialPrices.asphalt}/sq</option>
+              <option value="architectural">Architectural Shingles - ${materialPrices.architectural}/sq</option>
+              <option value="metal">Metal Roofing - ${materialPrices.metal}/sq</option>
+              <option value="tile">Tile Roofing - ${materialPrices.tile}/sq</option>
+              <option value="composite">Composite Shingles - ${materialPrices.composite}/sq</option>
             </select>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              {t('calculators.roofing.roofPitch')}
+              Roof Pitch
             </label>
             <select
               value={pitch}
-              onChange={(e) => setPitch(e.target.value)}
+              onChange={(e) => setPitch(e.target.value as RoofPitch)}
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             >
-              <option value="1:12">{t('calculators.roofing.pitchOptions.1:12')}</option>
-              <option value="2:12">{t('calculators.roofing.pitchOptions.2:12')}</option>
-              <option value="3:12">{t('calculators.roofing.pitchOptions.3:12')}</option>
-              <option value="4:12">{t('calculators.roofing.pitchOptions.4:12')}</option>
-              <option value="5:12">{t('calculators.roofing.pitchOptions.5:12')}</option>
-              <option value="6:12">{t('calculators.roofing.pitchOptions.6:12')}</option>
-              <option value="7:12">{t('calculators.roofing.pitchOptions.7:12')}</option>
-              <option value="8:12">{t('calculators.roofing.pitchOptions.8:12')}</option>
-              <option value="9:12">{t('calculators.roofing.pitchOptions.9:12')}</option>
-              <option value="10:12">{t('calculators.roofing.pitchOptions.10:12')}</option>
-              <option value="12:12">{t('calculators.roofing.pitchOptions.12:12')}</option>
+              <option value="low">Low (0-4/12)</option>
+              <option value="medium">Medium (5-8/12)</option>
+              <option value="high">High (9-12/12)</option>
+              <option value="steep">Steep (12+/12)</option>
             </select>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              {t('calculators.roofing.numberOfStories')}
+              Number of Stories
             </label>
             <select
               value={stories}
               onChange={(e) => setStories(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             >
-              <option value="1">{t('calculators.roofing.storiesOptions.1')}</option>
-              <option value="2">{t('calculators.roofing.storiesOptions.2')}</option>
-              <option value="3">{t('calculators.roofing.storiesOptions.3')}</option>
+              <option value="1">1 Story</option>
+              <option value="2">2 Stories</option>
+              <option value="3">3+ Stories</option>
             </select>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              {t('calculators.roofing.layersToRemove')}
+              Old Layers to Remove
             </label>
-            <input
-              type="number"
+            <select
               value={layers}
               onChange={(e) => setLayers(e.target.value ? parseInt(e.target.value) : '')}
-              placeholder="0"
-              min="0"
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-            />
+            >
+              <option value="0">0 (New Build)</option>
+              <option value="1">1 Layer</option>
+              <option value="2">2 Layers</option>
+              <option value="3">3 Layers</option>
+            </select>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              {t('calculators.roofing.skylights')}
+              Number of Skylights
             </label>
             <input
               type="number"
@@ -355,39 +492,11 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             />
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              {t('calculators.roofing.chimneys')}
-            </label>
-            <input
-              type="number"
-              value={chimneys}
-              onChange={(e) => setChimneys(e.target.value ? parseInt(e.target.value) : '')}
-              placeholder="0"
-              min="0"
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              {t('calculators.roofing.valleys')}
-            </label>
-            <input
-              type="number"
-              value={valleys}
-              onChange={(e) => setValleys(e.target.value ? parseInt(e.target.value) : '')}
-              placeholder="0"
-              min="0"
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-            />
-          </div>
         </div>
 
         {/* Optional Features */}
         <div className="space-y-3">
-          <h3 className="text-sm font-semibold text-gray-900">{t('calculators.roofing.optionalFeatures')}</h3>
+          <h3 className="text-sm font-semibold text-gray-900">Optional Features</h3>
 
           <label className="flex items-center space-x-3 cursor-pointer">
             <input
@@ -396,7 +505,7 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               onChange={(e) => setIncludeVentilation(e.target.checked)}
               className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
             />
-            <span className="text-sm text-gray-700">{t('calculators.roofing.ventilationUpgrade')}</span>
+            <span className="text-sm text-gray-700">Include Ventilation System (+$625)</span>
           </label>
 
           <label className="flex items-center space-x-3 cursor-pointer">
@@ -406,7 +515,7 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               onChange={(e) => setIncludeIceShield(e.target.checked)}
               className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
             />
-            <span className="text-sm text-gray-700">{t('calculators.roofing.iceWaterShieldOption')}</span>
+            <span className="text-sm text-gray-700">Include Ice & Water Shield</span>
           </label>
 
           <label className="flex items-center space-x-3 cursor-pointer">
@@ -416,17 +525,127 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               onChange={(e) => setIncludeWarranty(e.target.checked)}
               className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
             />
-            <span className="text-sm text-gray-700">{t('calculators.roofing.extendedWarrantyOption')}</span>
+            <span className="text-sm text-gray-700">Extended Warranty ($27/sq)</span>
           </label>
         </div>
 
-        <button
-          onClick={handleCalculate}
-          className="w-full py-3 px-4 border border-transparent text-base font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors"
-        >
-          {t('calculators.calculateMaterials')}
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={handleCalculate}
+            className="flex-1 py-3 px-4 border border-transparent text-base font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors"
+          >
+            Calculate Estimate
+          </button>
+
+          {lastCalculation && lastCalculation.length > 0 && (
+            <button
+              onClick={() => setShowSaveModal(true)}
+              className="px-6 py-3 border-2 border-green-600 text-base font-medium rounded-md text-green-600 bg-white hover:bg-green-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors flex items-center gap-2"
+            >
+              <Save className="w-5 h-5" />
+              Save Calculation
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* Save Calculation Modal */}
+      {showSaveModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-gray-900">Save Calculation</h3>
+              <button
+                onClick={() => setShowSaveModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Title *
+                </label>
+                <input
+                  type="text"
+                  value={saveTitle}
+                  onChange={(e) => setSaveTitle(e.target.value)}
+                  placeholder="e.g., Main Street Roof Replacement"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  autoFocus
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Client (Optional)
+                </label>
+                {clientsLoading ? (
+                  <div className="w-full px-4 py-2 border border-gray-300 rounded-md bg-gray-50 flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                    <span className="text-sm text-gray-500">Loading clients...</span>
+                  </div>
+                ) : (
+                  <select
+                    value={selectedClientId}
+                    onChange={(e) => setSelectedClientId(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  >
+                    <option value="">-- Select a client --</option>
+                    {clients
+                      .filter(c => c.status === 'active')
+                      .map(client => (
+                        <option key={client.id} value={client.id}>
+                          {client.name} {client.company ? `(${client.company})` : ''}
+                        </option>
+                      ))}
+                  </select>
+                )}
+                {!clientsLoading && clients.length === 0 && (
+                  <p className="text-xs text-amber-600 mt-1">
+                    No clients found. Add clients in the CRM section first.
+                  </p>
+                )}
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+                <p className="text-sm text-blue-800">
+                  💡 This calculation will be saved and can be loaded later from the "Saved Calculations" section.
+                </p>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={() => setShowSaveModal(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+                  disabled={saving}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveCalculation}
+                  disabled={saving || !saveTitle.trim()}
+                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                >
+                  {saving ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      Save
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

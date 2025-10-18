@@ -1,0 +1,101 @@
+{
+  "name": "Calendar Event Notifications",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "110a2ba9-93f2-4574-b2f6-3dc1d2f69637",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract all recipients from the webhook payload\nconst recipients = $input.item.json.body.notification.recipients;\nconst eventData = $input.item.json.body.event;\nconst notificationData = $input.item.json.body.notification;\nconst timestamp = $input.item.json.body.timestamp;\n\n// Create an array of items, one for each recipient\nconst items = recipients.map(recipient => ({\n  json: {\n    recipient: recipient,\n    event: eventData,\n    notification: {\n      trigger_time: notificationData.trigger_time,\n      message: notificationData.message,\n      is_test: notificationData.is_test\n    },\n    timestamp: timestamp\n  }\n}));\n\nreturn items;"
+      },
+      "name": "Split Recipients",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "amount": 5,
+        "unit": "minutes"
+      },
+      "name": "Wait Node",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [650, 300],
+      "webhookId": "REPLACE_WITH_WEBHOOK_ID"
+    },
+    {
+      "parameters": {
+        "fromEmail": "notifications@contractorai.com",
+        "toEmail": "={{ $json.recipient.email }}",
+        "subject": "Event Reminder: {{ $json.event.title }}",
+        "emailType": "html",
+        "message": "=<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Event Notification - ContractorAI</title>\n</head>\n<body style=\"margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f3f4f6;\">\n    <table role=\"presentation\" style=\"width: 100%; border-collapse: collapse; background-color: #f3f4f6;\">\n        <tr>\n            <td style=\"padding: 40px 20px;\">\n                <table role=\"presentation\" style=\"max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);\">\n                    <tr>\n                        <td style=\"background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0;\">\n                            <h1 style=\"margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;\">📅 Event Reminder</h1>\n                            <p style=\"margin: 8px 0 0 0; color: #dbeafe; font-size: 14px;\">ContractorAI Calendar Notification</p>\n                        </td>\n                    </tr>\n                    <tr>\n                        <td style=\"padding: 30px 30px 20px 30px;\">\n                            <p style=\"margin: 0; font-size: 16px; color: #374151; line-height: 1.5;\">Hi <strong>{{ $json.recipient.name }}</strong>,</p>\n                            <p style=\"margin: 16px 0 0 0; font-size: 16px; color: #374151; line-height: 1.5;\">You have an upcoming event scheduled. Here are the details:</p>\n                        </td>\n                    </tr>\n                    <tr>\n                        <td style=\"padding: 0 30px 30px 30px;\">\n                            <table role=\"presentation\" style=\"width: 100%; border: 2px solid #e5e7eb; border-radius: 8px; overflow: hidden;\">\n                                <tr>\n                                    <td style=\"background-color: #f9fafb; padding: 20px; border-bottom: 1px solid #e5e7eb;\">\n                                        <h2 style=\"margin: 0; font-size: 22px; color: #1f2937; font-weight: 600;\">{{ $json.event.title }}</h2>\n                                    </td>\n                                </tr>\n                                <tr>\n                                    <td style=\"padding: 20px; border-bottom: 1px solid #e5e7eb;\">\n                                        <div style=\"margin-bottom: 16px;\">\n                                            <p style=\"margin: 0 0 4px 0; font-size: 12px; color: #6b7280; font-weight: 600; text-transform: uppercase;\">📅 Start Date & Time</p>\n                                            <p style=\"margin: 0; font-size: 16px; color: #1f2937; font-weight: 500;\">{{ $json.event.start_date }}</p>\n                                        </div>\n                                        <div>\n                                            <p style=\"margin: 0 0 4px 0; font-size: 12px; color: #6b7280; font-weight: 600; text-transform: uppercase;\">🏁 End Date & Time</p>\n                                            <p style=\"margin: 0; font-size: 16px; color: #1f2937; font-weight: 500;\">{{ $json.event.end_date }}</p>\n                                        </div>\n                                    </td>\n                                </tr>\n                                <tr>\n                                    <td style=\"padding: 16px 20px; border-bottom: 1px solid #e5e7eb;\">\n                                        <p style=\"margin: 0 0 4px 0; font-size: 12px; color: #6b7280; font-weight: 600; text-transform: uppercase;\">📍 Location</p>\n                                        <p style=\"margin: 0; font-size: 16px; color: #1f2937;\">{{ $json.event.location }}</p>\n                                        <a href=\"https://www.google.com/maps/search/?api=1&query={{ $json.event.location }}\" style=\"display: inline-block; margin-top: 8px; color: #2563eb; text-decoration: none; font-size: 14px; font-weight: 500;\">📲 Open in Google Maps →</a>\n                                    </td>\n                                </tr>\n                                <tr>\n                                    <td style=\"padding: 16px 20px;\">\n                                        <p style=\"margin: 0 0 8px 0; font-size: 12px; color: #6b7280; font-weight: 600; text-transform: uppercase;\">📝 Description</p>\n                                        <p style=\"margin: 0; font-size: 14px; color: #4b5563; line-height: 1.6; white-space: pre-wrap;\">{{ $json.event.description }}</p>\n                                    </td>\n                                </tr>\n                            </table>\n                        </td>\n                    </tr>\n                    <tr>\n                        <td style=\"padding: 0 30px 30px 30px; text-align: center;\">\n                            <a href=\"https://contractorai2.netlify.app/calendar\" style=\"display: inline-block; background-color: #2563eb; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 6px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);\">📅 View Full Calendar</a>\n                        </td>\n                    </tr>\n                    <tr>\n                        <td style=\"padding: 20px 30px; background-color: #f9fafb; border-top: 1px solid #e5e7eb; border-radius: 0 0 8px 8px;\">\n                            <p style=\"margin: 0; font-size: 12px; color: #6b7280; text-align: center; line-height: 1.5;\">This is an automated notification from <strong>ContractorAI</strong>.</p>\n                            <p style=\"margin: 12px 0 0 0; font-size: 12px; color: #9ca3af; text-align: center;\">© 2025 ContractorAI. All rights reserved.</p>\n                        </td>\n                    </tr>\n                </table>\n            </td>\n        </tr>\n    </table>\n</body>\n</html>",
+        "options": {}
+      },
+      "name": "Send Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\"success\": true, \"message\": \"Notifications scheduled for \" + $('Split Recipients').itemMatching(0).json.notification.trigger_time, \"recipients_count\": $('Split Recipients').all().length} }}"
+      },
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [450, 500]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Split Recipients",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Recipients": {
+      "main": [
+        [
+          {
+            "node": "Wait Node",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait Node": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

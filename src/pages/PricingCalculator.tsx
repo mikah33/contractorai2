@@ -29,7 +29,9 @@ import RetainingWallCalculator from '../components/pricing/RetainingWallCalculat
 import SidingCalculator from '../components/pricing/SidingCalculator';
 import TileCalculator from '../components/pricing/TileCalculator';
 import RoofingCalculator from '../components/pricing/RoofingCalculator';
+import VeneerCalculator from '../components/pricing/VeneerCalculator';
 import CalculatorResults from '../components/pricing/CalculatorResults';
+import SavedCalculations, { SavedCalculationsRef } from '../components/pricing/SavedCalculations';
 import { Trade, CalculationResult } from '../types';
 import { trades } from '../data/trades';
 
@@ -44,6 +46,7 @@ const PricingCalculator = () => {
   const [calculatorResults, setCalculatorResults] = useState<CalculationResult[]>([]);
   const [showSpecializedCalculator, setShowSpecializedCalculator] = useState(false);
   const calculatorRef = useRef<HTMLDivElement>(null);
+  const savedCalculationsRef = useRef<SavedCalculationsRef>(null);
   const [showManageModal, setShowManageModal] = useState(false);
   const [editingEstimateId, setEditingEstimateId] = useState<string | null>(null);
   const [loadingEstimate, setLoadingEstimate] = useState(false);
@@ -61,7 +64,7 @@ const PricingCalculator = () => {
     setSpecifications({});
     setCalculatorResults([]);
     // Show specialized calculator for concrete, deck, doors_windows, drywall, electrical, excavation, fence, flooring, framing, hvac, paint, and roofing
-    setShowSpecializedCalculator(['concrete', 'deck', 'doors_windows', 'drywall', 'electrical', 'excavation', 'fence', 'flooring', 'foundation', 'framing', 'gutter', 'hvac', 'junk_removal', 'paint', 'pavers', 'plumbing', 'retaining_walls', 'roofing', 'siding', 'tile'].includes(trade.id));
+    setShowSpecializedCalculator(['concrete', 'deck', 'doors_windows', 'drywall', 'electrical', 'excavation', 'fence', 'flooring', 'foundation', 'framing', 'gutter', 'hvac', 'junk_removal', 'paint', 'pavers', 'plumbing', 'retaining_walls', 'roofing', 'siding', 'tile', 'veneer'].includes(trade.id));
   };
 
   // Load estimate from URL parameters if present
@@ -87,7 +90,7 @@ const PricingCalculator = () => {
           if (result.success && result.data) {
             // Set the trade
             setSelectedTrade(trade);
-            setShowSpecializedCalculator(['concrete', 'deck', 'doors_windows', 'drywall', 'electrical', 'excavation', 'fence', 'flooring', 'foundation', 'framing', 'gutter', 'hvac', 'junk_removal', 'paint', 'pavers', 'plumbing', 'retaining_walls', 'roofing', 'siding', 'tile'].includes(trade.id));
+            setShowSpecializedCalculator(['concrete', 'deck', 'doors_windows', 'drywall', 'electrical', 'excavation', 'fence', 'flooring', 'foundation', 'framing', 'gutter', 'hvac', 'junk_removal', 'paint', 'pavers', 'plumbing', 'retaining_walls', 'roofing', 'siding', 'tile', 'veneer'].includes(trade.id));
 
             // Set editing mode
             setEditingEstimateId(estimateId);
@@ -188,6 +191,19 @@ const PricingCalculator = () => {
       }
     });
   };
+
+  const handleLoadCalculation = (calculatorData: any, estimateId: string) => {
+    if (calculatorData) {
+      setSpecifications(calculatorData);
+      setEditingEstimateId(estimateId);
+      // Trigger recalculation if there's a specialized calculator
+      if (showSpecializedCalculator) {
+        // The specialized calculator will pick up the new specifications
+        // and user can click calculate again
+        alert('Calculation loaded! Click Calculate to see results.');
+      }
+    }
+  };
   
   const hasRequiredSpecifications = () => {
     if (!selectedTrade) return false;
@@ -241,7 +257,9 @@ const PricingCalculator = () => {
       case 'tile':
         return <TileCalculator onCalculate={handleSpecializedCalculation} />;
       case 'roofing':
-        return <RoofingCalculator onCalculate={handleSpecializedCalculation} />;
+        return <RoofingCalculator onCalculate={handleSpecializedCalculation} onSaveSuccess={() => savedCalculationsRef.current?.refresh()} />;
+      case 'veneer':
+        return <VeneerCalculator onCalculate={handleSpecializedCalculation} />;
       default:
         return null;
     }
@@ -362,9 +380,20 @@ const PricingCalculator = () => {
                 </button>
               </div>
             )}
+
+            {/* Saved Calculations Section */}
+            {selectedTrade && (
+              <div className="mt-6">
+                <SavedCalculations
+                  ref={savedCalculationsRef}
+                  trade={selectedTrade}
+                  onLoadCalculation={handleLoadCalculation}
+                />
+              </div>
+            )}
           </div>
         </div>
-        
+
         <div className="lg:col-span-2" ref={calculatorRef}>
           <div className="p-4 sm:p-6 bg-white rounded-lg shadow h-full overflow-x-auto">
             {!selectedTrade ? (

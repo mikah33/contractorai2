@@ -120,4 +120,5 @@ export interface CalculationResult {
 
 export interface CalculatorProps {
   onCalculate: (results: CalculationResult[]) => void;
+  onSaveSuccess?: () => void;
 }

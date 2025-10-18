@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { DollarSign, Receipt, Calendar, BarChart2, FileText, Download, RefreshCw, Menu, X } from 'lucide-react';
+import { DollarSign, Receipt, Calendar, BarChart2, FileText, RefreshCw, Menu } from 'lucide-react';
 import ReceiptCapture from '../components/finance/ReceiptCapture';
 import ExpenseList from '../components/finance/ExpenseList';
 import PaymentTracker from '../components/finance/PaymentTracker';
@@ -117,20 +117,14 @@ const FinanceTracker = () => {
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-2">
-          <button className="inline-flex items-center justify-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-            <Download className="h-4 w-4 sm:mr-2" />
-            <span className="hidden sm:inline">{t('common.export')}</span>
-          </button>
-          <button
-            onClick={handleRefresh}
-            disabled={isLoading}
-            className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <RefreshCw className={`h-4 w-4 sm:mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-            <span className="hidden sm:inline">{isLoading ? t('finance.syncing') : t('finance.sync')}</span>
-          </button>
-        </div>
+        <button
+          onClick={handleRefresh}
+          disabled={isLoading}
+          className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <RefreshCw className={`h-4 w-4 sm:mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+          <span className="hidden sm:inline">{isLoading ? t('finance.syncing') : t('finance.sync')}</span>
+        </button>
       </div>
       
       {error && (

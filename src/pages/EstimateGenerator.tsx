@@ -1201,47 +1201,101 @@ const EstimateGenerator = () => {
           )}
 
           {currentEstimate ? (
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-              <div className={`${showAIAssistant ? 'lg:col-span-2' : 'lg:col-span-3'}`}>
-                <EstimateEditor 
-                  estimate={currentEstimate}
-                  onUpdateEstimate={handleUpdateEstimate}
-                  onAddItem={handleAddItem}
-                  onUpdateItem={handleUpdateItem}
-                  onRemoveItem={handleRemoveItem}
-                  onLogoUpload={handleLogoUpload}
-                  clients={clients}
-                  projects={projects.map(p => ({ id: p.id, name: p.name }))}
-                />
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileChange}
-                  accept="image/*"
-                  className="hidden"
-                />
+            <>
+              {/* Calculate Job Cost Banner */}
+              <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg shadow-md p-6 mb-6 border-2 border-blue-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="bg-blue-600 rounded-full p-3">
+                      <Calculator className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">Need to Calculate Job Costs?</h3>
+                      <p className="text-sm text-gray-600">Use our 20+ professional calculators to get accurate pricing and import directly to this estimate</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      // Save current estimate before navigating
+                      if (currentEstimate.id) {
+                        handleSaveEstimate().then(() => {
+                          navigate('/pricing', {
+                            state: {
+                              fromEstimate: true,
+                              estimateId: currentEstimate.id
+                            }
+                          });
+                        });
+                      } else {
+                        navigate('/pricing', {
+                          state: {
+                            fromEstimate: true
+                          }
+                        });
+                      }
+                    }}
+                    className="inline-flex items-center px-6 py-3 text-sm font-semibold rounded-lg text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 whitespace-nowrap"
+                  >
+                    <Calculator className="w-5 h-5 mr-2" />
+                    Go to Calculators
+                  </button>
+                </div>
               </div>
-              
-              {showAIAssistant && (
-                <div className="lg:col-span-1">
-                  <AIEstimateAssistant 
-                    projectType={currentEstimate.projectId ? projects.find(p => p.id === currentEstimate.projectId)?.name || '' : ''}
-                    onGenerateItems={handleAIGeneratedItems}
-                    onClose={() => setShowAIAssistant(false)}
+
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                <div className={`${showAIAssistant ? 'lg:col-span-2' : 'lg:col-span-3'}`}>
+                  <EstimateEditor
+                    estimate={currentEstimate}
+                    onUpdateEstimate={handleUpdateEstimate}
+                    onAddItem={handleAddItem}
+                    onUpdateItem={handleUpdateItem}
+                    onRemoveItem={handleRemoveItem}
+                    onLogoUpload={handleLogoUpload}
+                    clients={clients}
+                    projects={projects.map(p => ({ id: p.id, name: p.name }))}
+                  />
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    accept="image/*"
+                    className="hidden"
                   />
                 </div>
-              )}
-            </div>
+
+                {showAIAssistant && (
+                  <div className="lg:col-span-1">
+                    <AIEstimateAssistant
+                      projectType={currentEstimate.projectId ? projects.find(p => p.id === currentEstimate.projectId)?.name || '' : ''}
+                      onGenerateItems={handleAIGeneratedItems}
+                      onClose={() => setShowAIAssistant(false)}
+                    />
+                  </div>
+                )}
+              </div>
+            </>
           ) : (
-            <div className="bg-white rounded-lg shadow-md p-8 text-center">
-              <p className="text-gray-500 mb-4">{t('estimates.noEstimateLoaded')}</p>
-              <button
-                onClick={handleCreateFromScratch}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-              >
-                {t('estimates.createNewEstimate')}
-              </button>
-            </div>
+            <>
+              {/* Calculate Job Cost Card for Empty State */}
+              <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg shadow-lg p-8 mb-6 border-2 border-blue-200">
+                <div className="text-center">
+                  <div className="bg-blue-600 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                    <Calculator className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Start with Job Cost Calculations</h3>
+                  <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
+                    Use our professional calculators to quickly estimate material and labor costs for roofing, concrete, HVAC, plumbing, and 17+ other trades. Your calculations will automatically create a new estimate.
+                  </p>
+                  <button
+                    onClick={() => navigate('/pricing', { state: { fromEstimate: true } })}
+                    className="inline-flex items-center px-8 py-4 text-lg font-semibold rounded-lg text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+                  >
+                    <Calculator className="w-6 h-6 mr-3" />
+                    Calculate Job Cost
+                  </button>
+                </div>
+              </div>
+            </>
           )}
         </>
       )}

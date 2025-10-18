@@ -6,12 +6,20 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // Validate environment variables
 if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Supabase configuration error:', {
+    urlExists: !!supabaseUrl,
+    keyExists: !!supabaseAnonKey,
+    urlValue: supabaseUrl,
+    env: import.meta.env
+  });
   throw new Error('Missing Supabase environment variables. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY');
 }
 
-// Debug logging
-console.log('Supabase URL:', supabaseUrl);
-console.log('Supabase Key (first 20 chars):', supabaseAnonKey.substring(0, 20) + '...');
+// Validate URL format
+if (!supabaseUrl.startsWith('http://') && !supabaseUrl.startsWith('https://')) {
+  console.error('Invalid Supabase URL format:', supabaseUrl);
+  throw new Error(`Invalid supabaseUrl: Must be a valid HTTP or HTTPS URL. Got: ${supabaseUrl}`);
+}
 
 // Create Supabase client with auth persistence
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {

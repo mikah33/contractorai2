@@ -17,6 +17,8 @@ interface Opening {
   isPreHung: boolean;
   material: string;
   finish: string;
+  useCustomCost: boolean;
+  customCostPerUnit: number | '';
 }
 
 const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
@@ -80,11 +82,18 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     }
   };
 
+  const vinylColorOptions = ['white', 'off-white', 'gray', 'beige', 'tan', 'clay', 'black', 'dark-bronze', 'brown', 'wood-tone'];
+  const standardFinishes = ['white', 'bronze', 'stained'];
+
   const windowStyles = {
     'single-hung': {
       name: t('calculators.doorsWindows.windowStyles.singleHung'),
       materials: ['vinyl', 'aluminum', 'wood'],
-      finishes: ['white', 'bronze', 'stained'],
+      finishes: {
+        'vinyl': vinylColorOptions,
+        'aluminum': standardFinishes,
+        'wood': standardFinishes
+      },
       prices: {
         'vinyl': 199.98,
         'aluminum': 249.98,
@@ -94,7 +103,11 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     'double-hung': {
       name: t('calculators.doorsWindows.windowStyles.doubleHung'),
       materials: ['vinyl', 'aluminum', 'wood'],
-      finishes: ['white', 'bronze', 'stained'],
+      finishes: {
+        'vinyl': vinylColorOptions,
+        'aluminum': standardFinishes,
+        'wood': standardFinishes
+      },
       prices: {
         'vinyl': 249.98,
         'aluminum': 299.98,
@@ -104,7 +117,11 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     'casement': {
       name: t('calculators.doorsWindows.windowStyles.casement'),
       materials: ['vinyl', 'aluminum', 'wood'],
-      finishes: ['white', 'bronze', 'stained'],
+      finishes: {
+        'vinyl': vinylColorOptions,
+        'aluminum': standardFinishes,
+        'wood': standardFinishes
+      },
       prices: {
         'vinyl': 299.98,
         'aluminum': 349.98,
@@ -114,7 +131,11 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     'sliding': {
       name: t('calculators.doorsWindows.windowStyles.sliding'),
       materials: ['vinyl', 'aluminum', 'wood'],
-      finishes: ['white', 'bronze', 'stained'],
+      finishes: {
+        'vinyl': vinylColorOptions,
+        'aluminum': standardFinishes,
+        'wood': standardFinishes
+      },
       prices: {
         'vinyl': 249.98,
         'aluminum': 299.98,
@@ -124,7 +145,11 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     'picture': {
       name: t('calculators.doorsWindows.windowStyles.picture'),
       materials: ['vinyl', 'aluminum', 'wood'],
-      finishes: ['white', 'bronze', 'stained'],
+      finishes: {
+        'vinyl': vinylColorOptions,
+        'aluminum': standardFinishes,
+        'wood': standardFinishes
+      },
       prices: {
         'vinyl': 299.98,
         'aluminum': 349.98,
@@ -173,7 +198,10 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     const defaultStyles = type === 'door' ? doorStyles : windowStyles;
     const firstStyle = Object.keys(defaultStyles)[0];
     const defaultMaterial = defaultStyles[firstStyle].materials[0];
-    const defaultFinish = defaultStyles[firstStyle].finishes[0];
+    const defaultFinishes = type === 'door'
+      ? defaultStyles[firstStyle].finishes
+      : defaultStyles[firstStyle].finishes[defaultMaterial];
+    const defaultFinish = Array.isArray(defaultFinishes) ? defaultFinishes[0] : defaultFinishes;
 
     const newOpening: Opening = {
       id: Date.now().toString(),
@@ -188,7 +216,9 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       isExterior: type === 'door' ? true : false,
       isPreHung: type === 'door' ? true : false,
       material: defaultMaterial,
-      finish: defaultFinish
+      finish: defaultFinish,
+      useCustomCost: false,
+      customCostPerUnit: ''
     };
     setOpenings([...openings, newOpening]);
   };
@@ -213,12 +243,17 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
     openings.forEach(opening => {
       const styles = opening.type === 'door' ? doorStyles : windowStyles;
-      const basePrice = styles[opening.style].prices[opening.material];
+
+      // Use custom cost if enabled, otherwise use base price
+      const basePrice = opening.useCustomCost && typeof opening.customCostPerUnit === 'number'
+        ? opening.customCostPerUnit
+        : styles[opening.style].prices[opening.material];
+
       const itemCost = basePrice * opening.quantity;
       totalCost += itemCost;
 
       results.push({
-        label: `${styles[opening.style].name} (${opening.material})`,
+        label: `${styles[opening.style].name} (${opening.material})${opening.useCustomCost ? ' - Custom Price' : ''}`,
         value: opening.quantity,
         unit: t('calculators.doorsWindows.units.units'),
         cost: itemCost
@@ -411,18 +446,25 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  {t('calculators.doorsWindows.finish')}
+                  {opening.type === 'window' && opening.material === 'vinyl' ? 'Color' : t('calculators.doorsWindows.finish')}
                 </label>
                 <select
                   value={opening.finish}
                   onChange={(e) => updateOpening(opening.id, { finish: e.target.value })}
                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 >
-                  {(opening.type === 'door' ? doorStyles : windowStyles)[opening.style].finishes.map(finish => (
-                    <option key={finish} value={finish}>
-                      {t(`calculators.doorsWindows.finishes.${finish}`)}
-                    </option>
-                  ))}
+                  {opening.type === 'window'
+                    ? windowStyles[opening.style].finishes[opening.material].map(finish => (
+                        <option key={finish} value={finish}>
+                          {finish.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                        </option>
+                      ))
+                    : doorStyles[opening.style].finishes.map(finish => (
+                        <option key={finish} value={finish}>
+                          {t(`calculators.doorsWindows.finishes.${finish}`)}
+                        </option>
+                      ))
+                  }
                 </select>
               </div>
 
@@ -466,6 +508,39 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   onChange={(e) => updateOpening(opening.id, { quantity: Number(e.target.value) })}
                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 />
+              </div>
+
+              <div className="md:col-span-3 border-t border-slate-200 pt-4 mt-2">
+                <div className="flex items-start space-x-3">
+                  <input
+                    type="checkbox"
+                    id={`customCost-${opening.id}`}
+                    checked={opening.useCustomCost}
+                    onChange={(e) => updateOpening(opening.id, { useCustomCost: e.target.checked })}
+                    className="mt-1 h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                  />
+                  <div className="flex-1">
+                    <label htmlFor={`customCost-${opening.id}`} className="block text-sm font-medium text-slate-700 mb-1">
+                      Use Custom Cost Per {opening.type === 'door' ? 'Door' : 'Window'}
+                    </label>
+                    {opening.useCustomCost && (
+                      <div className="mt-2">
+                        <label className="block text-xs text-slate-600 mb-1">
+                          Cost Per Unit ($)
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={opening.customCostPerUnit}
+                          onChange={(e) => updateOpening(opening.id, { customCostPerUnit: e.target.value ? Number(e.target.value) : '' })}
+                          className="w-full max-w-xs p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          placeholder="e.g., 350.00"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
 
               <div className="flex items-center">
