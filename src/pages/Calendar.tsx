@@ -1,10 +1,11 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { format, startOfWeek, addDays, isSameDay, parseISO, addMonths, subMonths, isToday } from 'date-fns';
+import { format, startOfWeek, addDays, isSameDay, parseISO, addMonths, subMonths, isToday, startOfMonth, endOfMonth, endOfWeek } from 'date-fns';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, Download, List, Grid, Clock, Check, AlertCircle, PenTool as Tool } from 'lucide-react';
 import { useCalendarStoreSupabase } from '../stores/calendarStoreSupabase';
 import { CalendarEvent } from '../services/calendarService';
 import EventModal from '../components/calendar/EventModal';
+import NotificationBanner from '../components/calendar/NotificationBanner';
 import { checkUpcomingEvents } from '../utils/notifications';
 import { useData } from '../contexts/DataContext';
 
@@ -17,6 +18,7 @@ const Calendar = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [showEventModal, setShowEventModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [currentTime, setCurrentTime] = useState(new Date());
   const { profile } = useData();
   const {
     events,
@@ -41,6 +43,15 @@ const Calendar = () => {
       checkUpcomingEvents(events);
     }
   }, [events, profile]);
+
+  // Update current time every minute for the current time indicator
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000); // Update every minute
+
+    return () => clearInterval(timer);
+  }, []);
 
   const getEventColor = (eventType: string) => {
     switch (eventType) {
@@ -121,25 +132,34 @@ const Calendar = () => {
 
   const renderMonthView = () => {
     const weeks = [];
-    let currentWeek = startOfWeek(currentDate);
+    const monthStart = startOfMonth(currentDate);
+    const monthEnd = endOfMonth(currentDate);
+    const calendarStart = startOfWeek(monthStart);
+    const calendarEnd = endOfWeek(monthEnd);
 
-    for (let week = 0; week < 6; week++) {
+    let currentWeek = calendarStart;
+
+    while (currentWeek <= calendarEnd) {
       const days = [];
       for (let day = 0; day < 7; day++) {
         const date = addDays(currentWeek, day);
         const dayEvents = getEventsByDate(date);
         const isSelected = selectedDate && isSameDay(date, selectedDate);
+        const isCurrentMonth = date >= monthStart && date <= monthEnd;
 
         days.push(
           <div
             key={date.toString()}
             className={`min-h-[80px] sm:min-h-[100px] md:min-h-[120px] p-1 sm:p-2 border border-gray-200 cursor-pointer ${
               isToday(date) ? 'bg-blue-50' : ''
-            } ${isSelected ? 'ring-2 ring-blue-500' : ''} hover:bg-gray-50 transition-colors`}
+            } ${isSelected ? 'ring-2 ring-blue-500' : ''} ${
+              !isCurrentMonth ? 'bg-gray-50' : ''
+            } hover:bg-gray-50 transition-colors`}
             onClick={() => handleDateClick(date)}
           >
             <div className={`font-medium text-xs sm:text-sm ${
-              isToday(date) ? 'bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center' : 'text-gray-900'
+              isToday(date) ? 'bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center' :
+              isCurrentMonth ? 'text-gray-900' : 'text-gray-400'
             }`}>
               {format(date, 'd')}
             </div>
@@ -181,49 +201,75 @@ const Calendar = () => {
   const renderWeekView = () => {
     const days = [];
     const weekStart = startOfWeek(currentDate);
+    const now = currentTime;
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
 
     for (let i = 0; i < 7; i++) {
       const date = addDays(weekStart, i);
       const dayEvents = getEventsByDate(date);
+      const isToday = isSameDay(date, now);
 
       days.push(
-        <div key={i} className="flex-1 min-w-0">
+        <div key={i} className="flex-1 min-w-0 relative">
           <div className="sticky top-0 z-10 bg-white border-b border-gray-200 p-2">
-            <div className="font-medium">{format(date, 'EEE')}</div>
-            <div className="text-sm text-gray-500">{format(date, 'MMM d')}</div>
+            <div className={`font-medium ${isToday ? 'text-blue-600' : ''}`}>{format(date, 'EEE')}</div>
+            <div className={`text-sm ${isToday ? 'text-blue-500' : 'text-gray-500'}`}>{format(date, 'MMM d')}</div>
           </div>
-          <div className="divide-y divide-gray-200">
-            {Array.from({ length: 24 }).map((_, hour) => (
-              <div key={hour} className="group relative min-h-[48px] hover:bg-gray-50 cursor-pointer">
-                <div className="absolute w-full h-full"></div>
-                {dayEvents
-                  .filter(event => {
-                    const eventHour = parseISO(event.start_date).getHours();
-                    return eventHour === hour;
-                  })
-                  .map(event => (
-                    <div
-                      key={event.id}
-                      onClick={(e) => handleEventClick(event, e)}
-                      className={`absolute w-full p-2 rounded-md border ${getEventColor(event.event_type)} ${
-                        event.auto_generated ? 'border-blue-500' : ''
-                      } hover:opacity-75 hover:shadow-md cursor-pointer transition-all`}
-                      style={{
-                        top: `${parseISO(event.start_date).getMinutes()}%`,
-                        height: '48px'
-                      }}
-                    >
-                      <div className="flex items-center">
-                        {getStatusIcon(event.status)}
-                        <span className="ml-1 font-medium text-xs">{event.title}</span>
+          <div className="divide-y divide-gray-200 relative">
+            {Array.from({ length: 24 }).map((_, hour) => {
+              const isCurrentHour = isToday && hour === currentHour;
+
+              return (
+                <div key={hour} className={`group relative min-h-[48px] hover:bg-gray-50 cursor-pointer flex ${isCurrentHour ? 'bg-blue-50' : ''}`}>
+                  <div className="w-16 flex-shrink-0 text-xs text-gray-500 pr-2 pt-1 text-right border-r border-gray-200">
+                    {format(new Date().setHours(hour, 0), 'h:mm a')}
+                  </div>
+                  <div className="flex-1 relative">
+                    {dayEvents
+                      .filter(event => {
+                        const eventHour = parseISO(event.start_date).getHours();
+                        return eventHour === hour;
+                      })
+                      .map(event => (
+                        <div
+                          key={event.id}
+                          onClick={(e) => handleEventClick(event, e)}
+                          className={`absolute w-full p-2 rounded-md border ${getEventColor(event.event_type)} ${
+                            event.auto_generated ? 'border-blue-500' : ''
+                          } hover:opacity-75 hover:shadow-md cursor-pointer transition-all`}
+                          style={{
+                            top: `${parseISO(event.start_date).getMinutes()}%`,
+                            height: '48px'
+                          }}
+                        >
+                          <div className="flex items-center">
+                            {getStatusIcon(event.status)}
+                            <span className="ml-1 font-medium text-xs">{event.title}</span>
+                          </div>
+                          <div className="text-xs opacity-75">
+                            {format(parseISO(event.start_date), 'h:mm a')}
+                          </div>
+                        </div>
+                      ))}
+                    {/* Current time indicator */}
+                    {isCurrentHour && (
+                      <div
+                        className="absolute left-0 right-0 border-t-2 border-red-500 z-20"
+                        style={{
+                          top: `${(currentMinute / 60) * 100}%`
+                        }}
+                      >
+                        <div className="absolute -left-2 -top-1.5 w-3 h-3 bg-red-500 rounded-full"></div>
+                        <div className="absolute left-2 -top-3 text-xs font-medium text-red-500 bg-white px-1 rounded">
+                          {format(now, 'h:mm a')}
+                        </div>
                       </div>
-                      <div className="text-xs opacity-75">
-                        {format(parseISO(event.start_date), 'h:mm a')}
-                      </div>
-                    </div>
-                  ))}
-              </div>
-            ))}
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       );
@@ -303,13 +349,6 @@ const Calendar = () => {
 
         <div className="flex flex-col sm:flex-row gap-2">
           <button
-            onClick={handleExportClick}
-            className="inline-flex items-center justify-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 active:bg-gray-100 w-full sm:w-auto"
-          >
-            <Download className="w-4 h-4 sm:mr-2" />
-            <span className="hidden sm:inline">{t('common.export')}</span>
-          </button>
-          <button
             onClick={handleAddEvent}
             className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 active:bg-blue-800 w-full sm:w-auto"
           >
@@ -364,17 +403,6 @@ const Calendar = () => {
                   <List className="w-4 h-4 sm:hidden" />
                   <span className="hidden sm:inline">{t('calendar.week')}</span>
                 </button>
-                <button
-                  onClick={() => handleViewChange('day')}
-                  className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium ${
-                    view === 'day'
-                      ? 'bg-blue-50 text-blue-600'
-                      : 'text-gray-700 hover:bg-gray-50 active:bg-gray-100'
-                  }`}
-                >
-                  <CalendarIcon className="w-4 h-4 sm:hidden" />
-                  <span className="hidden sm:inline">{t('calendar.day')}</span>
-                </button>
               </div>
 
             </div>
@@ -405,6 +433,8 @@ const Calendar = () => {
         selectedDate={selectedDate || currentDate}
         event={selectedEvent}
       />
+
+      <NotificationBanner />
     </div>
   );
 };

@@ -81,10 +81,22 @@ export const scheduleCalendarNotification = (
   const timeUntilReminder = reminderTime.getTime() - now.getTime();
 
   if (timeUntilReminder > 0) {
+    // Format the reminder message based on time
+    let message = '';
+    if (reminderMinutes >= 1440) { // 1 day or more
+      const days = Math.floor(reminderMinutes / 1440);
+      message = `${eventTitle} starts in ${days} day${days > 1 ? 's' : ''}`;
+    } else if (reminderMinutes >= 60) { // 1 hour or more
+      const hours = Math.floor(reminderMinutes / 60);
+      message = `${eventTitle} starts in ${hours} hour${hours > 1 ? 's' : ''}`;
+    } else {
+      message = `${eventTitle} starts in ${reminderMinutes} minute${reminderMinutes > 1 ? 's' : ''}`;
+    }
+
     setTimeout(() => {
-      showNotification('Upcoming Event', {
-        body: `${eventTitle} starts in ${reminderMinutes} minutes`,
-        tag: `event-${eventDate.getTime()}`,
+      showNotification('📅 Job Reminder', {
+        body: message,
+        tag: `event-${eventDate.getTime()}-${reminderMinutes}`,
         data: { url: '/calendar' }
       });
     }, timeUntilReminder);
@@ -98,18 +110,24 @@ export const scheduleCalendarNotification = (
 
 export const checkUpcomingEvents = async (events: any[]) => {
   const now = new Date();
-  const upcomingWindow = 24 * 60 * 60 * 1000; // 24 hours
+  const upcomingWindow = 48 * 60 * 60 * 1000; // 48 hours (to catch 1 day before notifications)
 
   events.forEach((event) => {
-    const eventDate = new Date(event.start);
+    const eventDate = new Date(event.start_date || event.start);
     const timeUntilEvent = eventDate.getTime() - now.getTime();
 
-    // Schedule notifications for events within the next 24 hours
+    // Schedule notifications for events within the next 48 hours
     if (timeUntilEvent > 0 && timeUntilEvent < upcomingWindow) {
-      // 15 minutes before
-      scheduleCalendarNotification(event.title, eventDate, 15);
+      // 1 day (24 hours) before
+      const oneDayBefore = 24 * 60; // 1440 minutes
+      if (timeUntilEvent > oneDayBefore * 60 * 1000) {
+        scheduleCalendarNotification(event.title, eventDate, oneDayBefore);
+      }
+
       // 1 hour before
-      scheduleCalendarNotification(event.title, eventDate, 60);
+      if (timeUntilEvent > 60 * 60 * 1000) {
+        scheduleCalendarNotification(event.title, eventDate, 60);
+      }
     }
   });
 };

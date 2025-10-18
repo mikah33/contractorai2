@@ -14,11 +14,44 @@ interface EventModalProps {
 
 const EventModal = ({ isOpen, onClose, selectedDate, event }: EventModalProps) => {
   const [isEditing, setIsEditing] = useState(false);
+
+  // Helper function to set time to 9:00 AM (using local time)
+  const getDefaultStartTime = (date?: Date) => {
+    if (!date) return '';
+    const newDate = new Date(date);
+    newDate.setHours(9, 0, 0, 0);
+
+    // Format as local datetime-local format: YYYY-MM-DDTHH:mm
+    const year = newDate.getFullYear();
+    const month = String(newDate.getMonth() + 1).padStart(2, '0');
+    const day = String(newDate.getDate()).padStart(2, '0');
+    const hours = String(newDate.getHours()).padStart(2, '0');
+    const minutes = String(newDate.getMinutes()).padStart(2, '0');
+
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
+  // Helper function to set time to 10:00 AM (1 hour after start, using local time)
+  const getDefaultEndTime = (date?: Date) => {
+    if (!date) return '';
+    const newDate = new Date(date);
+    newDate.setHours(10, 0, 0, 0);
+
+    // Format as local datetime-local format: YYYY-MM-DDTHH:mm
+    const year = newDate.getFullYear();
+    const month = String(newDate.getMonth() + 1).padStart(2, '0');
+    const day = String(newDate.getDate()).padStart(2, '0');
+    const hours = String(newDate.getHours()).padStart(2, '0');
+    const minutes = String(newDate.getMinutes()).padStart(2, '0');
+
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    start: selectedDate?.toISOString().slice(0, 16) || '',
-    end: selectedDate?.toISOString().slice(0, 16) || '',
+    start: getDefaultStartTime(selectedDate),
+    end: getDefaultEndTime(selectedDate),
     type: 'task',
     status: 'pending',
     weatherSensitive: false,
@@ -54,8 +87,8 @@ const EventModal = ({ isOpen, onClose, selectedDate, event }: EventModalProps) =
       setFormData({
         title: '',
         description: '',
-        start: selectedDate?.toISOString().slice(0, 16) || '',
-        end: selectedDate?.toISOString().slice(0, 16) || '',
+        start: getDefaultStartTime(selectedDate),
+        end: getDefaultEndTime(selectedDate),
         type: 'task',
         status: 'pending',
         weatherSensitive: false,
