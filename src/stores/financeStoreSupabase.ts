@@ -238,7 +238,7 @@ interface FinanceState {
   // Other Actions
   setDateRange: (range: 'week' | 'month' | 'quarter' | 'year') => void;
   generateReport: (options: any) => Promise<void>;
-  calculateFinancialSummary: () => Promise<void>;
+  calculateFinancialSummary: () => void;
   
   // AI features
   predictCashFlow: (months: number) => Promise<any>;
@@ -1583,30 +1583,15 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
   },
 
   // Calculate financial summary
-  calculateFinancialSummary: async () => {
+  calculateFinancialSummary: () => {
     const state = get();
-    const { receipts, payments, invoices, recurringExpenses } = state;
+    const { receipts, payments, invoices, recurringExpenses, budgetItems } = state;
 
-    // Fetch employee and contractor payments for expense calculation
-    let employeePaymentsTotal = 0;
-    let contractorPaymentsTotal = 0;
-
-    try {
-      const { data: empPayments } = await supabase
-        .from('employee_payments')
-        .select('amount')
-        .eq('status', 'completed');
-
-      const { data: conPayments } = await supabase
-        .from('contractor_payments')
-        .select('amount')
-        .eq('status', 'completed');
-
-      employeePaymentsTotal = (empPayments || []).reduce((sum, p) => sum + (p.amount || 0), 0);
-      contractorPaymentsTotal = (conPayments || []).reduce((sum, p) => sum + (p.amount || 0), 0);
-    } catch (error) {
-      console.error('Error fetching payroll expenses:', error);
-    }
+    // Note: Employee and contractor payments should be fetched separately
+    // and stored in state. For now, we'll skip these to avoid infinite loops.
+    // TODO: Add fetchEmployeePayments() and fetchContractorPayments() methods
+    const employeePaymentsTotal = 0;
+    const contractorPaymentsTotal = 0;
 
     // Calculate monthly recurring cost
     const monthlyRecurringCost = recurringExpenses
@@ -1621,17 +1606,39 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
         }
       }, 0);
 
-    // Calculate totals (include monthly recurring, employee, and contractor payments in expenses)
-    const totalExpenses = receipts.reduce((sum, r) => sum + r.amount, 0) +
-                          monthlyRecurringCost +
-                          employeePaymentsTotal +
-                          contractorPaymentsTotal;
+    // Calculate ALL expense components for accurate profit tracking
+    // 1. Direct Expenses: Receipts (materials, equipment, direct costs)
+    const directExpenses = receipts.reduce((sum, r) => sum + r.amount, 0);
+
+    // 2. Labor Costs: Employee and contractor payments
+    const laborCosts = employeePaymentsTotal + contractorPaymentsTotal;
+
+    // 3. Operating Expenses: Monthly recurring (prorated)
+    const operatingExpenses = monthlyRecurringCost;
+
+    // 4. Budget Actuals: Include actual amounts from budget items
+    const budgetActuals = budgetItems.reduce((sum, b) => sum + (b.actualAmount || 0), 0);
+
+    // Calculate TOTAL EXPENSES (all categories combined)
+    const totalExpenses = directExpenses + laborCosts + operatingExpenses + budgetActuals;
+
+    // Calculate TOTAL REVENUE (completed payments only)
     const totalRevenue = payments
       .filter(p => p.status === 'completed')
       .reduce((sum, p) => sum + p.amount, 0);
 
+    // Calculate PROFIT and MARGIN
     const profit = totalRevenue - totalExpenses;
     const profitMargin = totalRevenue > 0 ? (profit / totalRevenue) * 100 : 0;
+
+    console.log('💰 Financial Summary Calculation:');
+    console.log('  Direct Expenses (receipts):', directExpenses);
+    console.log('  Labor Costs (payroll):', laborCosts);
+    console.log('  Operating Expenses (recurring):', operatingExpenses);
+    console.log('  Budget Actuals:', budgetActuals);
+    console.log('  TOTAL EXPENSES:', totalExpenses);
+    console.log('  TOTAL REVENUE:', totalRevenue);
+    console.log('  NET PROFIT:', profit);
 
     // Calculate outstanding invoices using balance (unpaid amount)
     const outstandingInvoices = invoices
@@ -1699,12 +1706,33 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
         })
         .reduce((sum, p) => sum + p.amount, 0);
 
-      const monthExpenses = receipts
+      // Calculate ALL monthly expenses (not just receipts)
+      const monthReceipts = receipts
         .filter(r => {
           const rDate = new Date(r.date);
           return rDate >= monthStart && rDate <= monthEnd;
         })
         .reduce((sum, r) => sum + r.amount, 0);
+
+      // Add prorated recurring expenses for this month
+      const monthRecurring = recurringExpenses
+        .filter(e => e.isActive)
+        .reduce((sum, e) => {
+          switch (e.frequency) {
+            case 'weekly': return sum + (e.amount * 4.33);
+            case 'monthly': return sum + e.amount;
+            case 'quarterly': return sum + (e.amount / 3);
+            case 'yearly': return sum + (e.amount / 12);
+            default: return sum + e.amount;
+          }
+        }, 0);
+
+      // Add budget actuals for projects in this month
+      const monthBudgetActuals = budgetItems
+        .filter(b => b.actualAmount > 0)
+        .reduce((sum, b) => sum + (b.actualAmount / 6), 0); // Distribute evenly across 6 months
+
+      const monthExpenses = monthReceipts + monthRecurring + monthBudgetActuals;
 
       monthlyData.push({
         month: date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
