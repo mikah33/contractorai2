@@ -65,18 +65,28 @@ export const useCalculatorPreferences = () => {
 
   // Save calculator selections
   const saveCalculators = async (calculatorIds: string[]) => {
-    if (!user) return;
+    if (!user) {
+      console.error('❌ No user logged in');
+      return { success: false, error: 'No user logged in' };
+    }
+
+    console.log('💾 Saving calculators for user:', user.id);
+    console.log('📊 Calculator IDs to save:', calculatorIds);
 
     try {
       setError(null);
 
       // Delete all existing calculators for this user
+      console.log('🗑️ Deleting existing calculators...');
       const { error: deleteError } = await supabase
         .from('user_calculators')
         .delete()
         .eq('user_id', user.id);
 
-      if (deleteError) throw deleteError;
+      if (deleteError) {
+        console.error('❌ Delete error:', deleteError);
+        throw deleteError;
+      }
 
       // Insert new selections with order
       const newCalculators = calculatorIds.map((calcId, index) => ({
@@ -85,12 +95,20 @@ export const useCalculatorPreferences = () => {
         display_order: index
       }));
 
-      if (newCalculators.length > 0) {
-        const { error: insertError } = await supabase
-          .from('user_calculators')
-          .insert(newCalculators);
+      console.log('➕ Inserting new calculators:', newCalculators);
 
-        if (insertError) throw insertError;
+      if (newCalculators.length > 0) {
+        const { error: insertError, data: insertData } = await supabase
+          .from('user_calculators')
+          .insert(newCalculators)
+          .select();
+
+        if (insertError) {
+          console.error('❌ Insert error:', insertError);
+          throw insertError;
+        }
+
+        console.log('✅ Inserted data:', insertData);
       }
 
       // Update local state
@@ -99,10 +117,11 @@ export const useCalculatorPreferences = () => {
         .filter((calc): calc is CalculatorInfo => calc !== undefined);
 
       setSelectedCalculators(calculators);
+      console.log('✅ Successfully saved', calculators.length, 'calculators');
 
       return { success: true };
     } catch (err) {
-      console.error('Error saving calculators:', err);
+      console.error('❌ Error saving calculators:', err);
       setError(err instanceof Error ? err.message : 'Failed to save calculators');
       return { success: false, error: err };
     }

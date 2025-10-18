@@ -59,14 +59,26 @@ const CalculatorManagementModal: React.FC<CalculatorManagementModalProps> = ({
 
   const handleSave = async () => {
     setSaving(true);
+    console.log('Attempting to save calculators:', localSelections);
+    console.log('Number of calculators selected:', localSelections.length);
+
     try {
-      await saveCalculators(localSelections);
-      setHasChanges(false);
-      setTimeout(() => {
-        onClose();
-      }, 500);
+      const result = await saveCalculators(localSelections);
+      console.log('Save result:', result);
+
+      if (result?.success) {
+        console.log('✅ Calculators saved successfully');
+        setHasChanges(false);
+        setTimeout(() => {
+          onClose();
+        }, 500);
+      } else {
+        console.error('❌ Failed to save calculators:', result);
+        alert(`Failed to save calculators: ${result?.error || 'Unknown error'}`);
+      }
     } catch (error) {
-      console.error('Error saving calculators:', error);
+      console.error('❌ Error saving calculators:', error);
+      alert(`Error saving calculators: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setSaving(false);
     }
