@@ -8,6 +8,18 @@ import { useData } from '../contexts/DataContext';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
+interface Subscription {
+  id: string;
+  subscription_id: string;
+  customer_id: string;
+  price_id: string;
+  status: string;
+  current_period_end: string;
+  current_period_start: string;
+  created_at: string;
+  cancel_at_period_end: boolean;
+}
+
 interface SubscriptionDetails {
   payment_method?: {
     brand: string;
@@ -87,27 +99,34 @@ const Subscriptions: React.FC = () => {
 
   const fetchSubscriptionDetails = async (subscriptionId: string) => {
     try {
+      console.log('Fetching subscription details for:', subscriptionId);
       const { data, error } = await supabase.functions.invoke('get-subscription-details', {
         body: { subscriptionId },
       });
 
+      console.log('Subscription details response:', { data, error });
       if (error) throw error;
       setSubscriptionDetails(data);
     } catch (error) {
       console.error('Error fetching subscription details:', error);
+      // Set empty state to show error instead of loading
+      setSubscriptionDetails({ payment_method: undefined, next_invoice_amount: undefined });
     }
   };
 
   const fetchInvoices = async (customerId: string) => {
     try {
+      console.log('Fetching invoices for customer:', customerId);
       const { data, error } = await supabase.functions.invoke('get-invoices', {
         body: { customerId },
       });
 
+      console.log('Invoices response:', { data, error });
       if (error) throw error;
       setInvoices(data?.invoices || []);
     } catch (error) {
       console.error('Error fetching invoices:', error);
+      setInvoices([]);
     }
   };
 
@@ -357,10 +376,12 @@ const Subscriptions: React.FC = () => {
               <div>
                 <p className="text-sm text-gray-500 mb-1">Payment Method</p>
                 <p className="text-lg font-semibold text-gray-900">
-                  {subscriptionDetails?.payment_method ? (
+                  {subscriptionDetails === null ? (
+                    'Loading...'
+                  ) : subscriptionDetails.payment_method ? (
                     `${subscriptionDetails.payment_method.brand.charAt(0).toUpperCase() + subscriptionDetails.payment_method.brand.slice(1)} •••• ${subscriptionDetails.payment_method.last4}`
                   ) : (
-                    'Loading...'
+                    <span className="text-sm text-red-600">Error loading payment method</span>
                   )}
                 </p>
               </div>
@@ -368,9 +389,13 @@ const Subscriptions: React.FC = () => {
               <div>
                 <p className="text-sm text-gray-500 mb-1">Next Invoice</p>
                 <p className="text-lg font-semibold text-gray-900">
-                  {subscriptionDetails?.next_invoice_amount !== undefined
-                    ? `$${(subscriptionDetails.next_invoice_amount / 100).toFixed(2)}`
-                    : 'Loading...'}
+                  {subscriptionDetails === null ? (
+                    'Loading...'
+                  ) : subscriptionDetails.next_invoice_amount !== undefined ? (
+                    `$${(subscriptionDetails.next_invoice_amount / 100).toFixed(2)}`
+                  ) : (
+                    <span className="text-sm text-red-600">Error loading invoice</span>
+                  )}
                 </p>
               </div>
 
