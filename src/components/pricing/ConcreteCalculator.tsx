@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
-import { Calculator } from 'lucide-react';
+import { Calculator, Save } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import SaveCalculationModal from './SaveCalculationModal';
 
-const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
+const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSuccess }) => {
   const { t } = useTranslation();
   const [concreteType, setConcreteType] = useState<'wall' | 'flatwork'>('flatwork');
   const [length, setLength] = useState<number | ''>('');
@@ -19,6 +20,8 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const [colorPricePerYard, setColorPricePerYard] = useState<number | ''>('');
   const [addFiber, setAddFiber] = useState<boolean>(false);
   const [fiberPricePerYard, setFiberPricePerYard] = useState<number | ''>('');
+  const [lastCalculation, setLastCalculation] = useState<CalculationResult[] | null>(null);
+  const [showSaveModal, setShowSaveModal] = useState(false);
 
   const handleCalculate = () => {
     if (typeof length === 'number' &&
@@ -157,6 +160,7 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         });
       }
 
+      setLastCalculation(results);
       onCalculate(results);
     }
   };
@@ -482,17 +486,54 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         </div>
       </div>
 
-      <button
-        onClick={handleCalculate}
-        disabled={!isFormValid}
-        className={`w-full py-3 px-4 rounded-md font-medium text-white ${
-          isFormValid
-            ? 'bg-orange-500 hover:bg-orange-600 transition-colors'
-            : 'bg-slate-300 cursor-not-allowed'
-        }`}
-      >
-        {t('calculators.calculateMaterials')}
-      </button>
+      <div className="flex gap-3">
+        <button
+          onClick={handleCalculate}
+          disabled={!isFormValid}
+          className={`flex-1 py-3 px-4 rounded-md font-medium text-white ${
+            isFormValid
+              ? 'bg-orange-500 hover:bg-orange-600 transition-colors'
+              : 'bg-slate-300 cursor-not-allowed'
+          }`}
+        >
+          {t('calculators.calculateMaterials')}
+        </button>
+
+        {lastCalculation && lastCalculation.length > 0 && (
+          <button
+            onClick={() => setShowSaveModal(true)}
+            className="px-6 py-3 border-2 border-green-600 text-base font-medium rounded-md text-green-600 bg-white hover:bg-green-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors flex items-center gap-2"
+          >
+            <Save className="w-5 h-5" />
+            Save
+          </button>
+        )}
+      </div>
+
+      <SaveCalculationModal
+        isOpen={showSaveModal}
+        onClose={() => setShowSaveModal(false)}
+        calculatorType="concrete"
+        calculatorName="Concrete"
+        results={lastCalculation || []}
+        calculatorData={{
+          concreteType,
+          length,
+          width,
+          height,
+          thickness,
+          unit,
+          reinforcement,
+          rebarSpacing,
+          meshType,
+          deliveryMethod,
+          addColor,
+          colorPricePerYard,
+          addFiber,
+          fiberPricePerYard
+        }}
+        onSaveSuccess={onSaveSuccess}
+      />
     </div>
   );
 };
