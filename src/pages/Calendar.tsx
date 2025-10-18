@@ -53,6 +53,51 @@ const Calendar = () => {
     return () => clearInterval(timer);
   }, []);
 
+  // Auto-scroll to nearest event in week view
+  useEffect(() => {
+    if (view !== 'week') return;
+
+    const scrollContainer = document.querySelector('.week-scroll-container');
+    if (!scrollContainer) return;
+
+    // Find the nearest upcoming event or use current time
+    const now = new Date();
+    const weekStart = startOfWeek(currentDate);
+    const allWeekEvents = [];
+
+    for (let i = 0; i < 7; i++) {
+      const date = addDays(weekStart, i);
+      const dayEvents = getEventsByDate(date);
+      allWeekEvents.push(...dayEvents.filter(e => e.start_date));
+    }
+
+    // Find the next upcoming event
+    const upcomingEvents = allWeekEvents
+      .filter(e => {
+        const eventTime = parseISO(e.start_date);
+        return eventTime >= now;
+      })
+      .sort((a, b) => {
+        const aTime = parseISO(a.start_date);
+        const bTime = parseISO(b.start_date);
+        return aTime.getTime() - bTime.getTime();
+      });
+
+    let scrollToHour = now.getHours();
+    if (upcomingEvents.length > 0) {
+      const nextEvent = upcomingEvents[0];
+      scrollToHour = parseISO(nextEvent.start_date).getHours();
+    }
+
+    // Each hour is 60px tall, scroll to put the target hour near the top
+    const scrollPosition = Math.max(0, (scrollToHour - 2) * 60);
+
+    // Small delay to ensure DOM is ready
+    setTimeout(() => {
+      scrollContainer.scrollTop = scrollPosition;
+    }, 100);
+  }, [view, events, currentDate]);
+
   const getEventColor = (eventType: string) => {
     switch (eventType) {
       case 'task':
@@ -211,57 +256,96 @@ const Calendar = () => {
       const isToday = isSameDay(date, now);
 
       days.push(
-        <div key={i} className="flex-1 min-w-0 relative">
-          <div className="sticky top-0 z-10 bg-white border-b border-gray-200 p-2">
-            <div className={`font-medium ${isToday ? 'text-blue-600' : ''}`}>{format(date, 'EEE')}</div>
-            <div className={`text-sm ${isToday ? 'text-blue-500' : 'text-gray-500'}`}>{format(date, 'MMM d')}</div>
+        <div key={i} className="flex-1 min-w-[120px] relative">
+          {/* Improved Day Header */}
+          <div className={`sticky top-0 z-20 bg-gradient-to-b ${isToday ? 'from-blue-50 to-white' : 'from-gray-50 to-white'} border-b-2 ${isToday ? 'border-blue-400' : 'border-gray-200'} p-3 text-center shadow-md`}>
+            <div className={`text-xs font-semibold uppercase tracking-wide ${isToday ? 'text-blue-600' : 'text-gray-500'}`}>
+              {format(date, 'EEE')}
+            </div>
+            <div className={`mt-1 ${isToday ? 'bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center mx-auto font-bold' : 'text-2xl font-bold text-gray-900'}`}>
+              {format(date, 'd')}
+            </div>
+            {isToday && (
+              <div className="text-xs text-blue-600 font-medium mt-1">Today</div>
+            )}
           </div>
-          <div className="divide-y divide-gray-200 relative">
+
+          {/* Hour Grid */}
+          <div className="divide-y divide-gray-100 relative">
             {Array.from({ length: 24 }).map((_, hour) => {
               const isCurrentHour = isToday && hour === currentHour;
+              const isBusinessHour = hour >= 8 && hour < 18;
 
               return (
-                <div key={hour} className={`group relative min-h-[48px] hover:bg-gray-50 cursor-pointer flex ${isCurrentHour ? 'bg-blue-50' : ''}`}>
-                  <div className="w-16 flex-shrink-0 text-xs text-gray-500 pr-2 pt-1 text-right border-r border-gray-200">
-                    {format(new Date().setHours(hour, 0), 'h:mm a')}
-                  </div>
-                  <div className="flex-1 relative">
+                <div key={hour} className={`group relative min-h-[60px] hover:bg-blue-50/30 cursor-pointer transition-colors ${isCurrentHour ? 'bg-blue-50/50' : isBusinessHour ? 'bg-white' : 'bg-gray-50/50'}`}>
+                  {/* Time Label - Only show on first column */}
+                  {i === 0 && (
+                    <div className="absolute -left-16 top-0 w-14 text-xs font-medium text-gray-500 text-right pr-2 pt-1">
+                      {format(new Date().setHours(hour, 0), 'h a')}
+                    </div>
+                  )}
+
+                  <div className="flex-1 relative p-1">
+                    {/* Hour Grid Lines */}
+                    <div className="absolute inset-x-0 top-0 border-t border-gray-200"></div>
+                    <div className="absolute inset-x-0 top-1/2 border-t border-dashed border-gray-100"></div>
+
+                    {/* Events */}
                     {dayEvents
                       .filter(event => {
+                        if (!event.start_date) return false;
                         const eventHour = parseISO(event.start_date).getHours();
                         return eventHour === hour;
                       })
-                      .map(event => (
-                        <div
-                          key={event.id}
-                          onClick={(e) => handleEventClick(event, e)}
-                          className={`absolute w-full p-2 rounded-md border ${getEventColor(event.event_type)} ${
-                            event.auto_generated ? 'border-blue-500' : ''
-                          } hover:opacity-75 hover:shadow-md cursor-pointer transition-all`}
-                          style={{
-                            top: `${parseISO(event.start_date).getMinutes()}%`,
-                            height: '48px'
-                          }}
-                        >
-                          <div className="flex items-center">
-                            {getStatusIcon(event.status)}
-                            <span className="ml-1 font-medium text-xs">{event.title}</span>
+                      .map(event => {
+                        if (!event.start_date || !event.end_date) return null;
+                        const startTime = parseISO(event.start_date);
+                        const endTime = parseISO(event.end_date);
+                        const durationMinutes = (endTime.getTime() - startTime.getTime()) / 60000;
+                        const heightPx = Math.max(40, (durationMinutes / 60) * 60);
+
+                        return (
+                          <div
+                            key={event.id}
+                            onClick={(e) => handleEventClick(event, e)}
+                            className={`absolute left-1 right-1 p-2 rounded-lg border-l-4 shadow-sm ${getEventColor(event.event_type)} hover:shadow-lg hover:scale-[1.02] cursor-pointer transition-all duration-200`}
+                            style={{
+                              top: `${(startTime.getMinutes() / 60) * 100}%`,
+                              height: `${heightPx}px`,
+                              zIndex: 5
+                            }}
+                          >
+                            <div className="flex items-start gap-1">
+                              <div className="flex-shrink-0">
+                                {getStatusIcon(event.status)}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="font-semibold text-sm truncate">{event.title}</div>
+                                <div className="text-xs opacity-75 mt-0.5">
+                                  {format(startTime, 'h:mm a')}
+                                </div>
+                                {event.location && (
+                                  <div className="text-xs opacity-75 truncate mt-0.5">
+                                    📍 {event.location}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
                           </div>
-                          <div className="text-xs opacity-75">
-                            {format(parseISO(event.start_date), 'h:mm a')}
-                          </div>
-                        </div>
-                      ))}
-                    {/* Current time indicator */}
+                        );
+                      })}
+
+                    {/* Current Time Indicator */}
                     {isCurrentHour && (
                       <div
-                        className="absolute left-0 right-0 border-t-2 border-red-500 z-20"
+                        className="absolute left-0 right-0 z-20"
                         style={{
                           top: `${(currentMinute / 60) * 100}%`
                         }}
                       >
-                        <div className="absolute -left-2 -top-1.5 w-3 h-3 bg-red-500 rounded-full"></div>
-                        <div className="absolute left-2 -top-3 text-xs font-medium text-red-500 bg-white px-1 rounded">
+                        <div className="absolute -left-1.5 -top-1.5 w-3 h-3 bg-red-500 rounded-full animate-pulse shadow-lg"></div>
+                        <div className="absolute left-0 right-0 border-t-2 border-red-500 shadow-sm"></div>
+                        <div className="absolute left-2 -top-4 text-xs font-bold text-red-600 bg-white px-2 py-0.5 rounded-full shadow-sm">
                           {format(now, 'h:mm a')}
                         </div>
                       </div>
@@ -276,8 +360,14 @@ const Calendar = () => {
     }
 
     return (
-      <div className="flex divide-x divide-gray-200 h-[calc(100vh-300px)] overflow-y-auto">
-        {days}
+      <div className="relative">
+        {/* Time labels column */}
+        <div className="absolute left-0 w-16 h-full pointer-events-none z-10"></div>
+
+        {/* Week grid */}
+        <div className="week-scroll-container flex border-l border-gray-200 ml-16 h-[calc(100vh-300px)] overflow-y-auto overflow-x-hidden shadow-inner bg-gray-50/30 scroll-smooth">
+          {days}
+        </div>
       </div>
     );
   };
