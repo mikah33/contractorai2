@@ -9,6 +9,7 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const [length, setLength] = useState<number | ''>('');
   const [width, setWidth] = useState<number | ''>('');
   const [height, setHeight] = useState<number | ''>('');
+  const [thickness, setThickness] = useState<number | ''>(''); // For wall thickness in inches
   const [unit, setUnit] = useState<'imperial' | 'metric'>('imperial');
   const [reinforcement, setReinforcement] = useState<'none' | 'rebar' | 'mesh'>('none');
   const [rebarSpacing, setRebarSpacing] = useState<number>(12); // inches or 30cm
@@ -20,25 +21,26 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const [fiberPricePerYard, setFiberPricePerYard] = useState<number | ''>('');
 
   const handleCalculate = () => {
-    if (typeof length === 'number' && typeof width === 'number' &&
-        (concreteType === 'flatwork' || (concreteType === 'wall' && typeof height === 'number'))) {
+    if (typeof length === 'number' &&
+        (concreteType === 'flatwork' ? (typeof width === 'number' && typeof height === 'number') :
+         (typeof height === 'number' && typeof thickness === 'number'))) {
       let volume: number;
       let volumeUnit: string;
       let bagsNeeded: number;
       let bagsUnit: string;
 
       if (unit === 'imperial') {
-        // For walls: length and width in feet, height in feet
+        // For walls: length in feet, height in feet, thickness in inches
         // For flatwork: length and width in feet, depth in inches
         volume = concreteType === 'wall'
-          ? (length * width * height) / 27 // Convert cubic feet to cubic yards
+          ? (length * height * (thickness / 12)) / 27 // Linear feet × height × (thickness in feet) / 27
           : (length * width * (height / 12)) / 27; // Convert depth from inches to feet, then to cubic yards
         volumeUnit = t('calculators.concrete.cubicYards');
         bagsNeeded = Math.ceil(volume * 40); // Approx 40 bags per cubic yard
         bagsUnit = t('calculators.concrete.lbBags');
       } else {
         volume = concreteType === 'wall'
-          ? length * width * height // Already in cubic meters
+          ? (length * height * (thickness / 100)) // Linear meters × height × (thickness in meters)
           : length * width * (height / 100); // Convert depth from cm to meters
         volumeUnit = t('calculators.concrete.cubicMeters');
         bagsNeeded = Math.ceil(volume * 90);
@@ -161,8 +163,9 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
   const isFormValid =
     typeof length === 'number' &&
-    typeof width === 'number' &&
-    (concreteType === 'flatwork' || (concreteType === 'wall' && typeof height === 'number'));
+    (concreteType === 'flatwork'
+      ? (typeof width === 'number' && typeof height === 'number')
+      : (typeof height === 'number' && typeof thickness === 'number'));
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
@@ -253,7 +256,7 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label htmlFor="length" className="block text-sm font-medium text-slate-700 mb-1">
-              {t('calculators.concrete.length')} ({unit === 'imperial' ? t('calculators.concrete.feet') : t('calculators.concrete.meters')})
+              {concreteType === 'wall' ? 'Total Linear Feet' : t('calculators.concrete.length')} ({unit === 'imperial' ? t('calculators.concrete.feet') : t('calculators.concrete.meters')})
             </label>
             <input
               type="number"
@@ -263,41 +266,79 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               value={length}
               onChange={(e) => setLength(e.target.value ? Number(e.target.value) : '')}
               className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-              placeholder={`${t('calculators.concrete.enterLength')} ${unit === 'imperial' ? t('calculators.concrete.feet') : t('calculators.concrete.meters')}`}
+              placeholder={concreteType === 'wall' ? 'Total wall length' : `${t('calculators.concrete.enterLength')} ${unit === 'imperial' ? t('calculators.concrete.feet') : t('calculators.concrete.meters')}`}
             />
           </div>
 
-          <div>
-            <label htmlFor="width" className="block text-sm font-medium text-slate-700 mb-1">
-              {t('calculators.concrete.width')} ({unit === 'imperial' ? t('calculators.concrete.feet') : t('calculators.concrete.meters')})
-            </label>
-            <input
-              type="number"
-              id="width"
-              min="0"
-              step="0.01"
-              value={width}
-              onChange={(e) => setWidth(e.target.value ? Number(e.target.value) : '')}
-              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-              placeholder={`${t('calculators.concrete.enterWidth')} ${unit === 'imperial' ? t('calculators.concrete.feet') : t('calculators.concrete.meters')}`}
-            />
-          </div>
+          {concreteType === 'flatwork' && (
+            <div>
+              <label htmlFor="width" className="block text-sm font-medium text-slate-700 mb-1">
+                {t('calculators.concrete.width')} ({unit === 'imperial' ? t('calculators.concrete.feet') : t('calculators.concrete.meters')})
+              </label>
+              <input
+                type="number"
+                id="width"
+                min="0"
+                step="0.01"
+                value={width}
+                onChange={(e) => setWidth(e.target.value ? Number(e.target.value) : '')}
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                placeholder={`${t('calculators.concrete.enterWidth')} ${unit === 'imperial' ? t('calculators.concrete.feet') : t('calculators.concrete.meters')}`}
+              />
+            </div>
+          )}
 
           <div>
             <label htmlFor="height" className="block text-sm font-medium text-slate-700 mb-1">
-              {concreteType === 'wall' ? t('calculators.concrete.height') : t('calculators.concrete.thickness')} ({unit === 'imperial' ? (concreteType === 'wall' ? t('calculators.concrete.feet') : t('calculators.concrete.inches')) : (concreteType === 'wall' ? t('calculators.concrete.meters') : t('calculators.concrete.centimeters'))})
+              {concreteType === 'wall' ? 'Height of Wall' : t('calculators.concrete.thickness')} ({unit === 'imperial' ? t('calculators.concrete.feet') : (concreteType === 'wall' ? t('calculators.concrete.meters') : t('calculators.concrete.centimeters'))})
             </label>
             <input
               type="number"
               id="height"
               min="0"
-              step={concreteType === 'wall' ? '0.01' : '0.5'}
+              step="0.01"
               value={height}
               onChange={(e) => setHeight(e.target.value ? Number(e.target.value) : '')}
               className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-              placeholder={`${concreteType === 'wall' ? t('calculators.concrete.enterHeight') : t('calculators.concrete.enterThickness')} ${unit === 'imperial' ? (concreteType === 'wall' ? t('calculators.concrete.feet') : t('calculators.concrete.inches')) : (concreteType === 'wall' ? t('calculators.concrete.meters') : t('calculators.concrete.centimeters'))}`}
+              placeholder={concreteType === 'wall' ? 'e.g., 8' : `${t('calculators.concrete.enterThickness')} ${unit === 'imperial' ? t('calculators.concrete.inches') : t('calculators.concrete.centimeters')}`}
             />
           </div>
+
+          {concreteType === 'wall' && (
+            <div>
+              <label htmlFor="thickness" className="block text-sm font-medium text-slate-700 mb-1">
+                Thickness ({unit === 'imperial' ? t('calculators.concrete.inches') : 'cm'})
+              </label>
+              <input
+                type="number"
+                id="thickness"
+                min="0"
+                step="0.5"
+                value={thickness}
+                onChange={(e) => setThickness(e.target.value ? Number(e.target.value) : '')}
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                placeholder="e.g., 8"
+              />
+            </div>
+          )}
+
+          {concreteType === 'flatwork' && (
+            <div>
+              <label htmlFor="flatworkThickness" className="block text-sm font-medium text-slate-700 mb-1">
+                {t('calculators.concrete.thickness')} ({unit === 'imperial' ? t('calculators.concrete.inches') : t('calculators.concrete.centimeters')})
+              </label>
+              <input
+                type="number"
+                id="flatworkThickness"
+                min="0"
+                step="0.5"
+                value={height}
+                onChange={(e) => setHeight(e.target.value ? Number(e.target.value) : '')}
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                placeholder={`${t('calculators.concrete.enterThickness')} ${unit === 'imperial' ? t('calculators.concrete.inches') : t('calculators.concrete.centimeters')}`}
+              />
+            </div>
+          )}
         </div>
 
         {/* Color and Fiber Add-ons - Only show for Ready-Mix Truck */}

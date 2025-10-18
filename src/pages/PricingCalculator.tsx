@@ -305,10 +305,11 @@ const PricingCalculator = () => {
               {availableTrades.length > 0 && (
                 <button
                   onClick={() => setShowManageModal(true)}
-                  className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
-                  title="Manage Calculators"
+                  className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors"
+                  title="Choose Calculators"
                 >
-                  <Settings className="w-5 h-5" />
+                  <Settings className="w-4 h-4 mr-1.5" />
+                  Choose Calculators
                 </button>
               )}
             </div>
