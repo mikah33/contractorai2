@@ -193,9 +193,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   initialize: async () => {
     try {
-      // Get initial session
-      const { data: { session } } = await supabase.auth.getSession();
-      
+      console.log('🔐 Initializing auth...');
+
+      // Get initial session with timeout
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Auth initialization timeout')), 10000)
+      );
+
+      const sessionPromise = supabase.auth.getSession();
+
+      const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]) as any;
+
+      console.log('✅ Session retrieved:', session ? 'Logged in' : 'Not logged in');
+
       if (session) {
         set({
           user: session.user,
@@ -237,8 +247,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         subscription.unsubscribe();
       };
     } catch (error) {
-      console.error('Error initializing auth:', error);
-      set({ initialized: true });
+      console.error('❌ Error initializing auth:', error);
+      // Always mark as initialized even on error to prevent infinite loading
+      set({
+        initialized: true,
+        user: null,
+        session: null,
+        profile: null
+      });
     }
   },
 }));
