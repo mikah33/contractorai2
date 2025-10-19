@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Droplets } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import CalculatorEstimateHeader from './CalculatorEstimateHeader';
+import { CalculatorEstimateHeader } from '../calculators/CalculatorEstimateHeader';
 
 type GutterSize = '5' | '6' | 'custom';
 type GutterMaterial = 'aluminum' | 'vinyl' | 'galvanized' | 'copper';

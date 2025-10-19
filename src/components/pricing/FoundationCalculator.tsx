@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Radiation as Foundation } from 'lucide-react';
-import CalculatorEstimateHeader from './CalculatorEstimateHeader';
+import { CalculatorEstimateHeader } from '../calculators/CalculatorEstimateHeader';
 
 type FoundationType = 'strip-footing' | 'spread-footings' | 'thickened-edge' | 'frost-wall';
 type SoilType = 'sandy' | 'clay' | 'rock';

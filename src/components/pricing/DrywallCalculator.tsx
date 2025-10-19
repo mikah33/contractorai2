@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Square, DoorClosed, AppWindow as Window } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import CalculatorEstimateHeader from '../calculators/CalculatorEstimateHeader';
+import { CalculatorEstimateHeader } from '../calculators/CalculatorEstimateHeader';
 
 interface Opening {
   width: number;

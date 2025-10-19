@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Fence } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import CalculatorEstimateHeader from './CalculatorEstimateHeader';
+import { CalculatorEstimateHeader } from '../calculators/CalculatorEstimateHeader';
 
 interface Gate {
   id: string;

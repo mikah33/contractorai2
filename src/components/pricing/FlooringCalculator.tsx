@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Grid } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { CalculatorEstimateHeader } from './CalculatorEstimateHeader';
+import { CalculatorEstimateHeader } from '../calculators/CalculatorEstimateHeader';
 
 type FlooringType = 'hardwood' | 'laminate' | 'vinyl' | 'carpet' | 'engineered';
 type InstallPattern = 'straight' | 'diagonal' | 'herringbone';

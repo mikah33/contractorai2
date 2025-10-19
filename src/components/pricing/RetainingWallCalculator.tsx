@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Wallet as Wall } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import CalculatorEstimateHeader from './CalculatorEstimateHeader';
+import { CalculatorEstimateHeader } from '../calculators/CalculatorEstimateHeader';
 
 type WallType = 'block' | 'concrete' | 'timber' | 'boulder';
 type BlockType = 'standard' | 'pinned' | 'gravity' | 'custom';

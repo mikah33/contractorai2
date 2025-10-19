@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Calculator } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import CalculatorEstimateHeader from '../calculators/CalculatorEstimateHeader';
+import { CalculatorEstimateHeader } from '../calculators/CalculatorEstimateHeader';
 
 const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSuccess }) => {
   const { t } = useTranslation();
