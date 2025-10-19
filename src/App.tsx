@@ -35,14 +35,33 @@ function App() {
   // Show loading while auth or data initializes
   if (!initialized || (user && !dataInitialized)) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center max-w-md px-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 text-lg mb-2">
             {!initialized ? 'Checking authentication...' : 'Loading your data...'}
           </p>
           {initError && (
-            <p className="text-red-500 text-sm mt-2">Error: {initError}</p>
+            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-700 text-sm font-medium">Error: {initError}</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="mt-3 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors text-sm"
+              >
+                Reload Page
+              </button>
+            </div>
+          )}
+          {!initialized && (
+            <p className="text-gray-500 text-sm mt-4">
+              If this takes more than 10 seconds, please check your internet connection or{' '}
+              <button
+                onClick={() => window.location.reload()}
+                className="text-blue-600 hover:underline"
+              >
+                reload the page
+              </button>
+            </p>
           )}
         </div>
       </div>
