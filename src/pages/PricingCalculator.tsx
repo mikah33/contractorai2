@@ -51,7 +51,7 @@ const PricingCalculator = () => {
   const [editingEstimateId, setEditingEstimateId] = useState<string | null>(null);
   const [loadingEstimate, setLoadingEstimate] = useState(false);
 
-  const { selectedCalculators, loading: loadingPreferences } = useCalculatorPreferences();
+  const { selectedCalculators, loading: loadingPreferences, refreshCalculators } = useCalculatorPreferences();
 
   // Filter trades to only show selected calculators
   const availableTrades = trades.filter(trade =>
@@ -448,7 +448,10 @@ const PricingCalculator = () => {
       {/* Calculator Management Modal */}
       <CalculatorManagementModal
         isOpen={showManageModal}
-        onClose={() => setShowManageModal(false)}
+        onClose={() => {
+          setShowManageModal(false);
+          refreshCalculators();
+        }}
       />
     </div>
   );
