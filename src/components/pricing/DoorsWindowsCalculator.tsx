@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { DoorClosed, AppWindow } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import CalculatorEstimateHeader from './CalculatorEstimateHeader';
 
 interface Opening {
   id: string;
@@ -237,6 +238,30 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     return (width * 2 + height * 2) / 12; // Convert to linear feet
   };
 
+  const getCurrentInputs = () => ({
+    openings,
+    includeInsulation,
+    includeFlashing,
+    includeCaulk,
+    includeShims
+  });
+
+  const handleLoadEstimate = (inputs: any) => {
+    setOpenings(inputs.openings || []);
+    setIncludeInsulation(inputs.includeInsulation ?? true);
+    setIncludeFlashing(inputs.includeFlashing ?? true);
+    setIncludeCaulk(inputs.includeCaulk ?? true);
+    setIncludeShims(inputs.includeShims ?? true);
+  };
+
+  const handleNewEstimate = () => {
+    setOpenings([]);
+    setIncludeInsulation(true);
+    setIncludeFlashing(true);
+    setIncludeCaulk(true);
+    setIncludeShims(true);
+  };
+
   const handleCalculate = () => {
     const results: CalculationResult[] = [];
     let totalCost = 0;
@@ -387,6 +412,13 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         </div>
         <h2 className="text-xl font-bold text-slate-800 ml-2">{t('calculators.doorsWindows.title')}</h2>
       </div>
+
+      <CalculatorEstimateHeader
+        calculatorType="doors-windows"
+        getCurrentInputs={getCurrentInputs}
+        onLoadEstimate={handleLoadEstimate}
+        onNewEstimate={handleNewEstimate}
+      />
 
       <div className="mb-4">
         <div className="flex items-center justify-between mb-4">

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Zap } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import CalculatorEstimateHeader from '../calculators/CalculatorEstimateHeader';
 
 interface Circuit {
   id: string;
@@ -27,6 +28,38 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const [includeGroundRods, setIncludeGroundRods] = useState(true);
   const [includeGFCI, setIncludeGFCI] = useState(true);
   const [includeAFCI, setIncludeAFCI] = useState(true);
+  const [lastCalculation, setLastCalculation] = useState<CalculationResult[] | null>(null);
+
+  const getCurrentInputs = () => ({
+    circuits,
+    includePanel,
+    panelSize,
+    panelSpaces,
+    includeGroundRods,
+    includeGFCI,
+    includeAFCI
+  });
+
+  const handleLoadEstimate = (inputs: Record<string, any>) => {
+    setCircuits(inputs.circuits ?? []);
+    setIncludePanel(inputs.includePanel ?? false);
+    setPanelSize(inputs.panelSize ?? 200);
+    setPanelSpaces(inputs.panelSpaces ?? 30);
+    setIncludeGroundRods(inputs.includeGroundRods ?? true);
+    setIncludeGFCI(inputs.includeGFCI ?? true);
+    setIncludeAFCI(inputs.includeAFCI ?? true);
+  };
+
+  const handleNewEstimate = () => {
+    setCircuits([]);
+    setIncludePanel(false);
+    setPanelSize(200);
+    setPanelSpaces(30);
+    setIncludeGroundRods(true);
+    setIncludeGFCI(true);
+    setIncludeAFCI(true);
+    setLastCalculation(null);
+  };
 
   const addCircuit = () => {
     const newCircuit: Circuit = {
@@ -236,6 +269,7 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       });
     });
 
+    setLastCalculation(results);
     onCalculate(results);
   };
 
@@ -252,6 +286,13 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         <Zap className="h-6 w-6 text-orange-500 mr-2" />
         <h2 className="text-xl font-bold text-slate-800">{t('calculators.electrical.title')}</h2>
       </div>
+
+      <CalculatorEstimateHeader
+        calculatorType="electrical"
+        currentData={getCurrentInputs()}
+        onLoad={handleLoadEstimate}
+        onNewEstimate={handleNewEstimate}
+      />
 
       <div className="mb-4">
         <div className="flex items-center justify-between mb-4">

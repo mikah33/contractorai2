@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Droplets } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import CalculatorEstimateHeader from './CalculatorEstimateHeader';
 
 type GutterSize = '5' | '6' | 'custom';
 type GutterMaterial = 'aluminum' | 'vinyl' | 'galvanized' | 'copper';
@@ -53,6 +54,60 @@ const GuttersCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const [includeEndcaps, setIncludeEndcaps] = useState(true);
   const [includeCorners, setIncludeCorners] = useState(true);
   const [cornerCount, setCornerCount] = useState<number | ''>('');
+
+  const getCurrentInputs = () => ({
+    roofLength,
+    gutterMaterial,
+    gutterSize,
+    customGutterPrice,
+    customGutterMaxSpan,
+    downspoutSize,
+    customDownspoutPrice,
+    roofPitch,
+    valleyCount,
+    includeLeafGuards,
+    includeHeatTape,
+    heatTapeLength,
+    includeEndcaps,
+    includeCorners,
+    cornerCount
+  });
+
+  const handleLoadEstimate = (estimate: any) => {
+    setRoofLength(estimate.inputs.roofLength ?? '');
+    setGutterMaterial(estimate.inputs.gutterMaterial ?? 'aluminum');
+    setGutterSize(estimate.inputs.gutterSize ?? '5');
+    setCustomGutterPrice(estimate.inputs.customGutterPrice ?? '');
+    setCustomGutterMaxSpan(estimate.inputs.customGutterMaxSpan ?? '');
+    setDownspoutSize(estimate.inputs.downspoutSize ?? '2x3');
+    setCustomDownspoutPrice(estimate.inputs.customDownspoutPrice ?? '');
+    setRoofPitch(estimate.inputs.roofPitch ?? 4);
+    setValleyCount(estimate.inputs.valleyCount ?? '');
+    setIncludeLeafGuards(estimate.inputs.includeLeafGuards ?? false);
+    setIncludeHeatTape(estimate.inputs.includeHeatTape ?? false);
+    setHeatTapeLength(estimate.inputs.heatTapeLength ?? '');
+    setIncludeEndcaps(estimate.inputs.includeEndcaps ?? true);
+    setIncludeCorners(estimate.inputs.includeCorners ?? true);
+    setCornerCount(estimate.inputs.cornerCount ?? '');
+  };
+
+  const handleNewEstimate = () => {
+    setRoofLength('');
+    setGutterMaterial('aluminum');
+    setGutterSize('5');
+    setCustomGutterPrice('');
+    setCustomGutterMaxSpan('');
+    setDownspoutSize('2x3');
+    setCustomDownspoutPrice('');
+    setRoofPitch(4);
+    setValleyCount('');
+    setIncludeLeafGuards(false);
+    setIncludeHeatTape(false);
+    setHeatTapeLength('');
+    setIncludeEndcaps(true);
+    setIncludeCorners(true);
+    setCornerCount('');
+  };
 
   const handleCalculate = () => {
     if (typeof roofLength === 'number') {
@@ -203,7 +258,14 @@ const GuttersCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         <Droplets className="h-6 w-6 text-orange-500 mr-2" />
         <h2 className="text-xl font-bold text-slate-800">{t('calculators.gutters.title')}</h2>
       </div>
-      
+
+      <CalculatorEstimateHeader
+        calculatorType="gutters"
+        currentInputs={getCurrentInputs()}
+        onLoadEstimate={handleLoadEstimate}
+        onNewEstimate={handleNewEstimate}
+      />
+
       <div className="mb-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Grid } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { CalculatorEstimateHeader } from './CalculatorEstimateHeader';
 
 interface Opening {
   width: number;
@@ -65,6 +66,78 @@ const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
   const removeOpening = (index: number) => {
     setOpenings(openings.filter((_, i) => i !== index));
+  };
+
+  const getCurrentInputs = () => ({
+    surfaceType,
+    inputType,
+    length,
+    width,
+    height,
+    area,
+    tileSize,
+    pattern,
+    groutWidth,
+    openings,
+    wasteFactor,
+    includeBackerBoard,
+    backerBoardThickness,
+    mortarType,
+    groutType,
+    includeMembrane,
+    includeEdging,
+    edgingType
+  });
+
+  const handleLoadEstimate = (inputs: any) => {
+    if (inputs.surfaceType) setSurfaceType(inputs.surfaceType);
+    if (inputs.inputType) setInputType(inputs.inputType);
+    if (inputs.length !== undefined) setLength(inputs.length);
+    if (inputs.width !== undefined) setWidth(inputs.width);
+    if (inputs.height !== undefined) setHeight(inputs.height);
+    if (inputs.area !== undefined) setArea(inputs.area);
+    if (inputs.tileSize) setTileSize(inputs.tileSize);
+    if (inputs.pattern) setPattern(inputs.pattern);
+    if (inputs.groutWidth !== undefined) setGroutWidth(inputs.groutWidth);
+    if (inputs.openings) setOpenings(inputs.openings);
+    if (inputs.wasteFactor !== undefined) setWasteFactor(inputs.wasteFactor);
+    if (inputs.includeBackerBoard !== undefined) setIncludeBackerBoard(inputs.includeBackerBoard);
+    if (inputs.backerBoardThickness) setBackerBoardThickness(inputs.backerBoardThickness);
+    if (inputs.mortarType) setMortarType(inputs.mortarType);
+    if (inputs.groutType) setGroutType(inputs.groutType);
+    if (inputs.includeMembrane !== undefined) setIncludeMembrane(inputs.includeMembrane);
+    if (inputs.includeEdging !== undefined) setIncludeEdging(inputs.includeEdging);
+    if (inputs.edgingType) setEdgingType(inputs.edgingType);
+  };
+
+  const handleNewEstimate = () => {
+    setSurfaceType('floor');
+    setInputType('dimensions');
+    setLength('');
+    setWidth('');
+    setHeight('');
+    setArea('');
+    setTileSize({
+      width: 12,
+      length: 12,
+      piecesPerBox: 12,
+      pricePerBox: 45.98
+    });
+    setCustomTileWidth('');
+    setCustomTileLength('');
+    setCustomTilePiecesPerBox('');
+    setCustomTilePricePerBox('');
+    setPattern('straight');
+    setGroutWidth(0.25);
+    setOpenings([]);
+    setWasteFactor(15);
+    setIncludeBackerBoard(true);
+    setBackerBoardThickness('1/4');
+    setMortarType('modified');
+    setGroutType('sanded');
+    setIncludeMembrane(false);
+    setIncludeEdging(true);
+    setEdgingType('metal');
   };
 
   const handleCalculate = () => {
@@ -260,6 +333,13 @@ const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         <Grid className="h-6 w-6 text-orange-500 mr-2" />
         <h2 className="text-xl font-bold text-slate-800">{t('calculators.tile.title')}</h2>
       </div>
+
+      <CalculatorEstimateHeader
+        calculatorType="tile"
+        getCurrentInputs={getCurrentInputs}
+        onLoadEstimate={handleLoadEstimate}
+        onNewEstimate={handleNewEstimate}
+      />
 
       <div className="mb-4">
         <div className="flex justify-between mb-4">

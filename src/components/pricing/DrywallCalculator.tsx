@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Square, DoorClosed, AppWindow as Window } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import CalculatorEstimateHeader from '../calculators/CalculatorEstimateHeader';
 
 interface Opening {
   width: number;
@@ -21,6 +22,53 @@ const DrywallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const [layers, setLayers] = useState<1 | 2>(1);
   const [includeWaste, setIncludeWaste] = useState(true);
   const [wasteFactor, setWasteFactor] = useState<5 | 10 | 15>(10);
+  const [lastCalculation, setLastCalculation] = useState<CalculationResult[] | null>(null);
+
+  // Get current inputs for saving
+  const getCurrentInputs = () => ({
+    surfaceType,
+    length,
+    height,
+    unit,
+    sheetSize,
+    sheetThickness,
+    doors,
+    windows,
+    layers,
+    includeWaste,
+    wasteFactor
+  });
+
+  // Load saved estimate inputs
+  const handleLoadEstimate = (inputs: Record<string, any>) => {
+    setSurfaceType(inputs.surfaceType || 'wall');
+    setLength(inputs.length ?? '');
+    setHeight(inputs.height ?? '');
+    setUnit(inputs.unit || 'imperial');
+    setSheetSize(inputs.sheetSize || '4x8');
+    setSheetThickness(inputs.sheetThickness || '1/2');
+    setDoors(inputs.doors ?? []);
+    setWindows(inputs.windows ?? []);
+    setLayers(inputs.layers ?? 1);
+    setIncludeWaste(inputs.includeWaste ?? true);
+    setWasteFactor(inputs.wasteFactor ?? 10);
+  };
+
+  // Reset all inputs to defaults for new estimate
+  const handleNewEstimate = () => {
+    setSurfaceType('wall');
+    setLength('');
+    setHeight('');
+    setUnit('imperial');
+    setSheetSize('4x8');
+    setSheetThickness('1/2');
+    setDoors([]);
+    setWindows([]);
+    setLayers(1);
+    setIncludeWaste(true);
+    setWasteFactor(10);
+    setLastCalculation(null);
+  };
 
   const addDoor = () => {
     setDoors([...doors, { width: 3, height: 7 }]);
@@ -113,6 +161,7 @@ const DrywallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         }
       ];
 
+      setLastCalculation(results);
       onCalculate(results);
     }
   };
@@ -125,6 +174,13 @@ const DrywallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         <Square className="h-6 w-6 text-orange-500 mr-2" />
         <h2 className="text-xl font-bold text-slate-800">{t('calculators.drywall.title')}</h2>
       </div>
+
+      <CalculatorEstimateHeader
+        calculatorType="drywall"
+        currentData={getCurrentInputs()}
+        onLoad={handleLoadEstimate}
+        onNewEstimate={handleNewEstimate}
+      />
 
       <div className="mb-4">
         <div className="flex justify-end mb-4">

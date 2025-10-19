@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Radiation as Foundation } from 'lucide-react';
+import CalculatorEstimateHeader from './CalculatorEstimateHeader';
 
 type FoundationType = 'strip-footing' | 'spread-footings' | 'thickened-edge' | 'frost-wall';
 type SoilType = 'sandy' | 'clay' | 'rock';
@@ -31,6 +32,81 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const [gravelBaseDepth, setGravelBaseDepth] = useState<number | ''>('');
   const [includeICF, setIncludeICF] = useState(false);
   const [icfWallHeight, setIcfWallHeight] = useState<number | ''>('');
+
+  const getCurrentInputs = () => ({
+    foundationType,
+    isBasement,
+    length,
+    width,
+    footingWidth,
+    footingDepth,
+    stemWallHeight,
+    stemWallThickness,
+    slabThickness,
+    soilType,
+    backfillType,
+    frostDepth,
+    includeVaporBarrier,
+    includeSteelReinforcement,
+    rebarSize,
+    rebarSpacing,
+    includeWaterproofing,
+    includeDrainage,
+    concreteStrength,
+    gravelBaseDepth,
+    includeICF,
+    icfWallHeight,
+  });
+
+  const handleLoadEstimate = (inputs: any) => {
+    setFoundationType(inputs.foundationType || 'strip-footing');
+    setIsBasement(inputs.isBasement || false);
+    setLength(inputs.length || '');
+    setWidth(inputs.width || '');
+    setFootingWidth(inputs.footingWidth || '');
+    setFootingDepth(inputs.footingDepth || '');
+    setStemWallHeight(inputs.stemWallHeight || '');
+    setStemWallThickness(inputs.stemWallThickness || '');
+    setSlabThickness(inputs.slabThickness || '');
+    setSoilType(inputs.soilType || 'clay');
+    setBackfillType(inputs.backfillType || 'gravel');
+    setFrostDepth(inputs.frostDepth || '');
+    setIncludeVaporBarrier(inputs.includeVaporBarrier ?? true);
+    setIncludeSteelReinforcement(inputs.includeSteelReinforcement ?? true);
+    setRebarSize(inputs.rebarSize || '#4');
+    setRebarSpacing(inputs.rebarSpacing || 16);
+    setIncludeWaterproofing(inputs.includeWaterproofing ?? true);
+    setIncludeDrainage(inputs.includeDrainage ?? true);
+    setConcreteStrength(inputs.concreteStrength || 3500);
+    setGravelBaseDepth(inputs.gravelBaseDepth || '');
+    setIncludeICF(inputs.includeICF || false);
+    setIcfWallHeight(inputs.icfWallHeight || '');
+  };
+
+  const handleNewEstimate = () => {
+    setFoundationType('strip-footing');
+    setIsBasement(false);
+    setLength('');
+    setWidth('');
+    setFootingWidth('');
+    setFootingDepth('');
+    setStemWallHeight('');
+    setStemWallThickness('');
+    setSlabThickness('');
+    setSoilType('clay');
+    setBackfillType('gravel');
+    setFrostDepth('');
+    setIncludeVaporBarrier(true);
+    setIncludeSteelReinforcement(true);
+    setRebarSize('#4');
+    setRebarSpacing(16);
+    setIncludeWaterproofing(true);
+    setIncludeDrainage(true);
+    setConcreteStrength(3500);
+    setGravelBaseDepth('');
+    setIncludeICF(false);
+    setIcfWallHeight('');
+  };
 
   const handleCalculate = () => {
     if (typeof length === 'number' && typeof width === 'number' && 
@@ -296,7 +372,14 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         <Foundation className="h-6 w-6 text-orange-500 mr-2" />
         <h2 className="text-xl font-bold text-slate-800">{t('calculators.foundation.title')}</h2>
       </div>
-      
+
+      <CalculatorEstimateHeader
+        calculatorType="foundation"
+        currentInputs={getCurrentInputs()}
+        onLoadEstimate={handleLoadEstimate}
+        onNewEstimate={handleNewEstimate}
+      />
+
       <div className="mb-4">
         <div className="flex justify-between mb-4">
           <div className="inline-flex rounded-md shadow-sm">

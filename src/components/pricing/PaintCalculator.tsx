@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Paintbrush } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import CalculatorEstimateHeader from './CalculatorEstimateHeader';
 
 interface Opening {
   width: number;
@@ -40,6 +41,48 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
   const removeSurface = (index: number) => {
     setSurfaces(surfaces.filter((_, i) => i !== index));
+  };
+
+  const getCurrentInputs = () => ({
+    paintLocation,
+    unit,
+    surfaces,
+    doors,
+    windows,
+    coats,
+    paintType,
+    paintFinish,
+    includePrimer,
+    includeWaste,
+    wasteFactor
+  });
+
+  const handleLoadEstimate = (inputs: any) => {
+    setPaintLocation(inputs.paintLocation || 'interior');
+    setUnit(inputs.unit || 'imperial');
+    setSurfaces(inputs.surfaces || [{ length: 0, height: 0, condition: 'good' }]);
+    setDoors(inputs.doors || []);
+    setWindows(inputs.windows || []);
+    setCoats(inputs.coats || 2);
+    setPaintType(inputs.paintType || 'standard');
+    setPaintFinish(inputs.paintFinish || 'eggshell');
+    setIncludePrimer(inputs.includePrimer || false);
+    setIncludeWaste(inputs.includeWaste !== undefined ? inputs.includeWaste : true);
+    setWasteFactor(inputs.wasteFactor || 10);
+  };
+
+  const handleNewEstimate = () => {
+    setPaintLocation('interior');
+    setUnit('imperial');
+    setSurfaces([{ length: 0, height: 0, condition: 'good' }]);
+    setDoors([]);
+    setWindows([]);
+    setCoats(2);
+    setPaintType('standard');
+    setPaintFinish('eggshell');
+    setIncludePrimer(false);
+    setIncludeWaste(true);
+    setWasteFactor(10);
   };
 
   const addDoor = () => {
@@ -179,6 +222,13 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         <Paintbrush className="h-6 w-6 text-orange-500 mr-2" />
         <h2 className="text-xl font-bold text-slate-800">{t('calculators.paint.title')}</h2>
       </div>
+
+      <CalculatorEstimateHeader
+        calculatorType="paint"
+        getCurrentInputs={getCurrentInputs}
+        onLoadEstimate={handleLoadEstimate}
+        onNewEstimate={handleNewEstimate}
+      />
 
       <div className="mb-4">
         <div className="flex justify-between mb-4">

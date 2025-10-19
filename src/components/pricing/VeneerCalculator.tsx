@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Blocks } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import CalculatorEstimateHeader from './CalculatorEstimateHeader';
 
 const VeneerCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const { t } = useTranslation();
@@ -48,12 +49,37 @@ const VeneerCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     typeof height === 'number' &&
     typeof costPerSqFt === 'number';
 
+  const getCurrentInputs = () => ({
+    length,
+    height,
+    costPerSqFt
+  });
+
+  const handleLoadEstimate = (inputs: any) => {
+    setLength(inputs.length || '');
+    setHeight(inputs.height || '');
+    setCostPerSqFt(inputs.costPerSqFt || '');
+  };
+
+  const handleNewEstimate = () => {
+    setLength('');
+    setHeight('');
+    setCostPerSqFt('');
+  };
+
   return (
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
       <div className="flex items-center mb-6">
         <Blocks className="h-6 w-6 text-orange-500 mr-2" />
         <h2 className="text-xl font-bold text-slate-800">Veneer Calculator</h2>
       </div>
+
+      <CalculatorEstimateHeader
+        calculatorType="veneer"
+        currentInputs={getCurrentInputs()}
+        onLoadEstimate={handleLoadEstimate}
+        onNewEstimate={handleNewEstimate}
+      />
 
       <div className="mb-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">

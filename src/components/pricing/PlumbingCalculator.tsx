@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Pipette as Pipe } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import CalculatorEstimateHeader from './CalculatorEstimateHeader';
 
 interface Fixture {
   id: string;
@@ -190,6 +191,51 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
   const removePipingRun = (id: string) => {
     setPipingRuns(pipingRuns.filter(run => run.id !== id));
+  };
+
+  const getCurrentInputs = () => ({
+    fixtures,
+    pipingRuns,
+    includeWaterHeater,
+    waterHeaterType,
+    waterHeaterSize,
+    includeWaterSoftener,
+    includePressureTank,
+    pressureTankSize,
+    includeSewerConnection,
+    sewerLength,
+    includeCleanouts,
+    cleanoutCount
+  });
+
+  const handleLoadEstimate = (data: any) => {
+    if (data.fixtures) setFixtures(data.fixtures);
+    if (data.pipingRuns) setPipingRuns(data.pipingRuns);
+    if (data.includeWaterHeater !== undefined) setIncludeWaterHeater(data.includeWaterHeater);
+    if (data.waterHeaterType) setWaterHeaterType(data.waterHeaterType);
+    if (data.waterHeaterSize) setWaterHeaterSize(data.waterHeaterSize);
+    if (data.includeWaterSoftener !== undefined) setIncludeWaterSoftener(data.includeWaterSoftener);
+    if (data.includePressureTank !== undefined) setIncludePressureTank(data.includePressureTank);
+    if (data.pressureTankSize) setPressureTankSize(data.pressureTankSize);
+    if (data.includeSewerConnection !== undefined) setIncludeSewerConnection(data.includeSewerConnection);
+    if (data.sewerLength !== undefined) setSewerLength(data.sewerLength);
+    if (data.includeCleanouts !== undefined) setIncludeCleanouts(data.includeCleanouts);
+    if (data.cleanoutCount !== undefined) setCleanoutCount(data.cleanoutCount);
+  };
+
+  const handleNewEstimate = () => {
+    setFixtures([]);
+    setPipingRuns([]);
+    setIncludeWaterHeater(false);
+    setWaterHeaterType('tank');
+    setWaterHeaterSize(40);
+    setIncludeWaterSoftener(false);
+    setIncludePressureTank(false);
+    setPressureTankSize(30);
+    setIncludeSewerConnection(true);
+    setSewerLength('');
+    setIncludeCleanouts(true);
+    setCleanoutCount(2);
   };
 
   const getPipePrice = (material: PipingRun['material'], size: number) => {
@@ -509,6 +555,13 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         <Pipe className="h-6 w-6 text-orange-500 mr-2" />
         <h2 className="text-xl font-bold text-slate-800">{t('calculators.plumbing.title')}</h2>
       </div>
+
+      <CalculatorEstimateHeader
+        calculatorType="plumbing"
+        getCurrentInputs={getCurrentInputs}
+        onLoadEstimate={handleLoadEstimate}
+        onNewEstimate={handleNewEstimate}
+      />
 
       <div className="mb-4">
         <div className="border-b border-slate-200 pb-6 mb-6">

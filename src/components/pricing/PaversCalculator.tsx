@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Layout } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import CalculatorEstimateHeader from './CalculatorEstimateHeader';
 
 const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const { t } = useTranslation();
@@ -21,9 +22,63 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const [wasteFactor, setWasteFactor] = useState<5 | 10 | 15 | 20>(10);
   const [paverCostPerSqFt, setPaverCostPerSqFt] = useState<number | ''>('');
 
+  const getCurrentInputs = () => ({
+    inputType,
+    length,
+    width,
+    area,
+    baseDepth,
+    beddingType,
+    beddingDepth,
+    hasBorder,
+    borderLength,
+    borderStyle,
+    edgeBlockSize,
+    customEdgeWidth,
+    customEdgeLength,
+    wasteFactor,
+    paverCostPerSqFt
+  });
+
+  const handleLoadEstimate = (inputs: any) => {
+    setInputType(inputs.inputType || 'dimensions');
+    setLength(inputs.length || '');
+    setWidth(inputs.width || '');
+    setArea(inputs.area || '');
+    setBaseDepth(inputs.baseDepth || '');
+    setBeddingType(inputs.beddingType || 'sand');
+    setBeddingDepth(inputs.beddingDepth || '');
+    setHasBorder(inputs.hasBorder || false);
+    setBorderLength(inputs.borderLength || '');
+    setBorderStyle(inputs.borderStyle || 'soldier');
+    setEdgeBlockSize(inputs.edgeBlockSize || '6x9');
+    setCustomEdgeWidth(inputs.customEdgeWidth || '');
+    setCustomEdgeLength(inputs.customEdgeLength || '');
+    setWasteFactor(inputs.wasteFactor || 10);
+    setPaverCostPerSqFt(inputs.paverCostPerSqFt || '');
+  };
+
+  const handleNewEstimate = () => {
+    setInputType('dimensions');
+    setLength('');
+    setWidth('');
+    setArea('');
+    setBaseDepth('');
+    setBeddingType('sand');
+    setBeddingDepth('');
+    setHasBorder(false);
+    setBorderLength('');
+    setBorderStyle('soldier');
+    setEdgeBlockSize('6x9');
+    setCustomEdgeWidth('');
+    setCustomEdgeLength('');
+    setWasteFactor(10);
+    setPaverCostPerSqFt('');
+  };
+
   const handleCalculate = () => {
     let baseArea: number;
-    
+
     if (inputType === 'dimensions' && typeof length === 'number' && typeof width === 'number') {
       baseArea = length * width;
     } else if (inputType === 'area' && typeof area === 'number') {
@@ -97,11 +152,11 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         const edgeBlocksNeeded = Math.ceil(borderLength / effectiveLength);
         const totalBlocks = borderStyle === 'double-sailor' ? edgeBlocksNeeded * 2 : edgeBlocksNeeded;
 
-        const styleLabel = borderStyle.split('-').map(word => 
+        const styleLabel = borderStyle.split('-').map(word =>
           word.charAt(0).toUpperCase() + word.slice(1)
         ).join(' ');
-        
-        const sizeLabel = edgeBlockSize === 'custom' 
+
+        const sizeLabel = edgeBlockSize === 'custom'
           ? `${customEdgeWidth}"x${customEdgeLength}"`
           : edgeBlockSize;
 
@@ -117,7 +172,7 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
         const edgeBlockPrice = getEdgeBlockPrice(edgeBlockSize);
         const edgeBlockCost = totalBlocks * edgeBlockPrice;
-        
+
         results.push({
           label: `Edge Blocks Needed (${sizeLabel}, ${styleLabel})`,
           value: totalBlocks,
@@ -159,7 +214,14 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         <Layout className="h-6 w-6 text-orange-500 mr-2" />
         <h2 className="text-xl font-bold text-slate-800">{t('calculators.pavers.title')}</h2>
       </div>
-      
+
+      <CalculatorEstimateHeader
+        calculatorType="pavers"
+        currentInputs={getCurrentInputs()}
+        onLoadEstimate={handleLoadEstimate}
+        onNewEstimate={handleNewEstimate}
+      />
+
       <div className="mb-4">
         <div className="mb-6">
           <div className="flex justify-start mb-4">

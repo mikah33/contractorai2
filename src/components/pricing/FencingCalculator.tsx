@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Fence } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import CalculatorEstimateHeader from './CalculatorEstimateHeader';
 
 interface Gate {
   id: string;
@@ -193,6 +194,68 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
   const removeCorner = (id: string) => {
     setCorners(corners.filter(corner => corner.id !== id));
+  };
+
+  const getCurrentInputs = () => {
+    return {
+      fenceType,
+      material,
+      postMaterial,
+      length,
+      height,
+      postSpacing,
+      gates,
+      corners,
+      slopeType,
+      slopePercentage,
+      includePostCaps,
+      includeKickboard,
+      postMountType,
+      concreteDepth,
+      wasteFactor,
+      customLinearFeet,
+      customPricePerFoot
+    };
+  };
+
+  const handleLoadEstimate = (inputs: any) => {
+    if (inputs.fenceType) setFenceType(inputs.fenceType);
+    if (inputs.material) setMaterial(inputs.material);
+    if (inputs.postMaterial) setPostMaterial(inputs.postMaterial);
+    if (inputs.length !== undefined) setLength(inputs.length);
+    if (inputs.height !== undefined) setHeight(inputs.height);
+    if (inputs.postSpacing) setPostSpacing(inputs.postSpacing);
+    if (inputs.gates) setGates(inputs.gates);
+    if (inputs.corners) setCorners(inputs.corners);
+    if (inputs.slopeType) setSlopeType(inputs.slopeType);
+    if (inputs.slopePercentage !== undefined) setSlopePercentage(inputs.slopePercentage);
+    if (inputs.includePostCaps !== undefined) setIncludePostCaps(inputs.includePostCaps);
+    if (inputs.includeKickboard !== undefined) setIncludeKickboard(inputs.includeKickboard);
+    if (inputs.postMountType) setPostMountType(inputs.postMountType);
+    if (inputs.concreteDepth !== undefined) setConcreteDepth(inputs.concreteDepth);
+    if (inputs.wasteFactor) setWasteFactor(inputs.wasteFactor);
+    if (inputs.customLinearFeet !== undefined) setCustomLinearFeet(inputs.customLinearFeet);
+    if (inputs.customPricePerFoot !== undefined) setCustomPricePerFoot(inputs.customPricePerFoot);
+  };
+
+  const handleNewEstimate = () => {
+    setFenceType('privacy');
+    setMaterial('wood');
+    setPostMaterial('wood');
+    setLength('');
+    setHeight('');
+    setPostSpacing(8);
+    setGates([]);
+    setCorners([]);
+    setSlopeType('level');
+    setSlopePercentage('');
+    setIncludePostCaps(true);
+    setIncludeKickboard(false);
+    setPostMountType('concrete');
+    setConcreteDepth('');
+    setWasteFactor(15);
+    setCustomLinearFeet('');
+    setCustomPricePerFoot('');
   };
 
   const handleCalculate = () => {
@@ -414,6 +477,13 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         <Fence className="h-6 w-6 text-orange-500 mr-2" />
         <h2 className="text-xl font-bold text-slate-800">{t('calculators.fencing.title')}</h2>
       </div>
+
+      <CalculatorEstimateHeader
+        calculatorType="fencing"
+        getCurrentInputs={getCurrentInputs}
+        onLoadEstimate={handleLoadEstimate}
+        onNewEstimate={handleNewEstimate}
+      />
 
       <div className="mb-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">

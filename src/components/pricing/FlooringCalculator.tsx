@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Grid } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { CalculatorEstimateHeader } from './CalculatorEstimateHeader';
 
 type FlooringType = 'hardwood' | 'laminate' | 'vinyl' | 'carpet' | 'engineered';
 type InstallPattern = 'straight' | 'diagonal' | 'herringbone';
@@ -209,6 +210,60 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
   const isCustomSelection = (option: FlooringOption) => option.name.startsWith('Custom');
 
+  const getCurrentInputs = () => ({
+    inputType,
+    length,
+    width,
+    area,
+    flooringType,
+    selectedFlooring,
+    installPattern,
+    wasteFactor,
+    includeUnderlayment,
+    underlaymentType,
+    includeTransitionStrips,
+    transitionStripLength,
+    customName,
+    customPricePerBox,
+    customSqftPerBox
+  });
+
+  const handleLoadEstimate = (data: any) => {
+    if (data.inputType) setInputType(data.inputType);
+    if (data.length !== undefined) setLength(data.length);
+    if (data.width !== undefined) setWidth(data.width);
+    if (data.area !== undefined) setArea(data.area);
+    if (data.flooringType) setFlooringType(data.flooringType);
+    if (data.selectedFlooring !== undefined) setSelectedFlooring(data.selectedFlooring);
+    if (data.installPattern) setInstallPattern(data.installPattern);
+    if (data.wasteFactor !== undefined) setWasteFactor(data.wasteFactor);
+    if (data.includeUnderlayment !== undefined) setIncludeUnderlayment(data.includeUnderlayment);
+    if (data.underlaymentType) setUnderlaymentType(data.underlaymentType);
+    if (data.includeTransitionStrips !== undefined) setIncludeTransitionStrips(data.includeTransitionStrips);
+    if (data.transitionStripLength !== undefined) setTransitionStripLength(data.transitionStripLength);
+    if (data.customName !== undefined) setCustomName(data.customName);
+    if (data.customPricePerBox !== undefined) setCustomPricePerBox(data.customPricePerBox);
+    if (data.customSqftPerBox !== undefined) setCustomSqftPerBox(data.customSqftPerBox);
+  };
+
+  const handleNewEstimate = () => {
+    setInputType('dimensions');
+    setLength('');
+    setWidth('');
+    setArea('');
+    setFlooringType('hardwood');
+    setSelectedFlooring(0);
+    setInstallPattern('straight');
+    setWasteFactor(10);
+    setIncludeUnderlayment(true);
+    setUnderlaymentType('standard');
+    setIncludeTransitionStrips(false);
+    setTransitionStripLength('');
+    setCustomName('');
+    setCustomPricePerBox('');
+    setCustomSqftPerBox('');
+  };
+
   const handleCalculate = () => {
     let totalArea: number;
 
@@ -320,6 +375,13 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         <Grid className="h-6 w-6 text-orange-500 mr-2" />
         <h2 className="text-xl font-bold text-slate-800">{t('calculators.flooring.title')}</h2>
       </div>
+
+      <CalculatorEstimateHeader
+        calculatorType="flooring"
+        getCurrentInputs={getCurrentInputs}
+        onLoadEstimate={handleLoadEstimate}
+        onNewEstimate={handleNewEstimate}
+      />
 
       <div className="mb-4">
         <div className="flex justify-between mb-4">

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Thermometer } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import CalculatorEstimateHeader from './CalculatorEstimateHeader';
 
 interface Room {
   id: string;
@@ -81,6 +82,48 @@ const HVACCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
   const removeDuct = (id: string) => {
     setDucts(ducts.filter(duct => duct.id !== id));
+  };
+
+  const getCurrentInputs = () => ({
+    systemType,
+    rooms,
+    ducts,
+    climate,
+    includeHumidifier,
+    includeUVLight,
+    includeAirCleaner,
+    includeZoning,
+    zoneCount,
+    refrigerantLineLength,
+    condensateDrainLength
+  });
+
+  const handleLoadEstimate = (data: any) => {
+    if (data.systemType) setSystemType(data.systemType);
+    if (data.rooms) setRooms(data.rooms);
+    if (data.ducts) setDucts(data.ducts);
+    if (data.climate) setClimate(data.climate);
+    if (data.includeHumidifier !== undefined) setIncludeHumidifier(data.includeHumidifier);
+    if (data.includeUVLight !== undefined) setIncludeUVLight(data.includeUVLight);
+    if (data.includeAirCleaner !== undefined) setIncludeAirCleaner(data.includeAirCleaner);
+    if (data.includeZoning !== undefined) setIncludeZoning(data.includeZoning);
+    if (data.zoneCount) setZoneCount(data.zoneCount);
+    if (data.refrigerantLineLength !== undefined) setRefrigerantLineLength(data.refrigerantLineLength);
+    if (data.condensateDrainLength !== undefined) setCondensateDrainLength(data.condensateDrainLength);
+  };
+
+  const handleNewEstimate = () => {
+    setSystemType('split');
+    setRooms([]);
+    setDucts([]);
+    setClimate('moderate');
+    setIncludeHumidifier(false);
+    setIncludeUVLight(false);
+    setIncludeAirCleaner(false);
+    setIncludeZoning(false);
+    setZoneCount(2);
+    setRefrigerantLineLength('');
+    setCondensateDrainLength('');
   };
 
   const calculateBTUs = (room: Room): number => {
@@ -347,6 +390,13 @@ const HVACCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         <Thermometer className="h-6 w-6 text-orange-500 mr-2" />
         <h2 className="text-xl font-bold text-slate-800">{t('calculators.hvac.title')}</h2>
       </div>
+
+      <CalculatorEstimateHeader
+        calculatorType="hvac"
+        getCurrentInputs={getCurrentInputs}
+        onLoadEstimate={handleLoadEstimate}
+        onNewEstimate={handleNewEstimate}
+      />
 
       <div className="mb-4">
         <div className="flex justify-between mb-4">

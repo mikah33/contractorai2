@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Wallet as Wall } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import CalculatorEstimateHeader from './CalculatorEstimateHeader';
 
 type WallType = 'block' | 'concrete' | 'timber' | 'boulder';
 type BlockType = 'standard' | 'pinned' | 'gravity' | 'custom';
@@ -62,6 +63,75 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
       price: customBlockPrice,
       weightLbs: customBlockWeight
     }
+  };
+
+  const getCurrentInputs = () => ({
+    wallType,
+    length,
+    height,
+    concreteWidth,
+    blockType,
+    customBlockWidth,
+    customBlockHeight,
+    customBlockDepth,
+    customBlockPrice,
+    customBlockWeight,
+    drainageType,
+    includeFrost,
+    soilType,
+    includeGeogrid,
+    geogridLayers,
+    includeCapstone,
+    machineHours,
+    pricePerHour,
+    boulderQuantity,
+    pricePerBoulder
+  });
+
+  const handleLoadEstimate = (estimate: any) => {
+    setWallType(estimate.inputs.wallType);
+    setLength(estimate.inputs.length);
+    setHeight(estimate.inputs.height);
+    setConcreteWidth(estimate.inputs.concreteWidth);
+    setBlockType(estimate.inputs.blockType);
+    setCustomBlockWidth(estimate.inputs.customBlockWidth);
+    setCustomBlockHeight(estimate.inputs.customBlockHeight);
+    setCustomBlockDepth(estimate.inputs.customBlockDepth);
+    setCustomBlockPrice(estimate.inputs.customBlockPrice);
+    setCustomBlockWeight(estimate.inputs.customBlockWeight);
+    setDrainageType(estimate.inputs.drainageType);
+    setIncludeFrost(estimate.inputs.includeFrost);
+    setSoilType(estimate.inputs.soilType);
+    setIncludeGeogrid(estimate.inputs.includeGeogrid);
+    setGeogridLayers(estimate.inputs.geogridLayers);
+    setIncludeCapstone(estimate.inputs.includeCapstone);
+    setMachineHours(estimate.inputs.machineHours);
+    setPricePerHour(estimate.inputs.pricePerHour);
+    setBoulderQuantity(estimate.inputs.boulderQuantity);
+    setPricePerBoulder(estimate.inputs.pricePerBoulder);
+  };
+
+  const handleNewEstimate = () => {
+    setWallType('block');
+    setLength('');
+    setHeight('');
+    setConcreteWidth(12);
+    setBlockType('standard');
+    setCustomBlockWidth('');
+    setCustomBlockHeight('');
+    setCustomBlockDepth('');
+    setCustomBlockPrice('');
+    setCustomBlockWeight('');
+    setDrainageType('both');
+    setIncludeFrost(true);
+    setSoilType('clay');
+    setIncludeGeogrid(false);
+    setGeogridLayers(2);
+    setIncludeCapstone(true);
+    setMachineHours('');
+    setPricePerHour('');
+    setBoulderQuantity('');
+    setPricePerBoulder('');
   };
 
   const handleCalculate = () => {
@@ -319,6 +389,13 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
         <Wall className="h-6 w-6 text-orange-500 mr-2" />
         <h2 className="text-xl font-bold text-slate-800">{t('calculators.retainingWall.title')}</h2>
       </div>
+
+      <CalculatorEstimateHeader
+        calculatorType="retaining-wall"
+        getCurrentInputs={getCurrentInputs}
+        onLoadEstimate={handleLoadEstimate}
+        onNewEstimate={handleNewEstimate}
+      />
 
       <div className="mb-4">
         <div className="flex justify-between mb-4">

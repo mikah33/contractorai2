@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Ruler } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import CalculatorEstimateHeader from './CalculatorEstimateHeader';
 
 interface Opening {
   width: number;
@@ -67,6 +68,54 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       }
     };
     return prices[type][thickness];
+  };
+
+  const getCurrentInputs = () => ({
+    framingType,
+    length,
+    height,
+    studSpacing,
+    plateCount,
+    lumberSize,
+    openings,
+    includeBlocking,
+    includeFireblocking,
+    includeTiedowns,
+    includeSheathing,
+    sheathingType,
+    sheathingThickness
+  });
+
+  const handleLoadEstimate = (inputs: any) => {
+    setFramingType(inputs.framingType || 'wall');
+    setLength(inputs.length || '');
+    setHeight(inputs.height || '');
+    setStudSpacing(inputs.studSpacing || 16);
+    setPlateCount(inputs.plateCount || 2);
+    setLumberSize(inputs.lumberSize || '2x4');
+    setOpenings(inputs.openings || []);
+    setIncludeBlocking(inputs.includeBlocking || false);
+    setIncludeFireblocking(inputs.includeFireblocking || false);
+    setIncludeTiedowns(inputs.includeTiedowns || false);
+    setIncludeSheathing(inputs.includeSheathing !== undefined ? inputs.includeSheathing : true);
+    setSheathingType(inputs.sheathingType || 'osb');
+    setSheathingThickness(inputs.sheathingThickness || '7/16');
+  };
+
+  const handleNewEstimate = () => {
+    setFramingType('wall');
+    setLength('');
+    setHeight('');
+    setStudSpacing(16);
+    setPlateCount(2);
+    setLumberSize('2x4');
+    setOpenings([]);
+    setIncludeBlocking(false);
+    setIncludeFireblocking(false);
+    setIncludeTiedowns(false);
+    setIncludeSheathing(true);
+    setSheathingType('osb');
+    setSheathingThickness('7/16');
   };
 
   const handleCalculate = () => {
@@ -205,6 +254,13 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         <Ruler className="h-6 w-6 text-orange-500 mr-2" />
         <h2 className="text-xl font-bold text-slate-800">{t('calculators.framing.title')}</h2>
       </div>
+
+      <CalculatorEstimateHeader
+        calculatorType="framing"
+        getCurrentInputs={getCurrentInputs}
+        onLoadEstimate={handleLoadEstimate}
+        onNewEstimate={handleNewEstimate}
+      />
 
       <div className="mb-4">
         <div className="flex justify-between mb-4">

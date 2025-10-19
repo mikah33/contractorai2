@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Trash } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { CalculatorEstimateHeader } from './CalculatorEstimateHeader';
 
 interface JunkItem {
   id: string;
@@ -105,6 +106,42 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     const volumeCost = volume * 1.50;
     const weightCost = weight * 0.50;
     return Math.max(volumeCost, weightCost);
+  };
+
+  const getCurrentInputs = () => ({
+    items,
+    needsLabor,
+    laborers,
+    distance,
+    includeDisposal,
+    needsPermit,
+    isHazardous,
+    accessDifficulty,
+    floors
+  });
+
+  const handleLoadEstimate = (inputs: any) => {
+    setItems(inputs.items || []);
+    setNeedsLabor(inputs.needsLabor ?? true);
+    setLaborers(inputs.laborers || 2);
+    setDistance(inputs.distance ?? '');
+    setIncludeDisposal(inputs.includeDisposal ?? true);
+    setNeedsPermit(inputs.needsPermit ?? false);
+    setIsHazardous(inputs.isHazardous ?? false);
+    setAccessDifficulty(inputs.accessDifficulty || 'easy');
+    setFloors(inputs.floors || 1);
+  };
+
+  const handleNewEstimate = () => {
+    setItems([]);
+    setNeedsLabor(true);
+    setLaborers(2);
+    setDistance('');
+    setIncludeDisposal(true);
+    setNeedsPermit(false);
+    setIsHazardous(false);
+    setAccessDifficulty('easy');
+    setFloors(1);
   };
 
   const handleCalculate = () => {
@@ -260,6 +297,13 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         <Trash className="h-6 w-6 text-orange-500 mr-2" />
         <h2 className="text-xl font-bold text-slate-800">{t('calculators.junkRemoval.title')}</h2>
       </div>
+
+      <CalculatorEstimateHeader
+        calculatorType="junk-removal"
+        currentInputs={getCurrentInputs()}
+        onLoadEstimate={handleLoadEstimate}
+        onNewEstimate={handleNewEstimate}
+      />
 
       <div className="mb-4">
         <div className="border-b border-slate-200 pb-6 mb-6">

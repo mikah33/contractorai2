@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Square } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import CalculatorEstimateHeader from './CalculatorEstimateHeader';
 
 interface Opening {
   width: number;
@@ -88,6 +89,51 @@ const SidingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         openings: wall.openings.filter((_, i) => i !== index)
       });
     }
+  };
+
+  const getCurrentInputs = () => ({
+    walls,
+    sidingType,
+    sidingProfile,
+    sidingExposure,
+    includeTrim,
+    trimType,
+    includeInsulation,
+    includeHouseWrap,
+    includeStarter,
+    includeJChannel,
+    includeCorners,
+    wasteFactor
+  });
+
+  const handleLoadEstimate = (inputs: any) => {
+    if (inputs.walls) setWalls(inputs.walls);
+    if (inputs.sidingType) setSidingType(inputs.sidingType);
+    if (inputs.sidingProfile) setSidingProfile(inputs.sidingProfile);
+    if (inputs.sidingExposure) setSidingExposure(inputs.sidingExposure);
+    if (inputs.includeTrim !== undefined) setIncludeTrim(inputs.includeTrim);
+    if (inputs.trimType) setTrimType(inputs.trimType);
+    if (inputs.includeInsulation !== undefined) setIncludeInsulation(inputs.includeInsulation);
+    if (inputs.includeHouseWrap !== undefined) setIncludeHouseWrap(inputs.includeHouseWrap);
+    if (inputs.includeStarter !== undefined) setIncludeStarter(inputs.includeStarter);
+    if (inputs.includeJChannel !== undefined) setIncludeJChannel(inputs.includeJChannel);
+    if (inputs.includeCorners !== undefined) setIncludeCorners(inputs.includeCorners);
+    if (inputs.wasteFactor) setWasteFactor(inputs.wasteFactor);
+  };
+
+  const handleNewEstimate = () => {
+    setWalls([]);
+    setSidingType('vinyl');
+    setSidingProfile('lap');
+    setSidingExposure(4);
+    setIncludeTrim(true);
+    setTrimType('vinyl');
+    setIncludeInsulation(false);
+    setIncludeHouseWrap(true);
+    setIncludeStarter(true);
+    setIncludeJChannel(true);
+    setIncludeCorners(true);
+    setWasteFactor(15);
   };
 
   const getSidingPrice = () => {
@@ -318,6 +364,13 @@ const SidingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         <Square className="h-6 w-6 text-orange-500 mr-2" />
         <h2 className="text-xl font-bold text-slate-800">{t('calculators.siding.title')}</h2>
       </div>
+
+      <CalculatorEstimateHeader
+        calculatorType="siding"
+        currentInputs={getCurrentInputs()}
+        onLoadEstimate={handleLoadEstimate}
+        onNewEstimate={handleNewEstimate}
+      />
 
       <div className="mb-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Shovel } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import CalculatorEstimateHeader from './CalculatorEstimateHeader';
 
 const ExcavationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const { t } = useTranslation();
@@ -16,6 +17,50 @@ const ExcavationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const [totalHaulOffCost, setTotalHaulOffCost] = useState<number | ''>('');
   const [addSpoilFactor, setAddSpoilFactor] = useState(true);
   const [spoilFactor, setSpoilFactor] = useState<10 | 15 | 20>(15);
+
+  const getCurrentInputs = () => ({
+    length,
+    width,
+    depth,
+    removalCostPerYard,
+    soilType,
+    hasSlopedSides,
+    slopeRatio,
+    includeHaulOff,
+    totalHaulOffCost,
+    addSpoilFactor,
+    spoilFactor
+  });
+
+  const handleLoadEstimate = (estimate: any) => {
+    if (estimate.inputs) {
+      setLength(estimate.inputs.length ?? '');
+      setWidth(estimate.inputs.width ?? '');
+      setDepth(estimate.inputs.depth ?? '');
+      setRemovalCostPerYard(estimate.inputs.removalCostPerYard ?? '');
+      setSoilType(estimate.inputs.soilType ?? 'loose');
+      setHasSlopedSides(estimate.inputs.hasSlopedSides ?? false);
+      setSlopeRatio(estimate.inputs.slopeRatio ?? 1.5);
+      setIncludeHaulOff(estimate.inputs.includeHaulOff ?? true);
+      setTotalHaulOffCost(estimate.inputs.totalHaulOffCost ?? '');
+      setAddSpoilFactor(estimate.inputs.addSpoilFactor ?? true);
+      setSpoilFactor(estimate.inputs.spoilFactor ?? 15);
+    }
+  };
+
+  const handleNewEstimate = () => {
+    setLength('');
+    setWidth('');
+    setDepth('');
+    setRemovalCostPerYard('');
+    setSoilType('loose');
+    setHasSlopedSides(false);
+    setSlopeRatio(1.5);
+    setIncludeHaulOff(true);
+    setTotalHaulOffCost('');
+    setAddSpoilFactor(true);
+    setSpoilFactor(15);
+  };
 
   const handleCalculate = () => {
     if (typeof length === 'number' && typeof width === 'number' &&
@@ -104,6 +149,13 @@ const ExcavationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         <Shovel className="h-6 w-6 text-orange-500 mr-2" />
         <h2 className="text-xl font-bold text-slate-800">{t('calculators.excavation.title')}</h2>
       </div>
+
+      <CalculatorEstimateHeader
+        calculatorType="excavation"
+        getCurrentInputs={getCurrentInputs}
+        onLoadEstimate={handleLoadEstimate}
+        onNewEstimate={handleNewEstimate}
+      />
 
       <div className="mb-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
