@@ -34,30 +34,20 @@ export const useCalculatorPreferences = () => {
 
       if (fetchError) throw fetchError;
 
-      // If no calculators selected, show default ones (deck, foundation, roofing)
-      if (!data || data.length === 0) {
-        const defaultCalculators = calculatorRegistry.filter(calc =>
-          ['deck', 'foundation', 'roofing'].includes(calc.id)
-        );
-        setSelectedCalculators(defaultCalculators);
-      } else {
-        // Map calculator IDs to full calculator info
-        const calculators = data
-          .map((uc: UserCalculator) =>
-            calculatorRegistry.find(calc => calc.id === uc.calculator_id)
-          )
-          .filter((calc): calc is CalculatorInfo => calc !== undefined);
+      // Map calculator IDs to full calculator info
+      const calculators = data
+        ? data
+            .map((uc: UserCalculator) =>
+              calculatorRegistry.find(calc => calc.id === uc.calculator_id)
+            )
+            .filter((calc): calc is CalculatorInfo => calc !== undefined)
+        : [];
 
-        setSelectedCalculators(calculators);
-      }
+      setSelectedCalculators(calculators);
     } catch (err) {
       console.error('Error fetching calculators:', err);
       setError(err instanceof Error ? err.message : 'Failed to load calculators');
-      // Fallback to default calculators on error
-      const defaultCalculators = calculatorRegistry.filter(calc =>
-        ['deck', 'foundation', 'roofing'].includes(calc.id)
-      );
-      setSelectedCalculators(defaultCalculators);
+      setSelectedCalculators([]);
     } finally {
       setLoading(false);
     }
