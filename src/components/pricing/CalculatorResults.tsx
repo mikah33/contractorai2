@@ -47,7 +47,13 @@ const CalculatorResults: React.FC<CalculatorResultsProps> = ({ results, title })
     console.log('Generated items:', items);
 
     // Translate the title if it's a translation key
-    const translatedTitle = title.startsWith('trades.') ? t(title) : title;
+    // If translation fails or returns the key itself, strip the 'trades.' prefix
+    let translatedTitle = title;
+    if (title.startsWith('trades.')) {
+      const translated = t(title);
+      // Check if translation actually worked (didn't just return the key)
+      translatedTitle = translated === title ? title.replace('trades.', '') : translated;
+    }
 
     // Create new estimate with simple schema fields
     const newEstimate = {
@@ -75,7 +81,12 @@ const CalculatorResults: React.FC<CalculatorResultsProps> = ({ results, title })
   };
 
   // Translate the title for display
-  const displayTitle = title.startsWith('trades.') ? t(title) : title;
+  // If translation fails or returns the key itself, strip the 'trades.' prefix
+  let displayTitle = title;
+  if (title.startsWith('trades.')) {
+    const translated = t(title);
+    displayTitle = translated === title ? title.replace('trades.', '') : translated;
+  }
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
