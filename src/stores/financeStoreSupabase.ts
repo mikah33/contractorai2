@@ -260,18 +260,32 @@ const getCurrentUser = async () => {
 // Helper to resolve project ID (handles revenue-tracker special case)
 const resolveProjectId = async (projectId?: string) => {
   if (!projectId) return null;
-  
+
   // If it's the special revenue-tracker ID, find the actual Revenue Tracker project
   if (projectId === 'revenue-tracker') {
-    const { data } = await supabase
+    console.log('Resolving revenue-tracker to actual project ID...');
+    const { data, error } = await supabase
       .from('projects')
       .select('id')
       .eq('name', 'Revenue Tracker')
       .single();
-    
-    return data?.id || null;
+
+    if (error) {
+      console.error('Error resolving Revenue Tracker project:', error);
+      console.log('Will use null as project_id instead');
+      return null;
+    }
+
+    if (!data) {
+      console.warn('Revenue Tracker project not found in database');
+      console.log('Will use null as project_id instead');
+      return null;
+    }
+
+    console.log('Resolved revenue-tracker to project ID:', data.id);
+    return data.id;
   }
-  
+
   return projectId;
 };
 
@@ -546,6 +560,7 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
         .from('finance_payments')
         .insert({
           client_name: payment.clientId || 'Unknown Client',
+          project_id: resolvedProjectId, // Save the project ID
           amount: payment.amount,
           date: payment.date,
           method: payment.method || 'bank_transfer',
@@ -1055,24 +1070,14 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
 
       if (error) throw error;
 
-      // Filter out recurring expenses (they have null dates AND description with linked_project: OR are named something other than Revenue Tracker)
-      // Include Revenue Tracker even if it has null dates
-      const projectsData = (data || []).filter(project => {
-        // Always include Revenue Tracker
-        if (project.name === 'Revenue Tracker') return true;
-
-        // Include projects with dates (real projects)
-        if (project.start_date != null) return true;
-
-        // Exclude recurring expenses (null dates and not Revenue Tracker)
-        return false;
-      });
+      // Just use all projects - don't filter
+      const projectsData = data || [];
 
       // Map projects to include all required fields for finance components
       const projectsWithBudget = projectsData.map(project => ({
         id: project.id,
         name: project.name,
-        clientId: project.client_id || null, // Use actual client_id UUID
+        clientId: project.client_id ? project.client_id : null, // Preserve actual UUID or set to null
         clientName: project.client_name || 'Unknown Client', // Store the actual client name for display
         totalBudget: project.budget || 0,
         totalActual: project.spent || 0,

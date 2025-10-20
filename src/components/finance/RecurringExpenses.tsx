@@ -42,6 +42,7 @@ const RecurringExpenses: React.FC<RecurringExpensesProps> = ({
     nextDueDate: new Date().toISOString().split('T')[0],
     startDate: new Date().toISOString().split('T')[0],
     vendor: '',
+    projectId: undefined,
     isActive: true
   });
 
@@ -62,7 +63,7 @@ const RecurringExpenses: React.FC<RecurringExpensesProps> = ({
     } else {
       onAdd(formData);
     }
-    
+
     setShowForm(false);
     setFormData({
       name: '',
@@ -72,6 +73,7 @@ const RecurringExpenses: React.FC<RecurringExpensesProps> = ({
       nextDueDate: new Date().toISOString().split('T')[0],
       startDate: new Date().toISOString().split('T')[0],
       vendor: '',
+      projectId: undefined,
       isActive: true
     });
   };
@@ -103,6 +105,7 @@ const RecurringExpenses: React.FC<RecurringExpensesProps> = ({
       nextDueDate: new Date().toISOString().split('T')[0],
       startDate: new Date().toISOString().split('T')[0],
       vendor: '',
+      projectId: undefined,
       isActive: true
     });
   };
@@ -190,8 +193,8 @@ const RecurringExpenses: React.FC<RecurringExpensesProps> = ({
                     type="number"
                     step="0.01"
                     min="0"
-                    value={formData.amount}
-                    onChange={(e) => setFormData({...formData, amount: parseFloat(e.target.value)})}
+                    value={formData.amount || ''}
+                    onChange={(e) => setFormData({...formData, amount: parseFloat(e.target.value) || 0})}
                     required
                     className="block w-full pl-10 pr-3 py-2 border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   />
