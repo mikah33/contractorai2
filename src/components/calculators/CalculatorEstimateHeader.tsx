@@ -28,23 +28,41 @@ export const CalculatorEstimateHeader: React.FC<CalculatorEstimateHeaderProps> =
     setSaveError(null);
 
     try {
+      console.log('🔵 Starting save operation...');
+      console.log('Calculator Type:', calculatorType);
+      console.log('Estimate Name:', name);
+      console.log('Current Data:', currentData);
+      console.log('Results Data:', resultsData);
+
       const { data: { user } } = await supabase.auth.getUser();
+      console.log('User:', user?.id);
+
       if (!user) throw new Error('Not authenticated');
 
-      const { error } = await supabase
-        .from('calculator_estimates')
-        .insert({
-          user_id: user.id,
-          estimate_name: name,
-          calculator_type: calculatorType,
-          estimate_data: currentData,
-          results_data: resultsData || null,
-          client_id: clientId,
-        });
+      const insertData = {
+        user_id: user.id,
+        estimate_name: name,
+        calculator_type: calculatorType,
+        estimate_data: currentData,
+        results_data: resultsData || {},
+        client_id: clientId,
+      };
 
-      if (error) throw error;
+      console.log('Inserting data:', insertData);
+
+      const { data, error } = await supabase
+        .from('calculator_estimates')
+        .insert(insertData)
+        .select();
+
+      if (error) {
+        console.error('❌ Supabase error:', error);
+        throw error;
+      }
+
+      console.log('✅ Save successful! Data:', data);
     } catch (err) {
-      console.error('Error saving estimate:', err);
+      console.error('❌ Error saving estimate:', err);
       setSaveError(err instanceof Error ? err.message : 'Failed to save estimate');
       throw err;
     }
