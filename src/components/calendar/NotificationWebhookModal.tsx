@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Send, Clock, User, TestTube, UserPlus, Calendar as CalendarIcon, Mail } from 'lucide-react';
+import { X, Send, Clock, User, UserPlus, Calendar as CalendarIcon, Mail } from 'lucide-react';
 import { CalendarEvent } from '../../services/calendarService';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../stores/authStore';
@@ -589,15 +589,6 @@ const NotificationWebhookModal = ({ isOpen, onClose, event }: NotificationWebhoo
             >
               <Send className="w-4 h-4 mr-2" />
               {isSending ? 'Sending...' : 'Schedule Notification'}
-            </button>
-            <button
-              onClick={() => handleSendNotification(true)}
-              disabled={isSending || emailSlots.every(s => !s.email)}
-              className="w-full inline-flex justify-center items-center rounded-md border border-orange-500 shadow-sm px-4 py-2 bg-orange-50 text-base font-medium text-orange-700 hover:bg-orange-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Send test webhook immediately (for development)"
-            >
-              <TestTube className="w-4 h-4 mr-2" />
-              Test Webhook
             </button>
             <button
               onClick={onClose}
