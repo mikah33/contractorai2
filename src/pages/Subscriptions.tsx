@@ -137,49 +137,77 @@ const Subscriptions: React.FC = () => {
 
   const plans = [
     {
-      name: t('subscriptions.plan1Month'),
+      name: 'Base Plan',
       price: '$24.99',
-      priceId: import.meta.env.VITE_STRIPE_PRICE_1_MONTH || 'price_1SEXGjGcGCTrlHr7KPva7H7c',
-      period: t('subscriptions.perMonth'),
+      priceId: import.meta.env.VITE_STRIPE_PRICE_1_MONTH || 'price_1SJDBnGcGCTrlHr7CapiSyPk',
+      period: '/month',
+      recommended: 'Contractors who want to replace spreadsheets',
       features: [
-        t('subscriptions.feature1'),
-        t('subscriptions.feature2'),
-        t('subscriptions.feature3'),
-        t('subscriptions.feature4'),
-        t('subscriptions.feature5'),
-        t('subscriptions.feature6'),
+        'Unlimited job estimates & invoices',
+        'Real-time profit tracking',
+        'Crew scheduling & management',
+        'Professional roofing reports',
+        'Mobile app (iOS & Android)',
+        'Customer database & CRM',
+        'Payment tracking',
       ],
+      trial: '7-day free trial',
+      guarantee: '30-day money-back guarantee',
     },
     {
-      name: t('subscriptions.plan3Months'),
-      price: '$129.99',
-      priceId: import.meta.env.VITE_STRIPE_PRICE_3_MONTHS || 'price_1SEXGiGcGCTrlHr7yE07hREx',
-      period: t('subscriptions.per3Months'),
+      name: '3 Month Plan',
+      price: '$69.99',
+      priceId: import.meta.env.VITE_STRIPE_PRICE_3_MONTHS || 'price_1SJDC7GcGCTrlHr7Z6T8umjG',
+      period: '/3 months',
+      savings: 'Save $5/month',
+      features: [
+        'All Base Plan features',
+        'Unlimited job estimates & invoices',
+        'Real-time profit tracking',
+        'Crew scheduling & management',
+        'Professional roofing reports',
+        'Mobile app (iOS & Android)',
+        'Customer database & CRM',
+      ],
+      trial: '7-day free trial',
+      guarantee: '30-day money-back guarantee',
+    },
+    {
+      name: '1 Year Plan',
+      price: '$249.99',
+      priceId: import.meta.env.VITE_STRIPE_PRICE_1_YEAR || 'price_1SJDCYGcGCTrlHr7kQnJvE7F',
+      period: '/year',
+      savings: 'Save over $50/year',
+      features: [
+        'All Base Plan features',
+        'Unlimited job estimates & invoices',
+        'Real-time profit tracking',
+        'Crew scheduling & management',
+        'Professional roofing reports',
+        'Mobile app (iOS & Android)',
+        'Customer database & CRM',
+      ],
+      trial: '7-day free trial',
+      guarantee: '30-day money-back guarantee',
+    },
+    {
+      name: 'Premium Package',
+      price: '$297',
+      priceId: import.meta.env.VITE_STRIPE_PRICE_PREMIUM || 'price_1SJDFVGcGCTrlHr7pnzbRCxP',
+      period: '/month',
       popular: true,
-      savings: t('subscriptions.save3Months'),
+      recommended: 'Growing your business & getting more leads',
       features: [
-        t('subscriptions.feature1'),
-        t('subscriptions.feature2'),
-        t('subscriptions.feature3'),
-        t('subscriptions.feature4'),
-        t('subscriptions.feature5'),
-        t('subscriptions.feature6'),
+        'All Base Plan features',
+        'FREE Professional Website (Google optimized)',
+        'Instant Text-Back System',
+        '5-Star Reviews on Autopilot',
+        '1 Year Text Remarketing ($1,200 value)',
+        'Priority support',
+        'Onboarding within 72 hours',
       ],
-    },
-    {
-      name: t('subscriptions.plan1Year'),
-      price: '$499.99',
-      priceId: import.meta.env.VITE_STRIPE_PRICE_1_YEAR || 'price_1SEY4UGcGCTrlHr7pk0lW6MD',
-      period: t('subscriptions.perYear'),
-      savings: t('subscriptions.save1Year'),
-      features: [
-        t('subscriptions.feature1'),
-        t('subscriptions.feature2'),
-        t('subscriptions.feature3'),
-        t('subscriptions.feature4'),
-        t('subscriptions.feature5'),
-        t('subscriptions.feature6'),
-      ],
+      trial: '7-day free trial',
+      guarantee: '30-day money-back guarantee',
     },
   ];
 
@@ -569,7 +597,7 @@ const Subscriptions: React.FC = () => {
 
         {/* Pricing Cards - Only show if no active subscription */}
         {!currentSubscription && !loadingSubscription && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {plans.map((plan) => (
             <div
               key={plan.priceId}
@@ -586,24 +614,42 @@ const Subscriptions: React.FC = () => {
               <div className="p-8">
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">{plan.name}</h3>
 
-                <div className="flex items-baseline mb-4">
+                {plan.recommended && (
+                  <p className="text-sm text-gray-600 mb-4 italic">
+                    Recommended for: {plan.recommended}
+                  </p>
+                )}
+
+                <div className="flex items-baseline mb-2">
                   <span className="text-5xl font-extrabold text-gray-900">{plan.price}</span>
                   <span className="text-gray-500 ml-2">{plan.period}</span>
                 </div>
 
                 {plan.savings && (
-                  <div className="mb-6">
+                  <div className="mb-4">
                     <span className="inline-block bg-green-100 text-green-800 text-sm font-semibold px-3 py-1 rounded-full">
                       {plan.savings}
                     </span>
                   </div>
                 )}
 
-                <ul className="space-y-4 mb-8">
+                {plan.trial && (
+                  <div className="mb-2">
+                    <span className="text-sm text-blue-600 font-semibold">✓ {plan.trial}</span>
+                  </div>
+                )}
+
+                {plan.guarantee && (
+                  <div className="mb-6">
+                    <span className="text-sm text-green-600 font-semibold">✓ {plan.guarantee}</span>
+                  </div>
+                )}
+
+                <ul className="space-y-3 mb-8">
                   {plan.features.map((feature, index) => (
                     <li key={index} className="flex items-start">
                       <Check className="h-5 w-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
-                      <span className="text-gray-600">{feature}</span>
+                      <span className="text-gray-600 text-sm">{feature}</span>
                     </li>
                   ))}
                 </ul>
@@ -635,11 +681,14 @@ const Subscriptions: React.FC = () => {
         {/* FAQ or Additional Info */}
         {!currentSubscription && !loadingSubscription && (
         <div className="mt-16 text-center">
-          <p className="text-gray-600">
-            All plans include a 14-day money-back guarantee. Cancel anytime.
+          <p className="text-gray-600 text-lg font-semibold mb-2">
+            All plans include a 7-day free trial & 30-day money-back guarantee
+          </p>
+          <p className="text-gray-600 mb-4">
+            Premium plan includes onboarding within 72 hours. Cancel anytime.
           </p>
           <p className="text-sm text-gray-500 mt-2">
-            Need a custom plan? <a href="mailto:support@contractorai.com" className="text-orange-600 hover:text-orange-700">Contact us</a>
+            Need help choosing? <a href="mailto:admin@elevatedsystems.info" className="text-orange-600 hover:text-orange-700 font-semibold">Contact us</a>
           </p>
         </div>
         )}
