@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Send, Clock, User, TestTube, UserPlus, Calendar as CalendarIcon } from 'lucide-react';
+import { X, Send, Clock, User, TestTube, UserPlus, Calendar as CalendarIcon, Mail } from 'lucide-react';
 import { CalendarEvent } from '../../services/calendarService';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../stores/authStore';
