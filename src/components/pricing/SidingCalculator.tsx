@@ -316,7 +316,12 @@ const SidingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         'fiber-cement': 39.98
       };
 
-      const trimPieces = Math.ceil(totalOpeningsPerimeter / 16); // 16ft pieces
+      // Calculate trim for openings, or use a percentage of wall perimeter if no openings
+      const trimPerimeter = totalOpeningsPerimeter > 0
+        ? totalOpeningsPerimeter
+        : totalPerimeter * 0.3; // 30% of perimeter for misc trim if no openings defined
+
+      const trimPieces = Math.ceil(trimPerimeter / 16); // 16ft pieces
       const trimCost = trimPieces * trimPrices[trimType];
       totalCost += trimCost;
 
