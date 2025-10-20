@@ -7,6 +7,7 @@ import { estimateService } from '../services/estimateService';
 import ProjectSpecifications from '../components/pricing/ProjectSpecifications';
 import PricingResults from '../components/pricing/PricingResults';
 import CalculatorManagementModal from '../components/calculators/CalculatorManagementModal';
+import { CalculatorEstimateHeader } from '../components/calculators/CalculatorEstimateHeader';
 import { useCalculatorPreferences } from '../hooks/useCalculatorPreferences';
 import { calculatorRegistry } from '../data/calculatorRegistry';
 import ConcreteCalculator from '../components/pricing/ConcreteCalculator';
@@ -388,10 +389,23 @@ const PricingCalculator = () => {
               <div className="space-y-6">
                 {renderSpecializedCalculator()}
                 {calculatorResults.length > 0 && (
-                  <CalculatorResults 
-                    results={calculatorResults} 
-                    title={selectedTrade.name}
-                  />
+                  <>
+                    <CalculatorResults
+                      results={calculatorResults}
+                      title={selectedTrade.name}
+                    />
+                    <CalculatorEstimateHeader
+                      calculatorType={selectedTrade.id}
+                      currentData={specifications}
+                      resultsData={{ results: calculatorResults }}
+                      onLoad={(estimateData, resultsData) => {
+                        setSpecifications(estimateData);
+                        if (resultsData?.results) {
+                          setCalculatorResults(resultsData.results);
+                        }
+                      }}
+                    />
+                  </>
                 )}
               </div>
             ) : !calculationComplete ? (
