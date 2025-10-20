@@ -33,6 +33,14 @@ const NotificationWebhookModal = ({ isOpen, onClose, event }: NotificationWebhoo
   const [isSending, setIsSending] = useState(false);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [selectedEmployee, setSelectedEmployee] = useState<string>('');
+  const [showNewEmployeeForm, setShowNewEmployeeForm] = useState(false);
+  const [newEmployee, setNewEmployee] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    role: ''
+  });
+  const [isCreatingEmployee, setIsCreatingEmployee] = useState(false);
 
   // Calendar event configuration
   const [eventConfig, setEventConfig] = useState({
@@ -118,6 +126,63 @@ const NotificationWebhookModal = ({ isOpen, onClose, event }: NotificationWebhoo
     newSlots[emptySlotIndex] = { email: employee.email, name: employee.name };
     setEmailSlots(newSlots);
     setSelectedEmployee('');
+  };
+
+  const handleCreateEmployee = async () => {
+    if (!user) return;
+
+    // Validate required fields
+    if (!newEmployee.name.trim() || !newEmployee.email.trim()) {
+      alert('Please enter both name and email for the new employee.');
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newEmployee.email)) {
+      alert('Please enter a valid email address.');
+      return;
+    }
+
+    setIsCreatingEmployee(true);
+    try {
+      // Create new employee in database
+      const { data, error } = await supabase
+        .from('employees')
+        .insert([{
+          user_id: user.id,
+          name: newEmployee.name.trim(),
+          email: newEmployee.email.trim(),
+          phone: newEmployee.phone.trim() || null,
+          role: newEmployee.role.trim() || null
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Add to local employees list
+      setEmployees([...employees, data]);
+
+      // Add to email slots immediately
+      const emptySlotIndex = emailSlots.findIndex(slot => !slot.email);
+      if (emptySlotIndex !== -1) {
+        const newSlots = [...emailSlots];
+        newSlots[emptySlotIndex] = { email: data.email, name: data.name };
+        setEmailSlots(newSlots);
+      }
+
+      // Reset form and hide it
+      setNewEmployee({ name: '', email: '', phone: '', role: '' });
+      setShowNewEmployeeForm(false);
+
+      alert('✅ Employee created and added to recipients!');
+    } catch (error) {
+      console.error('Error creating employee:', error);
+      alert(`Failed to create employee: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsCreatingEmployee(false);
+    }
   };
 
   const handleSendNotification = async (isTest = false) => {
@@ -373,12 +438,106 @@ const NotificationWebhookModal = ({ isOpen, onClose, event }: NotificationWebhoo
                       Add
                     </button>
                   </div>
-                  {employees.length === 0 && (
-                    <p className="mt-2 text-xs text-gray-500">
-                      No employees found. Add employees in the Employees section first.
-                    </p>
-                  )}
+                  <div className="mt-3 flex items-center justify-between">
+                    {employees.length === 0 ? (
+                      <p className="text-xs text-gray-500">
+                        No employees found. Create a new employee below.
+                      </p>
+                    ) : (
+                      <p className="text-xs text-gray-500">
+                        Don't see who you're looking for?
+                      </p>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setShowNewEmployeeForm(!showNewEmployeeForm)}
+                      className="text-sm font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                    >
+                      <UserPlus className="w-4 h-4" />
+                      {showNewEmployeeForm ? 'Cancel' : 'Create New Employee'}
+                    </button>
+                  </div>
                 </div>
+
+                {/* New Employee Form */}
+                {showNewEmployeeForm && (
+                  <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <h5 className="text-sm font-semibold text-green-900 mb-3">Create New Employee</h5>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          Name <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={newEmployee.name}
+                          onChange={(e) => setNewEmployee({ ...newEmployee, name: e.target.value })}
+                          placeholder="John Doe"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          Email <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="email"
+                          value={newEmployee.email}
+                          onChange={(e) => setNewEmployee({ ...newEmployee, email: e.target.value })}
+                          placeholder="john@example.com"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          Phone (optional)
+                        </label>
+                        <input
+                          type="tel"
+                          value={newEmployee.phone}
+                          onChange={(e) => setNewEmployee({ ...newEmployee, phone: e.target.value })}
+                          placeholder="(555) 123-4567"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          Role (optional)
+                        </label>
+                        <input
+                          type="text"
+                          value={newEmployee.role}
+                          onChange={(e) => setNewEmployee({ ...newEmployee, role: e.target.value })}
+                          placeholder="Project Manager"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                        />
+                      </div>
+                    </div>
+                    <div className="mt-3 flex gap-2">
+                      <button
+                        type="button"
+                        onClick={handleCreateEmployee}
+                        disabled={isCreatingEmployee || !newEmployee.name.trim() || !newEmployee.email.trim()}
+                        className="flex-1 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                      >
+                        {isCreatingEmployee ? 'Creating...' : 'Create & Add to Recipients'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowNewEmployeeForm(false);
+                          setNewEmployee({ name: '', email: '', phone: '', role: '' });
+                        }}
+                        className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-sm font-medium"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                    <p className="mt-2 text-xs text-gray-600">
+                      This employee will be saved to your account and automatically added to the recipient list.
+                    </p>
+                  </div>
+                )}
 
                 {/* Added Employees Display */}
                 <div className="space-y-3 max-h-64 overflow-y-auto border border-gray-200 rounded-md p-3 bg-gray-50">
