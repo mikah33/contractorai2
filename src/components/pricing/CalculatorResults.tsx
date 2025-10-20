@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { CalculationResult } from '../../types';
-import { DollarSign, Package, Info, FileText, AlertTriangle } from 'lucide-react';
+import { DollarSign, Package, Info, FileText, AlertTriangle, Save } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import SaveCalculationModal from './SaveCalculationModal';
 
 interface CalculatorResultsProps {
   results: CalculationResult[];
@@ -12,6 +13,7 @@ interface CalculatorResultsProps {
 const CalculatorResults: React.FC<CalculatorResultsProps> = ({ results, title }) => {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const [showSaveModal, setShowSaveModal] = useState(false);
   // Filter out any items marked as isTotal to prevent double-counting
   const totalCost = results
     .filter(result => !result.isTotal)
@@ -148,7 +150,14 @@ const CalculatorResults: React.FC<CalculatorResultsProps> = ({ results, title })
               </div>
             </div>
             
-            <div className="mt-6 flex justify-center">
+            <div className="mt-6 flex justify-center gap-3">
+              <button
+                onClick={() => setShowSaveModal(true)}
+                className="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+              >
+                <Save className="w-5 h-5 mr-2" />
+                Save Calculation
+              </button>
               <button
                 onClick={handleGenerateEstimate}
                 className="inline-flex items-center px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors"
@@ -160,6 +169,15 @@ const CalculatorResults: React.FC<CalculatorResultsProps> = ({ results, title })
           </>
         )}
       </div>
+
+      {/* Save Calculation Modal */}
+      <SaveCalculationModal
+        isOpen={showSaveModal}
+        onClose={() => setShowSaveModal(false)}
+        calculatorType={displayTitle.toLowerCase().replace(/\s+/g, '_')}
+        calculatorName={displayTitle}
+        results={results}
+      />
     </div>
   );
 };
