@@ -402,10 +402,18 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       deckingPrice = selectedDecking.price;
     }
 
+    // Deck boards run parallel to the width, so we need enough to cover the LENGTH
     const optimalBoardLength = calculateOptimalBoardLength(deckWidth);
-    const boardsAcrossWidth = Math.ceil(deckWidth * 12 / (deckingWidth + deckingSpacing));
+
+    // Convert length to inches and calculate how many boards fit across the length
+    const deckLengthInches = deckLength * 12;
+    const boardWidthWithSpacing = deckingWidth + deckingSpacing;
+    const boardsNeededToSpanLength = Math.ceil(deckLengthInches / boardWidthWithSpacing);
+
+    // Each board can be cut to span the deck width
+    // If using longer boards, we might get multiple pieces per board
     const piecesPerBoard = Math.floor(optimalBoardLength / deckWidth);
-    const totalBoardsNeeded = Math.ceil(boardsAcrossWidth / (piecesPerBoard > 0 ? piecesPerBoard : 1));
+    const totalBoardsNeeded = Math.ceil(boardsNeededToSpanLength / (piecesPerBoard > 0 ? piecesPerBoard : 1));
 
     let totalCost = 0;
 

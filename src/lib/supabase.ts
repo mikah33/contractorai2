@@ -21,11 +21,22 @@ if (!supabaseUrl.startsWith('http://') && !supabaseUrl.startsWith('https://')) {
   throw new Error(`Invalid supabaseUrl: Must be a valid HTTP or HTTPS URL. Got: ${supabaseUrl}`);
 }
 
-// Create Supabase client with auth persistence
+// Create Supabase client with optimized auth persistence
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: true
+    detectSessionInUrl: true,
+    storage: window.localStorage, // Explicitly use localStorage
+    storageKey: 'contractorai-auth', // Custom storage key
+    flowType: 'pkce' // Use PKCE flow for better security
+  },
+  global: {
+    headers: {
+      'x-client-info': 'contractorai-web'
+    }
+  },
+  db: {
+    schema: 'public'
   }
 });

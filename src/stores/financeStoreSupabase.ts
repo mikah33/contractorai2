@@ -246,13 +246,24 @@ interface FinanceState {
   suggestCostSavings: () => Promise<any>;
 }
 
-// Helper function to get current user
-// For development, we'll use a mock user since auth isn't implemented
+// Helper function to get current user from auth
 const getCurrentUser = async () => {
-  // Always return the same fixed user for development
-  // This user_id matches what's already in your database
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      return {
+        id: user.id,
+        email: user.email || 'unknown@example.com'
+      };
+    }
+  } catch (error) {
+    console.error('Failed to get current user:', error);
+  }
+
+  // Fallback for development/testing
+  console.warn('⚠️  No authenticated user found, using fallback user ID');
   return {
-    id: '5ff28ea6-751f-4a22-b584-ca6c8a43f506', // The user_id from your session
+    id: '5ff28ea6-751f-4a22-b584-ca6c8a43f506',
     email: 'dev@example.com'
   };
 };

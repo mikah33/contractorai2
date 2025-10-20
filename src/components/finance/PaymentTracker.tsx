@@ -74,9 +74,22 @@ const PaymentTracker: React.FC<PaymentTrackerProps> = ({
     notes: ''
   });
 
+  // DEBUG: Log all data to console
+  console.log('🔍 PAYMENT TRACKER DEBUG:');
+  console.log('  Total projects received:', projects?.length || 0);
+  console.log('  All projects:', projects);
+  console.log('  Selected clientId:', formData.clientId);
+  console.log('  All clients:', clients);
+
   const filteredProjects = formData.clientId
-    ? (projects || []).filter(project => project?.clientId === formData.clientId)
+    ? (projects || []).filter(project => {
+        console.log(`  Comparing project "${project?.name}": project.clientId="${project?.clientId}" vs formData.clientId="${formData.clientId}"`);
+        return project?.clientId === formData.clientId;
+      })
     : (projects || []);
+
+  console.log('  Filtered projects count:', filteredProjects.length);
+  console.log('  Filtered projects:', filteredProjects);
 
   const filteredInvoices = formData.projectId
     ? (invoices || []).filter(invoice => invoice?.projectId === formData.projectId && invoice?.status !== 'paid')
@@ -293,7 +306,7 @@ const PaymentTracker: React.FC<PaymentTrackerProps> = ({
               <div>
                 <label className="block text-sm font-medium text-gray-700">Client (Optional)</label>
                 <select
-                  value={formData.clientId}
+                  value={formData.clientId || ''}
                   onChange={(e) => handleClientChange(e.target.value)}
                   className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
                 >

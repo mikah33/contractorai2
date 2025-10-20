@@ -286,7 +286,7 @@ const useProjectStore = create<ProjectStore>((set, get) => ({
         id: data.id,
         name: data.name,
         client: data.client_name || projectData.client || 'Direct Client',
-        clientId: null, // No client_id in SQL schema
+        clientId: data.client_id || null, // Load client_id from database response
         status: data.status,
         priority: projectData.priority || 'medium',
         startDate: data.start_date,

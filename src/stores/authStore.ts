@@ -211,9 +211,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       try {
         console.log('🔐 Initializing auth...');
 
-        // Get initial session with timeout
+        // Get initial session with longer timeout (30 seconds for slow connections)
         const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Auth initialization timeout')), 10000)
+          setTimeout(() => reject(new Error('Auth initialization timeout')), 30000)
         );
 
         const sessionPromise = supabase.auth.getSession();
@@ -229,8 +229,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             initialized: true
           });
 
-          // Fetch user profile
-          await get().fetchProfile();
+          // Fetch user profile in background (don't block)
+          get().fetchProfile().catch(err =>
+            console.error('Failed to fetch profile:', err)
+          );
         } else {
           set({ initialized: true });
         }
@@ -246,9 +248,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                 session
               });
 
-              // Fetch profile on sign in
+              // Fetch profile on sign in (in background)
               if (event === 'SIGNED_IN') {
-                await get().fetchProfile();
+                get().fetchProfile().catch(err =>
+                  console.error('Failed to fetch profile:', err)
+                );
               }
             } else {
               set({

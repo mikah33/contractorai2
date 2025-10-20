@@ -144,21 +144,72 @@ const ReceiptCapture: React.FC<ReceiptCaptureProps> = ({ onSave, projects }) => 
       // Save imageUrl immediately
       setReceiptData(prev => ({ ...prev, imageUrl: publicUrl }));
 
-      // 3. Call Edge Function to process receipt with OCR (runs in background)
-      const { data: ocrData, error: ocrError } = await supabase.functions.invoke('process-receipt', {
-        body: {
-          imageUrl: publicUrl,
-          useAPI: true
+      // 3. Call n8n webhook to process receipt with OCR (runs in background)
+      console.log('📤 Sending to n8n webhook for OCR processing...');
+
+      const n8nWebhookUrl = 'https://contractorai.app.n8n.cloud/webhook/d718a3b9-fd46-4ce2-b885-f2a18ad4d98a';
+
+      const requestPayload = {
+        imageUrl: publicUrl
+      };
+
+      console.log('🔍 Webhook URL:', n8nWebhookUrl);
+      console.log('🔍 Request payload:', requestPayload);
+      console.log('🔍 Image URL being sent:', publicUrl);
+
+      let ocrData: any = {};
+
+      try {
+        // Add timeout to prevent hanging forever
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => {
+          console.error('⏱️ Request timed out after 30 seconds');
+          controller.abort();
+        }, 30000); // 30 second timeout
+
+        console.log('🚀 Making fetch request now...');
+
+        const webhookResponse = await fetch(n8nWebhookUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestPayload),
+          signal: controller.signal
+        });
+
+        console.log('✅ Fetch completed');
+
+        clearTimeout(timeoutId);
+
+        console.log('📥 Webhook response status:', webhookResponse.status);
+        console.log('📥 Webhook response headers:', Object.fromEntries(webhookResponse.headers.entries()));
+
+        if (!webhookResponse.ok) {
+          console.error('❌ n8n webhook error:', webhookResponse.status, webhookResponse.statusText);
+          const errorText = await webhookResponse.text();
+          console.error('Error response body:', errorText);
+          throw new Error(`Webhook responded with ${webhookResponse.status}`);
         }
-      });
 
-      if (ocrError) {
-        console.error('OCR error:', ocrError);
+        // Get response as text first to debug
+        const responseText = await webhookResponse.text();
+        console.log('📥 Raw webhook response:', responseText);
+
+        // Try to parse as JSON
+        if (responseText.trim()) {
+          ocrData = JSON.parse(responseText);
+          console.log('✅ OCR Result from n8n:', ocrData);
+        } else {
+          console.warn('⚠️ Webhook returned empty response');
+          throw new Error('Empty response from webhook');
+        }
+      } catch (error) {
+        console.error('❌ n8n webhook failed:', error);
+        console.log('⚠️ Continuing without OCR - user can enter data manually');
         setOcrStatus('error');
-        return;
+        // Don't return - allow the user to continue manually
       }
-
-      console.log('OCR Result:', ocrData);
 
       // Store line items if available
       if (ocrData.lineItems && ocrData.lineItems.length > 0) {
@@ -221,7 +272,7 @@ const ReceiptCapture: React.FC<ReceiptCaptureProps> = ({ onSave, projects }) => 
           lineItems: lineItems
         }
       });
-      
+
       // Reset state
       setPreviewUrl(null);
       setCaptureMode(null);
@@ -235,6 +286,11 @@ const ReceiptCapture: React.FC<ReceiptCaptureProps> = ({ onSave, projects }) => 
         notes: '',
         status: 'pending'
       });
+
+      // Reload page after save
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
     }
   };
 
