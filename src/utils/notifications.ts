@@ -25,11 +25,19 @@ export const registerServiceWorker = async (): Promise<ServiceWorkerRegistration
   }
 
   try {
+    // Check if service worker file exists before registering
+    const response = await fetch('/sw.js', { method: 'HEAD' }).catch(() => null);
+
+    if (!response || !response.ok) {
+      console.warn('Service worker file not found, notifications will work without it');
+      return null;
+    }
+
     const registration = await navigator.serviceWorker.register('/sw.js');
     console.log('Service Worker registered:', registration);
     return registration;
   } catch (error) {
-    console.error('Service Worker registration failed:', error);
+    console.warn('Service Worker registration failed (non-critical):', error);
     return null;
   }
 };

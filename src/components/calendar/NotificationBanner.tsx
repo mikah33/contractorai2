@@ -20,13 +20,28 @@ const NotificationBanner = () => {
   }, []);
 
   const handleEnable = async () => {
-    const granted = await requestNotificationPermission();
+    try {
+      const granted = await requestNotificationPermission();
 
-    if (granted) {
-      // Register service worker
-      await registerServiceWorker();
-      setShowBanner(false);
-      localStorage.setItem('notification-banner-dismissed', 'true');
+      if (granted) {
+        // Register service worker (gracefully handle if it fails)
+        try {
+          await registerServiceWorker();
+        } catch (err) {
+          console.warn('Service worker registration failed, but notifications will still work:', err);
+        }
+
+        setShowBanner(false);
+        localStorage.setItem('notification-banner-dismissed', 'true');
+
+        // Show success message
+        alert('✅ Notifications enabled! You\'ll receive reminders 1 day and 1 hour before your jobs.');
+      } else {
+        alert('❌ Notification permission denied. Please enable notifications in your browser settings.');
+      }
+    } catch (error) {
+      console.error('Error enabling notifications:', error);
+      alert('❌ Failed to enable notifications. Please try again or check your browser settings.');
     }
   };
 
