@@ -164,10 +164,10 @@ const EstimatePreview: React.FC<EstimatePreviewProps> = ({ estimate, clients, pr
                     {item.type !== 'section' ? item.unit : ''}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-semibold">
-                    {item.type !== 'section' ? `$${item.unitPrice.toFixed(2)}` : ''}
+                    {item.type !== 'section' && item.unitPrice != null ? `$${item.unitPrice.toFixed(2)}` : item.type !== 'section' ? '$0.00' : ''}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-bold">
-                    {item.type !== 'section' ? `$${item.totalPrice.toFixed(2)}` : ''}
+                    {item.type !== 'section' && item.totalPrice != null ? `$${item.totalPrice.toFixed(2)}` : item.type !== 'section' ? '$0.00' : ''}
                   </td>
                 </tr>
               ))
@@ -179,15 +179,15 @@ const EstimatePreview: React.FC<EstimatePreviewProps> = ({ estimate, clients, pr
                 Subtotal
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 text-right">
-                ${estimate.subtotal.toFixed(2)}
+                ${(estimate.subtotal ?? 0).toFixed(2)}
               </td>
             </tr>
             <tr className="border-t border-gray-200">
               <td colSpan={4} className="px-6 py-4 text-right text-sm font-bold text-gray-900">
-                Tax ({estimate.taxRate}%)
+                Tax ({estimate.taxRate ?? 0}%)
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 text-right">
-                ${estimate.taxAmount.toFixed(2)}
+                ${(estimate.taxAmount ?? 0).toFixed(2)}
               </td>
             </tr>
             <tr className="border-t-2 border-gray-300 bg-gray-50">
@@ -195,7 +195,7 @@ const EstimatePreview: React.FC<EstimatePreviewProps> = ({ estimate, clients, pr
                 TOTAL
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-xl font-extrabold text-right" style={{ color: estimate.branding?.primaryColor || '#3B82F6' }}>
-                ${estimate.total.toFixed(2)}
+                ${(estimate.total ?? 0).toFixed(2)}
               </td>
             </tr>
           </tfoot>
