@@ -52,12 +52,14 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
   const { profile } = useData();
   const [clients, setClients] = useState<Client[]>([]);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  const [manualEmail, setManualEmail] = useState('');
-  const [manualName, setManualName] = useState('');
+  const [newClientName, setNewClientName] = useState('');
+  const [newClientEmail, setNewClientEmail] = useState('');
+  const [newClientPhone, setNewClientPhone] = useState('');
+  const [newClientAddress, setNewClientAddress] = useState('');
+  const [showAddClient, setShowAddClient] = useState(false);
   const [contractorEmail, setContractorEmail] = useState('');
   const [emailSubject, setEmailSubject] = useState('');
   const [emailBody, setEmailBody] = useState('');
-  const [useManual, setUseManual] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [pdfUrl, setPdfUrl] = useState('');
@@ -74,7 +76,7 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       // Get customer name
-      const customerName = useManual ? manualName || 'Customer' : selectedClient?.name || 'Customer';
+      const customerName = showAddClient ? newClientName || 'Customer' : selectedClient?.name || 'Customer';
 
       // Get company name - use email as fallback if name is empty
       const companyName = companyInfo.name && companyInfo.name !== 'Your Company'
@@ -85,7 +87,7 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
       setEmailSubject(`Estimate #${estimate?.estimateNumber || 'NEW'} from ${companyName}`);
       setEmailBody(`Dear ${customerName},\n\nPlease find attached your estimate for the proposed work.\n\nEstimate Details:\n- Estimate #: ${estimate?.estimateNumber || 'NEW'}\n- Total Amount: $${estimate?.total?.toFixed(2) || '0.00'}\n\nThis estimate is valid for 30 days. Please review and click Accept or Decline in the email to let us know your decision.\n\nIf you have any questions, please don't hesitate to contact us.\n\nBest regards,\n${companyName}\n${companyInfo.phone}\n${companyInfo.email}`);
     }
-  }, [estimate, companyInfo, selectedClient, useManual, manualName, isOpen]);
+  }, [estimate, companyInfo, selectedClient, showAddClient, newClientName, isOpen]);
 
   const resetForm = () => {
     setSuccessMessage('');
@@ -167,17 +169,62 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
   };
 
   const handleSendEstimate = async () => {
-    const recipientEmail = useManual ? manualEmail : selectedClient?.email;
-    const customerName = useManual ? manualName : selectedClient?.name || 'Customer';
-    const clientId = selectedClient?.id || null;
-
-    if (!recipientEmail) {
-      alert('Please select a client or enter an email address');
+    // Get authenticated user for adding new client
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user?.id) {
+      alert('User not authenticated');
       return;
     }
 
-    if (useManual && !manualName) {
-      alert('Please enter customer name');
+    let recipientEmail: string | undefined;
+    let customerName: string;
+    let clientId: string | null;
+
+    // If adding a new client, create it first
+    if (showAddClient) {
+      if (!newClientName || !newClientEmail) {
+        alert('Please enter client name and email');
+        return;
+      }
+
+      // Create new client in database
+      const { data: newClient, error: clientError } = await supabase
+        .from('clients')
+        .insert({
+          user_id: user.id,
+          name: newClientName,
+          email: newClientEmail,
+          phone: newClientPhone || null,
+          address: newClientAddress || null
+        })
+        .select()
+        .single();
+
+      if (clientError) {
+        alert(`Failed to create client: ${clientError.message}`);
+        return;
+      }
+
+      recipientEmail = newClient.email;
+      customerName = newClient.name;
+      clientId = newClient.id;
+
+      // Refresh clients list
+      await fetchClients();
+    } else {
+      // Use selected client
+      if (!selectedClient) {
+        alert('Please select a client or add a new one');
+        return;
+      }
+
+      recipientEmail = selectedClient.email;
+      customerName = selectedClient.name || 'Customer';
+      clientId = selectedClient.id;
+    }
+
+    if (!recipientEmail) {
+      alert('Client email is required');
       return;
     }
 
@@ -190,12 +237,6 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
     let switchedTab = false;
 
     try {
-      // Get authenticated user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user?.id) {
-        throw new Error('User not authenticated');
-      }
-
       // CRITICAL FIX: Check if estimate exists in database, if not, save it first
       let estimateId = estimate.id || estimate.estimateNumber;
 
@@ -383,40 +424,21 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
               </p>
             </div>
 
-            {/* Client Selection Toggle */}
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => setUseManual(false)}
-                disabled={isLoading}
-                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                  !useManual
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                } disabled:opacity-50 disabled:cursor-not-allowed`}
-              >
-                <User className="inline w-4 h-4 mr-2" />
-                Select from CRM
-              </button>
-              <button
-                onClick={() => setUseManual(true)}
-                disabled={isLoading}
-                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                  useManual
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                } disabled:opacity-50 disabled:cursor-not-allowed`}
-              >
-                <Mail className="inline w-4 h-4 mr-2" />
-                Manual Email
-              </button>
-            </div>
-
-            {/* Client Dropdown or Manual Input */}
-            {!useManual ? (
+            {/* Client Selection or Add New */}
+            {!showAddClient ? (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Select Client
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Select Client
+                  </label>
+                  <button
+                    onClick={() => setShowAddClient(true)}
+                    disabled={isLoading}
+                    className="text-sm text-blue-600 hover:text-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    + Add New Client
+                  </button>
+                </div>
                 <select
                   value={selectedClient?.id || ''}
                   onChange={(e) => {
@@ -435,32 +457,78 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
                 </select>
               </div>
             ) : (
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Customer Name
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Add New Client
                   </label>
-                  <input
-                    type="text"
-                    value={manualName}
-                    onChange={(e) => setManualName(e.target.value)}
-                    placeholder="John Smith"
+                  <button
+                    onClick={() => {
+                      setShowAddClient(false);
+                      setNewClientName('');
+                      setNewClientEmail('');
+                      setNewClientPhone('');
+                      setNewClientAddress('');
+                    }}
                     disabled={isLoading}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                  />
+                    className="text-sm text-gray-600 hover:text-gray-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Cancel
+                  </button>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Customer Email
-                  </label>
-                  <input
-                    type="email"
-                    value={manualEmail}
-                    onChange={(e) => setManualEmail(e.target.value)}
-                    placeholder="customer@example.com"
-                    disabled={isLoading}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                  />
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Client Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={newClientName}
+                      onChange={(e) => setNewClientName(e.target.value)}
+                      placeholder="John Smith"
+                      disabled={isLoading}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Email *
+                    </label>
+                    <input
+                      type="email"
+                      value={newClientEmail}
+                      onChange={(e) => setNewClientEmail(e.target.value)}
+                      placeholder="john@example.com"
+                      disabled={isLoading}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Phone (optional)
+                    </label>
+                    <input
+                      type="tel"
+                      value={newClientPhone}
+                      onChange={(e) => setNewClientPhone(e.target.value)}
+                      placeholder="(555) 123-4567"
+                      disabled={isLoading}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Address (optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={newClientAddress}
+                      onChange={(e) => setNewClientAddress(e.target.value)}
+                      placeholder="123 Main St, City, State"
+                      disabled={isLoading}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    />
+                  </div>
                 </div>
               </div>
             )}
@@ -521,7 +589,7 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
             </button>
             <button
               onClick={handleSendEstimate}
-              disabled={isLoading || (!useManual && !selectedClient) || (useManual && (!manualEmail || !manualName))}
+              disabled={isLoading || (!showAddClient && !selectedClient) || (showAddClient && (!newClientEmail || !newClientName))}
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (

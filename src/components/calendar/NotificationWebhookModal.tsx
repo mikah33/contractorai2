@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Send, Clock, Users, Mail, TestTube, UserPlus, Calendar as CalendarIcon } from 'lucide-react';
+import { X, Send, Clock, User, TestTube, UserPlus, Calendar as CalendarIcon } from 'lucide-react';
 import { CalendarEvent } from '../../services/calendarService';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../stores/authStore';
@@ -15,19 +15,6 @@ interface EmailSlot {
   name: string;
 }
 
-interface Project {
-  id: string;
-  client_id?: string;
-  [key: string]: any;
-}
-
-interface Client {
-  id: string;
-  email?: string;
-  name: string;
-  [key: string]: any;
-}
-
 interface Employee {
   id: string;
   name: string;
@@ -35,8 +22,6 @@ interface Employee {
   phone?: string;
   role?: string;
 }
-
-type RecipientTab = 'manual' | 'employees';
 
 const NotificationWebhookModal = ({ isOpen, onClose, event }: NotificationWebhookModalProps) => {
   const { user } = useAuthStore();
@@ -46,10 +31,7 @@ const NotificationWebhookModal = ({ isOpen, onClose, event }: NotificationWebhoo
     Array(10).fill(null).map(() => ({ email: '', name: '' }))
   );
   const [isSending, setIsSending] = useState(false);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [clients, setClients] = useState<Client[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [activeTab, setActiveTab] = useState<RecipientTab>('employees');
   const [selectedEmployee, setSelectedEmployee] = useState<string>('');
 
   // Calendar event configuration
@@ -63,26 +45,24 @@ const NotificationWebhookModal = ({ isOpen, onClose, event }: NotificationWebhoo
     status: ''
   });
 
-  // Fetch projects, clients, and employees when modal opens
+  // Fetch employees when modal opens
   useEffect(() => {
     if (isOpen && user) {
-      const fetchData = async () => {
+      const fetchEmployees = async () => {
         try {
-          const [projectsResult, clientsResult, employeesResult] = await Promise.all([
-            supabase.from('projects').select('*').eq('user_id', user.id),
-            supabase.from('clients').select('*').eq('user_id', user.id),
-            supabase.from('employees').select('*').eq('user_id', user.id)
-          ]);
+          const { data, error } = await supabase
+            .from('employees')
+            .select('*')
+            .eq('user_id', user.id);
 
-          if (projectsResult.data) setProjects(projectsResult.data);
-          if (clientsResult.data) setClients(clientsResult.data);
-          if (employeesResult.data) setEmployees(employeesResult.data);
+          if (error) throw error;
+          if (data) setEmployees(data);
         } catch (error) {
-          console.error('Error fetching data:', error);
+          console.error('Error fetching employees:', error);
         }
       };
 
-      fetchData();
+      fetchEmployees();
     }
   }, [isOpen, user]);
 
@@ -99,23 +79,6 @@ const NotificationWebhookModal = ({ isOpen, onClose, event }: NotificationWebhoo
         status: event.status || ''
       });
 
-      // Auto-populate employees from project if event has project_id
-      if (event.project_id && projects.length > 0 && clients.length > 0) {
-        const project = projects.find(p => p.id === event.project_id);
-        if (project && project.client_id) {
-          const client = clients.find(c => c.id === project.client_id);
-          if (client) {
-            const newSlots = [...emailSlots];
-            // Add client email
-            if (client.email) {
-              newSlots[0] = { email: client.email, name: client.name };
-            }
-            // Add project team members if available
-            // Note: You may need to add a team_members field to your project type
-            setEmailSlots(newSlots);
-          }
-        }
-      }
       // Set default trigger time to 1 hour before event
       if (event.start_date) {
         const eventStart = new Date(event.start_date);
@@ -123,7 +86,7 @@ const NotificationWebhookModal = ({ isOpen, onClose, event }: NotificationWebhoo
         setTriggerTime(oneHourBefore.toISOString().slice(0, 16));
       }
     }
-  }, [event, isOpen, projects, clients]);
+  }, [event, isOpen]);
 
   const handleEmailChange = (index: number, field: 'email' | 'name', value: string) => {
     const newSlots = [...emailSlots];
@@ -379,133 +342,81 @@ const NotificationWebhookModal = ({ isOpen, onClose, event }: NotificationWebhoo
                 />
               </div>
 
-              {/* Email Recipients */}
+              {/* Employee Recipients */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
-                  <Users className="w-4 h-4 mr-2" />
-                  Email Recipients (up to 10)
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Add Employees as Recipients
                 </label>
 
-                {/* Tabs */}
-                <div className="flex border-b border-gray-200 mb-4">
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('employees')}
-                    className={`flex items-center px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                      activeTab === 'employees'
-                        ? 'border-blue-500 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                  >
-                    <UserPlus className="w-4 h-4 mr-2" />
-                    Add from Employees
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('manual')}
-                    className={`flex items-center px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                      activeTab === 'manual'
-                        ? 'border-blue-500 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                  >
-                    <Mail className="w-4 h-4 mr-2" />
-                    Manual Entry
-                  </button>
+                {/* Employee Selection */}
+                <div className="mb-4">
+                  <div className="flex gap-2">
+                    <select
+                      value={selectedEmployee}
+                      onChange={(e) => setSelectedEmployee(e.target.value)}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Select an employee to add...</option>
+                      {employees.map((employee) => (
+                        <option key={employee.id} value={employee.id}>
+                          {employee.name} ({employee.email})
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      onClick={handleAddEmployee}
+                      disabled={!selectedEmployee}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                    >
+                      Add
+                    </button>
+                  </div>
+                  {employees.length === 0 && (
+                    <p className="mt-2 text-xs text-gray-500">
+                      No employees found. Add employees in the Employees section first.
+                    </p>
+                  )}
                 </div>
 
-                {/* Employee Dropdown Tab */}
-                {activeTab === 'employees' && (
-                  <div className="mb-4">
-                    <div className="flex gap-2">
-                      <select
-                        value={selectedEmployee}
-                        onChange={(e) => setSelectedEmployee(e.target.value)}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="">Select an employee...</option>
-                        {employees.map((employee) => (
-                          <option key={employee.id} value={employee.id}>
-                            {employee.name} ({employee.email})
-                          </option>
-                        ))}
-                      </select>
-                      <button
-                        type="button"
-                        onClick={handleAddEmployee}
-                        disabled={!selectedEmployee}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
-                      >
-                        Add
-                      </button>
-                    </div>
-                    {employees.length === 0 && (
-                      <p className="mt-2 text-xs text-gray-500">
-                        No employees found. Add employees in the Employees section first.
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                {/* Manual Entry Tab */}
-                {activeTab === 'manual' && (
-                  <div className="mb-4">
-                    <p className="text-xs text-gray-500 mb-3">
-                      Manually enter email addresses below
-                    </p>
-                  </div>
-                )}
-
-                {/* Email Slots Display */}
+                {/* Added Employees Display */}
                 <div className="space-y-3 max-h-64 overflow-y-auto border border-gray-200 rounded-md p-3 bg-gray-50">
                   {emailSlots.filter(slot => slot.email).length === 0 ? (
                     <p className="text-sm text-gray-500 text-center py-4">
-                      No recipients added yet
+                      No employees added yet. Select employees from the dropdown above.
                     </p>
-                  ) : null}
-                  {emailSlots.map((slot, index) => {
-                    if (!slot.email && activeTab !== 'manual') return null;
-
-                    return (
-                      <div key={index} className="grid grid-cols-2 gap-2 bg-white p-2 rounded border border-gray-200">
-                        <input
-                          type="text"
-                          placeholder={`Name ${index + 1}`}
-                          value={slot.name}
-                          onChange={(e) => handleEmailChange(index, 'name', e.target.value)}
-                          className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          disabled={activeTab === 'employees' && slot.email}
-                        />
-                        <div className="flex gap-1">
-                          <input
-                            type="email"
-                            placeholder={`email${index + 1}@example.com`}
-                            value={slot.email}
-                            onChange={(e) => handleEmailChange(index, 'email', e.target.value)}
-                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            disabled={activeTab === 'employees' && slot.email}
-                          />
-                          {slot.email && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const newSlots = [...emailSlots];
-                                newSlots[index] = { email: '', name: '' };
-                                setEmailSlots(newSlots);
-                              }}
-                              className="px-2 py-1 text-red-600 hover:text-red-700 hover:bg-red-50 rounded"
-                              title="Remove"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                          )}
+                  ) : (
+                    emailSlots
+                      .filter(slot => slot.email)
+                      .map((slot, index) => (
+                        <div key={index} className="flex items-center justify-between bg-white p-3 rounded border border-gray-200">
+                          <div className="flex items-center gap-3">
+                            <User className="w-4 h-4 text-gray-400" />
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">{slot.name}</p>
+                              <p className="text-xs text-gray-500">{slot.email}</p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newSlots = [...emailSlots];
+                              const actualIndex = emailSlots.findIndex(s => s.email === slot.email);
+                              newSlots[actualIndex] = { email: '', name: '' };
+                              setEmailSlots(newSlots);
+                            }}
+                            className="px-2 py-1 text-red-600 hover:text-red-700 hover:bg-red-50 rounded"
+                            title="Remove"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
                         </div>
-                      </div>
-                    );
-                  })}
+                      ))
+                  )}
                 </div>
                 <p className="mt-2 text-xs text-gray-500">
-                  {emailSlots.filter(s => s.email).length} / 10 recipients added
+                  {emailSlots.filter(s => s.email).length} employee(s) added
                 </p>
               </div>
             </div>
