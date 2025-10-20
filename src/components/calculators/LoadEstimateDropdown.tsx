@@ -4,7 +4,7 @@ import { supabase } from '../../lib/supabase';
 
 interface SavedEstimate {
   id: string;
-  name: string;
+  estimate_name: string;
   calculator_type: string;
   estimate_data: Record<string, any>;
   results_data?: Record<string, any>;
@@ -60,7 +60,7 @@ export const LoadEstimateDropdown: React.FC<LoadEstimateDropdownProps> = ({
         .from('calculator_estimates')
         .select(`
           id,
-          name,
+          estimate_name,
           calculator_type,
           estimate_data,
           results_data,
@@ -72,7 +72,7 @@ export const LoadEstimateDropdown: React.FC<LoadEstimateDropdownProps> = ({
         `)
         .eq('user_id', user.id)
         .eq('calculator_type', calculatorType)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false});
 
       if (error) throw error;
 
@@ -192,7 +192,7 @@ export const LoadEstimateDropdown: React.FC<LoadEstimateDropdownProps> = ({
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
                         <h4 className="text-sm font-medium text-gray-900 truncate">
-                          {estimate.name}
+                          {estimate.estimate_name}
                         </h4>
                         <div className="mt-1 space-y-1">
                           {estimate.client_name && (

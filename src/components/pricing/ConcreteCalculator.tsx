@@ -353,26 +353,28 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucc
             </div>
           )}
 
-          <div>
-            <label htmlFor="height" className="block text-sm font-medium text-slate-700 mb-1">
-              {concreteType === 'wall' ? 'Height of Wall (feet)' : t('calculators.concrete.thickness')} ({unit === 'imperial' ? (concreteType === 'wall' ? 'feet' : t('calculators.concrete.inches')) : (concreteType === 'wall' ? t('calculators.concrete.meters') : t('calculators.concrete.centimeters'))})
-            </label>
-            <input
-              type="number"
-              id="height"
-              min="0"
-              step="0.01"
-              value={height}
-              onChange={(e) => setHeight(e.target.value ? Number(e.target.value) : '')}
-              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-              placeholder={concreteType === 'wall' ? 'e.g., 8' : `${t('calculators.concrete.enterThickness')} ${unit === 'imperial' ? t('calculators.concrete.inches') : t('calculators.concrete.centimeters')}`}
-            />
-          </div>
+          {concreteType === 'wall' && (
+            <div>
+              <label htmlFor="height" className="block text-sm font-medium text-slate-700 mb-1">
+                Height of Wall ({unit === 'imperial' ? 'feet' : t('calculators.concrete.meters')})
+              </label>
+              <input
+                type="number"
+                id="height"
+                min="0"
+                step="0.01"
+                value={height}
+                onChange={(e) => setHeight(e.target.value ? Number(e.target.value) : '')}
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                placeholder="e.g., 8"
+              />
+            </div>
+          )}
 
           {concreteType === 'wall' && (
             <div>
               <label htmlFor="thickness" className="block text-sm font-medium text-slate-700 mb-1">
-                Thickness ({unit === 'imperial' ? t('calculators.concrete.inches') : 'cm'})
+                Wall Thickness ({unit === 'imperial' ? t('calculators.concrete.inches') : 'cm'})
               </label>
               <input
                 type="number"

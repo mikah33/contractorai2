@@ -35,7 +35,7 @@ export const CalculatorEstimateHeader: React.FC<CalculatorEstimateHeaderProps> =
         .from('calculator_estimates')
         .insert({
           user_id: user.id,
-          name,
+          estimate_name: name,
           calculator_type: calculatorType,
           estimate_data: currentData,
           results_data: resultsData || null,
