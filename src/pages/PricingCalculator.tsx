@@ -275,19 +275,10 @@ const PricingCalculator = () => {
 
         <div className="flex flex-col sm:flex-row gap-2">
           {(calculationComplete || calculatorResults.length > 0) && (
-            <>
-              <button className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-teal-600 border border-transparent rounded-md shadow-sm hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 w-full sm:w-auto">
-                <FileDown className="w-4 h-4 mr-2" />
-                {t('calculator.exportPDF')}
-              </button>
-              <button
-                onClick={handleSaveToEstimate}
-                className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 w-full sm:w-auto"
-              >
-                <Save className="w-4 h-4 mr-2" />
-                {editingEstimateId ? 'Update Estimate' : t('calculator.copyToEstimate')}
-              </button>
-            </>
+            <button className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-teal-600 border border-transparent rounded-md shadow-sm hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 w-full sm:w-auto">
+              <FileDown className="w-4 h-4 mr-2" />
+              {t('calculator.exportPDF')}
+            </button>
           )}
         </div>
       </div>
