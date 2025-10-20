@@ -27,7 +27,12 @@ export const useAppInitialization = () => {
     }
 
     if (!user) {
-      return; // Don't initialize without user
+      // No user = immediately mark as initialized (don't block login screen)
+      if (!isInitialized) {
+        setIsInitialized(true);
+        hasInitialized.current = true;
+      }
+      return;
     }
 
     let isMounted = true;
@@ -188,7 +193,7 @@ export const useAppInitialization = () => {
     return () => {
       isMounted = false;
     };
-  }, [user?.id]); // Only run when user changes
+  }, [user, queryClient]); // Add queryClient to dependencies
 
   return { isInitialized, initError };
 };

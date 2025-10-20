@@ -32,6 +32,9 @@ interface AuthState {
   initialize: () => Promise<void>;
 }
 
+// Track if initialization has been called
+let initializationPromise: Promise<void> | null = null;
+
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   profile: null,
@@ -192,72 +195,95 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   initialize: async () => {
-    try {
-      console.log('🔐 Initializing auth...');
-
-      // Get initial session with timeout
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Auth initialization timeout')), 10000)
-      );
-
-      const sessionPromise = supabase.auth.getSession();
-
-      const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]) as any;
-
-      console.log('✅ Session retrieved:', session ? 'Logged in' : 'Not logged in');
-
-      if (session) {
-        set({
-          user: session.user,
-          session,
-          initialized: true
-        });
-
-        // Fetch user profile
-        await get().fetchProfile();
-      } else {
-        set({ initialized: true });
-      }
-
-      // Set up auth state change listener
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        async (event, session) => {
-          if (session) {
-            set({ 
-              user: session.user, 
-              session 
-            });
-            
-            // Fetch profile on sign in
-            if (event === 'SIGNED_IN') {
-              await get().fetchProfile();
-            }
-          } else {
-            set({ 
-              user: null, 
-              profile: null,
-              session: null 
-            });
-          }
-        }
-      );
-
-      // Clean up subscription on unmount
-      return () => {
-        subscription.unsubscribe();
-      };
-    } catch (error) {
-      console.error('❌ Error initializing auth:', error);
-      // Always mark as initialized even on error to prevent infinite loading
-      set({
-        initialized: true,
-        user: null,
-        session: null,
-        profile: null
-      });
+    // Prevent multiple simultaneous initializations
+    if (initializationPromise) {
+      console.log('⏳ Auth initialization already in progress, waiting...');
+      return initializationPromise;
     }
+
+    // Check if already initialized
+    if (get().initialized) {
+      console.log('✅ Auth already initialized');
+      return Promise.resolve();
+    }
+
+    initializationPromise = (async () => {
+      try {
+        console.log('🔐 Initializing auth...');
+
+        // Get initial session with timeout
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Auth initialization timeout')), 10000)
+        );
+
+        const sessionPromise = supabase.auth.getSession();
+
+        const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]) as any;
+
+        console.log('✅ Session retrieved:', session ? 'Logged in' : 'Not logged in');
+
+        if (session) {
+          set({
+            user: session.user,
+            session,
+            initialized: true
+          });
+
+          // Fetch user profile
+          await get().fetchProfile();
+        } else {
+          set({ initialized: true });
+        }
+
+        // Set up auth state change listener
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          async (event, session) => {
+            console.log('🔄 Auth state changed:', event);
+
+            if (session) {
+              set({
+                user: session.user,
+                session
+              });
+
+              // Fetch profile on sign in
+              if (event === 'SIGNED_IN') {
+                await get().fetchProfile();
+              }
+            } else {
+              set({
+                user: null,
+                profile: null,
+                session: null
+              });
+            }
+          }
+        );
+
+        // Clean up subscription on unmount
+        return () => {
+          subscription.unsubscribe();
+        };
+      } catch (error) {
+        console.error('❌ Error initializing auth:', error);
+        // Always mark as initialized even on error to prevent infinite loading
+        set({
+          initialized: true,
+          user: null,
+          session: null,
+          profile: null
+        });
+      } finally {
+        // Clear the promise so future calls work properly
+        initializationPromise = null;
+      }
+    })();
+
+    return initializationPromise;
   },
 }));
 
-// Initialize auth on app start
-useAuthStore.getState().initialize();
+// Initialize auth on app start - only once
+if (typeof window !== 'undefined') {
+  useAuthStore.getState().initialize();
+}

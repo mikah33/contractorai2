@@ -172,15 +172,33 @@ export const DataProvider = ({ children }: DataProviderProps) => {
 
   // Load data whenever user changes - always refresh
   useEffect(() => {
-    if (user) {
-      console.log('User detected, loading data for user:', user.id);
-      refreshAll();
-    } else {
-      console.log('No user, clearing data');
-      setProfile(null);
-      setSubscription(null);
-      setLoading(false);
-    }
+    let mounted = true;
+
+    const loadData = async () => {
+      if (user) {
+        console.log('User detected, loading data for user:', user.id);
+        if (mounted) {
+          setLoading(true);
+          await Promise.all([refreshProfile(), refreshSubscription()]);
+          if (mounted) {
+            setLoading(false);
+          }
+        }
+      } else {
+        console.log('No user, clearing data');
+        if (mounted) {
+          setProfile(null);
+          setSubscription(null);
+          setLoading(false);
+        }
+      }
+    };
+
+    loadData();
+
+    return () => {
+      mounted = false;
+    };
   }, [user?.id]); // Depend on user.id to reload when user changes
 
   return (
