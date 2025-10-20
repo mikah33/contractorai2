@@ -235,8 +235,13 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucc
       <CalculatorEstimateHeader
         calculatorType="concrete"
         currentData={getCurrentInputs()}
-        onLoad={handleLoadEstimate}
-        onNewEstimate={handleNewEstimate}
+        resultsData={lastCalculation ? { results: lastCalculation } : undefined}
+        onLoad={(estimateData, resultsData) => {
+          handleLoadEstimate(estimateData);
+          if (resultsData?.results) {
+            setLastCalculation(resultsData.results);
+          }
+        }}
       />
 
       <div className="mb-4">
