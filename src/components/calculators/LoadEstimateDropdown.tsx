@@ -54,36 +54,38 @@ export const LoadEstimateDropdown: React.FC<LoadEstimateDropdownProps> = ({
     setIsLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
+      if (!user) {
+        console.error('No authenticated user');
+        throw new Error('Not authenticated');
+      }
 
+      console.log('Fetching estimates for calculator type:', calculatorType);
+      console.log('User ID:', user.id);
+
+      // Try without client join first
       const { data, error } = await supabase
         .from('calculator_estimates')
-        .select(`
-          id,
-          estimate_name,
-          calculator_type,
-          estimate_data,
-          results_data,
-          client_id,
-          created_at,
-          clients (
-            name
-          )
-        `)
+        .select('*')
         .eq('user_id', user.id)
         .eq('calculator_type', calculatorType)
         .order('created_at', { ascending: false});
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      console.log('Fetched estimates:', data);
 
       const formattedEstimates = (data || []).map((estimate: any) => ({
         ...estimate,
-        client_name: estimate.clients?.name || null,
+        client_name: null, // We'll add client lookup later if needed
       }));
 
       setEstimates(formattedEstimates);
     } catch (err) {
       console.error('Error fetching estimates:', err);
+      alert('Failed to load estimates. Check console for details.');
     } finally {
       setIsLoading(false);
     }
