@@ -61,6 +61,9 @@ export const SaveCalculatorEstimateModal: React.FC<SaveCalculatorEstimateModalPr
   };
 
   const handleSave = async () => {
+    console.log('🟢 Modal Save button clicked!');
+    console.log('Estimate Name:', estimateName);
+
     if (!estimateName.trim()) {
       setError('Please enter an estimate name');
       return;
@@ -70,16 +73,18 @@ export const SaveCalculatorEstimateModal: React.FC<SaveCalculatorEstimateModalPr
     setError(null);
 
     try {
+      console.log('🟢 Calling onSave callback...');
       await onSave(
         estimateName.trim(),
         selectedClientId === '' ? null : selectedClientId
       );
+      console.log('🟢 onSave completed successfully');
       setSuccess(true);
       setTimeout(() => {
         onClose();
       }, 1500);
     } catch (err) {
-      console.error('Error saving estimate:', err);
+      console.error('❌ Error in modal save:', err);
       setError(err instanceof Error ? err.message : 'Failed to save estimate');
     } finally {
       setIsLoading(false);
