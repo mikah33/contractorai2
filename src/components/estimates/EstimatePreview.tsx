@@ -167,7 +167,7 @@ const EstimatePreview: React.FC<EstimatePreviewProps> = ({ estimate, clients, pr
                     {item.type !== 'section' && item.unitPrice != null ? `$${item.unitPrice.toFixed(2)}` : item.type !== 'section' ? '$0.00' : ''}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-bold">
-                    {item.type !== 'section' && item.totalPrice != null ? `$${item.totalPrice.toFixed(2)}` : item.type !== 'section' ? '$0.00' : ''}
+                    {item.type !== 'section' ? `$${((item.totalPrice != null ? item.totalPrice : (item.unitPrice ?? 0) * (item.quantity ?? 0))).toFixed(2)}` : ''}
                   </td>
                 </tr>
               ))
