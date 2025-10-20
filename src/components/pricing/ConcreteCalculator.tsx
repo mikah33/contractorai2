@@ -355,7 +355,7 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucc
 
           <div>
             <label htmlFor="height" className="block text-sm font-medium text-slate-700 mb-1">
-              {concreteType === 'wall' ? 'Height of Wall' : t('calculators.concrete.thickness')} ({unit === 'imperial' ? t('calculators.concrete.feet') : (concreteType === 'wall' ? t('calculators.concrete.meters') : t('calculators.concrete.centimeters'))})
+              {concreteType === 'wall' ? 'Height of Wall (feet)' : t('calculators.concrete.thickness')} ({unit === 'imperial' ? (concreteType === 'wall' ? 'feet' : t('calculators.concrete.inches')) : (concreteType === 'wall' ? t('calculators.concrete.meters') : t('calculators.concrete.centimeters'))})
             </label>
             <input
               type="number"
