@@ -31,7 +31,6 @@ import TileCalculator from '../components/pricing/TileCalculator';
 import RoofingCalculator from '../components/pricing/RoofingCalculator';
 import VeneerCalculator from '../components/pricing/VeneerCalculator';
 import CalculatorResults from '../components/pricing/CalculatorResults';
-import SavedCalculations, { SavedCalculationsRef } from '../components/pricing/SavedCalculations';
 import { Trade, CalculationResult } from '../types';
 import { trades } from '../data/trades';
 
@@ -46,7 +45,6 @@ const PricingCalculator = () => {
   const [calculatorResults, setCalculatorResults] = useState<CalculationResult[]>([]);
   const [showSpecializedCalculator, setShowSpecializedCalculator] = useState(false);
   const calculatorRef = useRef<HTMLDivElement>(null);
-  const savedCalculationsRef = useRef<SavedCalculationsRef>(null);
   const [showManageModal, setShowManageModal] = useState(false);
   const [editingEstimateId, setEditingEstimateId] = useState<string | null>(null);
   const [loadingEstimate, setLoadingEstimate] = useState(false);
@@ -257,7 +255,7 @@ const PricingCalculator = () => {
       case 'tile':
         return <TileCalculator onCalculate={handleSpecializedCalculation} />;
       case 'roofing':
-        return <RoofingCalculator onCalculate={handleSpecializedCalculation} onSaveSuccess={() => savedCalculationsRef.current?.refresh()} />;
+        return <RoofingCalculator onCalculate={handleSpecializedCalculation} />;
       case 'veneer':
         return <VeneerCalculator onCalculate={handleSpecializedCalculation} />;
       default:
@@ -382,16 +380,6 @@ const PricingCalculator = () => {
               </div>
             )}
 
-            {/* Saved Calculations Section */}
-            {selectedTrade && (
-              <div className="mt-6">
-                <SavedCalculations
-                  ref={savedCalculationsRef}
-                  trade={selectedTrade}
-                  onLoadCalculation={handleLoadCalculation}
-                />
-              </div>
-            )}
           </div>
         </div>
 
