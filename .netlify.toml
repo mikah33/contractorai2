@@ -3,6 +3,22 @@
   publish = "dist"
   environment = { SECRETS_SCAN_ENABLED = "false" }
 
+# Headers for better performance and security
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    # Enable caching for static assets
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    # Don't cache the HTML
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
 # SPA redirects
 [[redirects]]
   from = "/*"

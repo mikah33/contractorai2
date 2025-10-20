@@ -208,75 +208,101 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
 
     initializationPromise = (async () => {
+      let authSubscription: any = null;
+
       try {
         console.log('🔐 Initializing auth...');
 
-        // Get initial session with longer timeout (30 seconds for slow connections)
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Auth initialization timeout')), 30000)
-        );
-
-        const sessionPromise = supabase.auth.getSession();
-
-        const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]) as any;
-
-        console.log('✅ Session retrieved:', session ? 'Logged in' : 'Not logged in');
-
-        if (session) {
-          set({
-            user: session.user,
-            session,
-            initialized: true
-          });
-
-          // Fetch user profile in background (don't block)
-          get().fetchProfile().catch(err =>
-            console.error('Failed to fetch profile:', err)
-          );
-        } else {
-          set({ initialized: true });
-        }
-
-        // Set up auth state change listener
+        // Set up auth state change listener FIRST (before getSession)
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, session) => {
-            console.log('🔄 Auth state changed:', event);
+            console.log('🔄 Auth state changed:', event, session ? 'Session active' : 'No session');
 
             if (session) {
               set({
                 user: session.user,
-                session
+                session,
+                initialized: true
               });
 
               // Fetch profile on sign in (in background)
-              if (event === 'SIGNED_IN') {
+              if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
                 get().fetchProfile().catch(err =>
                   console.error('Failed to fetch profile:', err)
                 );
               }
-            } else {
+            } else if (event === 'SIGNED_OUT') {
               set({
                 user: null,
                 profile: null,
-                session: null
+                session: null,
+                initialized: true
               });
             }
           }
         );
 
-        // Clean up subscription on unmount
+        authSubscription = subscription;
+
+        // Try to get session with aggressive timeout (5 seconds)
+        // If it times out, we'll rely on the auth state listener above
+        try {
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Session check timeout')), 5000)
+          );
+
+          const sessionPromise = supabase.auth.getSession();
+
+          const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]) as any;
+
+          console.log('✅ Session retrieved immediately:', session ? 'Logged in' : 'Not logged in');
+
+          if (session) {
+            set({
+              user: session.user,
+              session,
+              initialized: true
+            });
+
+            // Fetch user profile in background
+            get().fetchProfile().catch(err =>
+              console.error('Failed to fetch profile:', err)
+            );
+          } else {
+            set({ initialized: true });
+          }
+        } catch (timeoutError) {
+          console.warn('⚠️  Session check timed out, waiting for auth state event...');
+
+          // Wait a bit for the auth state listener to fire
+          await new Promise(resolve => setTimeout(resolve, 1000));
+
+          // If still not initialized, mark as initialized with no user
+          if (!get().initialized) {
+            console.log('📋 Marking as initialized without session');
+            set({ initialized: true });
+          }
+        }
+
+        // Return cleanup function
         return () => {
-          subscription.unsubscribe();
+          if (authSubscription) {
+            authSubscription.unsubscribe();
+          }
         };
       } catch (error) {
         console.error('❌ Error initializing auth:', error);
-        // Always mark as initialized even on error to prevent infinite loading
+        // Always mark as initialized even on error
         set({
           initialized: true,
           user: null,
           session: null,
           profile: null
         });
+
+        if (authSubscription) {
+          authSubscription.unsubscribe();
+        }
       } finally {
         // Clear the promise so future calls work properly
         initializationPromise = null;
