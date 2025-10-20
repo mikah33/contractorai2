@@ -495,7 +495,20 @@ const Subscriptions: React.FC = () => {
 
             {/* Change Plan */}
             <div className="mt-6 pt-6 border-t border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Change Plan</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Change Plan</h3>
+                <a
+                  href="https://contractorai.work"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-orange-600 hover:text-orange-700 font-semibold text-sm transition-colors"
+                >
+                  <span>View plan details</span>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </a>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {plans.filter(plan => plan.priceId !== currentSubscription.price_id).map((plan) => (
                   <div key={plan.priceId} className="p-4 border border-gray-200 rounded-md hover:border-orange-600 transition-colors">
