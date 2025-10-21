@@ -26,6 +26,11 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucce
   const [includeIceShield, setIncludeIceShield] = useState(true);
   const [includeWarranty, setIncludeWarranty] = useState(false);
 
+  // Custom pricing state
+  const [useCustomPricing, setUseCustomPricing] = useState(false);
+  const [customMaterialName, setCustomMaterialName] = useState('');
+  const [customPricePerSquare, setCustomPricePerSquare] = useState<number | ''>('');
+
   // Save modal state
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [saveTitle, setSaveTitle] = useState('');
@@ -126,10 +131,15 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucce
     const sqft = Number(areaToUse);
     const squares = sqft / 100; // Convert to roofing squares
 
-    // 1. Roofing Material - MATCHES WIDGET
-    const materialCost = squares * materialPrices[material];
+    // 1. Roofing Material - MATCHES WIDGET (or custom pricing)
+    const pricePerSquare = useCustomPricing && customPricePerSquare
+      ? Number(customPricePerSquare)
+      : materialPrices[material];
+    const materialCost = squares * pricePerSquare;
     results.push({
-      label: 'Roofing Material',
+      label: useCustomPricing && customMaterialName
+        ? `Roofing Material (${customMaterialName})`
+        : 'Roofing Material',
       value: squares,
       unit: 'squares',
       cost: materialCost
@@ -285,7 +295,10 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucce
           skylights,
           includeVentilation,
           includeIceShield,
-          includeWarranty
+          includeWarranty,
+          useCustomPricing,
+          customMaterialName: useCustomPricing ? customMaterialName : undefined,
+          customPricePerSquare: useCustomPricing ? customPricePerSquare : undefined
         }
       };
 
@@ -422,7 +435,8 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucce
             <select
               value={material}
               onChange={(e) => setMaterial(e.target.value as RoofMaterial)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              disabled={useCustomPricing}
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
             >
               <option value="asphalt">Asphalt Shingles - ${materialPrices.asphalt}/sq</option>
               <option value="architectural">Architectural Shingles - ${materialPrices.architectural}/sq</option>
@@ -492,6 +506,73 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucce
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             />
           </div>
+        </div>
+
+        {/* Custom Shingle Pricing Section */}
+        <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 border-2 border-purple-200">
+          <label className="flex items-center space-x-3 cursor-pointer mb-3">
+            <input
+              type="checkbox"
+              checked={useCustomPricing}
+              onChange={(e) => {
+                setUseCustomPricing(e.target.checked);
+                if (!e.target.checked) {
+                  setCustomMaterialName('');
+                  setCustomPricePerSquare('');
+                }
+              }}
+              className="w-5 h-5 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+            />
+            <span className="text-sm font-semibold text-gray-900">
+              💎 Use Custom Shingle Pricing
+            </span>
+          </label>
+
+          {useCustomPricing && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3 pt-3 border-t border-purple-200">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Custom Material Name
+                </label>
+                <input
+                  type="text"
+                  value={customMaterialName}
+                  onChange={(e) => setCustomMaterialName(e.target.value)}
+                  placeholder="e.g., Premium Designer Shingles"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Price per Square ($/sq)
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-2 text-gray-500">$</span>
+                  <input
+                    type="number"
+                    value={customPricePerSquare}
+                    onChange={(e) => setCustomPricePerSquare(e.target.value ? parseFloat(e.target.value) : '')}
+                    placeholder="500"
+                    min="0"
+                    step="0.01"
+                    className="w-full pl-7 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  />
+                </div>
+                <span className="text-xs text-gray-500 mt-1 block">
+                  1 square = 100 sq ft
+                </span>
+              </div>
+            </div>
+          )}
+
+          {useCustomPricing && (
+            <div className="mt-3 p-2 bg-purple-100 rounded-md">
+              <p className="text-xs text-purple-700">
+                ℹ️ Standard material dropdown is disabled when using custom pricing
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Optional Features */}
