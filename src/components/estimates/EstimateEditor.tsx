@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Trash2, Image, Settings, Palette, DollarSign, Calendar, User, Briefcase, FileText, Tag, Info, Edit2, Users, X } from 'lucide-react';
+import { Plus, Trash2, Image, Settings, Palette, DollarSign, Calendar, User, Briefcase, FileText, Tag, Info, Edit2, Users, X, Package, Wrench, HardHat, MoreHorizontal } from 'lucide-react';
 import { Estimate, EstimateItem } from '../../types/estimates';
 import { supabase } from '../../lib/supabase';
 import { useData } from '../../contexts/DataContext';
@@ -95,9 +95,9 @@ const EstimateEditor: React.FC<EstimateEditorProps> = ({
       id: `item-${Date.now()}`,
       totalPrice: newItem.quantity * newItem.unitPrice
     };
-    
+
     onAddItem(itemWithId);
-    
+
     // Reset form
     setNewItem({
       id: '',
@@ -108,6 +108,20 @@ const EstimateEditor: React.FC<EstimateEditorProps> = ({
       totalPrice: 0,
       type: 'material'
     });
+  };
+
+  const handleQuickAddItem = (type: 'material' | 'labor' | 'equipment' | 'other') => {
+    const itemWithId: EstimateItem = {
+      id: `item-${Date.now()}`,
+      description: '',
+      quantity: 1,
+      unit: type === 'labor' ? 'hour' : 'each',
+      unitPrice: 0,
+      totalPrice: 0,
+      type: type
+    };
+
+    onAddItem(itemWithId);
   };
 
   const handleItemChange = (index: number, field: keyof EstimateItem, value: any) => {
@@ -709,17 +723,54 @@ const EstimateEditor: React.FC<EstimateEditorProps> = ({
               </table>
             </div>
 
-            {/* Auto-populate Labor Button */}
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={handleAutoPopulateLabor}
-                disabled={!safeEstimate.projectId}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                title={!safeEstimate.projectId ? "Select a project first" : "Add team members as labor items"}
-              >
-                <Users className="h-5 w-5 mr-2" />
-                Auto-populate Labor from Project
-              </button>
+            {/* Quick Add Line Item Buttons */}
+            <div className="border-t border-gray-200 pt-6">
+              <h4 className="text-sm font-medium text-gray-700 mb-3">Quick Add Line Items</h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <button
+                  onClick={() => handleQuickAddItem('material')}
+                  className="inline-flex flex-col items-center justify-center px-4 py-3 border-2 border-blue-300 shadow-sm text-sm font-medium rounded-lg text-blue-700 bg-blue-50 hover:bg-blue-100 hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all"
+                >
+                  <Package className="h-6 w-6 mb-1" />
+                  <span>Material</span>
+                </button>
+
+                <button
+                  onClick={() => handleQuickAddItem('labor')}
+                  className="inline-flex flex-col items-center justify-center px-4 py-3 border-2 border-green-300 shadow-sm text-sm font-medium rounded-lg text-green-700 bg-green-50 hover:bg-green-100 hover:border-green-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all"
+                >
+                  <HardHat className="h-6 w-6 mb-1" />
+                  <span>Labor</span>
+                </button>
+
+                <button
+                  onClick={() => handleQuickAddItem('equipment')}
+                  className="inline-flex flex-col items-center justify-center px-4 py-3 border-2 border-orange-300 shadow-sm text-sm font-medium rounded-lg text-orange-700 bg-orange-50 hover:bg-orange-100 hover:border-orange-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-all"
+                >
+                  <Wrench className="h-6 w-6 mb-1" />
+                  <span>Equipment</span>
+                </button>
+
+                <button
+                  onClick={() => handleQuickAddItem('other')}
+                  className="inline-flex flex-col items-center justify-center px-4 py-3 border-2 border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-gray-50 hover:bg-gray-100 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all"
+                >
+                  <MoreHorizontal className="h-6 w-6 mb-1" />
+                  <span>Other</span>
+                </button>
+              </div>
+
+              <div className="mt-4 flex justify-end">
+                <button
+                  onClick={handleAutoPopulateLabor}
+                  disabled={!safeEstimate.projectId}
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  title={!safeEstimate.projectId ? "Select a project first" : "Add team members as labor items"}
+                >
+                  <Users className="h-5 w-5 mr-2" />
+                  Add employees for labor cost
+                </button>
+              </div>
             </div>
 
             {/* Totals Section */}
