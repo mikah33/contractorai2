@@ -22,6 +22,7 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucce
   const [stories, setStories] = useState('1');
   const [layers, setLayers] = useState<number | ''>('');
   const [skylights, setSkylights] = useState<number | ''>('');
+  const [wasteFactor, setWasteFactor] = useState<number>(10);
   const [includeVentilation, setIncludeVentilation] = useState(false);
   const [includeIceShield, setIncludeIceShield] = useState(true);
   const [includeWarranty, setIncludeWarranty] = useState(false);
@@ -132,7 +133,11 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucce
 
     const results: CalculationResult[] = [];
     const sqft = Number(areaToUse);
-    const squares = sqft / 100; // Convert to roofing squares
+    const baseSquares = sqft / 100; // Convert to roofing squares
+
+    // Apply waste factor
+    const wasteMultiplier = 1 + (wasteFactor / 100);
+    const squares = baseSquares * wasteMultiplier;
 
     // 1. Roofing Material - MATCHES WIDGET (or custom pricing)
     const pricePerSquare = useCustomPricing && customPricePerSquare
@@ -141,8 +146,8 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucce
     const materialCost = squares * pricePerSquare;
     results.push({
       label: useCustomPricing && customMaterialName
-        ? `Roofing Material (${customMaterialName})`
-        : 'Roofing Material',
+        ? `Roofing Material (${customMaterialName}) - with ${wasteFactor}% waste`
+        : `Roofing Material - with ${wasteFactor}% waste`,
       value: squares,
       unit: 'squares',
       cost: materialCost
@@ -296,6 +301,7 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucce
           stories,
           layers,
           skylights,
+          wasteFactor,
           includeVentilation,
           includeIceShield,
           includeWarranty,
@@ -511,6 +517,25 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucce
               min="0"
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Waste Factor
+            </label>
+            <select
+              value={wasteFactor}
+              onChange={(e) => setWasteFactor(parseInt(e.target.value))}
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            >
+              <option value="10">10% - Standard</option>
+              <option value="15">15% - Complex Roof</option>
+              <option value="20">20% - Very Complex</option>
+              <option value="25">25% - Extremely Complex</option>
+            </select>
+            <span className="text-xs text-gray-500 mt-1 block">
+              Accounts for cuts, overlaps, and roof complexity
+            </span>
           </div>
         </div>
 
