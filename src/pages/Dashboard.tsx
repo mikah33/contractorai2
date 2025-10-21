@@ -7,8 +7,9 @@ import StatCard from '../components/dashboard/StatCard';
 import RecentEstimatesTable from '../components/dashboard/RecentEstimatesTable';
 import FinanceSummaryChart from '../components/dashboard/FinanceSummaryChart';
 import ConnectionTest from '../components/ConnectionTest';
-import { useCachedProjects, useCachedEstimates, useCachedEvents } from '../hooks/useCachedData';
+import { useCachedProjects, useCachedEstimates } from '../hooks/useCachedData';
 import { useFinanceStore } from '../stores/financeStoreSupabase';
+import { useCalendarStoreSupabase } from '../stores/calendarStoreSupabase';
 
 const Dashboard = () => {
   const { t } = useTranslation();
@@ -17,16 +18,24 @@ const Dashboard = () => {
   // Use React Query cached data - instant loading!
   const { projects } = useCachedProjects();
   const { estimates } = useCachedEstimates();
-  const { events } = useCachedEvents();
+  const { events, fetchEvents } = useCalendarStoreSupabase(); // Use same store as Calendar page
   const { financialSummary } = useFinanceStore();
   const [currentMonth, setCurrentMonth] = useState(new Date());
+
+  // Fetch events on mount (same as Calendar page)
+  useEffect(() => {
+    console.log('📊 Dashboard: Fetching events on mount');
+    fetchEvents().then(() => {
+      console.log('📊 Dashboard: Events fetched, count:', events.length);
+    });
+  }, [fetchEvents]);
 
   // Debug: Log when component mounts and data state
   useEffect(() => {
     console.log('📊 Dashboard mounted with cached data');
     console.log('  Projects:', projects.length, '(cached)');
     console.log('  Estimates:', estimates.length, '(cached)');
-    console.log('  Events:', events.length, '(cached)');
+    console.log('  Events:', events.length, '(from calendar store)');
     console.log('  Financial Summary:', financialSummary);
   }, [projects.length, estimates.length, events.length]);
 
