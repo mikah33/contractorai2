@@ -94,7 +94,7 @@ export default function InvoiceManager() {
           </p>
         </div>
       ) : (
-        <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div className="bg-white shadow overflow-hidden sm:rounded-lg overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
@@ -130,32 +130,30 @@ export default function InvoiceManager() {
                   <td className="px-3 py-4 text-sm font-medium text-orange-600">
                     ${invoice.balance.toLocaleString()}
                   </td>
-                  <td className="px-3 py-4 text-sm">
-                    <div className="flex flex-col space-y-2">
-                      <div className="flex flex-wrap gap-2">
-                        {invoice.status !== 'paid' && (
-                          <button
-                            onClick={() => setSelectedInvoice(invoice.id)}
-                            className="text-xs text-blue-600 hover:text-blue-900 font-medium"
-                          >
-                            Pay
-                          </button>
-                        )}
-                        {invoice.paidAmount > 0 && (
-                          <button
-                            onClick={() => handleViewHistory(invoice.id)}
-                            className="text-xs text-green-600 hover:text-green-900"
-                          >
-                            History
-                          </button>
-                        )}
+                  <td className="px-2 py-3 text-sm">
+                    <div className="flex flex-col gap-1.5 min-w-[140px]">
+                      {invoice.status !== 'paid' && (
                         <button
-                          onClick={() => handleDeleteInvoice(invoice.id)}
-                          className="text-xs text-red-600 hover:text-red-900"
+                          onClick={() => setSelectedInvoice(invoice.id)}
+                          className="w-full px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 font-medium"
                         >
-                          Delete
+                          Pay
                         </button>
-                      </div>
+                      )}
+                      {invoice.paidAmount > 0 && (
+                        <button
+                          onClick={() => handleViewHistory(invoice.id)}
+                          className="w-full px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700"
+                        >
+                          History
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleDeleteInvoice(invoice.id)}
+                        className="w-full px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700"
+                      >
+                        Delete
+                      </button>
                       {invoice.status !== 'paid' && invoice.status !== 'draft' && (
                         <GeneratePaymentLinkButton
                           invoiceId={invoice.id}
