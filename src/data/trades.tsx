@@ -779,7 +779,7 @@ export const trades: Trade[] = [
   },
   {
     id: 'veneer',
-    name: 'trades.veneer',
+    name: 'Veneer',
     category: 'Exterior',
     icon: <Blocks />,
     description: 'Veneer installation for walls and facades',
