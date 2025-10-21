@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { estimateService } from '../../services/estimateService';
 import { useClientsStore } from '../../stores/clientsStore';
 
-type RoofMaterial = 'asphalt' | 'architectural' | 'metal' | 'tile' | 'composite';
+type RoofMaterial = 'asphalt' | 'architectural' | 'metal' | 'tile' | 'composite' | 'atlas-storm' | 'sbs-malarkey' | 'brava-synthetic';
 type RoofPitch = 'low' | 'medium' | 'high' | 'steep';
 
 const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSuccess }) => {
@@ -51,7 +51,10 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucce
     architectural: 475,     // Architectural Shingles
     metal: 850,            // Metal Roofing
     tile: 625,             // Tile Roofing
-    composite: 425         // Composite Shingles
+    composite: 425,        // Composite Shingles
+    'atlas-storm': 550,    // Atlas Storm Master Shingles
+    'sbs-malarkey': 500,   // SBS Malarkey Shingles
+    'brava-synthetic': 950 // Brava Synthetic Tiles
   };
 
   // Pitch multipliers - MATCHES WIDGET
@@ -440,8 +443,11 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucce
             >
               <option value="asphalt">Asphalt Shingles - ${materialPrices.asphalt}/sq</option>
               <option value="architectural">Architectural Shingles - ${materialPrices.architectural}/sq</option>
+              <option value="atlas-storm">Atlas Storm Master Shingles - ${materialPrices['atlas-storm']}/sq</option>
+              <option value="sbs-malarkey">SBS Malarkey Shingles - ${materialPrices['sbs-malarkey']}/sq</option>
               <option value="metal">Metal Roofing - ${materialPrices.metal}/sq</option>
               <option value="tile">Tile Roofing - ${materialPrices.tile}/sq</option>
+              <option value="brava-synthetic">Brava Synthetic Tiles - ${materialPrices['brava-synthetic']}/sq</option>
               <option value="composite">Composite Shingles - ${materialPrices.composite}/sq</option>
             </select>
           </div>

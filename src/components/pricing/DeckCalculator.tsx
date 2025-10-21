@@ -47,22 +47,22 @@ const fasciaTypes = {
 };
 
 const deckingTypes: DeckingType[] = [
-  { 
-    id: '5/4-deck', 
-    name: '5/4" Deck Board', 
-    width: 5.5, 
-    spacing: 0.125, 
+  {
+    id: '5/4-deck',
+    name: '5/4" Deck Board',
+    width: 5.5,
+    spacing: 0.125,
     price: {
       '12': 15.98,
       '16': 21.98,
       '20': 27.98
     }
   },
-  { 
-    id: '2x6-pt', 
-    name: '2x6 PT Lumber', 
-    width: 5.5, 
-    spacing: 0.25, 
+  {
+    id: '2x6-pt',
+    name: '2x6 PT Lumber',
+    width: 5.5,
+    spacing: 0.25,
     price: {
       '12': 12.98,
       '16': 17.98,
@@ -124,11 +124,44 @@ const deckingTypes: DeckingType[] = [
       '20': 156.40
     }
   },
-  { 
-    id: 'custom', 
-    name: 'Custom Size', 
-    width: 5.5, 
-    spacing: 0.125, 
+  {
+    id: 'deckorators-voyage',
+    name: 'Deckorators Voyage',
+    width: 5.5,
+    spacing: 0.25,
+    price: {
+      '12': 84.00,
+      '16': 112.00,
+      '20': 140.00
+    }
+  },
+  {
+    id: 'deckorators-vault',
+    name: 'Deckorators Vault',
+    width: 5.5,
+    spacing: 0.25,
+    price: {
+      '12': 71.25,
+      '16': 95.00,
+      '20': 118.75
+    }
+  },
+  {
+    id: 'deckorators-summit',
+    name: 'Deckorators Summit',
+    width: 5.5,
+    spacing: 0.25,
+    price: {
+      '12': 63.75,
+      '16': 85.00,
+      '20': 106.25
+    }
+  },
+  {
+    id: 'custom',
+    name: 'Custom Size',
+    width: 5.5,
+    spacing: 0.125,
     price: {
       '12': 15.98,
       '16': 21.98,
