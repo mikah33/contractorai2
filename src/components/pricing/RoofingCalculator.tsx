@@ -521,20 +521,20 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucce
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Waste Factor
+              Waste Factor (%)
             </label>
-            <select
+            <input
+              type="number"
               value={wasteFactor}
-              onChange={(e) => setWasteFactor(parseInt(e.target.value))}
+              onChange={(e) => setWasteFactor(e.target.value ? parseFloat(e.target.value) : 0)}
+              placeholder="10"
+              min="0"
+              max="100"
+              step="1"
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-            >
-              <option value="10">10% - Standard</option>
-              <option value="15">15% - Complex Roof</option>
-              <option value="20">20% - Very Complex</option>
-              <option value="25">25% - Extremely Complex</option>
-            </select>
+            />
             <span className="text-xs text-gray-500 mt-1 block">
-              Accounts for cuts, overlaps, and roof complexity
+              Accounts for cuts, overlaps, and roof complexity (10-25% typical)
             </span>
           </div>
         </div>
