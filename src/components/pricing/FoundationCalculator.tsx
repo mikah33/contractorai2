@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Radiation as Foundation } from 'lucide-react';
 import { CalculatorEstimateHeader } from '../calculators/CalculatorEstimateHeader';
+import { useCalculatorTab } from '../../contexts/CalculatorTabContext';
+import { useCustomCalculator } from '../../hooks/useCustomCalculator';
+import { useCustomMaterials } from '../../hooks/useCustomMaterials';
 
 type FoundationType = 'strip-footing' | 'spread-footings' | 'thickened-edge' | 'frost-wall';
 type SoilType = 'sandy' | 'clay' | 'rock';
@@ -10,6 +13,9 @@ type BackfillType = 'native' | 'gravel' | 'sand';
 
 const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const { t } = useTranslation();
+  const { activeTab } = useCalculatorTab();
+  const { materials: customMaterials, pricing: customPricing, loading: loadingCustom, isConfigured } = useCustomCalculator('foundation', activeTab === 'custom');
+  const { getCustomPrice, getCustomUnitValue } = useCustomMaterials('foundation');
   const [foundationType, setFoundationType] = useState<FoundationType>('strip-footing');
   const [isBasement, setIsBasement] = useState(false);
   const [length, setLength] = useState<number | ''>('');
@@ -32,6 +38,35 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const [gravelBaseDepth, setGravelBaseDepth] = useState<number | ''>('');
   const [includeICF, setIncludeICF] = useState(false);
   const [icfWallHeight, setIcfWallHeight] = useState<number | ''>('');
+
+  // Build active concrete pricing from custom or default
+  const activeConcretePrices = useMemo(() => {
+    return {
+      3000: getCustomPrice('concrete_3000', 125),
+      3500: getCustomPrice('concrete_3500', 135),
+      4000: getCustomPrice('concrete_4000', 145),
+      4500: getCustomPrice('concrete_4500', 155)
+    };
+  }, [getCustomPrice]);
+
+  // Build active rebar pricing from custom or default
+  const activeRebarPrice = useMemo(() => {
+    return getCustomPrice('rebar', 12.98);
+  }, [getCustomPrice]);
+
+  // Build active form/drainage materials pricing from custom or default
+  const activeMaterialPrices = useMemo(() => {
+    return {
+      vaporBarrier: getCustomPrice('vapor_barrier', 89.98),
+      waterproofing: getCustomPrice('waterproofing', 45.98),
+      drainPipe: getCustomPrice('drain_pipe', 12.98),
+      gravel: getCustomPrice('gravel', 45),
+      backfillNative: getCustomPrice('backfill_native', 15),
+      backfillGravel: getCustomPrice('backfill_gravel', 45),
+      backfillSand: getCustomPrice('backfill_sand', 35),
+      icfMaterial: getCustomPrice('icf_material', 12)
+    };
+  }, [getCustomPrice]);
 
   const getCurrentInputs = () => ({
     foundationType,
@@ -125,12 +160,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       const footingWidthFt = footingWidth / 12;
       const footingDepthFt = footingDepth / 12;
       const footingVolume = (perimeter * footingWidthFt * footingDepthFt) / 27;
-      const footingConcreteCost = footingVolume * {
-        3000: 125,
-        3500: 135,
-        4000: 145,
-        4500: 155
-      }[concreteStrength];
+      const footingConcreteCost = footingVolume * (activeConcretePrices[concreteStrength] || 135);
       totalCost += footingConcreteCost;
 
       results.push({
@@ -142,12 +172,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
       // 2. Stem Wall/Basement Wall Calculations
       const wallVolume = (perimeter * stemWallHeight * (stemWallThickness / 12)) / 27;
-      const wallConcreteCost = wallVolume * {
-        3000: 125,
-        3500: 135,
-        4000: 145,
-        4500: 155
-      }[concreteStrength];
+      const wallConcreteCost = wallVolume * (activeConcretePrices[concreteStrength] || 135);
       totalCost += wallConcreteCost;
 
       results.push({
@@ -164,11 +189,12 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         const interiorArea = interiorLength * interiorWidth;
         const backfillHeight = stemWallHeight - ((slabThickness / 12) + (gravelBaseDepth / 12));
         const backfillVolume = (interiorArea * backfillHeight) / 27;
-        const backfillCost = backfillVolume * {
-          'native': 15,
-          'gravel': 45,
-          'sand': 35
-        }[backfillType];
+        const backfillPriceMap = {
+          'native': activeMaterialPrices.backfillNative,
+          'gravel': activeMaterialPrices.backfillGravel,
+          'sand': activeMaterialPrices.backfillSand
+        };
+        const backfillCost = backfillVolume * (backfillPriceMap[backfillType] || 15);
         totalCost += backfillCost;
 
         results.push({
@@ -181,7 +207,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
       // 4. Gravel Base Calculations
       const gravelBaseVolume = (area * (gravelBaseDepth / 12)) / 27;
-      const gravelBaseCost = gravelBaseVolume * 45;
+      const gravelBaseCost = gravelBaseVolume * activeMaterialPrices.gravel;
       totalCost += gravelBaseCost;
 
       results.push({
@@ -193,12 +219,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
       // 5. Slab Calculations
       const slabVolume = (area * (slabThickness / 12)) / 27;
-      const slabConcreteCost = slabVolume * {
-        3000: 125,
-        3500: 135,
-        4000: 145,
-        4500: 155
-      }[concreteStrength];
+      const slabConcreteCost = slabVolume * (activeConcretePrices[concreteStrength] || 135);
       totalCost += slabConcreteCost;
 
       results.push({
@@ -213,7 +234,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         // Footing rebar (longitudinal bars)
         const footingRebarLength = perimeter * 2;
         const footingRebarPieces = Math.ceil(footingRebarLength / 20);
-        const footingRebarCost = footingRebarPieces * 12.98;
+        const footingRebarCost = footingRebarPieces * activeRebarPrice;
         totalCost += footingRebarCost;
 
         results.push({
@@ -229,7 +250,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         const verticalBarLength = stemWallHeight + 2;
         const wallVerticalRebarPieces = Math.ceil((verticalBars * verticalBarLength) / 20);
         const wallHorizontalRebarPieces = Math.ceil((perimeter * 2) / 20);
-        const wallRebarCost = (wallVerticalRebarPieces + wallHorizontalRebarPieces) * 12.98;
+        const wallRebarCost = (wallVerticalRebarPieces + wallHorizontalRebarPieces) * activeRebarPrice;
         totalCost += wallRebarCost;
 
         results.push({
@@ -245,7 +266,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         const transverseBars = Math.ceil(length / slabRebarSpacingFt) + 1;
         const slabRebarLength = (longitudinalBars * length) + (transverseBars * width);
         const slabRebarPieces = Math.ceil(slabRebarLength / 20);
-        const slabRebarCost = slabRebarPieces * 12.98;
+        const slabRebarCost = slabRebarPieces * activeRebarPrice;
         totalCost += slabRebarCost;
 
         results.push({
@@ -260,7 +281,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       if (includeVaporBarrier) {
         const vaporBarrierArea = area * 1.1;
         const vaporBarrierRolls = Math.ceil(vaporBarrierArea / 1000);
-        const vaporBarrierCost = vaporBarrierRolls * 89.98;
+        const vaporBarrierCost = vaporBarrierRolls * activeMaterialPrices.vaporBarrier;
         totalCost += vaporBarrierCost;
 
         results.push({
@@ -275,7 +296,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       if (includeWaterproofing) {
         const waterproofingArea = perimeter * stemWallHeight * 1.1;
         const waterproofingGallons = Math.ceil(waterproofingArea / 100);
-        const waterproofingCost = waterproofingGallons * 45.98;
+        const waterproofingCost = waterproofingGallons * activeMaterialPrices.waterproofing;
         totalCost += waterproofingCost;
 
         results.push({
@@ -290,7 +311,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       if (includeDrainage) {
         const drainPipeLength = Math.ceil(perimeter * 1.1);
         const drainPipeSections = Math.ceil(drainPipeLength / 10);
-        const drainPipeCost = drainPipeSections * 12.98;
+        const drainPipeCost = drainPipeSections * activeMaterialPrices.drainPipe;
         totalCost += drainPipeCost;
 
         results.push({
@@ -301,7 +322,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         });
 
         const drainageGravelVolume = (perimeter * 2 * 2) / 27;
-        const drainageGravelCost = drainageGravelVolume * 45;
+        const drainageGravelCost = drainageGravelVolume * activeMaterialPrices.gravel;
         totalCost += drainageGravelCost;
 
         results.push({
@@ -316,7 +337,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       // Formula: (L×2 + W×2) × H × 12 = Estimation total for ICF forms (materials only)
       if (includeICF && typeof icfWallHeight === 'number') {
         const totalSqFtage = perimeter * icfWallHeight;
-        const icfEstimation = totalSqFtage * 12;
+        const icfEstimation = totalSqFtage * activeMaterialPrices.icfMaterial;
         totalCost += icfEstimation;
 
         results.push({
@@ -328,12 +349,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
         // Note: Concrete yardage must still be calculated separately
         const icfConcreteVolume = (perimeter * icfWallHeight * (6 / 12)) / 27; // Assuming 6" ICF wall
-        const icfConcreteCost = icfConcreteVolume * {
-          3000: 125,
-          3500: 135,
-          4000: 145,
-          4500: 155
-        }[concreteStrength];
+        const icfConcreteCost = icfConcreteVolume * (activeConcretePrices[concreteStrength] || 135);
         totalCost += icfConcreteCost;
 
         results.push({
@@ -365,6 +381,41 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     typeof stemWallThickness === 'number' &&
     typeof slabThickness === 'number' &&
     typeof gravelBaseDepth === 'number';
+
+  // Show loading state if custom calculator data is loading
+  if (activeTab === 'custom' && loadingCustom) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
+        <div className="flex items-center mb-6">
+          <Foundation className="h-6 w-6 text-orange-500 mr-2" />
+          <h2 className="text-xl font-bold text-slate-800">{t('calculators.foundation.title')}</h2>
+        </div>
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading custom configuration...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show message if custom tab but not configured
+  if (activeTab === 'custom' && !isConfigured) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
+        <div className="flex items-center mb-6">
+          <Foundation className="h-6 w-6 text-orange-500 mr-2" />
+          <h2 className="text-xl font-bold text-slate-800">{t('calculators.foundation.title')}</h2>
+        </div>
+        <div className="text-center py-12">
+          <Foundation className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Configuration Required</h3>
+          <p className="text-gray-600 mb-4">
+            This calculator hasn't been configured yet. Click the gear icon to set up your custom materials and pricing.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">

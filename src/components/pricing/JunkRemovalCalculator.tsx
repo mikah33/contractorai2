@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Trash } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { CalculatorEstimateHeader } from '../calculators/CalculatorEstimateHeader';
+import { useCalculatorTab } from '../../contexts/CalculatorTabContext';
+import { useCustomCalculator } from '../../hooks/useCustomCalculator';
+import { useCustomMaterials } from '../../hooks/useCustomMaterials';
 
 interface JunkItem {
   id: string;
@@ -16,6 +19,10 @@ interface JunkItem {
 
 const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const { t } = useTranslation();
+  const { activeTab } = useCalculatorTab();
+  const { materials: customMaterials, pricing: customPricing, loading: loadingCustom, isConfigured } =
+    useCustomCalculator('junk-removal', activeTab === 'custom');
+  const { getCustomPrice, getCustomUnitValue } = useCustomMaterials('junk-removal');
   const [items, setItems] = useState<JunkItem[]>([]);
   const [needsLabor, setNeedsLabor] = useState(true);
   const [laborers, setLaborers] = useState<2 | 3 | 4>(2);
@@ -103,8 +110,14 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
   const calculateBaseCost = (volume: number, weight: number) => {
     // Base rate is $1.50 per cubic foot or $0.50 per pound, whichever is higher
-    const volumeCost = volume * 1.50;
-    const weightCost = weight * 0.50;
+    const defaultVolumeRate = 1.50;
+    const defaultWeightRate = 0.50;
+
+    const volumeRate = getCustomPrice('volume_rate_per_cubic_foot', defaultVolumeRate, 'pricing');
+    const weightRate = getCustomPrice('weight_rate_per_pound', defaultWeightRate, 'pricing');
+
+    const volumeCost = volume * volumeRate;
+    const weightCost = weight * weightRate;
     return Math.max(volumeCost, weightCost);
   };
 
@@ -188,7 +201,8 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
       // Labor costs
       if (needsLabor) {
-        const laborRate = 45; // per hour per person
+        const defaultLaborRate = 45; // per hour per person
+        const laborRate = getCustomPrice('labor_rate_per_hour', defaultLaborRate, 'pricing');
         const estimatedHours = Math.ceil(totalVolume / 100); // 1 hour per 100 cubic feet
         const laborCost = laborRate * laborers * estimatedHours;
         totalCost += laborCost;
@@ -202,7 +216,9 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       }
 
       // Distance fee
-      const distanceFee = distance * 2.50; // $2.50 per mile
+      const defaultDistanceRate = 2.50; // $2.50 per mile
+      const distanceRate = getCustomPrice('distance_rate_per_mile', defaultDistanceRate, 'pricing');
+      const distanceFee = distance * distanceRate;
       totalCost += distanceFee;
 
       results.push({
@@ -216,8 +232,10 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       if (includeDisposal) {
         const specialItems = items.filter(item => item.requiresSpecialDisposal);
         if (specialItems.length > 0) {
+          const defaultSpecialDisposalRate = 25; // $25 per special item
+          const specialDisposalRate = getCustomPrice('special_disposal_fee', defaultSpecialDisposalRate, 'pricing');
           const specialDisposalFee = specialItems.reduce((sum, item) =>
-            sum + (item.quantity * 25), 0); // $25 per special item
+            sum + (item.quantity * specialDisposalRate), 0);
           totalCost += specialDisposalFee;
 
           results.push({
@@ -231,7 +249,8 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
       // Permit fee if required
       if (needsPermit) {
-        const permitFee = 150;
+        const defaultPermitFee = 150;
+        const permitFee = getCustomPrice('permit_fee', defaultPermitFee, 'pricing');
         totalCost += permitFee;
 
         results.push({
@@ -244,7 +263,9 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
       // Hazardous material fee
       if (isHazardous) {
-        const hazardousFee = totalWeight * 0.75; // $0.75 per pound
+        const defaultHazardousRate = 0.75; // $0.75 per pound
+        const hazardousRate = getCustomPrice('hazardous_rate_per_pound', defaultHazardousRate, 'pricing');
+        const hazardousFee = totalWeight * hazardousRate;
         totalCost += hazardousFee;
 
         results.push({
@@ -290,6 +311,41 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   };
 
   const isFormValid = items.length > 0 && typeof distance === 'number';
+
+  // Loading state
+  if (activeTab === 'custom' && loadingCustom) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
+        <div className="flex items-center mb-6">
+          <Trash className="h-6 w-6 text-orange-500 mr-2" />
+          <h2 className="text-xl font-bold text-slate-800">{t('calculators.junkRemoval.title')}</h2>
+        </div>
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading custom configuration...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Not configured state
+  if (activeTab === 'custom' && !isConfigured) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
+        <div className="flex items-center mb-6">
+          <Trash className="h-6 w-6 text-orange-500 mr-2" />
+          <h2 className="text-xl font-bold text-slate-800">{t('calculators.junkRemoval.title')}</h2>
+        </div>
+        <div className="text-center py-12">
+          <Trash className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Configuration Required</h3>
+          <p className="text-gray-600 mb-4">
+            This calculator hasn't been configured yet. Click the gear icon to set up your custom materials and pricing.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">

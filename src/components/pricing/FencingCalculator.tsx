@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Fence } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { CalculatorEstimateHeader } from '../calculators/CalculatorEstimateHeader';
+import { useCalculatorTab } from '../../contexts/CalculatorTabContext';
+import { useCustomCalculator } from '../../hooks/useCustomCalculator';
+import { useCustomMaterials } from '../../hooks/useCustomMaterials';
 
 interface Gate {
   id: string;
@@ -20,6 +23,11 @@ interface Corner {
 
 const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const { t } = useTranslation();
+  const { activeTab } = useCalculatorTab();
+  const { materials: customMaterials, pricing: customPricing, loading: loadingCustom, isConfigured } =
+    useCustomCalculator('fencing', activeTab === 'custom');
+  const { getCustomPrice, getCustomUnitValue } = useCustomMaterials('fencing');
+
   const [fenceType, setFenceType] = useState<'privacy' | 'picket' | 'chain-link' | 'ranch' | 'panel' | 'custom'>('privacy');
   const [material, setMaterial] = useState<'wood' | 'vinyl' | 'metal' | 'composite'>('wood');
   const [postMaterial, setPostMaterial] = useState<'wood' | 'vinyl-5x5' | 'vinyl-4x4' | 'metal'>('wood');
@@ -39,6 +47,139 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   // Custom fencing options
   const [customLinearFeet, setCustomLinearFeet] = useState<number | ''>('');
   const [customPricePerFoot, setCustomPricePerFoot] = useState<number | ''>('');
+
+  // Active pricing based on tab using useCustomMaterials hook
+  const activePostMaterialPrices = useMemo(() => {
+    if (activeTab === 'custom') {
+      return {
+        'wood': getCustomPrice('Wood Post', 24.98, 'posts'),
+        'vinyl-5x5': getCustomPrice('Vinyl 5x5 Post', 42.00, 'posts'),
+        'vinyl-4x4': getCustomPrice('Vinyl 4x4 Post', 27.00, 'posts'),
+        'metal': getCustomPrice('Metal Post', 42.00, 'posts')
+      };
+    }
+    return postMaterialPrices;
+  }, [activeTab, getCustomPrice]);
+
+  const activeMaterialPrices = useMemo(() => {
+    if (activeTab === 'custom') {
+      return {
+        'privacy': {
+          'wood': {
+            'panel': getCustomPrice('Privacy Fence - Wood Panel', 45.98, 'panels'),
+            'rail': 12.98, // Rails not configurable separately in current setup
+            'cap': 4.98    // Caps not configurable separately in current setup
+          },
+          'vinyl': {
+            'panel': getCustomPrice('Privacy Fence - Vinyl Panel', 89.98, 'panels'),
+            'rail': 19.98,
+            'cap': 6.98
+          },
+          'metal': {
+            'panel': getCustomPrice('Privacy Fence - Metal Panel', 79.98, 'panels'),
+            'rail': 16.98,
+            'cap': 5.98
+          },
+          'composite': {
+            'panel': getCustomPrice('Privacy Fence - Composite Panel', 129.98, 'panels'),
+            'rail': 24.98,
+            'cap': 8.98
+          }
+        },
+        'picket': {
+          'wood': {
+            'picket': getCustomPrice('Picket Fence - Wood Picket', 2.98, 'panels'),
+            'rail': 9.98,
+            'cap': 3.98
+          },
+          'vinyl': {
+            'picket': getCustomPrice('Picket Fence - Vinyl Picket', 4.98, 'panels'),
+            'rail': 14.98,
+            'cap': 5.98
+          },
+          'metal': {
+            'picket': getCustomPrice('Picket Fence - Metal Picket', 3.98, 'panels'),
+            'rail': 12.98,
+            'cap': 4.98
+          },
+          'composite': {
+            'picket': getCustomPrice('Picket Fence - Composite Picket', 6.98, 'panels'),
+            'rail': 19.98,
+            'cap': 7.98
+          }
+        },
+        'chain-link': {
+          'metal': {
+            'fabric': getCustomPrice('Chain-Link Fabric', 5.98, 'panels'),
+            'rail': 8.98,
+            'cap': 2.98
+          }
+        },
+        'ranch': {
+          'wood': {
+            'rail': getCustomPrice('Ranch Rail - Wood', 14.98, 'panels'),
+            'cap': 4.98
+          },
+          'vinyl': {
+            'rail': getCustomPrice('Ranch Rail - Vinyl', 24.98, 'panels'),
+            'cap': 6.98
+          }
+        },
+        'panel': {
+          'wood': {
+            'panel': getCustomPrice('Wood Panel (8ft)', 69.98, 'panels'),
+            'cap': 4.98
+          },
+          'vinyl': {
+            'panel': getCustomPrice('Vinyl Panel (8ft)', 129.98, 'panels'),
+            'cap': 6.98
+          },
+          'composite': {
+            'panel': getCustomPrice('Composite Panel (8ft)', 189.98, 'panels'),
+            'cap': 8.98
+          }
+        }
+      };
+    }
+    return materialPrices;
+  }, [activeTab, getCustomPrice]);
+
+  const activeGatePrices = useMemo(() => {
+    if (activeTab === 'custom') {
+      return {
+        single: {
+          wood: getCustomPrice('Single Gate - Wood', 129.98, 'gates'),
+          vinyl: getCustomPrice('Single Gate - Vinyl', 199.98, 'gates'),
+          metal: getCustomPrice('Single Gate - Metal', 169.98, 'gates'),
+          composite: getCustomPrice('Single Gate - Composite', 249.98, 'gates')
+        },
+        double: {
+          wood: getCustomPrice('Double Gate - Wood', 249.98, 'gates'),
+          vinyl: getCustomPrice('Double Gate - Vinyl', 399.98, 'gates'),
+          metal: getCustomPrice('Double Gate - Metal', 329.98, 'gates'),
+          composite: getCustomPrice('Double Gate - Composite', 499.98, 'gates')
+        },
+        rolling: {
+          wood: getCustomPrice('Rolling Gate - Wood', 399.98, 'gates'),
+          vinyl: getCustomPrice('Rolling Gate - Vinyl', 599.98, 'gates'),
+          metal: getCustomPrice('Rolling Gate - Metal', 499.98, 'gates'),
+          composite: getCustomPrice('Rolling Gate - Composite', 799.98, 'gates')
+        }
+      };
+    }
+    return gatePrices;
+  }, [activeTab, getCustomPrice]);
+
+  const activeGateHardwarePrices = useMemo(() => {
+    if (activeTab === 'custom') {
+      return {
+        single: getCustomPrice('Gate Hardware - Single', 49.98, 'components'),
+        double: getCustomPrice('Gate Hardware - Double', 89.98, 'components'),
+        rolling: getCustomPrice('Gate Hardware - Rolling', 149.98, 'components')
+      };
+    }
+    return gateHardwarePrices;
+  }, [activeTab, getCustomPrice]);
 
   // Post material prices
   const postMaterialPrices = {
@@ -291,7 +432,7 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       // Calculate posts needed
       const postCount = Math.ceil(length / postSpacing) + 1 + corners.length;
       const postHeight = height + (postMountType === 'concrete' ? 24 : 0); // Add 2ft for concrete depth
-      const postPrice = postMaterialPrices[postMaterial];
+      const postPrice = activePostMaterialPrices[postMaterial];
       const postCost = postCount * postPrice;
       totalCost += postCost;
 
@@ -308,7 +449,7 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
       // Calculate post caps if included
       if (includePostCaps) {
-        const capPrice = materialPrices[fenceType][material]?.cap || 0;
+        const capPrice = activeMaterialPrices[fenceType]?.[material]?.cap || 0;
         const capCost = postCount * capPrice;
         totalCost += capCost;
 
@@ -357,7 +498,7 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
       // Calculate fencing materials based on type
       if (fenceType === 'privacy' || fenceType === 'panel') {
-        const panelPrice = materialPrices[fenceType][material]?.panel || 0;
+        const panelPrice = activeMaterialPrices[fenceType]?.[material]?.panel || 0;
         const panelsNeeded = Math.ceil(length / 8); // Standard 8ft panels
         const panelCost = panelsNeeded * panelPrice;
         totalCost += panelCost;
@@ -369,7 +510,7 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
           cost: panelCost
         });
       } else if (fenceType === 'picket') {
-        const picketPrice = materialPrices.picket[material]?.picket || 0;
+        const picketPrice = activeMaterialPrices.picket?.[material]?.picket || 0;
         const picketsPerFoot = 2; // Standard spacing
         const picketsNeeded = Math.ceil(length * picketsPerFoot);
         const picketCost = picketsNeeded * picketPrice;
@@ -382,7 +523,7 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
           cost: picketCost
         });
       } else if (fenceType === 'chain-link') {
-        const fabricPrice = materialPrices['chain-link'].metal.fabric;
+        const fabricPrice = activeMaterialPrices['chain-link']?.metal?.fabric || 5.98;
         const fabricNeeded = length * height / 9; // Convert to square yards
         const fabricCost = fabricNeeded * fabricPrice;
         totalCost += fabricCost;
@@ -398,7 +539,7 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       // Calculate rails if needed
       if (fenceType !== 'panel') {
         const railsPerSection = fenceType === 'ranch' ? 3 : 2;
-        const railPrice = materialPrices[fenceType][material]?.rail || 0;
+        const railPrice = activeMaterialPrices[fenceType]?.[material]?.rail || 0;
         const railsNeeded = Math.ceil(length / 8) * railsPerSection;
         const railCost = railsNeeded * railPrice;
         totalCost += railCost;
@@ -428,7 +569,7 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
       // Calculate gates
       gates.forEach(gate => {
-        const gatePrice = gatePrices[gate.type][gate.material];
+        const gatePrice = activeGatePrices[gate.type]?.[gate.material as keyof typeof activeGatePrices.single] || 0;
         const gateCost = gatePrice;
         totalCost += gateCost;
 
@@ -440,7 +581,7 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         });
 
         if (gate.includeHardware) {
-          const hardwareCost = gateHardwarePrices[gate.type];
+          const hardwareCost = activeGateHardwarePrices[gate.type];
           totalCost += hardwareCost;
 
           results.push({
@@ -470,6 +611,41 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       typeof height === 'number' &&
       (!includeKickboard || typeof height === 'number') &&
       (postMountType !== 'concrete' || typeof concreteDepth === 'number');
+
+  // Loading state
+  if (activeTab === 'custom' && loadingCustom) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
+        <div className="flex items-center mb-6">
+          <Fence className="h-6 w-6 text-orange-500 mr-2" />
+          <h2 className="text-xl font-bold text-slate-800">{t('calculators.fencing.title')}</h2>
+        </div>
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading custom configuration...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Not configured state
+  if (activeTab === 'custom' && !isConfigured) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
+        <div className="flex items-center mb-6">
+          <Fence className="h-6 w-6 text-orange-500 mr-2" />
+          <h2 className="text-xl font-bold text-slate-800">{t('calculators.fencing.title')}</h2>
+        </div>
+        <div className="text-center py-12">
+          <Fence className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Configuration Required</h3>
+          <p className="text-gray-600 mb-4">
+            This calculator hasn't been configured yet. Click the gear icon to set up your custom materials and pricing.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">

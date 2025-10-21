@@ -4,6 +4,8 @@ import { Warehouse, Search, Loader2, CheckCircle2, AlertCircle, Save, X } from '
 import { useTranslation } from 'react-i18next';
 import { estimateService } from '../../services/estimateService';
 import { useClientsStore } from '../../stores/clientsStore';
+import { customCalculatorService } from '../../services/customCalculatorService';
+import { CustomMaterial } from '../../types/custom-calculator';
 
 type RoofMaterial = 'asphalt' | 'architectural' | 'metal' | 'tile' | 'composite' | 'atlas-storm' | 'sbs-malarkey' | 'brava-synthetic';
 type RoofPitch = 'low' | 'medium' | 'high' | 'steep';
@@ -39,12 +41,31 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucce
   const [saving, setSaving] = useState(false);
   const [lastCalculation, setLastCalculation] = useState<CalculationResult[] | null>(null);
 
+  // Custom materials from database
+  const [customMaterials, setCustomMaterials] = useState<CustomMaterial[]>([]);
+  const [configId, setConfigId] = useState<string | null>(null);
+
   // Fetch clients when modal opens
   useEffect(() => {
     if (showSaveModal) {
       fetchClients();
     }
   }, [showSaveModal, fetchClients]);
+
+  // Load custom materials from database
+  useEffect(() => {
+    const loadCustomMaterials = async () => {
+      const configResult = await customCalculatorService.getOrCreateConfig('roofing');
+      if (configResult.success && configResult.data) {
+        setConfigId(configResult.data.id);
+        const materialsResult = await customCalculatorService.getMaterials(configResult.data.id);
+        if (materialsResult.success && materialsResult.data) {
+          setCustomMaterials(materialsResult.data);
+        }
+      }
+    };
+    loadCustomMaterials();
+  }, []);
 
   // Material pricing (price per square - 100 sq ft) - MATCHES WIDGET
   const materialPrices: Record<RoofMaterial, number> = {
@@ -124,6 +145,29 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucce
     }
   };
 
+  // Helper functions to get custom material prices and unit specs
+  const getCustomPrice = (materialName: string, defaultPrice: number, category?: string): number => {
+    const custom = customMaterials.find(m =>
+      m.name.toLowerCase() === materialName.toLowerCase() &&
+      (!category || m.category === category) &&
+      !m.is_archived
+    );
+    return custom ? custom.price : defaultPrice;
+  };
+
+  const getCustomUnitValue = (materialName: string, defaultValue: number, category?: string): number => {
+    const custom = customMaterials.find(m =>
+      m.name.toLowerCase() === materialName.toLowerCase() &&
+      (!category || m.category === category) &&
+      !m.is_archived
+    );
+    if (custom?.metadata?.unitSpec) {
+      const parsed = customCalculatorService.parseUnitSpec(custom.metadata.unitSpec);
+      return parsed !== null ? parsed : defaultValue;
+    }
+    return defaultValue;
+  };
+
   const handleCalculateWithArea = (area?: number) => {
     const areaToUse = area || roofArea;
     if (!areaToUse || areaToUse <= 0) {
@@ -153,88 +197,98 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucce
       cost: materialCost
     });
 
-    // 2. Underlayment - MATCHES WIDGET
+    // 2. Underlayment - Uses custom pricing from database
+    const underlaymentPrice = getCustomPrice('Standard Underlayment', 26, 'underlayment');
     results.push({
       label: 'Underlayment',
       value: squares,
       unit: 'squares',
-      cost: squares * 26
+      cost: squares * underlaymentPrice
     });
 
-    // 3. Ice & Water Shield - MATCHES WIDGET
+    // 3. Ice & Water Shield - Uses custom pricing and unit specs from database
     if (includeIceShield) {
-      const rolls = Math.ceil(sqft / 200);
+      const sqFtPerRoll = getCustomUnitValue('Ice & Water Shield', 200, 'underlayment');
+      const pricePerRoll = getCustomPrice('Ice & Water Shield', 70, 'underlayment');
+      const rolls = Math.ceil(sqft / sqFtPerRoll);
       results.push({
         label: 'Ice & Water Shield',
         value: rolls,
         unit: 'rolls',
-        cost: rolls * 70
+        cost: rolls * pricePerRoll
       });
     }
 
-    // 4. Ridge Cap - MATCHES WIDGET
+    // 4. Ridge Cap - Uses custom pricing from database
     const ridgeFeet = sqft * 0.1;
+    const ridgeCapPrice = getCustomPrice('Ridge Cap', 3.25, 'components');
     results.push({
       label: 'Ridge Cap',
       value: ridgeFeet,
       unit: 'linear feet',
-      cost: ridgeFeet * 3.25
+      cost: ridgeFeet * ridgeCapPrice
     });
 
-    // 5. Drip Edge - MATCHES WIDGET
+    // 5. Drip Edge - Uses custom pricing from database
     const dripEdge = Math.sqrt(sqft) * 4;
+    const dripEdgePrice = getCustomPrice('Drip Edge', 2.5, 'components');
     results.push({
       label: 'Drip Edge',
       value: dripEdge,
       unit: 'linear feet',
-      cost: dripEdge * 2.5
+      cost: dripEdge * dripEdgePrice
     });
 
-    // 6. Nails & Fasteners - MATCHES WIDGET
+    // 6. Nails & Fasteners - Uses custom pricing from database
+    const nailsPrice = getCustomPrice('Nails & Fasteners', 32, 'components');
     results.push({
       label: 'Nails & Fasteners',
       value: squares,
       unit: 'squares',
-      cost: squares * 32
+      cost: squares * nailsPrice
     });
 
-    // 7. Debris Disposal (if tear-off needed) - MATCHES WIDGET
+    // 7. Debris Disposal (if tear-off needed) - Uses custom pricing from database
     if (layers && layers > 0) {
+      const debrisPrice = getCustomPrice('Debris Disposal', 32, 'components');
       results.push({
         label: 'Debris Disposal',
         value: squares,
         unit: 'squares',
-        cost: squares * 32
+        cost: squares * debrisPrice
       });
     }
 
-    // 8. Skylight Flashing - MATCHES WIDGET
+    // 8. Skylight Flashing - Uses custom pricing from database
     if (skylights && skylights > 0) {
+      const skylightPrice = getCustomPrice('Skylight Flashing', 85, 'components');
       results.push({
         label: 'Skylight Flashing',
         value: Number(skylights),
         unit: skylights > 1 ? 'skylights' : 'skylight',
-        cost: Number(skylights) * 85
+        cost: Number(skylights) * skylightPrice
       });
     }
 
-    // 9. Ventilation System - MATCHES WIDGET
+    // 9. Ventilation System - Uses custom pricing from database
     if (includeVentilation) {
+      const ventilationPrice = getCustomPrice('Ventilation System', 625, 'components');
       results.push({
         label: 'Ventilation System',
         value: 1,
         unit: 'system',
-        cost: 625
+        cost: ventilationPrice
       });
     }
 
-    // 10. Extended Warranty - MATCHES WIDGET
+    // 10. Extended Warranty - Uses custom pricing from database
     if (includeWarranty) {
+      const warrantyPrice = getCustomPrice('Extended Warranty', 27, 'components');
       results.push({
         label: 'Extended Warranty',
         value: squares,
         unit: 'squares',
-        cost: squares * 27
+        cost: squares * warrantyPrice
       });
     }
 

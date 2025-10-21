@@ -21,9 +21,31 @@ import Subscriptions from './pages/Subscriptions';
 import ResetPassword from './pages/ResetPassword';
 import LoginPage from './pages/auth/LoginPage';
 import SignupPage from './pages/auth/SignupPage';
+import ConfigureDeckCalculator from './pages/ConfigureDeckCalculator';
+import ConfigureRoofingCalculator from './pages/ConfigureRoofingCalculator';
+import ConfigureConcreteCalculator from './pages/ConfigureConcreteCalculator';
+import ConfigureSidingCalculator from './pages/ConfigureSidingCalculator';
+import ConfigurePaintCalculator from './pages/ConfigurePaintCalculator';
+import ConfigureFlooringCalculator from './pages/ConfigureFlooringCalculator';
+import ConfigureTileCalculator from './pages/ConfigureTileCalculator';
+import ConfigureDrywallCalculator from './pages/ConfigureDrywallCalculator';
+import ConfigureFencingCalculator from './pages/ConfigureFencingCalculator';
+import ConfigurePaversCalculator from './pages/ConfigurePaversCalculator';
+import ConfigureVeneerCalculator from './pages/ConfigureVeneerCalculator';
+import ConfigureHVACCalculator from './pages/ConfigureHVACCalculator';
+import ConfigureElectricalCalculator from './pages/ConfigureElectricalCalculator';
+import ConfigureGutterCalculator from './pages/ConfigureGutterCalculator';
+import ConfigureFoundationCalculator from './pages/ConfigureFoundationCalculator';
+import ConfigureRetainingWallCalculator from './pages/ConfigureRetainingWallCalculator';
+import ConfigureDoorsWindowsCalculator from './pages/ConfigureDoorsWindowsCalculator';
+import ConfigurePlumbingCalculator from './pages/ConfigurePlumbingCalculator';
+import ConfigureFramingCalculator from './pages/ConfigureFramingCalculator';
+import ConfigureJunkRemovalCalculator from './pages/ConfigureJunkRemovalCalculator';
+import ConfigureExcavationCalculator from './pages/ConfigureExcavationCalculator';
 import { PricingProvider } from './contexts/PricingContext';
 import { ProjectProvider } from './contexts/ProjectContext';
 import { DataProvider } from './contexts/DataContext';
+import { CalculatorTabProvider } from './contexts/CalculatorTabContext';
 import { useAuthStore } from './stores/authStore';
 import { useAppInitialization } from './hooks/useAppInitialization';
 
@@ -82,40 +104,63 @@ function App() {
   // Show main app when user is logged in
   return (
     <DataProvider>
-      <div className="flex h-screen bg-gray-50">
+      <CalculatorTabProvider>
         <PricingProvider>
           <ProjectProvider>
-          <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-          
-          <div className="flex flex-col flex-1 overflow-hidden">
-            <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-            
-            <main className="flex-1 overflow-y-auto pt-8 px-4 sm:px-6 lg:px-8 pb-8">
-              <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/pricing" element={<PricingCalculator />} />
-                <Route path="/calculator-widgets" element={<CalculatorWidgets />} />
-                <Route path="/finance" element={<FinanceTracker />} />
-                <Route path="/estimates" element={<EstimateGenerator />} />
-                <Route path="/projects" element={<ProjectManager />} />
-                <Route path="/clients" element={<Clients />} />
-                <Route path="/employees" element={<EmployeesManager />} />
-                <Route path="/calendar" element={<Calendar />} />
-                <Route path="/ad-analyzer" element={<AdAnalyzer />} />
-                <Route path="/ad-accounts" element={<AdAccountsSetup />} />
-                <Route path="/ad-oauth-callback" element={<AdOAuthCallback />} />
-                <Route path="/meta-oauth-callback" element={<MetaOAuthCallback />} />
-                <Route path="/analytics" element={<AnalyticsDashboard />} />
-                <Route path="/subscriptions" element={<Subscriptions />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </main>
-          </div>
-        </ProjectProvider>
-      </PricingProvider>
-      </div>
+            <div className="flex h-screen bg-gray-50">
+              <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+
+              <div className="flex flex-col flex-1 overflow-hidden">
+                <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+
+                <main className="flex-1 overflow-y-auto pt-8 px-4 sm:px-6 lg:px-8 pb-8">
+                  <Routes>
+                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/pricing" element={<PricingCalculator />} />
+                    <Route path="/pricing/configure/deck" element={<ConfigureDeckCalculator />} />
+                    <Route path="/pricing/configure/roofing" element={<ConfigureRoofingCalculator />} />
+                    <Route path="/pricing/configure/concrete" element={<ConfigureConcreteCalculator />} />
+                    <Route path="/pricing/configure/siding" element={<ConfigureSidingCalculator />} />
+                    <Route path="/pricing/configure/paint" element={<ConfigurePaintCalculator />} />
+                    <Route path="/pricing/configure/flooring" element={<ConfigureFlooringCalculator />} />
+                    <Route path="/pricing/configure/tile" element={<ConfigureTileCalculator />} />
+                    <Route path="/pricing/configure/drywall" element={<ConfigureDrywallCalculator />} />
+                    <Route path="/pricing/configure/fencing" element={<ConfigureFencingCalculator />} />
+                    <Route path="/pricing/configure/pavers" element={<ConfigurePaversCalculator />} />
+                    <Route path="/pricing/configure/veneer" element={<ConfigureVeneerCalculator />} />
+                    <Route path="/pricing/configure/hvac" element={<ConfigureHVACCalculator />} />
+                    <Route path="/pricing/configure/electrical" element={<ConfigureElectricalCalculator />} />
+                    <Route path="/pricing/configure/gutter" element={<ConfigureGutterCalculator />} />
+                    <Route path="/pricing/configure/foundation" element={<ConfigureFoundationCalculator />} />
+                    <Route path="/pricing/configure/retaining-wall" element={<ConfigureRetainingWallCalculator />} />
+                    <Route path="/pricing/configure/doors-windows" element={<ConfigureDoorsWindowsCalculator />} />
+                    <Route path="/pricing/configure/plumbing" element={<ConfigurePlumbingCalculator />} />
+                    <Route path="/pricing/configure/framing" element={<ConfigureFramingCalculator />} />
+                    <Route path="/pricing/configure/junk-removal" element={<ConfigureJunkRemovalCalculator />} />
+                    <Route path="/pricing/configure/excavation" element={<ConfigureExcavationCalculator />} />
+                    <Route path="/calculator-widgets" element={<CalculatorWidgets />} />
+                    <Route path="/finance" element={<FinanceTracker />} />
+                    <Route path="/estimates" element={<EstimateGenerator />} />
+                    <Route path="/projects" element={<ProjectManager />} />
+                    <Route path="/clients" element={<Clients />} />
+                    <Route path="/employees" element={<EmployeesManager />} />
+                    <Route path="/calendar" element={<Calendar />} />
+                    <Route path="/ad-analyzer" element={<AdAnalyzer />} />
+                    <Route path="/ad-accounts" element={<AdAccountsSetup />} />
+                    <Route path="/ad-oauth-callback" element={<AdOAuthCallback />} />
+                    <Route path="/meta-oauth-callback" element={<MetaOAuthCallback />} />
+                    <Route path="/analytics" element={<AnalyticsDashboard />} />
+                    <Route path="/subscriptions" element={<Subscriptions />} />
+                    <Route path="/settings" element={<Settings />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                  </Routes>
+                </main>
+              </div>
+            </div>
+          </ProjectProvider>
+        </PricingProvider>
+      </CalculatorTabProvider>
     </DataProvider>
   );
 }

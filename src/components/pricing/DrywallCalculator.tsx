@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Square, DoorClosed, AppWindow as Window } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { CalculatorEstimateHeader } from '../calculators/CalculatorEstimateHeader';
+import { useCalculatorTab } from '../../contexts/CalculatorTabContext';
+import { useCustomCalculator } from '../../hooks/useCustomCalculator';
+import { useCustomMaterials } from '../../hooks/useCustomMaterials';
 
 interface Opening {
   width: number;
@@ -11,6 +14,11 @@ interface Opening {
 
 const DrywallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const { t } = useTranslation();
+  const { activeTab } = useCalculatorTab();
+  const { materials: customMaterials, pricing: customPricing, loading: loadingCustom, isConfigured } =
+    useCustomCalculator('drywall', activeTab === 'custom');
+  const { getCustomPrice, getCustomUnitValue } = useCustomMaterials('drywall');
+
   const [surfaceType, setSurfaceType] = useState<'wall' | 'ceiling'>('wall');
   const [length, setLength] = useState<number | ''>('');
   const [height, setHeight] = useState<number | ''>('');
@@ -23,6 +31,19 @@ const DrywallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const [includeWaste, setIncludeWaste] = useState(true);
   const [wasteFactor, setWasteFactor] = useState<5 | 10 | 15>(10);
   const [lastCalculation, setLastCalculation] = useState<CalculationResult[] | null>(null);
+
+  // Active pricing based on tab
+  const activePricing = useMemo(() => {
+    return {
+      sheetPrice: {
+        '1/2': getCustomPrice('1/2" Drywall Sheet', 15.98, 'sheets'),
+        '5/8': getCustomPrice('5/8" Drywall Sheet', 17.98, 'sheets')
+      },
+      screwBoxPrice: getCustomPrice('Drywall Screws', 8.98, 'fasteners'),
+      mudPrice: getCustomPrice('Joint Compound (Mud)', 19.98, 'finishing'),
+      tapePrice: getCustomPrice('Paper Tape', 4.98, 'finishing')
+    };
+  }, [getCustomPrice]);
 
   // Get current inputs for saving
   const getCurrentInputs = () => ({
@@ -122,12 +143,12 @@ const DrywallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       const mudNeeded = Math.ceil(totalArea / mudCoverage);
       const tapeNeeded = Math.ceil(totalArea / 25); // 25 sq ft per roll of tape approximately
 
-      // Calculate costs
-      const sheetPrice = sheetThickness === '1/2' ? 15.98 : 17.98;
+      // Calculate costs using active pricing
+      const sheetPrice = activePricing.sheetPrice[sheetThickness];
       const sheetCost = sheetsNeeded * sheetPrice;
-      const screwCost = Math.ceil(screwsNeeded / 100) * 8.98; // Box of 100 screws
-      const mudCost = mudNeeded * 19.98; // Cost per 5-gallon bucket
-      const tapeCost = tapeNeeded * 4.98; // Cost per roll
+      const screwCost = Math.ceil(screwsNeeded / 100) * activePricing.screwBoxPrice; // Box of 100 screws
+      const mudCost = mudNeeded * activePricing.mudPrice; // Cost per 5-gallon bucket
+      const tapeCost = tapeNeeded * activePricing.tapePrice; // Cost per roll
 
       const results: CalculationResult[] = [
         {
@@ -167,6 +188,41 @@ const DrywallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   };
 
   const isFormValid = typeof length === 'number' && typeof height === 'number';
+
+  // Loading state
+  if (activeTab === 'custom' && loadingCustom) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
+        <div className="flex items-center mb-6">
+          <Square className="h-6 w-6 text-orange-500 mr-2" />
+          <h2 className="text-xl font-bold text-slate-800">{t('calculators.drywall.title')}</h2>
+        </div>
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading custom configuration...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Not configured state
+  if (activeTab === 'custom' && !isConfigured) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
+        <div className="flex items-center mb-6">
+          <Square className="h-6 w-6 text-orange-500 mr-2" />
+          <h2 className="text-xl font-bold text-slate-800">{t('calculators.drywall.title')}</h2>
+        </div>
+        <div className="text-center py-12">
+          <Square className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Configuration Required</h3>
+          <p className="text-gray-600 mb-4">
+            This calculator hasn't been configured yet. Click the gear icon to set up your custom materials and pricing.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">

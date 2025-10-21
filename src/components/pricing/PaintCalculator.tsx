@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Paintbrush } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { CalculatorEstimateHeader } from '../calculators/CalculatorEstimateHeader';
+import { useCalculatorTab } from '../../contexts/CalculatorTabContext';
+import { useCustomCalculator } from '../../hooks/useCustomCalculator';
+import { useCustomMaterials } from '../../hooks/useCustomMaterials';
 
 interface Opening {
   width: number;
@@ -17,6 +20,9 @@ interface Surface {
 
 const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const { t } = useTranslation();
+  const { activeTab } = useCalculatorTab();
+  const { materials: customMaterials, pricing: customPricing, loading: loadingCustom, isConfigured } = useCustomCalculator('paint', activeTab === 'custom');
+  const { getCustomPrice, getCustomUnitValue } = useCustomMaterials('paint');
   const [paintLocation, setPaintLocation] = useState<'interior' | 'exterior'>('interior');
   const [unit, setUnit] = useState<'imperial' | 'metric'>('imperial');
   const [surfaces, setSurfaces] = useState<Surface[]>([{ length: 0, height: 0, condition: 'good' }]);
@@ -113,24 +119,81 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     setWindows(windows.filter((_, i) => i !== index));
   };
 
-  const getPaintPrice = () => {
-    const prices = {
+  // Determine which data source to use based on active tab with dynamic pricing
+  const activePaintPrices = useMemo(() => {
+    if (activeTab === 'custom' && isConfigured && customMaterials.length > 0) {
+      const customPaints = customMaterials.filter(m => m.category === 'paint-type');
+      if (customPaints.length > 0) {
+        const priceMap: any = { interior: {}, exterior: {} };
+        customPaints.forEach(m => {
+          const metadata = m.metadata || {};
+          const location = metadata.location || 'interior';
+          const quality = metadata.quality || 'standard';
+          priceMap[location][quality] = {
+            gallon: m.price,
+            coverage: metadata.coverage || (location === 'interior' ? 400 : 350)
+          };
+        });
+        return priceMap;
+      }
+    }
+    return {
       interior: {
-        economy: { gallon: 25.98, coverage: 400 },
-        standard: { gallon: 35.98, coverage: 400 },
-        premium: { gallon: 45.98, coverage: 400 }
+        economy: { gallon: getCustomPrice('Interior Paint - Economy', 25.98, 'paint'), coverage: getCustomUnitValue('Interior Paint - Economy', 400, 'paint') },
+        standard: { gallon: getCustomPrice('Interior Paint - Standard', 35.98, 'paint'), coverage: getCustomUnitValue('Interior Paint - Standard', 400, 'paint') },
+        premium: { gallon: getCustomPrice('Interior Paint - Premium', 45.98, 'paint'), coverage: getCustomUnitValue('Interior Paint - Premium', 400, 'paint') }
       },
       exterior: {
-        economy: { gallon: 30.98, coverage: 350 },
-        standard: { gallon: 40.98, coverage: 350 },
-        premium: { gallon: 50.98, coverage: 350 }
+        economy: { gallon: getCustomPrice('Exterior Paint - Economy', 30.98, 'paint'), coverage: getCustomUnitValue('Exterior Paint - Economy', 350, 'paint') },
+        standard: { gallon: getCustomPrice('Exterior Paint - Standard', 40.98, 'paint'), coverage: getCustomUnitValue('Exterior Paint - Standard', 350, 'paint') },
+        premium: { gallon: getCustomPrice('Exterior Paint - Premium', 50.98, 'paint'), coverage: getCustomUnitValue('Exterior Paint - Premium', 350, 'paint') }
       }
     };
-    return prices[paintLocation][paintType];
+  }, [activeTab, isConfigured, customMaterials, getCustomPrice, getCustomUnitValue]);
+
+  const activePrimerPrices = useMemo(() => {
+    if (activeTab === 'custom' && isConfigured && customMaterials.length > 0) {
+      const customPrimers = customMaterials.filter(m => m.category === 'paint-primer');
+      if (customPrimers.length > 0) {
+        const primerMap: any = {};
+        customPrimers.forEach(m => {
+          const metadata = m.metadata || {};
+          const location = metadata.location || 'interior';
+          primerMap[location] = m.price;
+        });
+        return primerMap;
+      }
+    }
+    return {
+      interior: getCustomPrice('Interior Primer', 25.98, 'primer'),
+      exterior: getCustomPrice('Exterior Primer', 30.98, 'primer')
+    };
+  }, [activeTab, isConfigured, customMaterials, getCustomPrice]);
+
+  // Auto-select when switching tabs
+  useEffect(() => {
+    if (activeTab === 'custom' && activePaintPrices) {
+      const availableTypes = Object.keys(activePaintPrices[paintLocation] || {});
+      if (availableTypes.length > 0 && !availableTypes.includes(paintType)) {
+        setPaintType(availableTypes[0] as any);
+      }
+    } else if (activeTab === 'default') {
+      if (!['economy', 'standard', 'premium'].includes(paintType)) {
+        setPaintType('standard');
+      }
+    }
+  }, [activeTab, activePaintPrices, paintLocation]);
+
+  const getPaintPrice = () => {
+    const priceData = activePaintPrices[paintLocation]?.[paintType];
+    if (!priceData) {
+      return { gallon: 35.98, coverage: 400 };
+    }
+    return priceData;
   };
 
   const getPrimerPrice = () => {
-    return paintLocation === 'interior' ? 25.98 : 30.98;
+    return activePrimerPrices[paintLocation] || (paintLocation === 'interior' ? 25.98 : 30.98);
   };
 
   const handleCalculate = () => {
@@ -189,10 +252,13 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     }
 
     // Add supplies
-    const suppliesCost = Math.ceil(totalArea / 400) * 25; // Basic supplies per 400 sq ft
+    const suppliesPerArea = 400; // Basic supplies per 400 sq ft
+    const suppliesSets = Math.ceil(totalArea / suppliesPerArea);
+    const suppliesUnitPrice = getCustomPrice('Painting Supplies Set', 25, 'supplies');
+    const suppliesCost = suppliesSets * suppliesUnitPrice;
     results.push({
       label: t('calculators.paint.paintingSupplies'),
-      value: 1,
+      value: suppliesSets,
       unit: t('calculators.paint.set'),
       cost: suppliesCost
     });
@@ -215,6 +281,41 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     typeof surface.height === 'number' &&
     surface.height > 0
   );
+
+  // Show loading state if custom calculator data is loading
+  if (activeTab === 'custom' && loadingCustom) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
+        <div className="flex items-center mb-6">
+          <Paintbrush className="h-6 w-6 text-orange-500 mr-2" />
+          <h2 className="text-xl font-bold text-slate-800">{t('calculators.paint.title')}</h2>
+        </div>
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading custom configuration...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show message if custom tab but not configured
+  if (activeTab === 'custom' && !isConfigured) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
+        <div className="flex items-center mb-6">
+          <Paintbrush className="h-6 w-6 text-orange-500 mr-2" />
+          <h2 className="text-xl font-bold text-slate-800">{t('calculators.paint.title')}</h2>
+        </div>
+        <div className="text-center py-12">
+          <Paintbrush className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Configuration Required</h3>
+          <p className="text-gray-600 mb-4">
+            This calculator hasn't been configured yet. Click the gear icon to set up your custom materials and pricing.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">

@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { DoorClosed, AppWindow } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { CalculatorEstimateHeader } from '../calculators/CalculatorEstimateHeader';
+import { useCalculatorTab } from '../../contexts/CalculatorTabContext';
+import { useCustomCalculator } from '../../hooks/useCustomCalculator';
+import { useCustomMaterials } from '../../hooks/useCustomMaterials';
 
 interface Opening {
   id: string;
@@ -24,6 +27,10 @@ interface Opening {
 
 const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const { t } = useTranslation();
+  const { activeTab } = useCalculatorTab();
+  const { materials: customMaterials, pricing: customPricing, loading: loadingCustom, isConfigured } =
+    useCustomCalculator('doors-windows', activeTab === 'custom');
+  const { getCustomPrice, getCustomUnitValue } = useCustomMaterials('doors-windows');
   const [openings, setOpenings] = useState<Opening[]>([]);
   const [includeInsulation, setIncludeInsulation] = useState(true);
   const [includeFlashing, setIncludeFlashing] = useState(true);
@@ -269,10 +276,14 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     openings.forEach(opening => {
       const styles = opening.type === 'door' ? doorStyles : windowStyles;
 
-      // Use custom cost if enabled, otherwise use base price
-      const basePrice = opening.useCustomCost && typeof opening.customCostPerUnit === 'number'
+      // Use custom cost if enabled, otherwise use base price (with custom pricing override)
+      let basePrice = opening.useCustomCost && typeof opening.customCostPerUnit === 'number'
         ? opening.customCostPerUnit
-        : styles[opening.style].prices[opening.material];
+        : styles[opening.style]?.prices[opening.material] || 0;
+
+      // Override with custom pricing if available
+      const pricingKey = `${opening.type}_${opening.style}_${opening.material}`;
+      basePrice = getCustomPrice(pricingKey, basePrice);
 
       const itemCost = basePrice * opening.quantity;
       totalCost += itemCost;
@@ -286,7 +297,8 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
       // Add pre-hung costs for doors
       if (opening.type === 'door' && opening.isPreHung) {
-        const preHungCost = opening.isExterior ? 149.98 : 79.98;
+        const preHungBasePrice = opening.isExterior ? 149.98 : 79.98;
+        const preHungCost = getCustomPrice(opening.isExterior ? 'prehung_exterior' : 'prehung_interior', preHungBasePrice);
         const totalPreHungCost = preHungCost * opening.quantity;
         totalCost += totalPreHungCost;
 
@@ -301,7 +313,8 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       // Calculate trim if included
       if (opening.includeTrim) {
         const trimLength = calculateTrimLength(opening.width, opening.height);
-        const trimPrice = trimStyles[opening.trimStyle].price;
+        const baseTrimPrice = trimStyles[opening.trimStyle].price;
+        const trimPrice = getCustomPrice(`trim_${opening.trimStyle}`, baseTrimPrice);
         const totalTrimLength = trimLength * opening.quantity;
         const trimCost = totalTrimLength * trimPrice;
         totalCost += trimCost;
@@ -316,15 +329,19 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
       // Add hardware if included
       if (opening.includeHardware) {
-        let hardwareCost: number;
+        let baseHardwarePrice: number;
+        let hardwareKey: string;
         if (opening.type === 'door') {
-          hardwareCost = opening.isExterior ?
+          baseHardwarePrice = opening.isExterior ?
             hardwarePrices.door.exterior.basic :
             hardwarePrices.door.interior.basic;
+          hardwareKey = opening.isExterior ? 'hardware_door_exterior' : 'hardware_door_interior';
         } else {
-          hardwareCost = hardwarePrices.window.basic;
+          baseHardwarePrice = hardwarePrices.window.basic;
+          hardwareKey = 'hardware_window';
         }
 
+        const hardwareCost = getCustomPrice(hardwareKey, baseHardwarePrice);
         const totalHardwareCost = hardwareCost * opening.quantity;
         totalCost += totalHardwareCost;
 
@@ -344,7 +361,8 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         return sum + (perimeterFeet * opening.quantity);
       }, 0);
 
-      const insulationCost = Math.ceil(insulationNeeded / 20) * 12.98; // 20ft per roll
+      const insulationPrice = getCustomPrice('insulation', 12.98);
+      const insulationCost = Math.ceil(insulationNeeded / 20) * insulationPrice;
       totalCost += insulationCost;
 
       results.push({
@@ -357,7 +375,8 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
     if (includeFlashing) {
       const exteriorOpenings = openings.filter(o => o.isExterior).reduce((sum, o) => sum + o.quantity, 0);
-      const flashingCost = exteriorOpenings * 12.98;
+      const flashingPrice = getCustomPrice('flashing', 12.98);
+      const flashingCost = exteriorOpenings * flashingPrice;
       totalCost += flashingCost;
 
       results.push({
@@ -374,7 +393,8 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         return sum + (linearFeet * opening.quantity / 20); // 20 linear feet per tube
       }, 0));
 
-      const caulkCost = caulkTubes * 6.98;
+      const caulkPrice = getCustomPrice('caulk', 6.98);
+      const caulkCost = caulkTubes * caulkPrice;
       totalCost += caulkCost;
 
       results.push({
@@ -387,7 +407,8 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
     if (includeShims) {
       const shimPacks = Math.ceil(openings.reduce((sum, o) => sum + o.quantity, 0) / 2);
-      const shimCost = shimPacks * 4.98;
+      const shimPrice = getCustomPrice('shims', 4.98);
+      const shimCost = shimPacks * shimPrice;
       totalCost += shimCost;
 
       results.push({
@@ -402,6 +423,47 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   };
 
   const isFormValid = openings.length > 0;
+
+  // Loading state
+  if (activeTab === 'custom' && loadingCustom) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
+        <div className="flex items-center mb-6">
+          <div className="flex space-x-2">
+            <DoorClosed className="h-6 w-6 text-orange-500" />
+            <AppWindow className="h-6 w-6 text-orange-500" />
+          </div>
+          <h2 className="text-xl font-bold text-slate-800 ml-2">{t('calculators.doorsWindows.title')}</h2>
+        </div>
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading custom configuration...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Not configured state
+  if (activeTab === 'custom' && !isConfigured) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
+        <div className="flex items-center mb-6">
+          <div className="flex space-x-2">
+            <DoorClosed className="h-6 w-6 text-orange-500" />
+            <AppWindow className="h-6 w-6 text-orange-500" />
+          </div>
+          <h2 className="text-xl font-bold text-slate-800 ml-2">{t('calculators.doorsWindows.title')}</h2>
+        </div>
+        <div className="text-center py-12">
+          <DoorClosed className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Configuration Required</h3>
+          <p className="text-gray-600 mb-4">
+            This calculator hasn't been configured yet. Click the gear icon to set up your custom materials and pricing.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">

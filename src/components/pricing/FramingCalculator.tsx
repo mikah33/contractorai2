@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Ruler } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { CalculatorEstimateHeader } from '../calculators/CalculatorEstimateHeader';
+import { useCalculatorTab } from '../../contexts/CalculatorTabContext';
+import { useCustomCalculator } from '../../hooks/useCustomCalculator';
+import { useCustomMaterials } from '../../hooks/useCustomMaterials';
 
 interface Opening {
   width: number;
@@ -13,6 +16,9 @@ interface Opening {
 
 const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const { t } = useTranslation();
+  const { activeTab } = useCalculatorTab();
+  const { materials: customMaterials, pricing: customPricing, loading: loadingCustom, isConfigured } = useCustomCalculator('framing', activeTab === 'custom');
+  const { getCustomPrice, getCustomUnitValue } = useCustomMaterials('framing');
   const [framingType, setFramingType] = useState<'wall' | 'floor' | 'ceiling'>('wall');
   const [length, setLength] = useState<number | ''>('');
   const [height, setHeight] = useState<number | ''>('');
@@ -26,6 +32,30 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const [includeSheathing, setIncludeSheathing] = useState(true);
   const [sheathingType, setSheathingType] = useState<'osb' | 'plywood'>('osb');
   const [sheathingThickness, setSheathingThickness] = useState<'7/16' | '15/32' | '19/32'>('7/16');
+
+  // Default prices
+  const defaultLumberPrices = {
+    '2x4': 3.98,
+    '2x6': 5.98
+  };
+
+  const defaultSheathingPrices = {
+    'osb': {
+      '7/16': 15.98,
+      '15/32': 18.98,
+      '19/32': 22.98
+    },
+    'plywood': {
+      '7/16': 24.98,
+      '15/32': 28.98,
+      '19/32': 32.98
+    }
+  };
+
+  const defaultHardwarePrices = {
+    tiedown: 12.98,
+    nailBox: 89.98
+  };
 
   const addOpening = (type: 'door' | 'window') => {
     setOpenings([...openings, {
@@ -47,27 +77,14 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   };
 
   const getLumberPrice = (size: '2x4' | '2x6') => {
-    const prices = {
-      '2x4': 3.98,
-      '2x6': 5.98
-    };
-    return prices[size];
+    const defaultPrice = defaultLumberPrices[size] || 0;
+    return getCustomPrice(`lumber_${size}`, defaultPrice, 'lumber');
   };
 
   const getSheathingPrice = (type: 'osb' | 'plywood', thickness: '7/16' | '15/32' | '19/32') => {
-    const prices = {
-      'osb': {
-        '7/16': 15.98,
-        '15/32': 18.98,
-        '19/32': 22.98
-      },
-      'plywood': {
-        '7/16': 24.98,
-        '15/32': 28.98,
-        '19/32': 32.98
-      }
-    };
-    return prices[type][thickness];
+    const defaultPrice = defaultSheathingPrices[type]?.[thickness] || 0;
+    const materialName = `${type}_${thickness.replace(/\//g, '_')}`;
+    return getCustomPrice(materialName, defaultPrice, 'sheathing');
   };
 
   const getCurrentInputs = () => ({
@@ -197,7 +214,8 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
       if (includeTiedowns) {
         const tiedownCount = Math.ceil(length / 16) + 1;
-        const tiedownCost = tiedownCount * 12.98;
+        const tiedownPrice = getCustomPrice('tiedown', defaultHardwarePrices.tiedown, 'hardware');
+        const tiedownCost = tiedownCount * tiedownPrice;
         results.push({
           label: t('calculators.framing.tiedowns'),
           value: tiedownCount,
@@ -229,8 +247,8 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       const nailsPerBox = 1000; // Standard box size for Passlode nails
       const nailBoxesNeeded = Math.ceil(nailStripsNeeded * nailsPerStrip / nailsPerBox);
 
-      // Passlode 3" hot-dipped galvanized nails cost (updated price)
-      const nailBoxPrice = 89.98; // Price per 1000-count box
+      // Passlode 3" hot-dipped galvanized nails cost
+      const nailBoxPrice = getCustomPrice('nail_box', defaultHardwarePrices.nailBox, 'hardware');
       const nailCost = nailBoxesNeeded * nailBoxPrice;
 
       results.push({
@@ -243,6 +261,41 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       onCalculate(results);
     }
   };
+
+  // Show loading state if custom calculator data is loading
+  if (activeTab === 'custom' && loadingCustom) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
+        <div className="flex items-center mb-6">
+          <Ruler className="h-6 w-6 text-orange-500 mr-2" />
+          <h2 className="text-xl font-bold text-slate-800">{t('calculators.framing.title')}</h2>
+        </div>
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading custom configuration...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show message if custom tab but not configured
+  if (activeTab === 'custom' && !isConfigured) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
+        <div className="flex items-center mb-6">
+          <Ruler className="h-6 w-6 text-orange-500 mr-2" />
+          <h2 className="text-xl font-bold text-slate-800">{t('calculators.framing.title')}</h2>
+        </div>
+        <div className="text-center py-12">
+          <Ruler className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Configuration Required</h3>
+          <p className="text-gray-600 mb-4">
+            This calculator hasn't been configured yet. Click the gear icon to set up your custom materials and pricing.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const isFormValid =
     typeof length === 'number' &&

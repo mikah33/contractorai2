@@ -35,6 +35,7 @@ import CalculatorResults from '../components/pricing/CalculatorResults';
 import MaterialRequestButton from '../components/material-request/MaterialRequestButton';
 import { Trade, CalculationResult } from '../types';
 import { trades } from '../data/trades';
+import { useCalculatorTab } from '../contexts/CalculatorTabContext';
 
 const PricingCalculator = () => {
   const { t } = useTranslation();
@@ -50,6 +51,7 @@ const PricingCalculator = () => {
   const [showManageModal, setShowManageModal] = useState(false);
   const [editingEstimateId, setEditingEstimateId] = useState<string | null>(null);
   const [loadingEstimate, setLoadingEstimate] = useState(false);
+  const { activeTab, setActiveTab} = useCalculatorTab();
 
   const { selectedCalculators, loading: loadingPreferences, refreshCalculators } = useCalculatorPreferences();
 
@@ -312,6 +314,32 @@ const PricingCalculator = () => {
               </div>
             )}
 
+            {/* Tab Navigation */}
+            <div className="mb-4 border-b border-gray-200">
+              <nav className="-mb-px flex gap-4 sm:gap-8" aria-label="Tabs">
+                <button
+                  onClick={() => setActiveTab('default')}
+                  className={`${
+                    activeTab === 'default'
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+                  } py-3 px-1 border-b-2 font-semibold text-sm sm:text-base transition-colors`}
+                >
+                  Default Calculators
+                </button>
+                <button
+                  onClick={() => setActiveTab('custom')}
+                  className={`${
+                    activeTab === 'custom'
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+                  } py-3 px-1 border-b-2 font-semibold text-sm sm:text-base transition-colors`}
+                >
+                  Your Custom Calculators
+                </button>
+              </nav>
+            </div>
+
             {loadingPreferences || loadingEstimate ? (
               <div className="text-center py-8 text-gray-500">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
@@ -337,6 +365,7 @@ const PricingCalculator = () => {
                 trades={availableTrades}
                 selectedTrade={selectedTrade}
                 onSelectTrade={handleTradeSelect}
+                activeTab={activeTab}
               />
             )}
             

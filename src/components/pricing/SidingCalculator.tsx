@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Square } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { CalculatorEstimateHeader } from '../calculators/CalculatorEstimateHeader';
+import { useCalculatorTab } from '../../contexts/CalculatorTabContext';
+import { useCustomCalculator } from '../../hooks/useCustomCalculator';
+import { useCustomMaterials } from '../../hooks/useCustomMaterials';
 
 interface Opening {
   width: number;
@@ -25,6 +28,9 @@ type TrimType = 'vinyl' | 'wood' | 'aluminum' | 'fiber-cement';
 
 const SidingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const { t } = useTranslation();
+  const { activeTab } = useCalculatorTab();
+  const { materials: customMaterials, pricing: customPricing, loading: loadingCustom, isConfigured } = useCustomCalculator('siding', activeTab === 'custom');
+  const { getCustomPrice, getCustomUnitValue } = useCustomMaterials('siding');
   const [walls, setWalls] = useState<Wall[]>([]);
   const [sidingType, setSidingType] = useState<SidingType>('vinyl');
   const [sidingProfile, setSidingProfile] = useState<SidingProfile>('lap');
@@ -37,6 +43,88 @@ const SidingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const [includeJChannel, setIncludeJChannel] = useState(true);
   const [includeCorners, setIncludeCorners] = useState(true);
   const [wasteFactor, setWasteFactor] = useState<10 | 15 | 20>(15);
+
+  // Default siding prices with dynamic pricing support
+  const defaultSidingPrices = {
+    'vinyl': {
+      'lap': getCustomPrice('Vinyl Siding - Traditional Lap', 179.98, 'siding'),
+      'dutch-lap': getCustomPrice('Vinyl Siding - Dutch Lap', 199.98, 'siding'),
+      'vertical': getCustomPrice('Vinyl Siding - Vertical Board & Batten', 219.98, 'siding'),
+      'shake': getCustomPrice('Vinyl Siding - Shake/Shingle', 259.98, 'siding')
+    },
+    'fiber-cement': {
+      'lap': getCustomPrice('Fiber Cement - Traditional Lap', 319.98, 'siding'),
+      'dutch-lap': getCustomPrice('Fiber Cement - Dutch Lap', 339.98, 'siding'),
+      'vertical': getCustomPrice('Fiber Cement - Vertical Board & Batten', 359.98, 'siding'),
+      'shake': getCustomPrice('Fiber Cement - Shake/Shingle', 399.98, 'siding')
+    },
+    'wood': {
+      'lap': getCustomPrice('Wood Siding - Traditional Lap', 399.98, 'siding'),
+      'dutch-lap': getCustomPrice('Wood Siding - Dutch Lap', 419.98, 'siding'),
+      'vertical': getCustomPrice('Wood Siding - Vertical Board & Batten', 439.98, 'siding'),
+      'shake': getCustomPrice('Wood Siding - Shake/Shingle', 479.98, 'siding')
+    },
+    'metal': {
+      'lap': getCustomPrice('Metal Siding - Traditional Lap', 299.98, 'siding'),
+      'dutch-lap': getCustomPrice('Metal Siding - Dutch Lap', 319.98, 'siding'),
+      'vertical': getCustomPrice('Metal Siding - Vertical Board & Batten', 279.98, 'siding'),
+      'shake': getCustomPrice('Metal Siding - Shake/Shingle', 379.98, 'siding')
+    },
+    'engineered-wood': {
+      'lap': getCustomPrice('Engineered Wood - Traditional Lap', 359.98, 'siding'),
+      'dutch-lap': getCustomPrice('Engineered Wood - Dutch Lap', 379.98, 'siding'),
+      'vertical': getCustomPrice('Engineered Wood - Vertical Board & Batten', 399.98, 'siding'),
+      'shake': getCustomPrice('Engineered Wood - Shake/Shingle', 439.98, 'siding')
+    }
+  };
+
+  // Default trim prices with dynamic pricing support
+  const defaultTrimPrices = {
+    'vinyl': getCustomPrice('Vinyl Trim', 17.98, 'trim'),
+    'wood': getCustomPrice('Wood Trim', 25.98, 'trim'),
+    'aluminum': getCustomPrice('Aluminum Trim', 31.98, 'trim'),
+    'fiber-cement': getCustomPrice('Fiber Cement Trim', 39.98, 'trim')
+  };
+
+  // Determine active siding prices based on tab
+  const activeSidingPrices = useMemo(() => {
+    if (activeTab === 'custom' && isConfigured && customPricing) {
+      const customSidingPrices: any = {};
+      Object.keys(defaultSidingPrices).forEach(type => {
+        customSidingPrices[type] = {};
+        Object.keys(defaultSidingPrices[type as SidingType]).forEach(profile => {
+          const key = `siding_${type}_${profile}`;
+          customSidingPrices[type][profile] = customPricing[key] || defaultSidingPrices[type as SidingType][profile as SidingProfile];
+        });
+      });
+      return customSidingPrices;
+    }
+    return defaultSidingPrices;
+  }, [activeTab, isConfigured, customPricing]);
+
+  // Determine active trim prices based on tab
+  const activeTrimPrices = useMemo(() => {
+    if (activeTab === 'custom' && isConfigured && customPricing) {
+      return {
+        'vinyl': customPricing.trim_vinyl || defaultTrimPrices.vinyl,
+        'wood': customPricing.trim_wood || defaultTrimPrices.wood,
+        'aluminum': customPricing.trim_aluminum || defaultTrimPrices.aluminum,
+        'fiber-cement': customPricing.trim_fiber_cement || defaultTrimPrices['fiber-cement']
+      };
+    }
+    return defaultTrimPrices;
+  }, [activeTab, isConfigured, customPricing]);
+
+  // Auto-select first material when switching tabs
+  useEffect(() => {
+    if (activeTab === 'custom' && isConfigured) {
+      // Keep current selection or use default
+      const typeExists = Object.keys(activeSidingPrices).includes(sidingType);
+      if (!typeExists) {
+        setSidingType('vinyl');
+      }
+    }
+  }, [activeTab, isConfigured, activeSidingPrices]);
 
   const addWall = () => {
     const newWall: Wall = {
@@ -137,39 +225,7 @@ const SidingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   };
 
   const getSidingPrice = () => {
-    const prices = {
-      'vinyl': {
-        'lap': 179.98,        // per square (100 sq ft)
-        'dutch-lap': 199.98,  // per square
-        'vertical': 219.98,   // per square (board and batten)
-        'shake': 259.98       // per square
-      },
-      'fiber-cement': {
-        'lap': 319.98,       // per square
-        'dutch-lap': 339.98, // per square
-        'vertical': 359.98,  // per square
-        'shake': 399.98      // per square
-      },
-      'wood': {
-        'lap': 399.98,       // per square
-        'dutch-lap': 419.98, // per square
-        'vertical': 439.98,  // per square
-        'shake': 479.98      // per square
-      },
-      'metal': {
-        'lap': 299.98,       // per square
-        'dutch-lap': 319.98, // per square
-        'vertical': 279.98,  // per square
-        'shake': 379.98      // per square
-      },
-      'engineered-wood': {
-        'lap': 359.98,       // per square
-        'dutch-lap': 379.98, // per square
-        'vertical': 399.98,  // per square
-        'shake': 439.98      // per square
-      }
-    };
-    return prices[sidingType][sidingProfile];
+    return activeSidingPrices[sidingType]?.[sidingProfile] || 0;
   };
 
   const handleCalculate = () => {
@@ -226,8 +282,10 @@ const SidingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
     // Calculate house wrap if included
     if (includeHouseWrap) {
-      const wrapRolls = Math.ceil(totalWallArea / 1000); // 1000 sq ft per roll
-      const wrapCost = wrapRolls * 159.98;
+      const wrapCoverage = getCustomUnitValue('House Wrap', 1000, 'accessories');
+      const wrapRolls = Math.ceil(totalWallArea / wrapCoverage);
+      const wrapPrice = getCustomPrice('House Wrap', 159.98, 'accessories');
+      const wrapCost = wrapRolls * wrapPrice;
       totalCost += wrapCost;
 
       results.push({
@@ -238,8 +296,10 @@ const SidingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       });
 
       // House wrap tape
-      const tapeRolls = Math.ceil(totalPerimeter / 165); // 165 linear feet per roll
-      const tapeCost = tapeRolls * 12.98;
+      const tapeCoverage = getCustomUnitValue('House Wrap Tape', 165, 'accessories');
+      const tapeRolls = Math.ceil(totalPerimeter / tapeCoverage);
+      const tapePrice = getCustomPrice('House Wrap Tape', 12.98, 'accessories');
+      const tapeCost = tapeRolls * tapePrice;
       totalCost += tapeCost;
 
       results.push({
@@ -252,8 +312,10 @@ const SidingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
     // Calculate insulation if included
     if (includeInsulation) {
-      const insulationBundles = Math.ceil(totalWallArea / 100); // 100 sq ft per bundle
-      const insulationCost = insulationBundles * 49.98;
+      const insulationCoverage = getCustomUnitValue('Foam Insulation', 100, 'accessories');
+      const insulationBundles = Math.ceil(totalWallArea / insulationCoverage);
+      const insulationPrice = getCustomPrice('Foam Insulation', 49.98, 'accessories');
+      const insulationCost = insulationBundles * insulationPrice;
       totalCost += insulationCost;
 
       results.push({
@@ -266,8 +328,10 @@ const SidingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
     // Calculate starter strip if included
     if (includeStarter) {
-      const starterPieces = Math.ceil(totalPerimeter / 12); // 12ft pieces
-      const starterCost = starterPieces * 13.98;
+      const starterLength = getCustomUnitValue('Starter Strip', 12, 'accessories');
+      const starterPieces = Math.ceil(totalPerimeter / starterLength);
+      const starterPrice = getCustomPrice('Starter Strip', 13.98, 'accessories');
+      const starterCost = starterPieces * starterPrice;
       totalCost += starterCost;
 
       results.push({
@@ -280,8 +344,10 @@ const SidingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
     // Calculate J-channel if included
     if (includeJChannel) {
-      const jChannelPieces = Math.ceil((totalOpeningsPerimeter + totalPerimeter) / 12.5); // 12.5ft pieces
-      const jChannelCost = jChannelPieces * 17.98;
+      const jChannelLength = getCustomUnitValue('J-Channel', 12.5, 'accessories');
+      const jChannelPieces = Math.ceil((totalOpeningsPerimeter + totalPerimeter) / jChannelLength);
+      const jChannelPrice = getCustomPrice('J-Channel', 17.98, 'accessories');
+      const jChannelCost = jChannelPieces * jChannelPrice;
       totalCost += jChannelCost;
 
       results.push({
@@ -295,8 +361,10 @@ const SidingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     // Calculate corner posts if included
     if (includeCorners) {
       const cornerHeight = Math.max(...walls.map(w => w.height));
-      const cornerPosts = Math.ceil((cornerHeight * 4) / 10); // 10ft pieces
-      const cornerCost = cornerPosts * 39.98;
+      const cornerPostLength = getCustomUnitValue('Corner Posts', 10, 'accessories');
+      const cornerPosts = Math.ceil((cornerHeight * 4) / cornerPostLength);
+      const cornerPrice = getCustomPrice('Corner Posts', 39.98, 'accessories');
+      const cornerCost = cornerPosts * cornerPrice;
       totalCost += cornerCost;
 
       results.push({
@@ -309,20 +377,13 @@ const SidingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
     // Calculate trim if included
     if (includeTrim) {
-      const trimPrices = {
-        'vinyl': 17.98,
-        'wood': 25.98,
-        'aluminum': 31.98,
-        'fiber-cement': 39.98
-      };
-
       // Calculate trim for openings, or use a percentage of wall perimeter if no openings
       const trimPerimeter = totalOpeningsPerimeter > 0
         ? totalOpeningsPerimeter
         : totalPerimeter * 0.3; // 30% of perimeter for misc trim if no openings defined
 
       const trimPieces = Math.ceil(trimPerimeter / 16); // 16ft pieces
-      const trimCost = trimPieces * trimPrices[trimType];
+      const trimCost = trimPieces * (activeTrimPrices[trimType] || 0);
       totalCost += trimCost;
 
       results.push({
@@ -335,8 +396,10 @@ const SidingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
     // Calculate fasteners
     const fastenersPerSquare = 250;
-    const fastenerBoxes = Math.ceil((squaresNeeded * fastenersPerSquare) / 1000); // 1000 per box
-    const fastenerCost = fastenerBoxes * 29.98;
+    const fastenerBoxCount = getCustomUnitValue('Siding Fasteners', 1000, 'accessories');
+    const fastenerBoxes = Math.ceil((squaresNeeded * fastenersPerSquare) / fastenerBoxCount);
+    const fastenerPrice = getCustomPrice('Siding Fasteners', 29.98, 'accessories');
+    const fastenerCost = fastenerBoxes * fastenerPrice;
     totalCost += fastenerCost;
 
     results.push({
@@ -356,6 +419,41 @@ const SidingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
     onCalculate(results);
   };
+
+  // Show loading state if custom calculator data is loading
+  if (activeTab === 'custom' && loadingCustom) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
+        <div className="flex items-center mb-6">
+          <Square className="h-6 w-6 text-orange-500 mr-2" />
+          <h2 className="text-xl font-bold text-slate-800">{t('calculators.siding.title')}</h2>
+        </div>
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading custom configuration...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show message if custom tab but not configured
+  if (activeTab === 'custom' && !isConfigured) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
+        <div className="flex items-center mb-6">
+          <Square className="h-6 w-6 text-orange-500 mr-2" />
+          <h2 className="text-xl font-bold text-slate-800">{t('calculators.siding.title')}</h2>
+        </div>
+        <div className="text-center py-12">
+          <Square className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Configuration Required</h3>
+          <p className="text-gray-600 mb-4">
+            This calculator hasn't been configured yet. Click the gear icon to set up your custom materials and pricing.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const isFormValid = walls.length > 0 && walls.every(wall =>
     typeof wall.length === 'number' && wall.length > 0 &&

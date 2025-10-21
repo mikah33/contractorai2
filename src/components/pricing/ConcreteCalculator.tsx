@@ -1,11 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Calculator } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { CalculatorEstimateHeader } from '../calculators/CalculatorEstimateHeader';
+import { useCalculatorTab } from '../../contexts/CalculatorTabContext';
+import { useCustomCalculator } from '../../hooks/useCustomCalculator';
+import { useCustomMaterials } from '../../hooks/useCustomMaterials';
 
 const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSuccess }) => {
   const { t } = useTranslation();
+  const { activeTab } = useCalculatorTab();
+  const { materials: customMaterials, pricing: customPricing, loading: loadingCustom, isConfigured } = useCustomCalculator('concrete', activeTab === 'custom');
+  const { getCustomPrice, getCustomUnitValue } = useCustomMaterials('concrete');
   const [concreteType, setConcreteType] = useState<'wall' | 'flatwork'>('flatwork');
   const [length, setLength] = useState<number | ''>('');
   const [width, setWidth] = useState<number | ''>('');
@@ -21,6 +27,31 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucc
   const [addFiber, setAddFiber] = useState<boolean>(false);
   const [fiberPricePerYard, setFiberPricePerYard] = useState<number | ''>('');
   const [lastCalculation, setLastCalculation] = useState<CalculationResult[] | null>(null);
+
+  // Default pricing with dynamic pricing support
+  const defaultPricing = {
+    bagPrice: unit === 'imperial' ? getCustomPrice('Concrete Bag', 6.98, 'concrete') : getCustomPrice('Concrete Bag', 7.50, 'concrete'),
+    truckPricePerYard: getCustomPrice('3000 PSI Concrete', 185, 'concrete'),
+    deliveryFee: getCustomPrice('Delivery Fee', 150, 'concrete'),
+    rebarPrice: unit === 'imperial' ? getCustomPrice('#4 Rebar', 8.98, 'reinforcement') : getCustomPrice('#4 Rebar', 9.50, 'reinforcement'),
+    meshPrice6x6: getCustomPrice('Wire Mesh', 12.98, 'reinforcement'),
+    meshPrice4x4: getCustomPrice('Wire Mesh 4x4', 16.98, 'reinforcement')
+  };
+
+  // Determine active pricing based on tab
+  const activePricing = useMemo(() => {
+    if (activeTab === 'custom' && isConfigured && customPricing) {
+      return {
+        bagPrice: customPricing.concrete_bag_price || defaultPricing.bagPrice,
+        truckPricePerYard: customPricing.concrete_truck_per_yard || defaultPricing.truckPricePerYard,
+        deliveryFee: customPricing.concrete_delivery_fee || defaultPricing.deliveryFee,
+        rebarPrice: customPricing.rebar_price || defaultPricing.rebarPrice,
+        meshPrice6x6: customPricing.mesh_price_6x6 || defaultPricing.meshPrice6x6,
+        meshPrice4x4: customPricing.mesh_price_4x4 || defaultPricing.meshPrice4x4
+      };
+    }
+    return defaultPricing;
+  }, [activeTab, isConfigured, customPricing, unit]);
 
   // Get current inputs for saving
   const getCurrentInputs = () => ({
@@ -113,8 +144,7 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucc
       ];
 
       if (deliveryMethod === 'bags') {
-        const bagPrice = unit === 'imperial' ? 6.98 : 7.50; // Price per bag
-        const bagCost = bagsNeeded * bagPrice;
+        const bagCost = bagsNeeded * (activePricing?.bagPrice || defaultPricing.bagPrice);
 
         results.push(
           {
@@ -127,8 +157,8 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucc
       } else {
         // Truck delivery
         const minLoad = 1; // Minimum load in cubic yards
-        const truckPrice = 185; // Price per cubic yard
-        const deliveryFee = volume < minLoad ? 150 : 0; // Additional fee for small loads
+        const truckPrice = activePricing?.truckPricePerYard || defaultPricing.truckPricePerYard;
+        const deliveryFee = volume < minLoad ? (activePricing?.deliveryFee || defaultPricing.deliveryFee) : 0;
         let truckCost = (Math.max(volume, minLoad) * truckPrice) + deliveryFee;
 
         // Add color cost if selected
@@ -190,7 +220,7 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucc
         const lengthBars = Math.ceil(width / spacing) + 1;
         const widthBars = Math.ceil(length / spacing) + 1;
         const totalLength = (length * lengthBars) + (width * widthBars);
-        const rebarPrice = unit === 'imperial' ? 8.98 : 9.50; // Price per bar
+        const rebarPrice = activePricing?.rebarPrice || defaultPricing.rebarPrice;
         const rebarCost = Math.ceil(totalLength / 20) * rebarPrice; // 20ft rebar lengths
 
         results.push({
@@ -203,7 +233,9 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucc
         const area = length * width;
         const sheetSize = unit === 'imperial' ? 100 : 9.29; // 100 sqft or 9.29 sqm per sheet
         const sheetsNeeded = Math.ceil(area / sheetSize);
-        const meshPrice = meshType === '6x6' ? 12.98 : 16.98; // Price per sheet
+        const meshPrice = meshType === '6x6'
+          ? (activePricing?.meshPrice6x6 || defaultPricing.meshPrice6x6)
+          : (activePricing?.meshPrice4x4 || defaultPricing.meshPrice4x4);
         const meshCost = sheetsNeeded * meshPrice;
 
         results.push({
@@ -218,6 +250,41 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucc
       onCalculate(results);
     }
   };
+
+  // Show loading state if custom calculator data is loading
+  if (activeTab === 'custom' && loadingCustom) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
+        <div className="flex items-center mb-6">
+          <Calculator className="h-6 w-6 text-orange-500 mr-2" />
+          <h2 className="text-xl font-bold text-slate-800">{t('calculators.concrete.title')}</h2>
+        </div>
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading custom configuration...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show message if custom tab but not configured
+  if (activeTab === 'custom' && !isConfigured) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
+        <div className="flex items-center mb-6">
+          <Calculator className="h-6 w-6 text-orange-500 mr-2" />
+          <h2 className="text-xl font-bold text-slate-800">{t('calculators.concrete.title')}</h2>
+        </div>
+        <div className="text-center py-12">
+          <Calculator className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Configuration Required</h3>
+          <p className="text-gray-600 mb-4">
+            This calculator hasn't been configured yet. Click the gear icon to set up your custom materials and pricing.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const isFormValid =
     typeof length === 'number' &&

@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Grid } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { CalculatorEstimateHeader } from '../calculators/CalculatorEstimateHeader';
+import { useCalculatorTab } from '../../contexts/CalculatorTabContext';
+import { useCustomCalculator } from '../../hooks/useCustomCalculator';
+import { useCustomMaterials } from '../../hooks/useCustomMaterials';
 
 interface Opening {
   width: number;
@@ -22,6 +25,9 @@ type GroutWidth = 0.125 | 0.25 | 0.375;
 
 const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const { t } = useTranslation();
+  const { activeTab } = useCalculatorTab();
+  const { materials: customMaterials, pricing: customPricing, loading: loadingCustom, isConfigured } = useCustomCalculator('tile', activeTab === 'custom');
+  const { getCustomPrice, getCustomUnitValue } = useCustomMaterials('tile');
   const [surfaceType, setSurfaceType] = useState<'floor' | 'wall'>('floor');
   const [inputType, setInputType] = useState<'dimensions' | 'area'>('dimensions');
   const [length, setLength] = useState<number | ''>('');
@@ -67,6 +73,44 @@ const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const removeOpening = (index: number) => {
     setOpenings(openings.filter((_, i) => i !== index));
   };
+
+  // Determine which data source to use based on active tab
+  const activeMortarPrices = useMemo(() => {
+    return {
+      modified: getCustomPrice('Modified Thinset Mortar', 24.98, 'mortar'),
+      unmodified: getCustomPrice('Unmodified Thinset Mortar', 19.98, 'mortar'),
+      epoxy: getCustomPrice('Epoxy Mortar', 89.98, 'mortar')
+    };
+  }, [getCustomPrice]);
+
+  const activeGroutPrices = useMemo(() => {
+    return {
+      sanded: getCustomPrice('Sanded Grout', 19.98, 'grout'),
+      unsanded: getCustomPrice('Unsanded Grout', 22.98, 'grout'),
+      epoxy: getCustomPrice('Epoxy Grout', 79.98, 'grout')
+    };
+  }, [getCustomPrice]);
+
+  // Auto-select when switching tabs
+  useEffect(() => {
+    if (activeTab === 'custom') {
+      const mortarTypes = Object.keys(activeMortarPrices);
+      if (mortarTypes.length > 0 && !mortarTypes.includes(mortarType)) {
+        setMortarType(mortarTypes[0] as any);
+      }
+      const groutTypes = Object.keys(activeGroutPrices);
+      if (groutTypes.length > 0 && !groutTypes.includes(groutType)) {
+        setGroutType(groutTypes[0] as any);
+      }
+    } else if (activeTab === 'default') {
+      if (!['modified', 'unmodified', 'epoxy'].includes(mortarType)) {
+        setMortarType('modified');
+      }
+      if (!['sanded', 'unsanded', 'epoxy'].includes(groutType)) {
+        setGroutType('sanded');
+      }
+    }
+  }, [activeTab, activeMortarPrices, activeGroutPrices]);
 
   const getCurrentInputs = () => ({
     surfaceType,
@@ -208,12 +252,8 @@ const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     // Calculate mortar
     const mortarCoverage = 90; // sq ft per 50lb bag
     const mortarBags = Math.ceil(areaWithWaste / mortarCoverage);
-    const mortarPrices = {
-      'modified': 24.98,
-      'unmodified': 19.98,
-      'epoxy': 89.98
-    };
-    const mortarCost = mortarBags * mortarPrices[mortarType];
+    const mortarPrice = activeMortarPrices[mortarType] || 24.98;
+    const mortarCost = mortarBags * mortarPrice;
     totalCost += mortarCost;
 
     results.push({
@@ -230,12 +270,8 @@ const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       0.375: 100
     }[groutWidth];
     const groutBags = Math.ceil(areaWithWaste / groutCoverage);
-    const groutPrices = {
-      'sanded': 19.98,
-      'unsanded': 22.98,
-      'epoxy': 79.98
-    };
-    const groutCost = groutBags * groutPrices[groutType];
+    const groutPrice = activeGroutPrices[groutType] || 19.98;
+    const groutCost = groutBags * groutPrice;
     totalCost += groutCost;
 
     results.push({
@@ -251,7 +287,9 @@ const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     // Calculate backer board if included
     if (includeBackerBoard) {
       const backerBoardSheets = Math.ceil(totalArea / 32); // 32 sq ft per sheet
-      const backerBoardPrice = backerBoardThickness === '1/4' ? 15.98 : 19.98;
+      const backerBoardPrice = backerBoardThickness === '1/4'
+        ? getCustomPrice('Backer Board 1/4"', 15.98, 'supplies')
+        : getCustomPrice('Backer Board 5/8"', 19.98, 'supplies');
       const backerBoardCost = backerBoardSheets * backerBoardPrice;
       totalCost += backerBoardCost;
 
@@ -265,7 +303,7 @@ const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       // Backer board screws
       const screwsNeeded = backerBoardSheets * 30; // 30 screws per sheet
       const screwBoxes = Math.ceil(screwsNeeded / 100);
-      const screwCost = screwBoxes * 12.98;
+      const screwCost = screwBoxes * getCustomPrice('Backer Board Screws', 12.98, 'supplies');
       totalCost += screwCost;
 
       results.push({
@@ -279,7 +317,7 @@ const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     // Calculate membrane if included
     if (includeMembrane) {
       const membraneRolls = Math.ceil(totalArea / 100); // 100 sq ft per roll
-      const membraneCost = membraneRolls * 89.98;
+      const membraneCost = membraneRolls * getCustomPrice('Waterproof Membrane', 89.98, 'supplies');
       totalCost += membraneCost;
 
       results.push({
@@ -294,7 +332,9 @@ const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     if (includeEdging && typeof length === 'number' && typeof width === 'number') {
       const edgeLength = surfaceType === 'floor' ? 2 * (length + width) : length + width;
       const edgePieces = Math.ceil(edgeLength / 8); // 8ft pieces
-      const edgePrice = edgingType === 'metal' ? 12.98 : 24.98;
+      const edgePrice = edgingType === 'metal'
+        ? getCustomPrice('Metal Edge Trim', 12.98, 'supplies')
+        : getCustomPrice('Stone Edge Trim', 24.98, 'supplies');
       const edgingCost = edgePieces * edgePrice;
       totalCost += edgingCost;
 
@@ -326,6 +366,41 @@ const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     typeof tileSize.length === 'number' &&
     typeof tileSize.piecesPerBox === 'number' &&
     typeof tileSize.pricePerBox === 'number';
+
+  // Show loading state if custom calculator data is loading
+  if (activeTab === 'custom' && loadingCustom) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
+        <div className="flex items-center mb-6">
+          <Grid className="h-6 w-6 text-orange-500 mr-2" />
+          <h2 className="text-xl font-bold text-slate-800">{t('calculators.tile.title')}</h2>
+        </div>
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading custom configuration...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show message if custom tab but not configured
+  if (activeTab === 'custom' && !isConfigured) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
+        <div className="flex items-center mb-6">
+          <Grid className="h-6 w-6 text-orange-500 mr-2" />
+          <h2 className="text-xl font-bold text-slate-800">{t('calculators.tile.title')}</h2>
+        </div>
+        <div className="text-center py-12">
+          <Grid className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Configuration Required</h3>
+          <p className="text-gray-600 mb-4">
+            This calculator hasn't been configured yet. Click the gear icon to set up your custom materials and pricing.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">

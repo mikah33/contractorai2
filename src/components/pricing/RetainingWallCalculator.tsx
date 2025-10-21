@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Wallet as Wall } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { CalculatorEstimateHeader } from '../calculators/CalculatorEstimateHeader';
+import { useCalculatorTab } from '../../contexts/CalculatorTabContext';
+import { useCustomCalculator } from '../../hooks/useCustomCalculator';
+import { useCustomMaterials } from '../../hooks/useCustomMaterials';
 
 type WallType = 'block' | 'concrete' | 'timber' | 'boulder';
 type BlockType = 'standard' | 'pinned' | 'gravity' | 'custom';
@@ -10,6 +13,10 @@ type DrainageType = 'gravel' | 'pipe' | 'both' | 'none';
 
 const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const { t } = useTranslation();
+  const { activeTab } = useCalculatorTab();
+  const { materials: customMaterials, pricing: customPricing, loading: loadingCustom, isConfigured } =
+    useCustomCalculator('retaining-wall', activeTab === 'custom');
+  const { getCustomPrice, getCustomUnitValue } = useCustomMaterials('retaining-wall');
   const [wallType, setWallType] = useState<WallType>('block');
   const [length, setLength] = useState<number | ''>('');
   const [height, setHeight] = useState<number | ''>('');
@@ -33,37 +40,65 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
   const [boulderQuantity, setBoulderQuantity] = useState<number | ''>('');
   const [pricePerBoulder, setPricePerBoulder] = useState<number | ''>('');
 
-  // Block dimensions and prices
-  const blockSpecs = {
-    standard: {
-      width: 12,
-      height: 8,
-      depth: 12,
-      price: 5.98,
-      weightLbs: 38
-    },
-    pinned: {
-      width: 16,
-      height: 6,
-      depth: 12,
-      price: 6.98,
-      weightLbs: 42
-    },
-    gravity: {
-      width: 18,
-      height: 8,
-      depth: 24,
-      price: 12.98,
-      weightLbs: 82
-    },
-    custom: {
-      width: customBlockWidth,
-      height: customBlockHeight,
-      depth: customBlockDepth,
-      price: customBlockPrice,
-      weightLbs: customBlockWeight
+  // Block dimensions and prices - use custom materials if available
+  const activeBlockSpecs = useMemo(() => {
+    const defaultSpecs = {
+      standard: {
+        width: 12,
+        height: 8,
+        depth: 12,
+        price: 5.98,
+        weightLbs: 38
+      },
+      pinned: {
+        width: 16,
+        height: 6,
+        depth: 12,
+        price: 6.98,
+        weightLbs: 42
+      },
+      gravity: {
+        width: 18,
+        height: 8,
+        depth: 24,
+        price: 12.98,
+        weightLbs: 82
+      },
+      custom: {
+        width: customBlockWidth,
+        height: customBlockHeight,
+        depth: customBlockDepth,
+        price: customBlockPrice,
+        weightLbs: customBlockWeight
+      }
+    };
+
+    if (activeTab === 'custom' && isConfigured && customMaterials.length > 0) {
+      const wallBlocks = customMaterials.filter(m => m.category === 'wall-blocks');
+      if (wallBlocks.length > 0) {
+        const customBlockMap: any = { ...defaultSpecs };
+        wallBlocks.forEach(block => {
+          const metadata = block.metadata || {};
+          customBlockMap[block.id] = {
+            width: metadata.width || 12,
+            height: metadata.height || 8,
+            depth: metadata.depth || 12,
+            price: block.price,
+            weightLbs: metadata.weightLbs || 40
+          };
+        });
+        return customBlockMap;
+      }
     }
-  };
+    return defaultSpecs;
+  }, [activeTab, isConfigured, customMaterials, customBlockWidth, customBlockHeight, customBlockDepth, customBlockPrice, customBlockWeight]);
+
+  const activeMaterialPricing = useMemo(() => {
+    if (activeTab === 'custom' && isConfigured && customPricing) {
+      return customPricing;
+    }
+    return {};
+  }, [activeTab, isConfigured, customPricing]);
 
   const getCurrentInputs = () => ({
     wallType,
@@ -152,7 +187,7 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
       }
 
       if (wallType === 'block') {
-        const specs = blockSpecs[blockType];
+        const specs = activeBlockSpecs[blockType];
 
         // For custom blocks, verify all dimensions are provided
         if (blockType === 'custom' &&
@@ -162,7 +197,8 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
             typeof specs.price === 'number') {
           const blocksPerSqFt = 144 / (specs.width * specs.height); // 144 sq inches in a sq ft
           const totalBlocks = Math.ceil(wallArea * blocksPerSqFt);
-          const blockCost = totalBlocks * specs.price;
+          const blockPrice = getCustomPrice('wall_block_custom', specs.price);
+          const blockCost = totalBlocks * blockPrice;
           totalCost += blockCost;
 
           results.push({
@@ -174,7 +210,8 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
         } else if (blockType !== 'custom') {
           const blocksPerSqFt = 144 / (specs.width * specs.height);
           const totalBlocks = Math.ceil(wallArea * blocksPerSqFt);
-          const blockCost = totalBlocks * specs.price;
+          const blockPrice = getCustomPrice(`wall_block_${blockType}`, specs.price);
+          const blockCost = totalBlocks * blockPrice;
           totalCost += blockCost;
 
           results.push({
@@ -188,7 +225,8 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
         if (includeCapstone) {
           const capstonePerFt = 1;
           const capstonesNeeded = Math.ceil(length * capstonePerFt);
-          const capstoneCost = capstonesNeeded * 8.98;
+          const capstonePrice = getCustomPrice('capstone', 8.98);
+          const capstoneCost = capstonesNeeded * capstonePrice;
           totalCost += capstoneCost;
 
           results.push({
@@ -202,7 +240,8 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
       } else if (wallType === 'concrete') {
         const wallThickness = typeof concreteWidth === 'number' ? concreteWidth : 12; // Use user input or default to 12 inches
         const volumeCuYd = (length * height * (wallThickness / 12)) / 27;
-        const concreteCost = volumeCuYd * 185; // $185 per cubic yard
+        const concretePrice = getCustomPrice('concrete', 185);
+        const concreteCost = volumeCuYd * concretePrice;
         totalCost += concreteCost;
 
         results.push({
@@ -218,7 +257,8 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
         const verticalBars = Math.ceil((length * 12) / verticalSpacing);
         const horizontalBars = Math.ceil((height * 12) / horizontalSpacing);
         const totalRebar = (verticalBars * height) + (horizontalBars * length);
-        const rebarCost = Math.ceil(totalRebar / 20) * 12.98; // 20ft rebar lengths at $12.98 each
+        const rebarPrice = getCustomPrice('rebar', 12.98);
+        const rebarCost = Math.ceil(totalRebar / 20) * rebarPrice;
         totalCost += rebarCost;
 
         results.push({
@@ -233,7 +273,8 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
         const rowsNeeded = Math.ceil((height * 12) / timberHeight);
         const timberLength = 8; // feet
         const timbersNeeded = Math.ceil(length / timberLength) * rowsNeeded;
-        const timberCost = timbersNeeded * 24.98; // $24.98 per pressure treated 6x6
+        const timberPrice = getCustomPrice('timber_6x6', 24.98);
+        const timberCost = timbersNeeded * timberPrice;
         totalCost += timberCost;
 
         results.push({
@@ -245,7 +286,7 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
 
         // Deadmen calculation (one every 8ft of length, every other row)
         const deadmenNeeded = Math.ceil(length / 8) * Math.ceil(rowsNeeded / 2);
-        const deadmenCost = deadmenNeeded * 24.98;
+        const deadmenCost = deadmenNeeded * timberPrice;
         totalCost += deadmenCost;
 
         results.push({
@@ -288,7 +329,8 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
         const baseDepth = 6; // inches
         const baseWidth = wallType === 'block' ? 24 : 36; // inches
         const baseVolume = (length * (baseWidth / 12) * (baseDepth / 12)) / 27; // cubic yards
-        const baseCost = baseVolume * 45; // $45 per cubic yard
+        const gravelPrice = getCustomPrice('gravel', 45);
+        const baseCost = baseVolume * gravelPrice;
         totalCost += baseCost;
 
         results.push({
@@ -302,7 +344,8 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
         if (drainageType !== 'none') {
           if (drainageType === 'gravel' || drainageType === 'both') {
             const drainageGravelVolume = (length * height * 1) / 27; // 1 foot thick drainage layer
-            const drainageGravelCost = drainageGravelVolume * 55; // $55 per cubic yard
+            const drainageGravelPrice = getCustomPrice('drainage_gravel', 55);
+            const drainageGravelCost = drainageGravelVolume * drainageGravelPrice;
             totalCost += drainageGravelCost;
 
             results.push({
@@ -315,7 +358,8 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
 
           if (drainageType === 'pipe' || drainageType === 'both') {
             const drainPipeNeeded = Math.ceil(length);
-            const drainPipeCost = drainPipeNeeded * 8.98; // $8.98 per 10ft section
+            const drainPipePrice = getCustomPrice('drain_pipe', 8.98);
+            const drainPipeCost = drainPipeNeeded * drainPipePrice;
             totalCost += drainPipeCost;
 
             results.push({
@@ -331,7 +375,8 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
         if (includeGeogrid && height > 4) {
           const geogridArea = length * height * geogridLayers;
           const geogridRolls = Math.ceil(geogridArea / 200); // 200 sq ft per roll
-          const geogridCost = geogridRolls * 89.98;
+          const geogridPrice = getCustomPrice('geogrid', 89.98);
+          const geogridCost = geogridRolls * geogridPrice;
           totalCost += geogridCost;
 
           results.push({
@@ -345,7 +390,8 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
         // Filter fabric
         const fabricArea = length * (height + 2); // Extra 2ft for overlap
         const fabricRolls = Math.ceil(fabricArea / 300); // 300 sq ft per roll
-        const fabricCost = fabricRolls * 45.98;
+        const fabricPrice = getCustomPrice('filter_fabric', 45.98);
+        const fabricCost = fabricRolls * fabricPrice;
         totalCost += fabricCost;
 
         results.push({
@@ -382,6 +428,41 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
          typeof customBlockPrice === 'number' &&
          typeof customBlockWeight === 'number'
        )));
+
+  // Loading state
+  if (activeTab === 'custom' && loadingCustom) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
+        <div className="flex items-center mb-6">
+          <Wall className="h-6 w-6 text-orange-500 mr-2" />
+          <h2 className="text-xl font-bold text-slate-800">{t('calculators.retainingWall.title')}</h2>
+        </div>
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading custom configuration...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Not configured state
+  if (activeTab === 'custom' && !isConfigured) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
+        <div className="flex items-center mb-6">
+          <Wall className="h-6 w-6 text-orange-500 mr-2" />
+          <h2 className="text-xl font-bold text-slate-800">{t('calculators.retainingWall.title')}</h2>
+        </div>
+        <div className="text-center py-12">
+          <Wall className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Configuration Required</h3>
+          <p className="text-gray-600 mb-4">
+            This calculator hasn't been configured yet. Click the gear icon to set up your custom materials and pricing.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">

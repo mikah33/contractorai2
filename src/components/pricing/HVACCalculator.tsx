@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Thermometer } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { CalculatorEstimateHeader } from '../calculators/CalculatorEstimateHeader';
+import { useCalculatorTab } from '../../contexts/CalculatorTabContext';
+import { useCustomCalculator } from '../../hooks/useCustomCalculator';
+import { useCustomMaterials } from '../../hooks/useCustomMaterials';
 
 interface Room {
   id: string;
@@ -26,6 +29,9 @@ interface Duct {
 
 const HVACCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const { t } = useTranslation();
+  const { activeTab } = useCalculatorTab();
+  const { materials: customMaterials, pricing: customPricing, loading: loadingCustom, isConfigured } = useCustomCalculator('hvac', activeTab === 'custom');
+  const { getCustomPrice, getCustomUnitValue } = useCustomMaterials('hvac');
   const [systemType, setSystemType] = useState<'split' | 'package' | 'mini-split'>('split');
   const [rooms, setRooms] = useState<Room[]>([]);
   const [ducts, setDucts] = useState<Duct[]>([]);
@@ -37,6 +43,30 @@ const HVACCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const [zoneCount, setZoneCount] = useState<2 | 3 | 4>(2);
   const [refrigerantLineLength, setRefrigerantLineLength] = useState<number | ''>('');
   const [condensateDrainLength, setCondensateDrainLength] = useState<number | ''>('');
+
+  // Active pricing for HVAC equipment based on tab
+  const activeEquipmentPricing = useMemo(() => {
+    if (activeTab === 'custom' && isConfigured && Object.keys(customPricing).length > 0) {
+      return { ...customPricing };
+    }
+    return {};
+  }, [activeTab, isConfigured, customPricing]);
+
+  // Active duct pricing
+  const activeDuctPricing = useMemo(() => {
+    if (activeTab === 'custom' && isConfigured && customMaterials.length > 0) {
+      const ductMaterials = customMaterials.filter(m => m.category === 'hvac_ducts');
+      if (ductMaterials.length > 0) {
+        const pricing: Record<string, number> = {};
+        ductMaterials.forEach(m => {
+          const size = m.metadata?.size || 6;
+          pricing[`duct_${size}`] = m.price;
+        });
+        return pricing;
+      }
+    }
+    return {};
+  }, [activeTab, isConfigured, customMaterials]);
 
   const addRoom = () => {
     const newRoom: Room = {
@@ -175,18 +205,18 @@ const HVACCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     // Equipment costs based on system type and size
     const equipmentPrices = {
       'split': {
-        condenser: tonnage * 1200,
-        airHandler: tonnage * 800,
-        installation: tonnage * 1000
+        condenser: activeEquipmentPricing.condenser_per_ton || tonnage * 1200,
+        airHandler: activeEquipmentPricing.air_handler_per_ton || tonnage * 800,
+        installation: activeEquipmentPricing.installation_per_ton || tonnage * 1000
       },
       'package': {
-        unit: tonnage * 1800,
-        installation: tonnage * 800
+        unit: activeEquipmentPricing.package_unit_per_ton || tonnage * 1800,
+        installation: activeEquipmentPricing.package_installation_per_ton || tonnage * 800
       },
       'mini-split': {
-        outdoor: tonnage * 1500,
-        indoor: rooms.length * 500,
-        installation: (tonnage * 800) + (rooms.length * 200)
+        outdoor: activeEquipmentPricing.mini_split_outdoor_per_ton || tonnage * 1500,
+        indoor: activeEquipmentPricing.mini_split_indoor_per_head || rooms.length * 500,
+        installation: activeEquipmentPricing.mini_split_installation || (tonnage * 800) + (rooms.length * 200)
       }
     };
 
@@ -244,14 +274,18 @@ const HVACCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     if (systemType !== 'mini-split') {
       let totalDuctCost = 0;
       ducts.forEach(duct => {
-        const ductPricePerFoot = duct.size <= 6 ? 4.98 :
-                                duct.size <= 8 ? 6.98 :
-                                duct.size <= 10 ? 8.98 :
-                                12.98;
+        const ductPricePerFoot = activeDuctPricing[`duct_${duct.size}`] || (
+          duct.size <= 6 ? 4.98 :
+          duct.size <= 8 ? 6.98 :
+          duct.size <= 10 ? 8.98 :
+          12.98
+        );
 
         const ductCost = duct.length * ductPricePerFoot;
-        const elbowCost = duct.elbows * (duct.size <= 8 ? 8.98 : 12.98);
-        const takeoffCost = duct.takeoffs * 6.98;
+        const elbowPrice = activeEquipmentPricing[`elbow_${duct.size}`] || (duct.size <= 8 ? 8.98 : 12.98);
+        const elbowCost = duct.elbows * elbowPrice;
+        const takeoffPrice = activeEquipmentPricing.takeoff_price || 6.98;
+        const takeoffCost = duct.takeoffs * takeoffPrice;
 
         const totalCostForDuct = ductCost + elbowCost + takeoffCost;
         totalDuctCost += totalCostForDuct;
@@ -268,7 +302,8 @@ const HVACCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
     // Refrigerant line set if applicable
     if (typeof refrigerantLineLength === 'number' && systemType !== 'package') {
-      const lineSetCost = refrigerantLineLength * 12.98;
+      const lineSetPricePerFoot = activeEquipmentPricing.refrigerant_line_per_foot || 12.98;
+      const lineSetCost = refrigerantLineLength * lineSetPricePerFoot;
       totalCost += lineSetCost;
 
       results.push({
@@ -281,7 +316,8 @@ const HVACCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
     // Condensate drain
     if (typeof condensateDrainLength === 'number') {
-      const drainCost = condensateDrainLength * 2.98;
+      const drainPricePerFoot = activeEquipmentPricing.condensate_drain_per_foot || 2.98;
+      const drainCost = condensateDrainLength * drainPricePerFoot;
       totalCost += drainCost;
 
       results.push({
@@ -294,7 +330,7 @@ const HVACCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
     // Optional components
     if (includeHumidifier) {
-      const humidifierCost = 299.98;
+      const humidifierCost = activeEquipmentPricing.humidifier || 299.98;
       totalCost += humidifierCost;
 
       results.push({
@@ -306,7 +342,7 @@ const HVACCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     }
 
     if (includeUVLight) {
-      const uvLightCost = 249.98;
+      const uvLightCost = activeEquipmentPricing.uv_light || 249.98;
       totalCost += uvLightCost;
 
       results.push({
@@ -318,7 +354,7 @@ const HVACCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     }
 
     if (includeAirCleaner) {
-      const airCleanerCost = 399.98;
+      const airCleanerCost = activeEquipmentPricing.air_cleaner || 399.98;
       totalCost += airCleanerCost;
 
       results.push({
@@ -330,9 +366,9 @@ const HVACCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     }
 
     if (includeZoning) {
-      const zoneBoardCost = 299.98;
-      const damperCost = 89.98 * zoneCount;
-      const thermostatCost = 79.98 * zoneCount;
+      const zoneBoardCost = activeEquipmentPricing.zone_board || 299.98;
+      const damperCost = (activeEquipmentPricing.zone_damper || 89.98) * zoneCount;
+      const thermostatCost = (activeEquipmentPricing.zone_thermostat || 79.98) * zoneCount;
       const totalZoningCost = zoneBoardCost + damperCost + thermostatCost;
       totalCost += totalZoningCost;
 
@@ -383,6 +419,41 @@ const HVACCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     ) &&
     (systemType === 'package' || typeof refrigerantLineLength === 'number') &&
     typeof condensateDrainLength === 'number';
+
+  // Show loading state if custom calculator data is loading
+  if (activeTab === 'custom' && loadingCustom) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
+        <div className="flex items-center mb-6">
+          <Thermometer className="h-6 w-6 text-orange-500 mr-2" />
+          <h2 className="text-xl font-bold text-slate-800">{t('calculators.hvac.title')}</h2>
+        </div>
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading custom configuration...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show message if custom tab but not configured
+  if (activeTab === 'custom' && !isConfigured) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
+        <div className="flex items-center mb-6">
+          <Thermometer className="h-6 w-6 text-orange-500 mr-2" />
+          <h2 className="text-xl font-bold text-slate-800">{t('calculators.hvac.title')}</h2>
+        </div>
+        <div className="text-center py-12">
+          <Thermometer className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Configuration Required</h3>
+          <p className="text-gray-600 mb-4">
+            This calculator hasn't been configured yet. Click the gear icon to set up your custom materials and pricing.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">

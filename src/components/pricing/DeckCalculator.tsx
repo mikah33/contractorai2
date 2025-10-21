@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Grid } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { CalculatorEstimateHeader } from '../calculators/CalculatorEstimateHeader';
+import { useCalculatorTab } from '../../contexts/CalculatorTabContext';
+import { useCustomCalculator } from '../../hooks/useCustomCalculator';
 
 type DeckingType = {
   id: string;
@@ -214,6 +216,8 @@ interface BoardOption {
 
 const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const { t } = useTranslation();
+  const { activeTab } = useCalculatorTab();
+  const { materials: customMaterials, pricing: customPricing, loading: loadingCustom, isConfigured } = useCustomCalculator('deck', activeTab === 'custom');
   const [inputType, setInputType] = useState<'dimensions' | 'area'>('dimensions');
   const [length, setLength] = useState<number | ''>('');
   const [width, setWidth] = useState<number | ''>('');
@@ -247,6 +251,84 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const [postHeight, setPostHeight] = useState<number | ''>('');
   const [includeLedgerBoard, setIncludeLedgerBoard] = useState(false);
   const [ledgerBoardLength, setLedgerBoardLength] = useState<number | ''>('');
+
+  // Determine which data source to use based on active tab
+  const activeDeckingTypes = useMemo(() => {
+    if (activeTab === 'custom' && isConfigured && customMaterials.length > 0) {
+      // Build decking types from custom materials with deck_boards category
+      const customDeckBoards = customMaterials
+        .filter(m => m.category === 'deck_boards')
+        .map(m => {
+          const metadata = m.metadata || {};
+          return {
+            id: m.id,
+            name: m.name,
+            width: metadata.width || 5.5,
+            spacing: metadata.spacing || 0.25,
+            price: metadata.prices || { '12': m.price, '16': m.price, '20': m.price }
+          };
+        });
+      return customDeckBoards.length > 0 ? customDeckBoards : deckingTypes;
+    }
+    return deckingTypes;
+  }, [activeTab, isConfigured, customMaterials]);
+
+  // Auto-select first custom material when switching to custom tab
+  useEffect(() => {
+    if (activeTab === 'custom' && activeDeckingTypes.length > 0) {
+      const currentDeckingExists = activeDeckingTypes.find(d => d.id === deckingType);
+      if (!currentDeckingExists) {
+        // Current selection doesn't exist in custom materials, select first one
+        setDeckingType(activeDeckingTypes[0].id);
+      }
+    } else if (activeTab === 'default') {
+      // When switching back to default tab, reset to default decking type if current is not valid
+      const currentDeckingExists = activeDeckingTypes.find(d => d.id === deckingType);
+      if (!currentDeckingExists) {
+        setDeckingType('5/4-deck');
+      }
+    }
+  }, [activeTab, activeDeckingTypes]);
+
+  const activeMaterialPrices = useMemo(() => {
+    if (activeTab === 'custom' && isConfigured && Object.keys(customPricing).length > 0) {
+      return { ...materialPrices, ...customPricing };
+    }
+    return materialPrices;
+  }, [activeTab, isConfigured, customPricing]);
+
+  const activeFasciaTypes = useMemo(() => {
+    if (activeTab === 'custom' && isConfigured && customMaterials.length > 0) {
+      const customFascia = customMaterials.filter(m => m.category === 'fascia');
+      if (customFascia.length > 0) {
+        // Build fascia types from custom materials
+        const fasciaMap: Record<string, any> = {};
+        customFascia.forEach((m, idx) => {
+          const key = m.id.substring(0, 10); // Use first 10 chars of ID as key
+          fasciaMap[key] = {
+            name: m.name,
+            price: m.metadata?.sizes || { '2x6': m.price, '2x8': m.price, '2x10': m.price, '2x12': m.price }
+          };
+        });
+        return Object.keys(fasciaMap).length > 0 ? fasciaMap : fasciaTypes;
+      }
+    }
+    return fasciaTypes;
+  }, [activeTab, isConfigured, customMaterials]);
+
+  const activeRailingPrices = useMemo(() => {
+    if (activeTab === 'custom' && isConfigured && customMaterials.length > 0) {
+      const customRailings = customMaterials.filter(m => m.category === 'railings');
+      if (customRailings.length > 0) {
+        const railingMap: Record<string, number> = {};
+        customRailings.forEach(m => {
+          railingMap[m.id.substring(0, 10)] = m.price;
+        });
+        return Object.keys(railingMap).length > 0 ? railingMap : railingPrices;
+      }
+    }
+    return railingPrices;
+  }, [activeTab, isConfigured, customMaterials]);
 
   // Gather all current calculator inputs for saving
   const getCurrentInputs = () => ({
@@ -349,7 +431,10 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
   const calculateOptimalBoardLength = (deckWidth: number) => {
     const availableLengths = [12, 16, 20];
-    const selectedDecking = deckingTypes.find(d => d.id === deckingType)!;
+    const selectedDecking = activeDeckingTypes.find(d => d.id === deckingType);
+    if (!selectedDecking) {
+      return 16; // Default to 16ft if no decking type found
+    }
     const isComposite = deckingType.includes('trex');
     
     const options: BoardOption[] = availableLengths.map(length => {
@@ -427,9 +512,14 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     if (deckingType === 'custom' && typeof customDeckingWidth === 'number' && typeof customDeckingSpacing === 'number') {
       deckingWidth = customDeckingWidth;
       deckingSpacing = customDeckingSpacing;
-      deckingPrice = deckingTypes.find(d => d.id === 'custom')!.price;
+      const customDeck = activeDeckingTypes.find(d => d.id === 'custom');
+      deckingPrice = customDeck ? customDeck.price : { '12': 15.98, '16': 21.98, '20': 27.98 };
     } else {
-      const selectedDecking = deckingTypes.find(d => d.id === deckingType)!;
+      const selectedDecking = activeDeckingTypes.find(d => d.id === deckingType);
+      if (!selectedDecking) {
+        alert('Please select a valid decking type');
+        return;
+      }
       deckingWidth = selectedDecking.width;
       deckingSpacing = selectedDecking.spacing;
       deckingPrice = selectedDecking.price;
@@ -454,7 +544,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     totalCost += deckingCost;
 
     results.push({
-      label: `${deckingType === 'custom' ? 'Decking Boards' : deckingTypes.find(d => d.id === deckingType)?.name} (${optimalBoardLength}ft)`,
+      label: `${deckingType === 'custom' ? 'Decking Boards' : activeDeckingTypes.find(d => d.id === deckingType)?.name} (${optimalBoardLength}ft)`,
       value: totalBoardsNeeded,
       unit: `${optimalBoardLength}ft boards`,
       cost: deckingCost
@@ -462,7 +552,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
     const joistsNeeded = Math.ceil(deckWidth * 12 / joistsSpacing) + 1;
     const optimalJoistLength = calculateOptimalBoardLength(deckLength);
-    const joistCost = joistsNeeded * materialPrices[joistSize][optimalJoistLength.toString()];
+    const joistCost = joistsNeeded * activeMaterialPrices[joistSize][optimalJoistLength.toString()];
     totalCost += joistCost;
 
     results.push({
@@ -473,7 +563,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     });
 
     const joistsHangers = joistsNeeded;
-    const hangerCost = joistsHangers * materialPrices.joist_hanger;
+    const hangerCost = joistsHangers * activeMaterialPrices.joist_hanger;
     totalCost += hangerCost;
 
     results.push({
@@ -484,7 +574,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     });
 
     if (includeCantilever && typeof cantileverLength === 'number') {
-      const hurricaneTieCost = joistsNeeded * materialPrices.hurricane_tie;
+      const hurricaneTieCost = joistsNeeded * activeMaterialPrices.hurricane_tie;
       totalCost += hurricaneTieCost;
 
       results.push({
@@ -497,7 +587,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
     const screwsNeeded = totalBoardsNeeded * joistsNeeded * 2;
     const screwBoxesNeeded = Math.ceil(screwsNeeded / 1000);
-    const screwCost = screwBoxesNeeded * materialPrices.deck_screws;
+    const screwCost = screwBoxesNeeded * activeMaterialPrices.deck_screws;
     totalCost += screwCost;
 
     results.push({
@@ -540,7 +630,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
           const stringerLength = Math.sqrt(Math.pow(totalRun, 2) + Math.pow(totalRise, 2)) / 12;
           const optimalStringerLength = calculateOptimalBoardLength(stringerLength);
 
-          const stringerCost = numStringers * materialPrices['2x12'][optimalStringerLength.toString()];
+          const stringerCost = numStringers * activeMaterialPrices['2x12'][optimalStringerLength.toString()];
           totalCost += stringerCost;
 
           const staircaseLabel = numberOfStaircases > 1 ? ` (Staircase ${index + 1})` : '';
@@ -583,7 +673,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     }
 
     if (includeRailing && typeof railingLength === 'number') {
-      const railingCost = railingLength * railingPrices[railingType];
+      const railingCost = railingLength * activeRailingPrices[railingType];
       totalCost += railingCost;
       
       results.push({
@@ -607,12 +697,12 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
     if (includeFascia && typeof fasciaLength === 'number') {
       const boardsNeeded = Math.ceil(fasciaLength / 16);
-      const fasciaPrice = fasciaTypes[fasciaType].price[joistSize];
+      const fasciaPrice = activeFasciaTypes[fasciaType].price[joistSize];
       const fasciaCost = boardsNeeded * fasciaPrice;
       totalCost += fasciaCost;
 
       results.push({
-        label: `${fasciaTypes[fasciaType].name} Fascia (${joistSize})`,
+        label: `${activeFasciaTypes[fasciaType].name} Fascia (${joistSize})`,
         value: boardsNeeded,
         unit: '16ft boards',
         cost: fasciaCost
@@ -620,8 +710,9 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     }
 
     if (includeTripleBeam && typeof tripleBeamLength === 'number') {
-      // Triple beam at $16 per linear foot
-      const tripleBeamCost = tripleBeamLength * 16;
+      // Triple beam - use custom pricing if available
+      const tripleBeamPricePerFt = activeMaterialPrices.triple_beam_per_ft || 16;
+      const tripleBeamCost = tripleBeamLength * tripleBeamPricePerFt;
       totalCost += tripleBeamCost;
 
       results.push({
@@ -633,8 +724,10 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     }
 
     if (includeFreestandingPosts && typeof numFreestandingPosts === 'number' && typeof postHeight === 'number') {
-      // Price per foot: 6x6 @ $9/ft, 4x4 @ $6/ft
-      const pricePerFoot = postSize === '6x6' ? 9 : 6;
+      // Price per foot: use custom pricing if available
+      const pricePerFoot = postSize === '6x6'
+        ? (activeMaterialPrices.post_6x6_per_ft || 9)
+        : (activeMaterialPrices.post_4x4_per_ft || 6);
       const freestandingPostCost = numFreestandingPosts * postHeight * pricePerFoot;
       totalCost += freestandingPostCost;
 
@@ -647,13 +740,12 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     }
 
     if (includeLedgerBoard && typeof ledgerBoardLength === 'number') {
-      // Ledger board matches selected joist size
-      // Pricing: 2x8 @ $2.00/ft, 2x10 @ $2.32/ft, 2x12 @ $2.89/ft
+      // Ledger board matches selected joist size - use custom pricing if available
       const ledgerPrices: Record<'2x6' | '2x8' | '2x10' | '2x12', number> = {
-        '2x6': 1.75,
-        '2x8': 2.00,
-        '2x10': 2.32,
-        '2x12': 2.89
+        '2x6': activeMaterialPrices.ledger_2x6_per_ft || 1.75,
+        '2x8': activeMaterialPrices.ledger_2x8_per_ft || 2.00,
+        '2x10': activeMaterialPrices.ledger_2x10_per_ft || 2.32,
+        '2x12': activeMaterialPrices.ledger_2x12_per_ft || 2.89
       };
       const ledgerPricePerFt = ledgerPrices[joistSize];
       const ledgerBoardCost = ledgerBoardLength * ledgerPricePerFt;
@@ -669,6 +761,41 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
     onCalculate(results);
   };
+
+  // Show loading state if custom calculator data is loading
+  if (activeTab === 'custom' && loadingCustom) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
+        <div className="flex items-center mb-6">
+          <Grid className="h-6 w-6 text-orange-500 mr-2" />
+          <h2 className="text-xl font-bold text-slate-800">{t('calculators.deck.title')}</h2>
+        </div>
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading custom configuration...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show message if custom tab but not configured
+  if (activeTab === 'custom' && !isConfigured) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
+        <div className="flex items-center mb-6">
+          <Grid className="h-6 w-6 text-orange-500 mr-2" />
+          <h2 className="text-xl font-bold text-slate-800">{t('calculators.deck.title')}</h2>
+        </div>
+        <div className="text-center py-12">
+          <Grid className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Configuration Required</h3>
+          <p className="text-gray-600 mb-4">
+            This calculator hasn't been configured yet. Click the gear icon to set up your custom materials and pricing.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const isFormValid =
     ((inputType === 'dimensions' && typeof length === 'number' && typeof width === 'number') ||
@@ -786,7 +913,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             onChange={(e) => setDeckingType(e.target.value)}
             className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
           >
-            {deckingTypes.map(type => (
+            {activeDeckingTypes.map(type => (
               <option key={type.id} value={type.id}>{type.name}</option>
             ))}
           </select>

@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Pipette as Pipe } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { CalculatorEstimateHeader } from '../calculators/CalculatorEstimateHeader';
+import { useCalculatorTab } from '../../contexts/CalculatorTabContext';
+import { useCustomCalculator } from '../../hooks/useCustomCalculator';
+import { useCustomMaterials } from '../../hooks/useCustomMaterials';
 
 interface Fixture {
   id: string;
@@ -33,6 +36,10 @@ interface PipingRun {
 
 const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const { t } = useTranslation();
+  const { activeTab } = useCalculatorTab();
+  const { materials: customMaterials, pricing: customPricing, loading: loadingCustom, isConfigured } =
+    useCustomCalculator('plumbing', activeTab === 'custom');
+  const { getCustomPrice, getCustomUnitValue } = useCustomMaterials('plumbing');
   const [fixtures, setFixtures] = useState<Fixture[]>([]);
   const [pipingRuns, setPipingRuns] = useState<PipingRun[]>([]);
   const [includeWaterHeater, setIncludeWaterHeater] = useState(false);
@@ -239,7 +246,7 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   };
 
   const getPipePrice = (material: PipingRun['material'], size: number) => {
-    const prices = {
+    const defaultPrices = {
       'pex': {
         0.5: 0.89,
         0.75: 1.29,
@@ -273,11 +280,15 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         4: 24.98
       }
     };
-    return prices[material][size] || 0;
+
+    const defaultPrice = defaultPrices[material]?.[size] || 0;
+    const materialName = `${material}_${size}`;
+
+    return getCustomPrice(materialName, defaultPrice, 'pipe');
   };
 
   const getFittingPrice = (material: PipingRun['material'], size: number, type: keyof PipingRun['fittings']) => {
-    const prices = {
+    const defaultPrices = {
       'pex': {
         'elbows90': 1.98,
         'elbows45': 1.98,
@@ -327,7 +338,11 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         'valves': 49.98
       }
     };
-    return prices[material][type] || 0;
+
+    const defaultPrice = defaultPrices[material]?.[type] || 0;
+    const materialName = `${material}_${type}`;
+
+    return getCustomPrice(materialName, defaultPrice, 'fitting');
   };
 
   const handleCalculate = () => {
@@ -365,7 +380,8 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       }
 
       // Supply lines
-      const supplyLineCost = fixture.supplyLines * 12.98;
+      const supplyLinePrice = getCustomPrice('supply_line', 12.98, 'fixture');
+      const supplyLineCost = fixture.supplyLines * supplyLinePrice;
       totalCost += supplyLineCost;
 
       results.push({
@@ -376,10 +392,11 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       });
 
       // Drain assembly
-      const drainAssemblyCost = fixture.type === 'toilet' ? 24.98 :
+      const defaultDrainPrice = fixture.type === 'toilet' ? 24.98 :
                                fixture.type === 'tub' ? 49.98 :
                                fixture.type === 'shower' ? 39.98 :
                                29.98;
+      const drainAssemblyCost = getCustomPrice(`drain_assembly_${fixture.type}`, defaultDrainPrice, 'fixture');
       totalCost += drainAssemblyCost;
 
       results.push({
@@ -422,7 +439,7 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
     // Water heater if included
     if (includeWaterHeater) {
-      const waterHeaterPrices = {
+      const defaultWaterHeaterPrices = {
         tank: {
           30: 399.98,
           40: 449.98,
@@ -437,7 +454,8 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         }
       };
 
-      const waterHeaterCost = waterHeaterPrices[waterHeaterType][waterHeaterSize];
+      const defaultPrice = defaultWaterHeaterPrices[waterHeaterType][waterHeaterSize];
+      const waterHeaterCost = getCustomPrice(`water_heater_${waterHeaterType}_${waterHeaterSize}`, defaultPrice, 'equipment');
       totalCost += waterHeaterCost;
 
       results.push({
@@ -448,7 +466,8 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       });
 
       // Water heater installation kit
-      const installKitCost = waterHeaterType === 'tank' ? 89.98 : 149.98;
+      const defaultInstallKitPrice = waterHeaterType === 'tank' ? 89.98 : 149.98;
+      const installKitCost = getCustomPrice(`install_kit_${waterHeaterType}`, defaultInstallKitPrice, 'equipment');
       totalCost += installKitCost;
 
       results.push({
@@ -461,8 +480,8 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
     // Water softener if included
     if (includeWaterSoftener) {
-      const softenerCost = 599.98;
-      const installKitCost = 89.98;
+      const softenerCost = getCustomPrice('water_softener', 599.98, 'equipment');
+      const installKitCost = getCustomPrice('softener_install_kit', 89.98, 'equipment');
       totalCost += softenerCost + installKitCost;
 
       results.push({
@@ -481,14 +500,15 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
     // Pressure tank if included
     if (includePressureTank) {
-      const tankPrices = {
+      const defaultTankPrices = {
         20: 199.98,
         30: 249.98,
         40: 299.98
       };
 
-      const tankCost = tankPrices[pressureTankSize];
-      const installKitCost = 69.98;
+      const defaultTankPrice = defaultTankPrices[pressureTankSize];
+      const tankCost = getCustomPrice(`pressure_tank_${pressureTankSize}`, defaultTankPrice, 'equipment');
+      const installKitCost = getCustomPrice('pressure_tank_install_kit', 69.98, 'equipment');
       totalCost += tankCost + installKitCost;
 
       results.push({
@@ -507,7 +527,8 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
     // Sewer connection if included
     if (includeSewerConnection && typeof sewerLength === 'number') {
-      const sewerPipeCost = sewerLength * 12.98; // 4" PVC sewer pipe
+      const sewerPipePrice = getCustomPrice('sewer_pipe_4', 12.98, 'pipe'); // 4" PVC sewer pipe
+      const sewerPipeCost = sewerLength * sewerPipePrice;
       totalCost += sewerPipeCost;
 
       results.push({
@@ -520,7 +541,8 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
     // Cleanouts if included
     if (includeCleanouts) {
-      const cleanoutCost = cleanoutCount * 24.98;
+      const cleanoutPrice = getCustomPrice('cleanout', 24.98, 'fixture');
+      const cleanoutCost = cleanoutCount * cleanoutPrice;
       totalCost += cleanoutCost;
 
       results.push({
@@ -548,6 +570,41 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       typeof run.length === 'number' && run.length > 0
     ) &&
     (!includeSewerConnection || typeof sewerLength === 'number');
+
+  // Loading state
+  if (activeTab === 'custom' && loadingCustom) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
+        <div className="flex items-center mb-6">
+          <Pipe className="h-6 w-6 text-orange-500 mr-2" />
+          <h2 className="text-xl font-bold text-slate-800">{t('calculators.plumbing.title')}</h2>
+        </div>
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading custom configuration...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Not configured state
+  if (activeTab === 'custom' && !isConfigured) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
+        <div className="flex items-center mb-6">
+          <Pipe className="h-6 w-6 text-orange-500 mr-2" />
+          <h2 className="text-xl font-bold text-slate-800">{t('calculators.plumbing.title')}</h2>
+        </div>
+        <div className="text-center py-12">
+          <Pipe className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Configuration Required</h3>
+          <p className="text-gray-600 mb-4">
+            This calculator hasn't been configured yet. Click the gear icon to set up your custom materials and pricing.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">

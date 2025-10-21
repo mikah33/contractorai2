@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Zap } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { CalculatorEstimateHeader } from '../calculators/CalculatorEstimateHeader';
+import { useCalculatorTab } from '../../contexts/CalculatorTabContext';
+import { useCustomCalculator } from '../../hooks/useCustomCalculator';
+import { useCustomMaterials } from '../../hooks/useCustomMaterials';
 
 interface Circuit {
   id: string;
@@ -21,6 +24,9 @@ interface Circuit {
 
 const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const { t } = useTranslation();
+  const { activeTab } = useCalculatorTab();
+  const { materials: customMaterials, pricing: customPricing, loading: loadingCustom, isConfigured } = useCustomCalculator('electrical', activeTab === 'custom');
+  const { getCustomPrice, getCustomUnitValue } = useCustomMaterials('electrical');
   const [circuits, setCircuits] = useState<Circuit[]>([]);
   const [includePanel, setIncludePanel] = useState(false);
   const [panelSize, setPanelSize] = useState<100 | 150 | 200>(200);
@@ -29,6 +35,32 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const [includeGFCI, setIncludeGFCI] = useState(true);
   const [includeAFCI, setIncludeAFCI] = useState(true);
   const [lastCalculation, setLastCalculation] = useState<CalculationResult[] | null>(null);
+
+  // Active wire pricing based on tab
+  const activeWirePricing = useMemo(() => {
+    if (activeTab === 'custom' && isConfigured && customMaterials.length > 0) {
+      const wireMaterials = customMaterials.filter(m => m.category === 'electrical_wire');
+      if (wireMaterials.length > 0) {
+        const pricing: Record<string, Record<number, number>> = {};
+        wireMaterials.forEach(m => {
+          const wireType = m.metadata?.wire_type || 'nm-b';
+          const gauge = m.metadata?.gauge || 14;
+          if (!pricing[wireType]) pricing[wireType] = {};
+          pricing[wireType][gauge] = m.price;
+        });
+        return pricing;
+      }
+    }
+    return {};
+  }, [activeTab, isConfigured, customMaterials]);
+
+  // Active panel pricing based on tab
+  const activePanelPricing = useMemo(() => {
+    if (activeTab === 'custom' && isConfigured && Object.keys(customPricing).length > 0) {
+      return customPricing;
+    }
+    return {};
+  }, [activeTab, isConfigured, customPricing]);
 
   const getCurrentInputs = () => ({
     circuits,
@@ -88,6 +120,12 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   };
 
   const getWirePrice = (gauge: number, type: string) => {
+    // Check custom pricing first
+    if (activeWirePricing[type] && activeWirePricing[type][gauge]) {
+      return activeWirePricing[type][gauge];
+    }
+
+    // Default prices
     const prices = {
       'nm-b': {
         14: 89.98,  // 250ft roll
@@ -115,10 +153,17 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         6: 449.98   // 250ft roll
       }
     };
-    return prices[type][gauge];
+    return prices[type]?.[gauge] || 0;
   };
 
   const getConduitPrice = (type: string, size: number) => {
+    // Check custom pricing first
+    const conduitKey = `conduit_${type}_${size}`;
+    if (activePanelPricing[conduitKey]) {
+      return activePanelPricing[conduitKey];
+    }
+
+    // Default prices
     const prices = {
       'emt': {
         0.5: 4.98,   // 10ft length
@@ -136,7 +181,7 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         1: 19.98     // 25ft roll
       }
     };
-    return prices[type][size];
+    return prices[type]?.[size] || 0;
   };
 
   const handleCalculate = () => {
@@ -145,12 +190,13 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
     // Calculate panel if included
     if (includePanel) {
+      const panelKey = `panel_${panelSize}a_${panelSpaces}sp`;
       const panelPrices = {
         100: { 20: 89.98, 30: 119.98, 40: 149.98 },
         150: { 20: 119.98, 30: 149.98, 40: 179.98 },
         200: { 20: 149.98, 30: 179.98, 40: 209.98 }
       };
-      const panelCost = panelPrices[panelSize][panelSpaces];
+      const panelCost = activePanelPricing[panelKey] || panelPrices[panelSize][panelSpaces];
       totalCost += panelCost;
 
       results.push({
@@ -161,9 +207,9 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       });
 
       if (includeGroundRods) {
-        const groundRodCost = 2 * 12.98; // Two ground rods required
-        const groundClampCost = 2 * 4.98;
-        const groundWireCost = 20.98; // 25ft of #6 bare copper
+        const groundRodCost = 2 * (activePanelPricing.ground_rod || 12.98); // Two ground rods required
+        const groundClampCost = 2 * (activePanelPricing.ground_clamp || 4.98);
+        const groundWireCost = activePanelPricing.ground_wire || 20.98; // 25ft of #6 bare copper
         totalCost += groundRodCost + groundClampCost + groundWireCost;
 
         results.push({
@@ -209,7 +255,7 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         // Conduit fittings
         const fittingsPerLength = 2;
         const fittingsNeeded = conduitPieces * fittingsPerLength;
-        const fittingCost = fittingsNeeded * 1.98;
+        const fittingCost = fittingsNeeded * (activePanelPricing.conduit_fitting || 1.98);
         totalCost += fittingCost;
 
         results.push({
@@ -224,13 +270,13 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       if (circuit.deviceCount > 0) {
         let deviceCost = 0;
         if (circuit.type === 'receptacle') {
-          const gfciPrice = 19.98;
-          const standardPrice = 3.98;
+          const gfciPrice = activePanelPricing.gfci_receptacle || 19.98;
+          const standardPrice = activePanelPricing.standard_receptacle || 3.98;
           const gfciCount = includeGFCI ? Math.ceil(circuit.deviceCount / 4) : 0;
           const standardCount = circuit.deviceCount - gfciCount;
           deviceCost = (gfciCount * gfciPrice) + (standardCount * standardPrice);
         } else if (circuit.type === 'lighting') {
-          deviceCost = circuit.deviceCount * 4.98; // Standard switches
+          deviceCost = circuit.deviceCount * (activePanelPricing.switch || 4.98); // Standard switches
         }
         totalCost += deviceCost;
 
@@ -244,7 +290,9 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
       // Box calculations
       if (circuit.boxCount > 0) {
-        const boxPrice = circuit.type === 'lighting' ? 0.98 : 1.98;
+        const boxPrice = circuit.type === 'lighting'
+          ? (activePanelPricing.box_lighting || 0.98)
+          : (activePanelPricing.box_receptacle || 1.98);
         const boxCost = circuit.boxCount * boxPrice;
         totalCost += boxCost;
 
@@ -257,8 +305,11 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       }
 
       // Circuit breaker
-      const breakerPrice = circuit.amperage >= 30 ? 24.98 :
-                          (includeAFCI ? 39.98 : 8.98);
+      const breakerPrice = circuit.amperage >= 30
+        ? (activePanelPricing[`breaker_${circuit.amperage}a`] || 24.98)
+        : (includeAFCI
+          ? (activePanelPricing.breaker_afci || 39.98)
+          : (activePanelPricing.breaker_standard || 8.98));
       totalCost += breakerPrice;
 
       results.push({
@@ -279,6 +330,41 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     typeof circuit.deviceCount === 'number' &&
     typeof circuit.boxCount === 'number'
   );
+
+  // Show loading state if custom calculator data is loading
+  if (activeTab === 'custom' && loadingCustom) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
+        <div className="flex items-center mb-6">
+          <Zap className="h-6 w-6 text-orange-500 mr-2" />
+          <h2 className="text-xl font-bold text-slate-800">{t('calculators.electrical.title')}</h2>
+        </div>
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading custom configuration...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show message if custom tab but not configured
+  if (activeTab === 'custom' && !isConfigured) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
+        <div className="flex items-center mb-6">
+          <Zap className="h-6 w-6 text-orange-500 mr-2" />
+          <h2 className="text-xl font-bold text-slate-800">{t('calculators.electrical.title')}</h2>
+        </div>
+        <div className="text-center py-12">
+          <Zap className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Configuration Required</h3>
+          <p className="text-gray-600 mb-4">
+            This calculator hasn't been configured yet. Click the gear icon to set up your custom materials and pricing.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
