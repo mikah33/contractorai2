@@ -32,6 +32,7 @@ import TileCalculator from '../components/pricing/TileCalculator';
 import RoofingCalculator from '../components/pricing/RoofingCalculator';
 import VeneerCalculator from '../components/pricing/VeneerCalculator';
 import CalculatorResults from '../components/pricing/CalculatorResults';
+import MaterialRequestButton from '../components/material-request/MaterialRequestButton';
 import { Trade, CalculationResult } from '../types';
 import { trades } from '../data/trades';
 
@@ -446,6 +447,9 @@ const PricingCalculator = () => {
           refreshCalculators();
         }}
       />
+
+      {/* Material Request Button - Always visible on calculator pages */}
+      <MaterialRequestButton />
     </div>
   );
 };
