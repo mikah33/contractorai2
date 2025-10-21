@@ -67,7 +67,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
     { name: t('navigation.calendar'), icon: Calendar, href: '/calendar' },
     { name: 'Ad Analyzer', icon: BarChart3, href: '/ad-analyzer' },
     { name: t('navigation.subscriptions'), icon: CreditCard, href: '/subscriptions' },
-    { name: t('navigation.settings'), icon: Settings, href: '/settings' },
+    { name: t('navigation.settings'), icon: Settings, href: '/settings', badge: 'Widgets now here' },
   ];
 
   return (
@@ -103,14 +103,21 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               <Link
                 key={item.name}
                 to={item.href}
-                className={`group flex items-center px-4 py-3 text-sm font-medium rounded-md transition-colors ${
+                className={`group flex items-center justify-between px-4 py-3 text-sm font-medium rounded-md transition-colors ${
                   isActive
                     ? 'bg-blue-800 text-white'
                     : 'text-blue-100 hover:bg-blue-800 hover:text-white'
                 }`}
               >
-                <item.icon className="w-5 h-5 mr-3 text-blue-300 flex-shrink-0" />
-                <span className="truncate">{item.name}</span>
+                <div className="flex items-center">
+                  <item.icon className="w-5 h-5 mr-3 text-blue-300 flex-shrink-0" />
+                  <span className="truncate">{item.name}</span>
+                </div>
+                {item.badge && (
+                  <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-teal-500 text-white rounded-full whitespace-nowrap">
+                    {item.badge}
+                  </span>
+                )}
               </Link>
             );
           })}
