@@ -508,22 +508,22 @@ const Settings = () => {
 
       {/* Calculator Widgets Section */}
       <div className="mt-6">
-        <div className="bg-white shadow rounded-lg">
+        <div className="bg-gray-100 shadow rounded-lg opacity-60">
           <div className="p-6">
-            <h2 className="flex items-center text-xl font-bold text-gray-900 mb-4">
-              <Code className="w-6 h-6 mr-2 text-gray-500" />
-              Calculator Widgets
+            <h2 className="flex items-center text-xl font-bold text-gray-500 mb-4">
+              <Code className="w-6 h-6 mr-2 text-gray-400" />
+              Calculator Widgets <span className="ml-2 text-sm font-normal text-gray-400">(Under Construction)</span>
             </h2>
-            <p className="text-sm text-gray-600 mb-6">
+            <p className="text-sm text-gray-500 mb-6">
               Embed our pricing calculators on your website. Choose from various calculator types to help your customers get instant pricing estimates.
             </p>
-            <Link
-              to="/calculator-widgets"
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            <button
+              disabled
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-gray-400 bg-gray-300 cursor-not-allowed"
             >
               <Code className="w-4 h-4 mr-2" />
               Manage Calculator Widgets
-            </Link>
+            </button>
           </div>
         </div>
       </div>
