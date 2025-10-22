@@ -151,14 +151,15 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       const totalStuds = studCount + openingStuds;
 
       // Calculate plates
+      const lumberStandardLength = getCustomUnitValue('Lumber', 16, 'lumber'); // ft per piece
       const plateLength = length;
       const platesNeeded = plateCount; // 2 for standard, 3 for double top plate
-      const platePieces = Math.ceil(plateLength / 16) * platesNeeded; // 16ft standard lumber length
+      const platePieces = Math.ceil(plateLength / lumberStandardLength) * platesNeeded;
 
       // Calculate headers
       const headerPieces = openings.reduce((sum, opening) => {
         const headerLength = opening.width + 1; // Add 1ft for overlap
-        return sum + (Math.ceil(headerLength / 16) * 2); // Double headers
+        return sum + (Math.ceil(headerLength / lumberStandardLength) * 2); // Double headers
       }, 0);
 
       const lumberPrice = getLumberPrice(lumberSize);
@@ -242,9 +243,9 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       // Using 30-degree Passlode 3" hot-dipped nails
       const nailsPerConnection = 2; // Standard framing connection
       const nailsNeeded = Math.ceil((totalStuds + platePieces + headerPieces) * nailsPerConnection);
-      const nailsPerStrip = 30; // Typical strip count for framing nailers
+      const nailsPerStrip = getCustomUnitValue('Framing Nails', 30, 'hardware'); // nails per strip
       const nailStripsNeeded = Math.ceil(nailsNeeded / nailsPerStrip);
-      const nailsPerBox = 1000; // Standard box size for Passlode nails
+      const nailsPerBox = getCustomUnitValue('Nail Box', 1000, 'hardware'); // nails per box
       const nailBoxesNeeded = Math.ceil(nailStripsNeeded * nailsPerStrip / nailsPerBox);
 
       // Passlode 3" hot-dipped galvanized nails cost

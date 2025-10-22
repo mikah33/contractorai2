@@ -140,7 +140,8 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       const baseVolume = (areaWithWaste * baseDepth) / 324;
       const beddingVolume = (areaWithWaste * beddingDepth) / 324;
 
-      const jointSandBags = Math.ceil(baseArea / 60);
+      const jointSandCoverage = getCustomUnitValue('Polymeric Sand', 60, 'pavers'); // sq ft per bag
+      const jointSandBags = Math.ceil(baseArea / jointSandCoverage);
 
       // Calculate paver cost using active pricing
       const paverCost = baseArea * effectiveCost;
