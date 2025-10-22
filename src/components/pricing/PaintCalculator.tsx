@@ -240,7 +240,8 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     ];
 
     if (includePrimer) {
-      const primerGallons = Math.ceil(areaWithWaste / 400); // Primer typically covers 400 sq ft
+      const primerCoverage = getCustomUnitValue('Primer', 400, 'primer'); // sq ft per gallon
+      const primerGallons = Math.ceil(areaWithWaste / primerCoverage);
       const primerCost = primerGallons * getPrimerPrice();
 
       results.push({

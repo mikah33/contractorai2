@@ -404,14 +404,15 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
     // Calculate underlayment if needed
     if (includeUnderlayment && selectedOption.requiresUnderlayment) {
-      const underlaymentRolls = Math.ceil(areaWithWaste / 100); // Typical 100 sq ft rolls
+      const underlaymentCoverage = getCustomUnitValue('Underlayment', 100, 'underlayment'); // sq ft per roll
+      const underlaymentRolls = Math.ceil(areaWithWaste / underlaymentCoverage);
       const underlaymentPricePerSqft = activeUnderlaymentOptions[underlaymentType]?.pricePerSqft || 0.45;
       const underlaymentPrice = getCustomPrice(
         activeUnderlaymentOptions[underlaymentType]?.name || 'Standard Foam',
         underlaymentPricePerSqft,
         'underlayment'
       );
-      const underlaymentCost = underlaymentRolls * (underlaymentPrice * 100);
+      const underlaymentCost = underlaymentRolls * (underlaymentPrice * underlaymentCoverage);
       totalCost += underlaymentCost;
 
       results.push({
@@ -424,7 +425,8 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
     // Calculate transition strips if needed
     if (includeTransitionStrips && typeof transitionStripLength === 'number') {
-      const stripsNeeded = Math.ceil(transitionStripLength / 4); // 4ft strips
+      const stripLength = getCustomUnitValue('Transition Strips', 4, 'trim'); // ft per piece
+      const stripsNeeded = Math.ceil(transitionStripLength / stripLength);
       const stripsCost = stripsNeeded * getCustomPrice('Transition Strips', 19.98, 'trim');
       totalCost += stripsCost;
 
