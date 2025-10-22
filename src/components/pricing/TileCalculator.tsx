@@ -250,7 +250,7 @@ const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     let totalCost = tileCost;
 
     // Calculate mortar
-    const mortarCoverage = 90; // sq ft per 50lb bag
+    const mortarCoverage = getCustomUnitValue('Mortar', 90, 'mortar'); // sq ft per 50lb bag
     const mortarBags = Math.ceil(areaWithWaste / mortarCoverage);
     const mortarPrice = activeMortarPrices[mortarType] || 24.98;
     const mortarCost = mortarBags * mortarPrice;
@@ -264,11 +264,12 @@ const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     });
 
     // Calculate grout
-    const groutCoverage = {
+    const baseGroutCoverage = {
       0.125: 200,
       0.25: 150,
       0.375: 100
     }[groutWidth];
+    const groutCoverage = getCustomUnitValue('Grout', baseGroutCoverage, 'grout'); // sq ft per bag
     const groutBags = Math.ceil(areaWithWaste / groutCoverage);
     const groutPrice = activeGroutPrices[groutType] || 19.98;
     const groutCost = groutBags * groutPrice;
@@ -286,7 +287,8 @@ const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
     // Calculate backer board if included
     if (includeBackerBoard) {
-      const backerBoardSheets = Math.ceil(totalArea / 32); // 32 sq ft per sheet
+      const backerBoardCoverage = getCustomUnitValue('Backer Board', 32, 'supplies'); // sq ft per sheet
+      const backerBoardSheets = Math.ceil(totalArea / backerBoardCoverage);
       const backerBoardPrice = backerBoardThickness === '1/4'
         ? getCustomPrice('Backer Board 1/4"', 15.98, 'supplies')
         : getCustomPrice('Backer Board 5/8"', 19.98, 'supplies');
@@ -316,7 +318,8 @@ const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
     // Calculate membrane if included
     if (includeMembrane) {
-      const membraneRolls = Math.ceil(totalArea / 100); // 100 sq ft per roll
+      const membraneCoverage = getCustomUnitValue('Waterproof Membrane', 100, 'supplies'); // sq ft per roll
+      const membraneRolls = Math.ceil(totalArea / membraneCoverage);
       const membraneCost = membraneRolls * getCustomPrice('Waterproof Membrane', 89.98, 'supplies');
       totalCost += membraneCost;
 
@@ -331,7 +334,8 @@ const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     // Calculate edging if included
     if (includeEdging && typeof length === 'number' && typeof width === 'number') {
       const edgeLength = surfaceType === 'floor' ? 2 * (length + width) : length + width;
-      const edgePieces = Math.ceil(edgeLength / 8); // 8ft pieces
+      const edgeTrimLength = getCustomUnitValue('Edge Trim', 8, 'supplies'); // ft per piece
+      const edgePieces = Math.ceil(edgeLength / edgeTrimLength);
       const edgePrice = edgingType === 'metal'
         ? getCustomPrice('Metal Edge Trim', 12.98, 'supplies')
         : getCustomPrice('Stone Edge Trim', 24.98, 'supplies');

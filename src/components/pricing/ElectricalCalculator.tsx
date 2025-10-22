@@ -224,7 +224,8 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     // Calculate circuit materials
     circuits.forEach(circuit => {
       // Wire calculations
-      const wireRollLength = circuit.wireType === 'ser' ? 125 : 250;
+      const baseWireRollLength = circuit.wireType === 'ser' ? 125 : 250;
+      const wireRollLength = getCustomUnitValue(`Wire ${circuit.wireType.toUpperCase()}`, baseWireRollLength, 'wire'); // ft per roll
       const wiringRuns = circuit.voltage === 240 ? 3 : 2;
       const totalWireLength = circuit.length * wiringRuns * 1.2; // 20% extra for bends and connections
       const wireRollsNeeded = Math.ceil(totalWireLength / wireRollLength);
@@ -241,7 +242,8 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       // Conduit calculations if needed
       if (circuit.conduit && circuit.conduitType && circuit.conduitSize) {
         const conduitLength = Math.ceil(circuit.length * 1.1); // 10% extra for bends
-        const conduitPieces = Math.ceil(conduitLength / 10);
+        const conduitPieceLength = getCustomUnitValue('Conduit', 10, 'conduit'); // ft per piece
+        const conduitPieces = Math.ceil(conduitLength / conduitPieceLength);
         const conduitCost = conduitPieces * getConduitPrice(circuit.conduitType, circuit.conduitSize);
         totalCost += conduitCost;
 
