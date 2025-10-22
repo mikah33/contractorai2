@@ -229,8 +229,9 @@ const GuttersCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       });
 
       // Calculate downspouts (1 per 35 feet of gutter)
-      const downspoutsNeeded = Math.ceil(totalGutterLength / 35);
-      const downspoutLength = 15; // Average 15 feet per downspout
+      const downspoutSpacing = getCustomUnitValue('Downspout Spacing', 35, 'downspouts'); // ft per downspout
+      const downspoutsNeeded = Math.ceil(totalGutterLength / downspoutSpacing);
+      const downspoutLength = getCustomUnitValue('Downspout Length', 15, 'downspouts'); // ft per downspout
       const totalDownspoutLength = downspoutsNeeded * downspoutLength;
 
       const downspoutPrice = downspoutSize === 'custom' && typeof customDownspoutPrice === 'number'
@@ -249,7 +250,8 @@ const GuttersCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
       // Add endcaps if included
       if (includeEndcaps) {
-        const endcapsNeeded = Math.ceil(totalGutterLength / 50) * 2; // Two per section
+        const endcapSectionLength = getCustomUnitValue('Endcap Section', 50, 'accessories'); // ft per section
+        const endcapsNeeded = Math.ceil(totalGutterLength / endcapSectionLength) * 2; // Two per section
         const endcapPrice = gutterMaterial === 'copper' ? activeAccessoryPricing.endcapCopper : activeAccessoryPricing.endcap;
         const endcapCost = endcapsNeeded * endcapPrice;
         totalCost += endcapCost;
@@ -304,7 +306,8 @@ const GuttersCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       }
 
       // Add hangers and misc hardware
-      const hangersNeeded = Math.ceil(totalGutterLength / 2); // One every 2 feet
+      const hangerSpacing = getCustomUnitValue('Hanger Spacing', 2, 'accessories'); // ft per hanger
+      const hangersNeeded = Math.ceil(totalGutterLength / hangerSpacing); // One every 2 feet
       const hangerPrice = gutterMaterial === 'copper' ? activeAccessoryPricing.hangerCopper : activeAccessoryPricing.hanger;
       const hangerCost = hangersNeeded * hangerPrice;
       totalCost += hangerCost;

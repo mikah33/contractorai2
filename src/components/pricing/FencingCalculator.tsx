@@ -499,7 +499,8 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       // Calculate fencing materials based on type
       if (fenceType === 'privacy' || fenceType === 'panel') {
         const panelPrice = activeMaterialPrices[fenceType]?.[material]?.panel || 0;
-        const panelsNeeded = Math.ceil(length / 8); // Standard 8ft panels
+        const fencePanelLength = getCustomUnitValue('Fence Panel', 8, 'panels'); // ft per panel
+        const panelsNeeded = Math.ceil(length / fencePanelLength);
         const panelCost = panelsNeeded * panelPrice;
         totalCost += panelCost;
 
@@ -511,7 +512,7 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         });
       } else if (fenceType === 'picket') {
         const picketPrice = activeMaterialPrices.picket?.[material]?.picket || 0;
-        const picketsPerFoot = 2; // Standard spacing
+        const picketsPerFoot = getCustomUnitValue('Pickets', 2, 'pickets'); // pickets per linear foot
         const picketsNeeded = Math.ceil(length * picketsPerFoot);
         const picketCost = picketsNeeded * picketPrice;
         totalCost += picketCost;
@@ -524,7 +525,8 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         });
       } else if (fenceType === 'chain-link') {
         const fabricPrice = activeMaterialPrices['chain-link']?.metal?.fabric || 5.98;
-        const fabricNeeded = length * height / 9; // Convert to square yards
+        const fabricCoverage = getCustomUnitValue('Chain-Link Fabric', 9, 'fabric'); // sq ft per yard
+        const fabricNeeded = length * height / fabricCoverage; // Convert to square yards
         const fabricCost = fabricNeeded * fabricPrice;
         totalCost += fabricCost;
 
@@ -540,7 +542,8 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       if (fenceType !== 'panel') {
         const railsPerSection = fenceType === 'ranch' ? 3 : 2;
         const railPrice = activeMaterialPrices[fenceType]?.[material]?.rail || 0;
-        const railsNeeded = Math.ceil(length / 8) * railsPerSection;
+        const railSectionLength = getCustomUnitValue('Rail Section', 8, 'rails'); // ft per section
+        const railsNeeded = Math.ceil(length / railSectionLength) * railsPerSection;
         const railCost = railsNeeded * railPrice;
         totalCost += railCost;
 

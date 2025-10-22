@@ -258,7 +258,8 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
         const horizontalBars = Math.ceil((height * 12) / horizontalSpacing);
         const totalRebar = (verticalBars * height) + (horizontalBars * length);
         const rebarPrice = getCustomPrice('rebar', 12.98);
-        const rebarCost = Math.ceil(totalRebar / 20) * rebarPrice;
+        const rebarStandardLength = getCustomUnitValue('Rebar', 20, 'rebar'); // ft per piece
+        const rebarCost = Math.ceil(totalRebar / rebarStandardLength) * rebarPrice;
         totalCost += rebarCost;
 
         results.push({
@@ -374,7 +375,8 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
         // Geogrid if included
         if (includeGeogrid && height > 4) {
           const geogridArea = length * height * geogridLayers;
-          const geogridRolls = Math.ceil(geogridArea / 200); // 200 sq ft per roll
+          const geogridCoverage = getCustomUnitValue('Geogrid', 200, 'geogrid'); // sq ft per roll
+          const geogridRolls = Math.ceil(geogridArea / geogridCoverage);
           const geogridPrice = getCustomPrice('geogrid', 89.98);
           const geogridCost = geogridRolls * geogridPrice;
           totalCost += geogridCost;
@@ -389,7 +391,8 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
 
         // Filter fabric
         const fabricArea = length * (height + 2); // Extra 2ft for overlap
-        const fabricRolls = Math.ceil(fabricArea / 300); // 300 sq ft per roll
+        const fabricCoverage = getCustomUnitValue('Filter Fabric', 300, 'fabric'); // sq ft per roll
+        const fabricRolls = Math.ceil(fabricArea / fabricCoverage);
         const fabricPrice = getCustomPrice('filter_fabric', 45.98);
         const fabricCost = fabricRolls * fabricPrice;
         totalCost += fabricCost;

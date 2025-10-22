@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { CalculatorEstimateHeader } from '../calculators/CalculatorEstimateHeader';
 import { useCalculatorTab } from '../../contexts/CalculatorTabContext';
 import { useCustomCalculator } from '../../hooks/useCustomCalculator';
+import { useCustomMaterials } from '../../hooks/useCustomMaterials';
 
 type DeckingType = {
   id: string;
@@ -218,6 +219,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const { t } = useTranslation();
   const { activeTab } = useCalculatorTab();
   const { materials: customMaterials, pricing: customPricing, loading: loadingCustom, isConfigured } = useCustomCalculator('deck', activeTab === 'custom');
+  const { getCustomPrice, getCustomUnitValue } = useCustomMaterials('deck');
   const [inputType, setInputType] = useState<'dimensions' | 'area'>('dimensions');
   const [length, setLength] = useState<number | ''>('');
   const [width, setWidth] = useState<number | ''>('');
@@ -430,7 +432,8 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   };
 
   const calculateOptimalBoardLength = (deckWidth: number) => {
-    const availableLengths = [12, 16, 20];
+    const lumberStandardLength = getCustomUnitValue('Lumber', 16, 'lumber'); // ft per piece
+    const availableLengths = [12, lumberStandardLength, 20];
     const selectedDecking = activeDeckingTypes.find(d => d.id === deckingType);
     if (!selectedDecking) {
       return 16; // Default to 16ft if no decking type found
@@ -586,7 +589,8 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     }
 
     const screwsNeeded = totalBoardsNeeded * joistsNeeded * 2;
-    const screwBoxesNeeded = Math.ceil(screwsNeeded / 1000);
+    const screwsPerBox = getCustomUnitValue('Deck Screws Box', 1000, 'hardware'); // screws per box
+    const screwBoxesNeeded = Math.ceil(screwsNeeded / screwsPerBox);
     const screwCost = screwBoxesNeeded * activeMaterialPrices.deck_screws;
     totalCost += screwCost;
 
@@ -696,7 +700,8 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     }
 
     if (includeFascia && typeof fasciaLength === 'number') {
-      const boardsNeeded = Math.ceil(fasciaLength / 16);
+      const fasciaStandardLength = getCustomUnitValue('Fascia', 16, 'fascia'); // ft per board
+      const boardsNeeded = Math.ceil(fasciaLength / fasciaStandardLength);
       const fasciaPrice = activeFasciaTypes[fasciaType].price[joistSize];
       const fasciaCost = boardsNeeded * fasciaPrice;
       totalCost += fasciaCost;
