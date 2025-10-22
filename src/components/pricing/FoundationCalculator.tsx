@@ -233,7 +233,8 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       if (includeSteelReinforcement) {
         // Footing rebar (longitudinal bars)
         const footingRebarLength = perimeter * 2;
-        const footingRebarPieces = Math.ceil(footingRebarLength / 20);
+        const rebarStandardLength = getCustomUnitValue('Rebar', 20, 'rebar'); // ft per piece
+        const footingRebarPieces = Math.ceil(footingRebarLength / rebarStandardLength);
         const footingRebarCost = footingRebarPieces * activeRebarPrice;
         totalCost += footingRebarCost;
 
@@ -248,8 +249,8 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         const verticalBarSpacing = 16;
         const verticalBars = Math.ceil((perimeter * 12) / verticalBarSpacing);
         const verticalBarLength = stemWallHeight + 2;
-        const wallVerticalRebarPieces = Math.ceil((verticalBars * verticalBarLength) / 20);
-        const wallHorizontalRebarPieces = Math.ceil((perimeter * 2) / 20);
+        const wallVerticalRebarPieces = Math.ceil((verticalBars * verticalBarLength) / rebarStandardLength);
+        const wallHorizontalRebarPieces = Math.ceil((perimeter * 2) / rebarStandardLength);
         const wallRebarCost = (wallVerticalRebarPieces + wallHorizontalRebarPieces) * activeRebarPrice;
         totalCost += wallRebarCost;
 
@@ -265,7 +266,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         const longitudinalBars = Math.ceil(width / slabRebarSpacingFt) + 1;
         const transverseBars = Math.ceil(length / slabRebarSpacingFt) + 1;
         const slabRebarLength = (longitudinalBars * length) + (transverseBars * width);
-        const slabRebarPieces = Math.ceil(slabRebarLength / 20);
+        const slabRebarPieces = Math.ceil(slabRebarLength / rebarStandardLength);
         const slabRebarCost = slabRebarPieces * activeRebarPrice;
         totalCost += slabRebarCost;
 
@@ -280,7 +281,8 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       // 7. Vapor Barrier
       if (includeVaporBarrier) {
         const vaporBarrierArea = area * 1.1;
-        const vaporBarrierRolls = Math.ceil(vaporBarrierArea / 1000);
+        const vaporBarrierCoverage = getCustomUnitValue('Vapor Barrier', 1000, 'vapor-barrier'); // sq ft per roll
+        const vaporBarrierRolls = Math.ceil(vaporBarrierArea / vaporBarrierCoverage);
         const vaporBarrierCost = vaporBarrierRolls * activeMaterialPrices.vaporBarrier;
         totalCost += vaporBarrierCost;
 
@@ -295,7 +297,8 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       // 8. Waterproofing
       if (includeWaterproofing) {
         const waterproofingArea = perimeter * stemWallHeight * 1.1;
-        const waterproofingGallons = Math.ceil(waterproofingArea / 100);
+        const waterproofingCoverage = getCustomUnitValue('Waterproofing', 100, 'waterproofing'); // sq ft per gallon
+        const waterproofingGallons = Math.ceil(waterproofingArea / waterproofingCoverage);
         const waterproofingCost = waterproofingGallons * activeMaterialPrices.waterproofing;
         totalCost += waterproofingCost;
 

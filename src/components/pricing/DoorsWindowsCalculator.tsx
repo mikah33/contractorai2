@@ -362,12 +362,13 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       }, 0);
 
       const insulationPrice = getCustomPrice('insulation', 12.98);
-      const insulationCost = Math.ceil(insulationNeeded / 20) * insulationPrice;
+      const insulationRollCoverage = getCustomUnitValue('Insulation Roll', 20, 'insulation'); // linear ft per roll
+      const insulationCost = Math.ceil(insulationNeeded / insulationRollCoverage) * insulationPrice;
       totalCost += insulationCost;
 
       results.push({
         label: t('calculators.doorsWindows.insulation'),
-        value: Math.ceil(insulationNeeded / 20),
+        value: Math.ceil(insulationNeeded / insulationRollCoverage),
         unit: t('calculators.doorsWindows.units.rolls20ft'),
         cost: insulationCost
       });
@@ -388,9 +389,10 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     }
 
     if (includeCaulk) {
+      const caulkCoverage = getCustomUnitValue('Caulk', 20, 'caulk'); // linear ft per tube
       const caulkTubes = Math.ceil(openings.reduce((sum, opening) => {
         const linearFeet = (opening.width + opening.height) * 2 / 12;
-        return sum + (linearFeet * opening.quantity / 20); // 20 linear feet per tube
+        return sum + (linearFeet * opening.quantity / caulkCoverage);
       }, 0));
 
       const caulkPrice = getCustomPrice('caulk', 6.98);
@@ -406,7 +408,8 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     }
 
     if (includeShims) {
-      const shimPacks = Math.ceil(openings.reduce((sum, o) => sum + o.quantity, 0) / 2);
+      const shimsPerPack = getCustomUnitValue('Shims', 2, 'shims'); // openings per pack
+      const shimPacks = Math.ceil(openings.reduce((sum, o) => sum + o.quantity, 0) / shimsPerPack);
       const shimPrice = getCustomPrice('shims', 4.98);
       const shimCost = shimPacks * shimPrice;
       totalCost += shimCost;
