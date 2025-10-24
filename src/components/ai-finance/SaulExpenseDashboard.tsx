@@ -14,6 +14,11 @@ interface Expense {
   created_at: string;
 }
 
+interface Project {
+  id: string;
+  name: string;
+}
+
 interface SaulExpenseDashboardProps {
   sessionStartTime: Date;
   onRefresh?: () => void;
@@ -28,27 +33,132 @@ export const SaulExpenseDashboard: React.FC<SaulExpenseDashboardProps> = ({
   const [activeTab, setActiveTab] = useState<'session' | 'all' | 'dashboard'>('session');
   const [isLoading, setIsLoading] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<string>('');
+  const [projectFilter, setProjectFilter] = useState<string>('');
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [totalRevenue, setTotalRevenue] = useState(0);
+  const [totalProfit, setTotalProfit] = useState(0);
+  const [outstandingInvoices, setOutstandingInvoices] = useState(0);
+  const [recurringExpensesCount, setRecurringExpensesCount] = useState(0);
+  const [budgetUtilization, setBudgetUtilization] = useState(0);
 
   const fetchExpenses = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
+      // Fetch projects first
+      const { data: projectData, error: projectError } = await supabase
+        .from('projects')
+        .select('id, name')
+        .order('name');
+
+      if (!projectError) {
+        setProjects(projectData || []);
+      }
+
+      // Build expense query
+      let expenseQuery = supabase
         .from('finance_expenses')
         .select('*')
         .order('date', { ascending: false })
         .limit(50);
 
-      if (error) throw error;
+      // Apply project filter if selected
+      if (projectFilter) {
+        expenseQuery = expenseQuery.eq('project_id', projectFilter);
+      }
 
-      setAllExpenses(data || []);
+      const { data: expenseData, error: expenseError } = await expenseQuery;
+
+      if (expenseError) throw expenseError;
+
+      setAllExpenses(expenseData || []);
 
       // Filter expenses from current session
-      const sessionExp = (data || []).filter(exp =>
+      const sessionExp = (expenseData || []).filter(exp =>
         new Date(exp.created_at) >= sessionStartTime
       );
       setSessionExpenses(sessionExp);
+
+      // Build revenue query with project filter
+      let revenueQuery = supabase
+        .from('payments')
+        .select('amount, status')
+        .eq('status', 'completed')
+        .order('payment_date', { ascending: false })
+        .limit(50);
+
+      if (projectFilter) {
+        revenueQuery = revenueQuery.eq('project_id', projectFilter);
+      }
+
+      const { data: revenueData, error: revenueError } = await revenueQuery;
+
+      if (revenueError) throw revenueError;
+
+      const revenue = (revenueData || []).reduce((sum, payment) =>
+        sum + parseFloat(payment.amount || 0), 0
+      );
+      setTotalRevenue(revenue);
+
+      // Calculate profit
+      const expenses = (expenseData || []).reduce((sum, exp) =>
+        sum + parseFloat(exp.amount || 0), 0
+      );
+      setTotalProfit(revenue - expenses);
+
+      // Build invoice query with project filter
+      let invoiceQuery = supabase
+        .from('invoices')
+        .select('total_amount')
+        .in('status', ['pending', 'sent', 'overdue']);
+
+      if (projectFilter) {
+        invoiceQuery = invoiceQuery.eq('project_id', projectFilter);
+      }
+
+      const { data: invoiceData, error: invoiceError } = await invoiceQuery;
+
+      if (!invoiceError) {
+        const outstanding = (invoiceData || []).reduce((sum, inv) =>
+          sum + parseFloat(inv.total_amount || 0), 0
+        );
+        setOutstandingInvoices(outstanding);
+      }
+
+      // Build recurring expenses query with project filter
+      let recurringQuery = supabase
+        .from('recurring_expenses')
+        .select('id')
+        .eq('active', true);
+
+      if (projectFilter) {
+        recurringQuery = recurringQuery.eq('project_id', projectFilter);
+      }
+
+      const { data: recurringData, error: recurringError } = await recurringQuery;
+
+      if (!recurringError) {
+        setRecurringExpensesCount((recurringData || []).length);
+      }
+
+      // Build budget query with project filter
+      let budgetQuery = supabase
+        .from('budgets')
+        .select('budget_amount, spent_amount');
+
+      if (projectFilter) {
+        budgetQuery = budgetQuery.eq('project_id', projectFilter);
+      }
+
+      const { data: budgetData, error: budgetError } = await budgetQuery;
+
+      if (!budgetError && budgetData && budgetData.length > 0) {
+        const totalBudget = budgetData.reduce((sum, b) => sum + parseFloat(b.budget_amount || 0), 0);
+        const totalSpent = budgetData.reduce((sum, b) => sum + parseFloat(b.spent_amount || 0), 0);
+        const utilization = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
+        setBudgetUtilization(utilization);
+      }
     } catch (error) {
-      console.error('Error fetching expenses:', error);
+      console.error('Error fetching financial data:', error);
     } finally {
       setIsLoading(false);
     }
@@ -56,7 +166,7 @@ export const SaulExpenseDashboard: React.FC<SaulExpenseDashboardProps> = ({
 
   useEffect(() => {
     fetchExpenses();
-  }, []);
+  }, [projectFilter]);
 
   const handleRefresh = () => {
     fetchExpenses();
@@ -93,10 +203,10 @@ export const SaulExpenseDashboard: React.FC<SaulExpenseDashboardProps> = ({
     <div className="bg-white rounded-lg shadow-lg">
       {/* Header */}
       <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-green-500 to-green-600">
-        <div className="flex items-center justify-between text-white">
+        <div className="flex items-center justify-between text-white mb-3">
           <div className="flex items-center gap-2">
             <Receipt className="w-5 h-5" />
-            <h3 className="font-bold">Expense Dashboard</h3>
+            <h3 className="font-bold">Financial Dashboard</h3>
           </div>
           <button
             onClick={handleRefresh}
@@ -106,6 +216,23 @@ export const SaulExpenseDashboard: React.FC<SaulExpenseDashboardProps> = ({
           >
             <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
+        </div>
+
+        {/* Project Filter */}
+        <div className="flex items-center gap-2">
+          <Filter className="w-4 h-4 text-white/80" />
+          <select
+            value={projectFilter}
+            onChange={(e) => setProjectFilter(e.target.value)}
+            className="flex-1 px-3 py-2 bg-white/20 backdrop-blur-sm border border-white/30 rounded-lg text-sm font-medium text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent"
+          >
+            <option value="" className="text-gray-900">All Projects</option>
+            {projects.map(project => (
+              <option key={project.id} value={project.id} className="text-gray-900">
+                {project.name}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
@@ -148,9 +275,22 @@ export const SaulExpenseDashboard: React.FC<SaulExpenseDashboardProps> = ({
         {activeTab === 'dashboard' ? (
           /* Dashboard View */
           <div className="space-y-4">
-            {/* Stats Cards - Stacked vertically for better readability */}
+            {/* Financial Overview Cards */}
             <div className="space-y-3">
-              {/* Total Expenses Card */}
+              {/* Revenue Card */}
+              <div className="bg-green-50 rounded-xl border border-green-200 p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-green-700">
+                    <DollarSign className="w-5 h-5" />
+                    <span className="text-sm font-semibold">Total Revenue</span>
+                  </div>
+                  <div className="text-2xl font-bold text-green-900">
+                    {formatCurrency(totalRevenue)}
+                  </div>
+                </div>
+              </div>
+
+              {/* Expenses Card */}
               <div className="bg-red-50 rounded-xl border border-red-200 p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-red-700">
@@ -163,26 +303,76 @@ export const SaulExpenseDashboard: React.FC<SaulExpenseDashboardProps> = ({
                 </div>
               </div>
 
+              {/* Profit Card */}
+              <div className={`rounded-xl border p-4 ${totalProfit >= 0 ? 'bg-blue-50 border-blue-200' : 'bg-orange-50 border-orange-200'}`}>
+                <div className="flex items-center justify-between">
+                  <div className={`flex items-center gap-2 ${totalProfit >= 0 ? 'text-blue-700' : 'text-orange-700'}`}>
+                    <DollarSign className="w-5 h-5" />
+                    <span className="text-sm font-semibold">Net Profit</span>
+                  </div>
+                  <div className={`text-2xl font-bold ${totalProfit >= 0 ? 'text-blue-900' : 'text-orange-900'}`}>
+                    {formatCurrency(totalProfit)}
+                  </div>
+                </div>
+              </div>
+
+              {/* Outstanding Invoices */}
+              <div className="bg-yellow-50 rounded-xl border border-yellow-200 p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-yellow-700">
+                    <Receipt className="w-5 h-5" />
+                    <span className="text-sm font-semibold">Outstanding Invoices</span>
+                  </div>
+                  <div className="text-2xl font-bold text-yellow-900">
+                    {formatCurrency(outstandingInvoices)}
+                  </div>
+                </div>
+              </div>
+
               {/* Stats Row */}
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-blue-50 rounded-xl border border-blue-200 p-4">
-                  <div className="flex items-center gap-2 text-blue-700 mb-1">
-                    <Receipt className="w-4 h-4" />
-                    <span className="text-xs font-medium">Transactions</span>
+                <div className="bg-purple-50 rounded-xl border border-purple-200 p-4">
+                  <div className="flex items-center gap-2 text-purple-700 mb-1">
+                    <Calendar className="w-4 h-4" />
+                    <span className="text-xs font-medium">Recurring Expenses</span>
                   </div>
-                  <div className="text-xl font-bold text-blue-900">
-                    {expensesToShow.length}
+                  <div className="text-xl font-bold text-purple-900">
+                    {recurringExpensesCount} active
                   </div>
                 </div>
 
-                <div className="bg-green-50 rounded-xl border border-green-200 p-4">
-                  <div className="flex items-center gap-2 text-green-700 mb-1">
-                    <Calendar className="w-4 h-4" />
-                    <span className="text-xs font-medium">This Session</span>
+                <div className={`rounded-xl border p-4 ${
+                  budgetUtilization <= 75 ? 'bg-teal-50 border-teal-200' :
+                  budgetUtilization <= 90 ? 'bg-orange-50 border-orange-200' :
+                  'bg-red-50 border-red-200'
+                }`}>
+                  <div className={`flex items-center gap-2 mb-1 ${
+                    budgetUtilization <= 75 ? 'text-teal-700' :
+                    budgetUtilization <= 90 ? 'text-orange-700' :
+                    'text-red-700'
+                  }`}>
+                    <DollarSign className="w-4 h-4" />
+                    <span className="text-xs font-medium">Budget Used</span>
                   </div>
-                  <div className="text-xl font-bold text-green-900">
-                    {sessionExpenses.length}
+                  <div className={`text-xl font-bold ${
+                    budgetUtilization <= 75 ? 'text-teal-900' :
+                    budgetUtilization <= 90 ? 'text-orange-900' :
+                    'text-red-900'
+                  }`}>
+                    {budgetUtilization.toFixed(0)}%
                   </div>
+                </div>
+              </div>
+
+              {/* Transaction counts */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-gray-50 rounded-xl border border-gray-200 p-3">
+                  <div className="text-xs text-gray-600 mb-1">Total Transactions</div>
+                  <div className="text-lg font-bold text-gray-900">{expensesToShow.length}</div>
+                </div>
+                <div className="bg-gray-50 rounded-xl border border-gray-200 p-3">
+                  <div className="text-xs text-gray-600 mb-1">This Session</div>
+                  <div className="text-lg font-bold text-gray-900">{sessionExpenses.length}</div>
                 </div>
               </div>
             </div>
