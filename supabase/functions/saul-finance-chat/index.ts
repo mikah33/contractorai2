@@ -13,6 +13,88 @@ const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY') || '';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 
+// Helper: Parse natural language dates
+function parseDateRange(dateString: string): { startDate: string; endDate: string } {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  // Handle specific date ranges
+  if (dateString.toLowerCase().includes('last week')) {
+    const lastWeekStart = new Date(today);
+    lastWeekStart.setDate(today.getDate() - today.getDay() - 7); // Last Sunday
+    const lastWeekEnd = new Date(lastWeekStart);
+    lastWeekEnd.setDate(lastWeekStart.getDate() + 6); // Last Saturday
+    return {
+      startDate: lastWeekStart.toISOString().split('T')[0],
+      endDate: lastWeekEnd.toISOString().split('T')[0]
+    };
+  }
+
+  if (dateString.toLowerCase().includes('this week')) {
+    const weekStart = new Date(today);
+    weekStart.setDate(today.getDate() - today.getDay()); // This Sunday
+    return {
+      startDate: weekStart.toISOString().split('T')[0],
+      endDate: today.toISOString().split('T')[0]
+    };
+  }
+
+  if (dateString.toLowerCase().includes('last month')) {
+    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+    return {
+      startDate: lastMonth.toISOString().split('T')[0],
+      endDate: lastMonthEnd.toISOString().split('T')[0]
+    };
+  }
+
+  if (dateString.toLowerCase().includes('this month')) {
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    return {
+      startDate: monthStart.toISOString().split('T')[0],
+      endDate: today.toISOString().split('T')[0]
+    };
+  }
+
+  if (dateString.toLowerCase().includes('last 30 days')) {
+    const thirtyDaysAgo = new Date(today);
+    thirtyDaysAgo.setDate(today.getDate() - 30);
+    return {
+      startDate: thirtyDaysAgo.toISOString().split('T')[0],
+      endDate: today.toISOString().split('T')[0]
+    };
+  }
+
+  if (dateString.toLowerCase().includes('last 7 days')) {
+    const sevenDaysAgo = new Date(today);
+    sevenDaysAgo.setDate(today.getDate() - 7);
+    return {
+      startDate: sevenDaysAgo.toISOString().split('T')[0],
+      endDate: today.toISOString().split('T')[0]
+    };
+  }
+
+  // Handle month names (e.g., "October", "Jan", etc.)
+  const months = ['january', 'february', 'march', 'april', 'may', 'june',
+                  'july', 'august', 'september', 'october', 'november', 'december'];
+  const monthMatch = months.findIndex(m => dateString.toLowerCase().includes(m));
+  if (monthMatch !== -1) {
+    const year = dateString.match(/\d{4}/) ? parseInt(dateString.match(/\d{4}/)![0]) : now.getFullYear();
+    const monthStart = new Date(year, monthMatch, 1);
+    const monthEnd = new Date(year, monthMatch + 1, 0);
+    return {
+      startDate: monthStart.toISOString().split('T')[0],
+      endDate: monthEnd.toISOString().split('T')[0]
+    };
+  }
+
+  // Default to current month if can't parse
+  return {
+    startDate: new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0],
+    endDate: today.toISOString().split('T')[0]
+  };
+}
+
 interface Message {
   role: 'user' | 'assistant' | 'system';
   content: string;
@@ -28,25 +110,41 @@ interface FinancialContext {
   budgets: any[];
 }
 
-const SYSTEM_PROMPT = `You are Saul. When user mentions spending money, YOU MUST IMMEDIATELY call the add_expense function.
+const SYSTEM_PROMPT = `You are Saul, an AI finance manager for contractors. You can track expenses, analyze spending, generate reports, and provide financial insights.
 
-MANDATORY FUNCTION CALLING:
-- User says "I spent $X on Y" = CALL add_expense(amount=X, category=guess, description=Y)
-- User says "I paid $X for Y" = CALL add_expense(amount=X, category=guess, description=Y)
-- User says "I bought Y for $X" = CALL add_expense(amount=X, category=guess, description=Y)
+CRITICAL: When user mentions spending money, IMMEDIATELY call add_expense function.
 
-EXPENSE KEYWORDS (MUST call function):
-spent, paid, bought, purchased, invoice, receipt, bill
+EXPENSE DETECTION (MUST call add_expense):
+- "I spent $X on Y" → add_expense(amount=X, category=guess, description=Y)
+- "I paid $X for Y" → add_expense(amount=X, category=guess, description=Y)
+- "bought/purchased X" → add_expense
+Keywords: spent, paid, bought, purchased, invoice, receipt, bill
 
 CATEGORY MAPPING:
 lumber/materials/supplies = "Materials"
 crew/labor/workers = "Labor"
 tools/equipment = "Equipment"
 gas/fuel = "Fuel"
-permit = "Permits"
+permits = "Permits"
+insurance = "Insurance"
 default = "Other"
 
-NEVER respond without calling function first when user mentions money spent.
+DATE UNDERSTANDING:
+You understand natural language dates:
+- "last week", "this week", "last month", "this month"
+- "last 7 days", "last 30 days"
+- Month names: "October", "September 2024", etc.
+- Specific dates in prompts
+
+WHEN TO CALL FUNCTIONS:
+- add_expense: User mentions spending money
+- add_revenue: User mentions receiving payment/income
+- get_financial_summary: "show me", "what did I spend", "how much"
+- generate_report: "make a report", "generate report", "give me a breakdown"
+- check_budget_status: "budget", "how much left", "am I over budget"
+- analyze_cash_flow: "cash flow", "trend", "predict"
+- create_invoice: "create invoice", "make invoice"
+- record_payment: "received payment", "client paid"
 
 FINANCIAL OPERATIONS YOU CAN PERFORM:
 - Add expenses with amount, category, description, project, date
@@ -340,7 +438,7 @@ serve(async (req) => {
           }))
         ],
         tools,
-        tool_choice: 'required', // Force function calling
+        tool_choice: 'auto', // Let AI decide when to call functions
         parallel_tool_calls: false
       })
     });
@@ -485,37 +583,271 @@ serve(async (req) => {
               functionResults.push({ tool: toolName, success: true, data: recurring });
 
             } else if (toolName === 'get_financial_summary') {
-              // Get financial summary (placeholder - would aggregate data)
+              // Get financial summary with real data
+              const { startDate, endDate } = toolInput;
+
+              const { data: expenses } = await supabaseClient
+                .from('finance_expenses')
+                .select('amount, category, vendor, date, notes')
+                .eq('user_id', userId)
+                .gte('date', startDate)
+                .lte('date', endDate);
+
+              const { data: payments } = await supabaseClient
+                .from('payments')
+                .select('amount, description, payment_date')
+                .eq('user_id', userId)
+                .gte('payment_date', startDate)
+                .lte('payment_date', endDate)
+                .eq('status', 'completed');
+
+              const totalExpenses = expenses?.reduce((sum, e) => sum + parseFloat(e.amount || 0), 0) || 0;
+              const totalRevenue = payments?.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0) || 0;
+
+              // Group expenses by category
+              const byCategory: Record<string, number> = {};
+              expenses?.forEach(e => {
+                const cat = e.category || 'Other';
+                byCategory[cat] = (byCategory[cat] || 0) + parseFloat(e.amount || 0);
+              });
+
+              const summaryData = {
+                startDate,
+                endDate,
+                revenue: totalRevenue,
+                expenses: totalExpenses,
+                profit: totalRevenue - totalExpenses,
+                expensesByCategory: byCategory,
+                transactionCount: (expenses?.length || 0) + (payments?.length || 0),
+                ...(toolInput.includeProjects && { projects: [] }) // Would need project breakdown
+              };
+
+              functionResults.push({ tool: toolName, success: true, data: summaryData });
+
+            } else if (toolName === 'check_budget_status') {
+              // Check budget status with real data
+              const now = new Date();
+              const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+              const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+
+              const { data: budgets } = await supabaseClient
+                .from('budgets')
+                .select('*')
+                .eq('user_id', userId)
+                .eq('period', 'monthly');
+
+              const { data: expenses } = await supabaseClient
+                .from('finance_expenses')
+                .select('category, amount')
+                .eq('user_id', userId)
+                .gte('date', monthStart)
+                .lte('date', monthEnd);
+
+              const spendingByCategory: Record<string, number> = {};
+              expenses?.forEach(e => {
+                const cat = e.category || 'Other';
+                spendingByCategory[cat] = (spendingByCategory[cat] || 0) + parseFloat(e.amount || 0);
+              });
+
+              const budgetStatus = budgets?.map(b => {
+                const spent = spendingByCategory[b.category] || 0;
+                const remaining = b.amount - spent;
+                const percentUsed = (spent / b.amount) * 100;
+                return {
+                  category: b.category,
+                  budgeted: b.amount,
+                  spent,
+                  remaining,
+                  percentUsed,
+                  status: percentUsed > 100 ? 'over' : percentUsed > 80 ? 'warning' : 'ok'
+                };
+              }) || [];
+
               functionResults.push({
                 tool: toolName,
                 success: true,
                 data: {
-                  revenue: 0,
-                  expenses: 0,
-                  profit: 0,
-                  message: 'Financial summary generated'
+                  budgets: budgetStatus,
+                  totalBudgeted: budgets?.reduce((sum, b) => sum + b.amount, 0) || 0,
+                  totalSpent: Object.values(spendingByCategory).reduce((sum, v) => sum + v, 0),
+                  alerts: budgetStatus.filter(b => b.status === 'over' || b.status === 'warning')
                 }
               });
-            } else if (toolName === 'check_budget_status') {
-              // Check budget status (placeholder)
-              functionResults.push({
-                tool: toolName,
-                success: true,
-                data: { message: 'Budget check completed' }
-              });
+
             } else if (toolName === 'analyze_cash_flow') {
-              // Analyze cash flow (placeholder)
+              // Analyze cash flow with trends
+              const months = toolInput.months || 3;
+              const cashFlowData = [];
+
+              for (let i = months - 1; i >= 0; i--) {
+                const monthDate = new Date();
+                monthDate.setMonth(monthDate.getMonth() - i);
+                const monthStart = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1).toISOString().split('T')[0];
+                const monthEnd = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0).toISOString().split('T')[0];
+
+                const { data: expenses } = await supabaseClient
+                  .from('finance_expenses')
+                  .select('amount')
+                  .eq('user_id', userId)
+                  .gte('date', monthStart)
+                  .lte('date', monthEnd);
+
+                const { data: payments } = await supabaseClient
+                  .from('payments')
+                  .select('amount')
+                  .eq('user_id', userId)
+                  .gte('payment_date', monthStart)
+                  .lte('payment_date', monthEnd)
+                  .eq('status', 'completed');
+
+                const monthExpenses = expenses?.reduce((sum, e) => sum + parseFloat(e.amount || 0), 0) || 0;
+                const monthRevenue = payments?.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0) || 0;
+
+                cashFlowData.push({
+                  month: monthDate.toLocaleString('default', { month: 'long', year: 'numeric' }),
+                  revenue: monthRevenue,
+                  expenses: monthExpenses,
+                  netCashFlow: monthRevenue - monthExpenses
+                });
+              }
+
+              const avgRevenue = cashFlowData.reduce((sum, m) => sum + m.revenue, 0) / cashFlowData.length;
+              const avgExpenses = cashFlowData.reduce((sum, m) => sum + m.expenses, 0) / cashFlowData.length;
+              const trend = cashFlowData[cashFlowData.length - 1].netCashFlow > cashFlowData[0].netCashFlow ? 'improving' : 'declining';
+
               functionResults.push({
                 tool: toolName,
                 success: true,
-                data: { message: 'Cash flow analysis completed' }
+                data: {
+                  months: cashFlowData,
+                  averageRevenue: avgRevenue,
+                  averageExpenses: avgExpenses,
+                  averageNetCashFlow: avgRevenue - avgExpenses,
+                  trend,
+                  prediction: avgRevenue - avgExpenses // Simple prediction
+                }
               });
+
             } else if (toolName === 'generate_report') {
-              // Generate report (placeholder)
+              // Generate report with real data
+              const { reportType, startDate, endDate, format } = toolInput;
+
+              const { data: expenses } = await supabaseClient
+                .from('finance_expenses')
+                .select('*')
+                .eq('user_id', userId)
+                .gte('date', startDate)
+                .lte('date', endDate)
+                .order('date', { ascending: false });
+
+              const { data: payments } = await supabaseClient
+                .from('payments')
+                .select('*')
+                .eq('user_id', userId)
+                .gte('payment_date', startDate)
+                .lte('date', endDate)
+                .eq('status', 'completed')
+                .order('payment_date', { ascending: false });
+
+              const totalExpenses = expenses?.reduce((sum, e) => sum + parseFloat(e.amount || 0), 0) || 0;
+              const totalRevenue = payments?.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0) || 0;
+
+              let reportData: any = {
+                reportType,
+                period: { startDate, endDate },
+                generatedAt: new Date().toISOString()
+              };
+
+              if (reportType === 'profit-loss') {
+                const byCategory: Record<string, number> = {};
+                expenses?.forEach(e => {
+                  const cat = e.category || 'Other';
+                  byCategory[cat] = (byCategory[cat] || 0) + parseFloat(e.amount || 0);
+                });
+
+                reportData = {
+                  ...reportData,
+                  revenue: totalRevenue,
+                  expenses: totalExpenses,
+                  netProfit: totalRevenue - totalExpenses,
+                  expensesByCategory: byCategory,
+                  profitMargin: totalRevenue > 0 ? ((totalRevenue - totalExpenses) / totalRevenue * 100) : 0
+                };
+              } else if (reportType === 'expense-summary') {
+                const byCategory: Record<string, { total: number; count: number; items: any[] }> = {};
+                expenses?.forEach(e => {
+                  const cat = e.category || 'Other';
+                  if (!byCategory[cat]) byCategory[cat] = { total: 0, count: 0, items: [] };
+                  byCategory[cat].total += parseFloat(e.amount || 0);
+                  byCategory[cat].count += 1;
+                  byCategory[cat].items.push({
+                    date: e.date,
+                    amount: e.amount,
+                    vendor: e.vendor,
+                    notes: e.notes
+                  });
+                });
+
+                reportData = {
+                  ...reportData,
+                  totalExpenses,
+                  expenseCount: expenses?.length || 0,
+                  byCategory,
+                  topExpenses: expenses?.slice(0, 10)
+                };
+              } else if (reportType === 'revenue-summary') {
+                reportData = {
+                  ...reportData,
+                  totalRevenue,
+                  paymentCount: payments?.length || 0,
+                  payments: payments?.map(p => ({
+                    date: p.payment_date,
+                    amount: p.amount,
+                    description: p.description,
+                    method: p.payment_method
+                  }))
+                };
+              }
+
+              functionResults.push({ tool: toolName, success: true, data: reportData });
+
+            } else if (toolName === 'create_invoice') {
+              // Create invoice
+              const { clientId, projectId, items, dueDate, notes } = toolInput;
+
+              // Calculate invoice total
+              const total = items.reduce((sum: number, item: any) =>
+                sum + (item.quantity * item.unitPrice), 0);
+
+              const { data: invoice, error: invError } = await supabaseClient
+                .from('invoices')
+                .insert({
+                  user_id: userId,
+                  client_id: clientId,
+                  project_id: projectId || null,
+                  invoice_number: `INV-${Date.now()}`,
+                  issue_date: new Date().toISOString().split('T')[0],
+                  due_date: dueDate,
+                  total_amount: total,
+                  status: 'pending',
+                  notes: notes || null,
+                  items: JSON.stringify(items)
+                })
+                .select()
+                .single();
+
+              if (invError) throw invError;
+
               functionResults.push({
                 tool: toolName,
                 success: true,
-                data: { message: 'Report generated' }
+                data: {
+                  invoiceId: invoice.id,
+                  invoiceNumber: invoice.invoice_number,
+                  total,
+                  dueDate,
+                  status: 'created'
+                }
               });
             }
           } catch (error: any) {
