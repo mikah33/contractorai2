@@ -149,33 +149,33 @@ export const SaulExpenseDashboard: React.FC<SaulExpenseDashboardProps> = ({
           /* Dashboard View */
           <div className="space-y-4">
             {/* Stats Cards */}
-            <div className="grid grid-cols-3 gap-4">
-              <div className="p-4 bg-red-50 rounded-lg border border-red-200">
-                <div className="flex items-center gap-2 text-red-700 mb-1">
-                  <TrendingDown className="w-4 h-4" />
-                  <span className="text-xs font-medium">Total Expenses</span>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="flex flex-col p-4 bg-red-50 rounded-lg border border-red-200 min-h-[100px]">
+                <div className="flex items-center gap-2 text-red-700 mb-2">
+                  <TrendingDown className="w-4 h-4 flex-shrink-0" />
+                  <span className="text-xs font-medium whitespace-nowrap">Total Expenses</span>
                 </div>
-                <div className="text-xl font-bold text-red-900">
+                <div className="text-2xl font-bold text-red-900 mt-auto">
                   {formatCurrency(totalAmount)}
                 </div>
               </div>
 
-              <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <div className="flex items-center gap-2 text-blue-700 mb-1">
-                  <Receipt className="w-4 h-4" />
-                  <span className="text-xs font-medium">Transactions</span>
+              <div className="flex flex-col p-4 bg-blue-50 rounded-lg border border-blue-200 min-h-[100px]">
+                <div className="flex items-center gap-2 text-blue-700 mb-2">
+                  <Receipt className="w-4 h-4 flex-shrink-0" />
+                  <span className="text-xs font-medium whitespace-nowrap">Transactions</span>
                 </div>
-                <div className="text-xl font-bold text-blue-900">
+                <div className="text-2xl font-bold text-blue-900 mt-auto">
                   {expensesToShow.length}
                 </div>
               </div>
 
-              <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-                <div className="flex items-center gap-2 text-green-700 mb-1">
-                  <Calendar className="w-4 h-4" />
-                  <span className="text-xs font-medium">This Session</span>
+              <div className="flex flex-col p-4 bg-green-50 rounded-lg border border-green-200 min-h-[100px]">
+                <div className="flex items-center gap-2 text-green-700 mb-2">
+                  <Calendar className="w-4 h-4 flex-shrink-0" />
+                  <span className="text-xs font-medium whitespace-nowrap">This Session</span>
                 </div>
-                <div className="text-xl font-bold text-green-900">
+                <div className="text-2xl font-bold text-green-900 mt-auto">
                   {sessionExpenses.length}
                 </div>
               </div>
