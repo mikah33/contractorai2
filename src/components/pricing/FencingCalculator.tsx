@@ -25,8 +25,8 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const { t } = useTranslation();
   const { activeTab } = useCalculatorTab();
   const { materials: customMaterials, pricing: customPricing, loading: loadingCustom, isConfigured } =
-    useCustomCalculator('fencing', activeTab === 'custom');
-  const { getCustomPrice, getCustomUnitValue } = useCustomMaterials('fencing');
+    useCustomCalculator('fence', activeTab === 'custom');
+  const { getCustomPrice, getCustomUnitValue } = useCustomMaterials('fence');
 
   const [fenceType, setFenceType] = useState<'privacy' | 'picket' | 'chain-link' | 'ranch' | 'panel' | 'custom'>('privacy');
   const [material, setMaterial] = useState<'wood' | 'vinyl' | 'metal' | 'composite'>('wood');
@@ -47,6 +47,119 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   // Custom fencing options
   const [customLinearFeet, setCustomLinearFeet] = useState<number | ''>('');
   const [customPricePerFoot, setCustomPricePerFoot] = useState<number | ''>('');
+
+  // Default pricing constants - must be defined before useMemo hooks that reference them
+  const postMaterialPrices = {
+    'wood': 24.98,
+    'vinyl-5x5': 42.00,
+    'vinyl-4x4': 27.00,
+    'metal': 42.00
+  };
+
+  const materialPrices = {
+    'privacy': {
+      'wood': {
+        'panel': 45.98,
+        'rail': 12.98,
+        'cap': 4.98
+      },
+      'vinyl': {
+        'panel': 89.98,
+        'rail': 19.98,
+        'cap': 6.98
+      },
+      'metal': {
+        'panel': 79.98,
+        'rail': 16.98,
+        'cap': 5.98
+      },
+      'composite': {
+        'panel': 129.98,
+        'rail': 24.98,
+        'cap': 8.98
+      }
+    },
+    'picket': {
+      'wood': {
+        'picket': 2.98,
+        'rail': 9.98,
+        'cap': 3.98
+      },
+      'vinyl': {
+        'picket': 4.98,
+        'rail': 14.98,
+        'cap': 5.98
+      },
+      'metal': {
+        'picket': 3.98,
+        'rail': 12.98,
+        'cap': 4.98
+      },
+      'composite': {
+        'picket': 6.98,
+        'rail': 19.98,
+        'cap': 7.98
+      }
+    },
+    'chain-link': {
+      'metal': {
+        'fabric': 5.98,
+        'rail': 8.98,
+        'cap': 2.98
+      }
+    },
+    'ranch': {
+      'wood': {
+        'rail': 14.98,
+        'cap': 4.98
+      },
+      'vinyl': {
+        'rail': 24.98,
+        'cap': 6.98
+      }
+    },
+    'panel': {
+      'wood': {
+        'panel': 69.98,
+        'cap': 4.98
+      },
+      'vinyl': {
+        'panel': 129.98,
+        'cap': 6.98
+      },
+      'composite': {
+        'panel': 189.98,
+        'cap': 8.98
+      }
+    }
+  };
+
+  const gatePrices = {
+    'single': {
+      'wood': 129.98,
+      'vinyl': 199.98,
+      'metal': 169.98,
+      'composite': 249.98
+    },
+    'double': {
+      'wood': 249.98,
+      'vinyl': 399.98,
+      'metal': 329.98,
+      'composite': 499.98
+    },
+    'rolling': {
+      'wood': 399.98,
+      'vinyl': 599.98,
+      'metal': 499.98,
+      'composite': 799.98
+    }
+  };
+
+  const gateHardwarePrices = {
+    'single': 49.98,
+    'double': 89.98,
+    'rolling': 149.98
+  };
 
   // Active pricing based on tab using useCustomMaterials hook
   const activePostMaterialPrices = useMemo(() => {
@@ -180,119 +293,6 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     }
     return gateHardwarePrices;
   }, [activeTab, getCustomPrice]);
-
-  // Post material prices
-  const postMaterialPrices = {
-    'wood': 24.98,
-    'vinyl-5x5': 42.00,
-    'vinyl-4x4': 27.00,
-    'metal': 42.00
-  };
-
-  const materialPrices = {
-    'privacy': {
-      'wood': {
-        'panel': 45.98,
-        'rail': 12.98,
-        'cap': 4.98
-      },
-      'vinyl': {
-        'panel': 89.98,
-        'rail': 19.98,
-        'cap': 6.98
-      },
-      'metal': {
-        'panel': 79.98,
-        'rail': 16.98,
-        'cap': 5.98
-      },
-      'composite': {
-        'panel': 129.98,
-        'rail': 24.98,
-        'cap': 8.98
-      }
-    },
-    'picket': {
-      'wood': {
-        'picket': 2.98,
-        'rail': 9.98,
-        'cap': 3.98
-      },
-      'vinyl': {
-        'picket': 4.98,
-        'rail': 14.98,
-        'cap': 5.98
-      },
-      'metal': {
-        'picket': 3.98,
-        'rail': 12.98,
-        'cap': 4.98
-      },
-      'composite': {
-        'picket': 6.98,
-        'rail': 19.98,
-        'cap': 7.98
-      }
-    },
-    'chain-link': {
-      'metal': {
-        'fabric': 5.98,
-        'rail': 8.98,
-        'cap': 2.98
-      }
-    },
-    'ranch': {
-      'wood': {
-        'rail': 14.98,
-        'cap': 4.98
-      },
-      'vinyl': {
-        'rail': 24.98,
-        'cap': 6.98
-      }
-    },
-    'panel': {
-      'wood': {
-        'panel': 69.98,
-        'cap': 4.98
-      },
-      'vinyl': {
-        'panel': 129.98,
-        'cap': 6.98
-      },
-      'composite': {
-        'panel': 189.98,
-        'cap': 8.98
-      }
-    }
-  };
-
-  const gatePrices = {
-    'single': {
-      'wood': 129.98,
-      'vinyl': 199.98,
-      'metal': 169.98,
-      'composite': 249.98
-    },
-    'double': {
-      'wood': 249.98,
-      'vinyl': 399.98,
-      'metal': 329.98,
-      'composite': 499.98
-    },
-    'rolling': {
-      'wood': 399.98,
-      'vinyl': 599.98,
-      'metal': 499.98,
-      'composite': 799.98
-    }
-  };
-
-  const gateHardwarePrices = {
-    'single': 49.98,
-    'double': 89.98,
-    'rolling': 149.98
-  };
 
   const addGate = (type: Gate['type']) => {
     const defaultHeight = typeof height === 'number' ? height : 72;
@@ -658,7 +658,7 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       </div>
 
       <CalculatorEstimateHeader
-        calculatorType="fencing"
+        calculatorType="fence"
         getCurrentInputs={getCurrentInputs}
         onLoadEstimate={handleLoadEstimate}
         onNewEstimate={handleNewEstimate}
