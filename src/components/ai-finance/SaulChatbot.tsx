@@ -117,7 +117,15 @@ export const SaulChatbot: React.FC = () => {
         })
       });
 
-      if (!response.ok) throw new Error('API request failed');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Saul API Error:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorData
+        });
+        throw new Error(errorData.error || errorData.message || 'API request failed');
+      }
 
       const data = await response.json();
 
@@ -134,12 +142,12 @@ export const SaulChatbot: React.FC = () => {
       if (data.updatedContext) {
         setFinancialContext(data.updatedContext);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Chat error:', error);
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: "I'm having trouble connecting right now. Please try again in a moment.",
+        content: error.message || "I'm having trouble connecting right now. Please try again in a moment.",
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);

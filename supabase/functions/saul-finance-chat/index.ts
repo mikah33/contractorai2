@@ -516,9 +516,20 @@ serve(async (req) => {
     );
 
   } catch (error: any) {
-    console.error('Error:', error);
+    console.error('Saul Error:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      userId,
+      hasOpenAIKey: !!OPENAI_API_KEY,
+      hasSupabaseUrl: !!SUPABASE_URL,
+      hasSupabaseKey: !!SUPABASE_SERVICE_ROLE_KEY
+    });
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({
+        error: error.message,
+        message: "I'm having trouble processing that right now. Please make sure you're logged in and try again."
+      }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
