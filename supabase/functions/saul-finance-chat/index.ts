@@ -129,22 +129,41 @@ permits = "Permits"
 insurance = "Insurance"
 default = "Other"
 
-DATE UNDERSTANDING:
-You understand natural language dates:
-- "last week", "this week", "last month", "this month"
-- "last 7 days", "last 30 days"
-- Month names: "October", "September 2024", etc.
-- Specific dates in prompts
+DATE UNDERSTANDING - CRITICAL:
+CURRENT DATE: ${new Date().toISOString().split('T')[0]}
+TODAY IS: ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+
+When user mentions dates, convert to YYYY-MM-DD format:
+- "today" → ${new Date().toISOString().split('T')[0]} (ALWAYS use current date!)
+- "yesterday" → ${new Date(Date.now() - 86400000).toISOString().split('T')[0]}
+- "this week" → ${new Date(new Date().setDate(new Date().getDate() - new Date().getDay())).toISOString().split('T')[0]} to ${new Date().toISOString().split('T')[0]}
+- "last week" → Last Sunday to Saturday
+- "this month" → ${new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]} to ${new Date().toISOString().split('T')[0]}
+- "last month" → Previous month's first to last day
+- "last 7 days" → 7 days ago to today
+- "last 30 days" → 30 days ago to today
 
 WHEN TO CALL FUNCTIONS:
 - add_expense: User mentions spending money
 - add_revenue: User mentions receiving payment/income
 - get_financial_summary: "show me", "what did I spend", "how much"
 - generate_report: "make a report", "generate report", "give me a breakdown"
+  * format='pdf' when user says "PDF", "download", "generate PDF"
+  * format='summary' for chat display (default)
+  * IMPORTANT: When user says "today's report", use TODAY'S DATE: ${new Date().toISOString().split('T')[0]}
+  * IMPORTANT: When user says "this week's report", use THIS WEEK'S dates
+  * NEVER use old dates from 2023 - ALWAYS use current 2024 dates!
 - check_budget_status: "budget", "how much left", "am I over budget"
 - analyze_cash_flow: "cash flow", "trend", "predict"
 - create_invoice: "create invoice", "make invoice"
 - record_payment: "received payment", "client paid"
+
+PDF REPORT GENERATION:
+When user asks for a "PDF report", "download report", or "generate PDF":
+1. Call generate_report with format="pdf"
+2. Use correct dates - "today" means ${new Date().toISOString().split('T')[0]}!
+3. Tell user "I'm generating your PDF report now..."
+4. Report will download automatically
 
 FINANCIAL OPERATIONS YOU CAN PERFORM:
 - Add expenses with amount, category, description, project, date
@@ -745,34 +764,58 @@ serve(async (req) => {
                 .select('*')
                 .eq('user_id', userId)
                 .gte('payment_date', startDate)
-                .lte('date', endDate)
+                .lte('payment_date', endDate)
                 .eq('status', 'completed')
                 .order('payment_date', { ascending: false });
 
               const totalExpenses = expenses?.reduce((sum, e) => sum + parseFloat(e.amount || 0), 0) || 0;
               const totalRevenue = payments?.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0) || 0;
 
+              // Prepare expense data for PDF
+              const expenseList = expenses?.map(e => ({
+                date: e.date,
+                vendor: e.vendor || 'Unknown',
+                category: e.category || 'Other',
+                amount: parseFloat(e.amount || 0),
+                notes: e.notes || ''
+              })) || [];
+
+              // Prepare revenue data for PDF
+              const revenueList = payments?.map(p => ({
+                date: p.payment_date,
+                description: p.description || 'Payment',
+                amount: parseFloat(p.amount || 0),
+                paymentMethod: p.payment_method || 'Unknown'
+              })) || [];
+
+              // Group expenses by category
+              const byCategory: Record<string, number> = {};
+              expenses?.forEach(e => {
+                const cat = e.category || 'Other';
+                byCategory[cat] = (byCategory[cat] || 0) + parseFloat(e.amount || 0);
+              });
+
+              // Base report data structure for PDF generation
               let reportData: any = {
                 reportType,
-                period: { startDate, endDate },
-                generatedAt: new Date().toISOString()
+                dateRange: { startDate, endDate },
+                generatedAt: new Date().toISOString(),
+                format: format || 'summary',
+                // PDF-specific fields
+                summary: {
+                  totalRevenue,
+                  totalExpenses,
+                  netProfit: totalRevenue - totalExpenses,
+                  profitMargin: totalRevenue > 0 ? ((totalRevenue - totalExpenses) / totalRevenue * 100) : 0
+                },
+                expensesByCategory: byCategory,
+                expenses: expenseList,
+                revenue: revenueList
               };
 
+              // Add report-specific data
               if (reportType === 'profit-loss') {
-                const byCategory: Record<string, number> = {};
-                expenses?.forEach(e => {
-                  const cat = e.category || 'Other';
-                  byCategory[cat] = (byCategory[cat] || 0) + parseFloat(e.amount || 0);
-                });
-
-                reportData = {
-                  ...reportData,
-                  revenue: totalRevenue,
-                  expenses: totalExpenses,
-                  netProfit: totalRevenue - totalExpenses,
-                  expensesByCategory: byCategory,
-                  profitMargin: totalRevenue > 0 ? ((totalRevenue - totalExpenses) / totalRevenue * 100) : 0
-                };
+                // Already has all needed data
               } else if (reportType === 'expense-summary') {
                 const byCategory: Record<string, { total: number; count: number; items: any[] }> = {};
                 expenses?.forEach(e => {
@@ -788,24 +831,56 @@ serve(async (req) => {
                   });
                 });
 
-                reportData = {
-                  ...reportData,
-                  totalExpenses,
-                  expenseCount: expenses?.length || 0,
-                  byCategory,
-                  topExpenses: expenses?.slice(0, 10)
-                };
+                reportData.expenseCount = expenses?.length || 0;
+                reportData.categoryDetails = byCategory;
+                reportData.topExpenses = expenses?.slice(0, 10);
               } else if (reportType === 'revenue-summary') {
-                reportData = {
-                  ...reportData,
-                  totalRevenue,
-                  paymentCount: payments?.length || 0,
-                  payments: payments?.map(p => ({
-                    date: p.payment_date,
-                    amount: p.amount,
-                    description: p.description,
-                    method: p.payment_method
-                  }))
+                reportData.paymentCount = payments?.length || 0;
+              } else if (reportType === 'cash-flow') {
+                // Get multi-month cash flow data
+                const cashFlowMonths = [];
+                for (let i = 2; i >= 0; i--) {
+                  const monthDate = new Date();
+                  monthDate.setMonth(monthDate.getMonth() - i);
+                  const monthStart = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1).toISOString().split('T')[0];
+                  const monthEnd = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0).toISOString().split('T')[0];
+
+                  const { data: monthExpenses } = await supabaseClient
+                    .from('finance_expenses')
+                    .select('amount')
+                    .eq('user_id', userId)
+                    .gte('date', monthStart)
+                    .lte('date', monthEnd);
+
+                  const { data: monthPayments } = await supabaseClient
+                    .from('payments')
+                    .select('amount')
+                    .eq('user_id', userId)
+                    .gte('payment_date', monthStart)
+                    .lte('payment_date', monthEnd)
+                    .eq('status', 'completed');
+
+                  const monthExp = monthExpenses?.reduce((sum, e) => sum + parseFloat(e.amount || 0), 0) || 0;
+                  const monthRev = monthPayments?.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0) || 0;
+
+                  cashFlowMonths.push({
+                    month: monthDate.toLocaleString('default', { month: 'long', year: 'numeric' }),
+                    revenue: monthRev,
+                    expenses: monthExp,
+                    netCashFlow: monthRev - monthExp
+                  });
+                }
+
+                const avgRevenue = cashFlowMonths.reduce((sum, m) => sum + m.revenue, 0) / cashFlowMonths.length;
+                const avgExpenses = cashFlowMonths.reduce((sum, m) => sum + m.expenses, 0) / cashFlowMonths.length;
+                const trend = cashFlowMonths[2].netCashFlow > cashFlowMonths[0].netCashFlow ? 'improving' : 'declining';
+
+                reportData.cashFlow = cashFlowMonths;
+                reportData.trends = {
+                  trend,
+                  averageRevenue: avgRevenue,
+                  averageExpenses: avgExpenses,
+                  prediction: avgRevenue - avgExpenses
                 };
               }
 
