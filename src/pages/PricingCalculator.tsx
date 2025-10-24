@@ -338,18 +338,6 @@ const PricingCalculator = () => {
                 >
                   Custom
                 </button>
-                <button
-                  onClick={() => navigate('/ai-calculator')}
-                  className="border-transparent text-gray-600 hover:text-orange-600 hover:border-orange-300 py-3 px-1 border-b-2 font-semibold text-xs sm:text-sm transition-colors group relative"
-                >
-                  <span className="flex items-center gap-2">
-                    <img src={hankLogo} alt="Hank" className="w-5 h-5" />
-                    Hank AI
-                    <span className="absolute -top-1 -right-1 px-1.5 py-0.5 text-[10px] font-bold bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-full shadow-md">
-                      NEW
-                    </span>
-                  </span>
-                </button>
               </nav>
             </div>
 
