@@ -3,6 +3,7 @@ import { FileDown, Copy, RotateCw, Calculator, Settings, Save } from 'lucide-rea
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import TradeSelector from '../components/pricing/TradeSelector';
+import hankLogo from '../assets/icons/hank-logo.svg';
 import { estimateService } from '../services/estimateService';
 import ProjectSpecifications from '../components/pricing/ProjectSpecifications';
 import PricingResults from '../components/pricing/PricingResults';
@@ -339,11 +340,12 @@ const PricingCalculator = () => {
                 </button>
                 <button
                   onClick={() => navigate('/ai-calculator')}
-                  className="border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300 py-3 px-1 border-b-2 font-semibold text-xs sm:text-sm transition-colors group relative"
+                  className="border-transparent text-gray-600 hover:text-orange-600 hover:border-orange-300 py-3 px-1 border-b-2 font-semibold text-xs sm:text-sm transition-colors group relative"
                 >
-                  <span className="flex items-center gap-1">
-                    🤖 AI Chat
-                    <span className="absolute -top-1 -right-1 px-1.5 py-0.5 text-[10px] font-bold bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-full">
+                  <span className="flex items-center gap-2">
+                    <img src={hankLogo} alt="Hank" className="w-5 h-5" />
+                    Hank AI
+                    <span className="absolute -top-1 -right-1 px-1.5 py-0.5 text-[10px] font-bold bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-full shadow-md">
                       NEW
                     </span>
                   </span>
@@ -490,6 +492,34 @@ const PricingCalculator = () => {
 
       {/* Material Request Button - Always visible on calculator pages */}
       <MaterialRequestButton />
+
+      {/* Floating Hank AI Button - Always visible and prominent */}
+      <button
+        onClick={() => navigate('/ai-calculator')}
+        className="fixed bottom-24 right-6 z-50 group"
+        title="Ask Hank AI for help with estimates"
+      >
+        <div className="relative">
+          {/* Pulsing glow effect */}
+          <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full blur-xl opacity-60 group-hover:opacity-80 animate-pulse"></div>
+
+          {/* Main button */}
+          <div className="relative bg-gradient-to-r from-orange-500 to-orange-600 rounded-full p-4 shadow-2xl hover:shadow-3xl transform hover:scale-110 transition-all duration-300">
+            <img src={hankLogo} alt="Hank AI" className="w-12 h-12" />
+          </div>
+
+          {/* NEW badge */}
+          <span className="absolute -top-2 -right-2 px-2 py-1 text-xs font-bold bg-gradient-to-r from-pink-500 to-red-500 text-white rounded-full shadow-lg animate-bounce">
+            NEW
+          </span>
+        </div>
+
+        {/* Tooltip */}
+        <div className="absolute bottom-full right-0 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+          Ask Hank AI 🤖
+          <div className="absolute top-full right-8 w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-gray-900"></div>
+        </div>
+      </button>
     </div>
   );
 };
