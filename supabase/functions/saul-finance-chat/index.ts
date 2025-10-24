@@ -390,11 +390,11 @@ serve(async (req) => {
                   user_id: userId,
                   amount: toolInput.amount,
                   category: toolInput.category,
-                  description: toolInput.description,
+                  notes: toolInput.description, // Column is 'notes' not 'description'
                   project_id: toolInput.projectId || null,
-                  vendor: toolInput.vendor || null,
-                  date: toolInput.date || new Date().toISOString(),
-                  status: 'approved'
+                  vendor: toolInput.vendor || 'Unknown', // Required field, default to 'Unknown'
+                  date: toolInput.date || new Date().toISOString().split('T')[0], // DATE format YYYY-MM-DD
+                  status: 'processed' // Valid status: 'pending', 'processed', or 'verified'
                 })
                 .select()
                 .single();
