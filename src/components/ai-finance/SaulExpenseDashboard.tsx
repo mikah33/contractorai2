@@ -136,7 +136,7 @@ export const SaulExpenseDashboard: React.FC<SaulExpenseDashboardProps> = ({
         .from('recurring_expenses')
         .select('id')
         .eq('user_id', userId)
-        .eq('active', true);
+        .eq('is_active', true);
 
       if (projectFilter) {
         recurringQuery = recurringQuery.eq('project_id', projectFilter);
@@ -148,10 +148,10 @@ export const SaulExpenseDashboard: React.FC<SaulExpenseDashboardProps> = ({
         setRecurringExpensesCount((recurringData || []).length);
       }
 
-      // Build budget query with user and project filter
+      // Build budget query with user and project filter - use budget_items table
       let budgetQuery = supabase
-        .from('budgets')
-        .select('budget_amount, spent_amount')
+        .from('budget_items')
+        .select('budgeted_amount, actual_amount')
         .eq('user_id', userId);
 
       if (projectFilter) {
@@ -161,8 +161,8 @@ export const SaulExpenseDashboard: React.FC<SaulExpenseDashboardProps> = ({
       const { data: budgetData, error: budgetError } = await budgetQuery;
 
       if (!budgetError && budgetData && budgetData.length > 0) {
-        const totalBudget = budgetData.reduce((sum, b) => sum + parseFloat(b.budget_amount || 0), 0);
-        const totalSpent = budgetData.reduce((sum, b) => sum + parseFloat(b.spent_amount || 0), 0);
+        const totalBudget = budgetData.reduce((sum, b) => sum + parseFloat(b.budgeted_amount || 0), 0);
+        const totalSpent = budgetData.reduce((sum, b) => sum + parseFloat(b.actual_amount || 0), 0);
         const utilization = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
         setBudgetUtilization(utilization);
       }
