@@ -267,59 +267,51 @@ export const SaulExpenseDashboard: React.FC<SaulExpenseDashboardProps> = ({
             {/* Financial Overview Cards */}
             <div className="space-y-3">
               {/* Revenue Card */}
-              <div className="bg-green-50 rounded-xl border border-green-200 p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-green-700">
-                    <DollarSign className="w-5 h-5" />
-                    <span className="text-sm font-semibold">Total Revenue</span>
-                  </div>
-                  <div className="text-2xl font-bold text-green-900">
-                    {formatCurrency(totalRevenue)}
-                  </div>
+              <div className="bg-green-50 rounded-xl border border-green-200 p-3">
+                <div className="flex items-center gap-2 text-green-700 mb-1">
+                  <DollarSign className="w-4 h-4" />
+                  <span className="text-xs font-medium">Total Revenue</span>
+                </div>
+                <div className="text-xl font-bold text-green-900 break-words">
+                  {formatCurrency(totalRevenue)}
                 </div>
               </div>
 
               {/* Expenses Card */}
-              <div className="bg-red-50 rounded-xl border border-red-200 p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-red-700">
-                    <TrendingDown className="w-5 h-5" />
-                    <span className="text-sm font-semibold">Total Expenses</span>
-                  </div>
-                  <div className="text-2xl font-bold text-red-900">
-                    {formatCurrency(totalAmount)}
-                  </div>
+              <div className="bg-red-50 rounded-xl border border-red-200 p-3">
+                <div className="flex items-center gap-2 text-red-700 mb-1">
+                  <TrendingDown className="w-4 h-4" />
+                  <span className="text-xs font-medium">Total Expenses</span>
+                </div>
+                <div className="text-xl font-bold text-red-900 break-words">
+                  {formatCurrency(totalAmount)}
                 </div>
               </div>
 
               {/* Profit Card */}
-              <div className={`rounded-xl border p-4 ${totalProfit >= 0 ? 'bg-blue-50 border-blue-200' : 'bg-orange-50 border-orange-200'}`}>
-                <div className="flex items-center justify-between">
-                  <div className={`flex items-center gap-2 ${totalProfit >= 0 ? 'text-blue-700' : 'text-orange-700'}`}>
-                    <DollarSign className="w-5 h-5" />
-                    <span className="text-sm font-semibold">Net Profit</span>
-                  </div>
-                  <div className={`text-2xl font-bold ${totalProfit >= 0 ? 'text-blue-900' : 'text-orange-900'}`}>
-                    {formatCurrency(totalProfit)}
-                  </div>
+              <div className={`rounded-xl border p-3 ${totalProfit >= 0 ? 'bg-blue-50 border-blue-200' : 'bg-orange-50 border-orange-200'}`}>
+                <div className={`flex items-center gap-2 mb-1 ${totalProfit >= 0 ? 'text-blue-700' : 'text-orange-700'}`}>
+                  <DollarSign className="w-4 h-4" />
+                  <span className="text-xs font-medium">Net Profit</span>
+                </div>
+                <div className={`text-xl font-bold break-words ${totalProfit >= 0 ? 'text-blue-900' : 'text-orange-900'}`}>
+                  {formatCurrency(totalProfit)}
                 </div>
               </div>
 
               {/* Outstanding Invoices */}
-              <div className="bg-yellow-50 rounded-xl border border-yellow-200 p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-yellow-700">
-                    <Receipt className="w-5 h-5" />
-                    <span className="text-sm font-semibold">Outstanding Invoices</span>
-                  </div>
-                  <div className="text-2xl font-bold text-yellow-900">
-                    {formatCurrency(outstandingInvoices)}
-                  </div>
+              <div className="bg-yellow-50 rounded-xl border border-yellow-200 p-3">
+                <div className="flex items-center gap-2 text-yellow-700 mb-1">
+                  <Receipt className="w-4 h-4" />
+                  <span className="text-xs font-medium">Outstanding Invoices</span>
+                </div>
+                <div className="text-xl font-bold text-yellow-900 break-words">
+                  {formatCurrency(outstandingInvoices)}
                 </div>
               </div>
 
               {/* Stats Row */}
-              <div className="bg-purple-50 rounded-xl border border-purple-200 p-4">
+              <div className="bg-purple-50 rounded-xl border border-purple-200 p-3">
                 <div className="flex items-center gap-2 text-purple-700 mb-1">
                   <Calendar className="w-4 h-4" />
                   <span className="text-xs font-medium">Recurring Expenses</span>

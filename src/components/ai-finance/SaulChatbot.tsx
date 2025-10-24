@@ -617,9 +617,9 @@ export const SaulChatbot: React.FC = () => {
 
             {/* Current Month Overview */}
             <div className="space-y-3 mb-6">
-              <div className="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200">
-                <div className="text-sm text-green-700 mb-1 font-medium">Revenue</div>
-                <div className="text-2xl font-bold text-green-900">
+              <div className="p-3 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200">
+                <div className="text-xs text-green-700 mb-1 font-medium">Revenue</div>
+                <div className="text-lg font-bold text-green-900 break-words">
                   {formatCurrency(financialContext.currentMonth.revenue)}
                 </div>
                 <div className="flex items-center gap-1 text-xs text-green-600 mt-1">
@@ -628,9 +628,9 @@ export const SaulChatbot: React.FC = () => {
                 </div>
               </div>
 
-              <div className="p-4 bg-gradient-to-br from-red-50 to-red-100 rounded-xl border border-red-200">
-                <div className="text-sm text-red-700 mb-1 font-medium">Expenses</div>
-                <div className="text-2xl font-bold text-red-900">
+              <div className="p-3 bg-gradient-to-br from-red-50 to-red-100 rounded-xl border border-red-200">
+                <div className="text-xs text-red-700 mb-1 font-medium">Expenses</div>
+                <div className="text-lg font-bold text-red-900 break-words">
                   {formatCurrency(financialContext.currentMonth.expenses)}
                 </div>
                 <div className="flex items-center gap-1 text-xs text-red-600 mt-1">
@@ -639,9 +639,9 @@ export const SaulChatbot: React.FC = () => {
                 </div>
               </div>
 
-              <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200">
-                <div className="text-sm text-blue-700 mb-1 font-medium">Net Profit</div>
-                <div className="text-2xl font-bold text-blue-900">
+              <div className="p-3 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200">
+                <div className="text-xs text-blue-700 mb-1 font-medium">Net Profit</div>
+                <div className="text-lg font-bold text-blue-900 break-words">
                   {formatCurrency(financialContext.currentMonth.profit)}
                 </div>
                 <div className="text-xs text-blue-600 mt-1">
