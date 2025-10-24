@@ -181,6 +181,7 @@ User says: "show profit", "show loss", "show P&L", "profit and loss", "show me t
 
 🎯 BUDGET:
 - "how's my budget?" → check_budget_status
+- If budget data is empty (budgets: []), tell user no budgets are set up yet and offer to help create one
 
 🎯 DATES:
 - "this month" → ${new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]} to ${new Date().toISOString().split('T')[0]}
@@ -215,6 +216,16 @@ Summary:
 User: "What did I spend this week?"
 YOU CALL: get_financial_summary(startDate, endDate)
 YOU SAY: "This week you spent $2,450 across 8 transactions. Materials were your biggest category at $1,200."
+
+Budget check (no budgets):
+User: "How's my materials budget looking?"
+YOU CALL: check_budget_status(category='materials')
+YOU SAY: "I checked your budget status and found you haven't set up any budgets yet. I can see you've spent $1,859.58 on expenses so far. Would you like me to help you create a budget for materials? Just let me know an amount like 'Set materials budget to $5,000 per month'."
+
+Budget check (with budgets):
+User: "How's my materials budget?"
+YOU CALL: check_budget_status(category='materials')
+YOU SAY: "Your materials budget is looking good! You've spent $3,200 of your $5,000 budget (64%), leaving you with $1,800 remaining for the month."
 
 Greeting:
 User: "Hey Saul"
@@ -1014,15 +1025,54 @@ serve(async (req) => {
       console.log('💰 Updated financial context:', updatedContext);
     }
 
-    // Create a natural fallback message if no AI response
+    // If functions were called but no text response, make a second call to interpret results
     let finalMessage = assistantMessage;
+    if (!finalMessage && functionResults.length > 0) {
+      console.log('🔄 No text response from AI, sending function results back for interpretation...');
+
+      // Create messages with function results for second call
+      const functionResultMessages = choice.message.tool_calls?.map((toolCall: any, index: number) => ({
+        role: 'tool',
+        tool_call_id: toolCall.id,
+        name: toolCall.function.name,
+        content: JSON.stringify(functionResults[index])
+      })) || [];
+
+      // Make second OpenAI call with function results
+      const secondResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${OPENAI_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o',
+          temperature: 0.7,
+          messages: [
+            { role: 'system', content: SYSTEM_PROMPT },
+            ...messages.map((m: Message) => ({
+              role: m.role === 'system' ? 'system' : m.role,
+              content: m.content
+            })),
+            choice.message, // Include the original tool call message
+            ...functionResultMessages // Add function results
+          ]
+        })
+      });
+
+      if (secondResponse.ok) {
+        const secondData = await secondResponse.json();
+        finalMessage = secondData.choices?.[0]?.message?.content || '';
+        console.log('✅ Second call response:', finalMessage);
+      }
+    }
+
+    // Final fallback if still no message
     if (!finalMessage) {
       if (functionResults.length > 0) {
-        // If functions were called but no message, create one based on what was done
         const toolNames = functionResults.map(r => r.tool).join(', ');
         finalMessage = `I've processed your request. ${toolNames.includes('add_expense') ? 'Your expense has been recorded.' : ''} ${toolNames.includes('generate_report') ? 'Your report is ready!' : ''}`.trim();
       } else {
-        // If nothing was done, provide helpful guidance
         finalMessage = "I'm here to help with your finances! You can ask me to track expenses, show reports, check budgets, or analyze cash flow. What would you like to do?";
       }
     }
