@@ -530,9 +530,69 @@ serve(async (req) => {
       }
     }
 
+    // Calculate updated financial context if user is authenticated
+    let updatedContext = financialContext;
+    if (userId && functionResults.some(r => r.success)) {
+      const supabaseClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+      // Get current month's date range
+      const now = new Date();
+      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+
+      // Get expenses for current month
+      const { data: expenses } = await supabaseClient
+        .from('finance_expenses')
+        .select('amount, category, notes, date')
+        .eq('user_id', userId)
+        .gte('date', firstDay)
+        .lte('date', lastDay);
+
+      // Get revenue for current month
+      const { data: payments } = await supabaseClient
+        .from('payments')
+        .select('amount, description, payment_date')
+        .eq('user_id', userId)
+        .gte('payment_date', firstDay)
+        .lte('payment_date', lastDay)
+        .eq('status', 'completed');
+
+      const totalExpenses = expenses?.reduce((sum, e) => sum + parseFloat(e.amount || 0), 0) || 0;
+      const totalRevenue = payments?.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0) || 0;
+
+      // Build recent transactions list
+      const recentTransactions = [
+        ...(expenses?.map(e => ({
+          type: 'expense',
+          amount: -parseFloat(e.amount),
+          description: e.notes || e.category,
+          date: e.date
+        })) || []),
+        ...(payments?.map(p => ({
+          type: 'revenue',
+          amount: parseFloat(p.amount),
+          description: p.description,
+          date: p.payment_date
+        })) || [])
+      ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5);
+
+      updatedContext = {
+        currentMonth: {
+          revenue: totalRevenue,
+          expenses: totalExpenses,
+          profit: totalRevenue - totalExpenses
+        },
+        recentTransactions,
+        budgets: financialContext.budgets || []
+      };
+
+      console.log('💰 Updated financial context:', updatedContext);
+    }
+
     const responseData = {
       message: assistantMessage || 'Recording that financial transaction now.',
       functionResults,
+      updatedContext,
       debug: {
         toolsCalled: functionResults.length,
         userId: userId ? 'present' : 'missing'
