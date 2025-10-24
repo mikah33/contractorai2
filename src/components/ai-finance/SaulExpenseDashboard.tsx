@@ -115,7 +115,7 @@ export const SaulExpenseDashboard: React.FC<SaulExpenseDashboardProps> = ({
         .from('invoices')
         .select('total_amount')
         .eq('user_id', userId)
-        .in('status', ['pending', 'sent', 'overdue']);
+        .in('status', ['outstanding', 'partial', 'overdue']);
 
       if (projectFilter) {
         invoiceQuery = invoiceQuery.eq('project_id', projectFilter);
