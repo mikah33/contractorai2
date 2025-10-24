@@ -316,16 +316,16 @@ const PricingCalculator = () => {
 
             {/* Tab Navigation */}
             <div className="mb-4 border-b border-gray-200">
-              <nav className="-mb-px flex gap-4 sm:gap-8" aria-label="Tabs">
+              <nav className="-mb-px flex gap-2 sm:gap-4" aria-label="Tabs">
                 <button
                   onClick={() => setActiveTab('default')}
                   className={`${
                     activeTab === 'default'
                       ? 'border-blue-500 text-blue-600'
                       : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
-                  } py-3 px-1 border-b-2 font-semibold text-sm sm:text-base transition-colors`}
+                  } py-3 px-1 border-b-2 font-semibold text-xs sm:text-sm transition-colors`}
                 >
-                  Default Calculators
+                  Default
                 </button>
                 <button
                   onClick={() => setActiveTab('custom')}
@@ -333,9 +333,20 @@ const PricingCalculator = () => {
                     activeTab === 'custom'
                       ? 'border-blue-500 text-blue-600'
                       : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
-                  } py-3 px-1 border-b-2 font-semibold text-sm sm:text-base transition-colors`}
+                  } py-3 px-1 border-b-2 font-semibold text-xs sm:text-sm transition-colors`}
                 >
-                  Your Custom Calculators
+                  Custom
+                </button>
+                <button
+                  onClick={() => navigate('/ai-calculator')}
+                  className="border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300 py-3 px-1 border-b-2 font-semibold text-xs sm:text-sm transition-colors group relative"
+                >
+                  <span className="flex items-center gap-1">
+                    🤖 AI Chat
+                    <span className="absolute -top-1 -right-1 px-1.5 py-0.5 text-[10px] font-bold bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-full">
+                      NEW
+                    </span>
+                  </span>
                 </button>
               </nav>
             </div>
