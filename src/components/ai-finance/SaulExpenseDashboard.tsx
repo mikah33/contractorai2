@@ -148,35 +148,41 @@ export const SaulExpenseDashboard: React.FC<SaulExpenseDashboardProps> = ({
         {activeTab === 'dashboard' ? (
           /* Dashboard View */
           <div className="space-y-4">
-            {/* Stats Cards */}
-            <div className="grid grid-cols-3 gap-3">
-              <div className="flex flex-col p-4 bg-red-50 rounded-lg border border-red-200 min-h-[100px]">
-                <div className="flex items-center gap-2 text-red-700 mb-2">
-                  <TrendingDown className="w-4 h-4 flex-shrink-0" />
-                  <span className="text-xs font-medium whitespace-nowrap">Total Expenses</span>
-                </div>
-                <div className="text-2xl font-bold text-red-900 mt-auto">
-                  {formatCurrency(totalAmount)}
-                </div>
-              </div>
-
-              <div className="flex flex-col p-4 bg-blue-50 rounded-lg border border-blue-200 min-h-[100px]">
-                <div className="flex items-center gap-2 text-blue-700 mb-2">
-                  <Receipt className="w-4 h-4 flex-shrink-0" />
-                  <span className="text-xs font-medium whitespace-nowrap">Transactions</span>
-                </div>
-                <div className="text-2xl font-bold text-blue-900 mt-auto">
-                  {expensesToShow.length}
+            {/* Stats Cards - Stacked vertically for better readability */}
+            <div className="space-y-3">
+              {/* Total Expenses Card */}
+              <div className="bg-red-50 rounded-xl border border-red-200 p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-red-700">
+                    <TrendingDown className="w-5 h-5" />
+                    <span className="text-sm font-semibold">Total Expenses</span>
+                  </div>
+                  <div className="text-2xl font-bold text-red-900">
+                    {formatCurrency(totalAmount)}
+                  </div>
                 </div>
               </div>
 
-              <div className="flex flex-col p-4 bg-green-50 rounded-lg border border-green-200 min-h-[100px]">
-                <div className="flex items-center gap-2 text-green-700 mb-2">
-                  <Calendar className="w-4 h-4 flex-shrink-0" />
-                  <span className="text-xs font-medium whitespace-nowrap">This Session</span>
+              {/* Stats Row */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-blue-50 rounded-xl border border-blue-200 p-4">
+                  <div className="flex items-center gap-2 text-blue-700 mb-1">
+                    <Receipt className="w-4 h-4" />
+                    <span className="text-xs font-medium">Transactions</span>
+                  </div>
+                  <div className="text-xl font-bold text-blue-900">
+                    {expensesToShow.length}
+                  </div>
                 </div>
-                <div className="text-2xl font-bold text-green-900 mt-auto">
-                  {sessionExpenses.length}
+
+                <div className="bg-green-50 rounded-xl border border-green-200 p-4">
+                  <div className="flex items-center gap-2 text-green-700 mb-1">
+                    <Calendar className="w-4 h-4" />
+                    <span className="text-xs font-medium">This Session</span>
+                  </div>
+                  <div className="text-xl font-bold text-green-900">
+                    {sessionExpenses.length}
+                  </div>
                 </div>
               </div>
             </div>
