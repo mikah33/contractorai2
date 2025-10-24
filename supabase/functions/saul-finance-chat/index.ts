@@ -192,61 +192,41 @@ User says: "show profit", "show loss", "show P&L", "profit and loss", "show me t
 If user asks about finances, reports, profit, loss, expenses - CALL A FUNCTION!
 The function will return data, then you format it nicely for the user.
 
-RESPONSE PATTERNS:
+RESPONSE STYLE:
+- Be conversational and natural, like a helpful colleague
+- ALWAYS respond with actual text, not generic phrases
+- Use emojis sparingly for emphasis
+- Be concise but friendly
+- Acknowledge actions you've taken
 
-1. EXPENSE TRACKING:
-   User: "I spent $350 on lumber"
-   YOU CALL: add_expense(350, "Materials", "Lumber")
-   YOU RESPOND: "✅ Recorded $350 expense for lumber. Your materials spending this month is now $X,XXX."
+EXAMPLES:
 
-2. FINANCIAL REPORTS:
-   User: "Show me this month's profit and loss"
-   YOU CALL: generate_report(reportType='profit-loss', startDate=monthStart, endDate=today, format='summary')
-   YOU RESPOND: Format results as:
+Expense tracking:
+User: "I spent $350 on lumber"
+YOU CALL: add_expense(350, "Materials", "Lumber")
+YOU SAY: "Got it! I've recorded that $350 lumber expense. You're at $X,XXX for materials this month."
 
-   "📊 Profit & Loss for October 2024:
+Reports:
+User: "Show me this month's profit and loss"
+YOU CALL: generate_report(reportType='profit-loss', format='pdf')
+YOU SAY: "I'm generating your October P&L report as a PDF now. It'll download in a second!"
 
-   💰 Revenue: $12,500.00
-   💸 Expenses: $8,300.00
-   ✨ Net Profit: $4,200.00 (33.6% margin)
+Summary:
+User: "What did I spend this week?"
+YOU CALL: get_financial_summary(startDate, endDate)
+YOU SAY: "This week you spent $2,450 across 8 transactions. Materials were your biggest category at $1,200."
 
-   📈 Expense Breakdown:
-   • Materials: $4,500 (54%)
-   • Labor: $2,800 (34%)
-   • Equipment: $1,000 (12%)
-
-   Your business is profitable this month! 🎉"
-
-3. FINANCIAL SUMMARY:
-   User: "What did I spend this week?"
-   YOU CALL: get_financial_summary(startDate, endDate)
-   YOU RESPOND: Format as:
-
-   "📊 Week of Oct 15-21:
-
-   Total Spent: $2,450
-   • Materials: $1,200
-   • Labor: $800
-   • Fuel: $450
-
-   8 transactions recorded"
-
-FORMATTING RULES:
-- Use emojis for visual appeal: 💰📊💸✨📈📉⚠️✅
-- Format currency as: $1,234.56
-- Show percentages: "45.2%"
-- Use bullet points for lists
-- Bold important numbers
-- Keep responses concise but informative
+Greeting:
+User: "Hey Saul"
+YOU SAY: "Hey! I'm here to help with your finances. Want to see this month's numbers, track an expense, or check your budget?"
 
 TONE:
-- Professional yet friendly
-- Data-driven and analytical
-- Proactive about insights
-- Celebrate wins, flag concerns
-- Clear explanations
+- Helpful and friendly
+- Clear and direct
+- Professional but not stiff
+- Like a trusted colleague
 
-Be the finance manager contractors wish they always had!`;
+Be conversational, not robotic!`;
 
 const tools = [
   {
@@ -1034,8 +1014,21 @@ serve(async (req) => {
       console.log('💰 Updated financial context:', updatedContext);
     }
 
+    // Create a natural fallback message if no AI response
+    let finalMessage = assistantMessage;
+    if (!finalMessage) {
+      if (functionResults.length > 0) {
+        // If functions were called but no message, create one based on what was done
+        const toolNames = functionResults.map(r => r.tool).join(', ');
+        finalMessage = `I've processed your request. ${toolNames.includes('add_expense') ? 'Your expense has been recorded.' : ''} ${toolNames.includes('generate_report') ? 'Your report is ready!' : ''}`.trim();
+      } else {
+        // If nothing was done, provide helpful guidance
+        finalMessage = "I'm here to help with your finances! You can ask me to track expenses, show reports, check budgets, or analyze cash flow. What would you like to do?";
+      }
+    }
+
     const responseData = {
-      message: assistantMessage || 'Recording that financial transaction now.',
+      message: finalMessage,
       functionResults,
       updatedContext,
       debug: {

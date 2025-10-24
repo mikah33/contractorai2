@@ -62,15 +62,62 @@ export const SaulChatbot: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Focus input on mount and load chat history
+  // Focus input on mount, load chat history, and fetch initial financial data
   useEffect(() => {
     inputRef.current?.focus();
+
     const loadHistory = async () => {
       const sessions = await saulChatHistoryManager.getAllSessions();
       setChatHistory(sessions);
     };
+
+    const loadFinancialData = async () => {
+      if (!session?.user?.id) return;
+
+      try {
+        // Get current month date range
+        const now = new Date();
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+        const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+
+        // Fetch expenses
+        const { data: expenses } = await supabase
+          .from('finance_expenses')
+          .select('amount, category, notes, date')
+          .eq('user_id', session.user.id)
+          .gte('date', monthStart)
+          .lte('date', monthEnd);
+
+        // Fetch revenue
+        const { data: payments } = await supabase
+          .from('payments')
+          .select('amount, description, payment_date')
+          .eq('user_id', session.user.id)
+          .gte('payment_date', monthStart)
+          .lte('payment_date', monthEnd)
+          .eq('status', 'completed');
+
+        const totalExpenses = expenses?.reduce((sum, e) => sum + parseFloat(e.amount || 0), 0) || 0;
+        const totalRevenue = payments?.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0) || 0;
+
+        // Update financial context
+        setFinancialContext({
+          currentMonth: {
+            revenue: totalRevenue,
+            expenses: totalExpenses,
+            profit: totalRevenue - totalExpenses
+          },
+          recentTransactions: [],
+          budgets: []
+        });
+      } catch (error) {
+        console.error('Error loading financial data:', error);
+      }
+    };
+
     loadHistory();
-  }, []);
+    loadFinancialData();
+  }, [session?.user?.id]);
 
   // Auto-save chat on every message or financial context change
   useEffect(() => {
