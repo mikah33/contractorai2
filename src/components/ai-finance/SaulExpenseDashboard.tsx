@@ -22,11 +22,13 @@ interface Project {
 interface SaulExpenseDashboardProps {
   sessionStartTime: Date;
   onRefresh?: () => void;
+  userId?: string;
 }
 
 export const SaulExpenseDashboard: React.FC<SaulExpenseDashboardProps> = ({
   sessionStartTime,
-  onRefresh
+  onRefresh,
+  userId
 }) => {
   const [allExpenses, setAllExpenses] = useState<Expense[]>([]);
   const [sessionExpenses, setSessionExpenses] = useState<Expense[]>([]);
@@ -42,22 +44,26 @@ export const SaulExpenseDashboard: React.FC<SaulExpenseDashboardProps> = ({
   const [budgetUtilization, setBudgetUtilization] = useState(0);
 
   const fetchExpenses = async () => {
+    if (!userId) return; // Don't fetch without user ID
+
     setIsLoading(true);
     try {
       // Fetch projects first
       const { data: projectData, error: projectError } = await supabase
         .from('projects')
         .select('id, name')
+        .eq('user_id', userId)
         .order('name');
 
       if (!projectError) {
         setProjects(projectData || []);
       }
 
-      // Build expense query
+      // Build expense query with user filter
       let expenseQuery = supabase
         .from('finance_expenses')
         .select('*')
+        .eq('user_id', userId)
         .order('date', { ascending: false })
         .limit(50);
 
@@ -78,10 +84,11 @@ export const SaulExpenseDashboard: React.FC<SaulExpenseDashboardProps> = ({
       );
       setSessionExpenses(sessionExp);
 
-      // Build revenue query with project filter
+      // Build revenue query with user and project filter
       let revenueQuery = supabase
         .from('payments')
         .select('amount, status')
+        .eq('user_id', userId)
         .eq('status', 'completed')
         .order('payment_date', { ascending: false })
         .limit(50);
@@ -105,10 +112,11 @@ export const SaulExpenseDashboard: React.FC<SaulExpenseDashboardProps> = ({
       );
       setTotalProfit(revenue - expenses);
 
-      // Build invoice query with project filter
+      // Build invoice query with user and project filter
       let invoiceQuery = supabase
         .from('invoices')
         .select('total_amount')
+        .eq('user_id', userId)
         .in('status', ['pending', 'sent', 'overdue']);
 
       if (projectFilter) {
@@ -124,10 +132,11 @@ export const SaulExpenseDashboard: React.FC<SaulExpenseDashboardProps> = ({
         setOutstandingInvoices(outstanding);
       }
 
-      // Build recurring expenses query with project filter
+      // Build recurring expenses query with user and project filter
       let recurringQuery = supabase
         .from('recurring_expenses')
         .select('id')
+        .eq('user_id', userId)
         .eq('active', true);
 
       if (projectFilter) {
@@ -140,10 +149,11 @@ export const SaulExpenseDashboard: React.FC<SaulExpenseDashboardProps> = ({
         setRecurringExpensesCount((recurringData || []).length);
       }
 
-      // Build budget query with project filter
+      // Build budget query with user and project filter
       let budgetQuery = supabase
         .from('budgets')
-        .select('budget_amount, spent_amount');
+        .select('budget_amount, spent_amount')
+        .eq('user_id', userId);
 
       if (projectFilter) {
         budgetQuery = budgetQuery.eq('project_id', projectFilter);
@@ -166,7 +176,7 @@ export const SaulExpenseDashboard: React.FC<SaulExpenseDashboardProps> = ({
 
   useEffect(() => {
     fetchExpenses();
-  }, [projectFilter]);
+  }, [projectFilter, userId]);
 
   const handleRefresh = () => {
     fetchExpenses();

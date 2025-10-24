@@ -663,6 +663,7 @@ export const SaulChatbot: React.FC = () => {
             <div className="mt-6">
               <SaulExpenseDashboard
                 sessionStartTime={sessionStartTime}
+                userId={session?.user?.id}
                 onRefresh={() => {
                   // Trigger a refresh of the financial context if needed
                   console.log('Expense dashboard refreshed');
