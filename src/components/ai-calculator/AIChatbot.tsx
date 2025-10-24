@@ -3,6 +3,7 @@ import { Send, User, Loader2, FileText, History, Trash2, Plus, X } from 'lucide-
 import { useNavigate } from 'react-router-dom';
 import { WELCOME_MESSAGE } from '../../lib/ai/chatbot-config';
 import { chatHistoryManager, ChatSession } from '../../lib/ai/chatHistory';
+import hankLogo from '../../assets/icons/hank-logo.svg';
 
 interface Message {
   id: string;
@@ -36,6 +37,7 @@ export const AIChatbot: React.FC = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [currentEstimate, setCurrentEstimate] = useState<EstimateLineItem[]>([]);
+  const [showEstimate, setShowEstimate] = useState(false); // Mobile estimate toggle
 
   const handleRemoveItem = (itemId: string) => {
     setCurrentEstimate(prev => prev.filter(item => item.id !== itemId));
@@ -224,10 +226,10 @@ export const AIChatbot: React.FC = () => {
   };
 
   return (
-    <div className="flex h-[calc(100vh-200px)] max-w-6xl mx-auto gap-4">
-      {/* Chat History Sidebar */}
+    <div className="flex flex-col lg:flex-row h-[calc(100vh-120px)] sm:h-[calc(100vh-200px)] max-w-6xl mx-auto gap-2 sm:gap-4">
+      {/* Chat History Sidebar - Full screen on mobile */}
       {showHistory && (
-        <div className="w-80 bg-white rounded-lg shadow-lg p-4 overflow-y-auto">
+        <div className="fixed inset-0 lg:relative lg:w-80 bg-white lg:rounded-lg shadow-lg p-4 overflow-y-auto z-50 lg:z-auto">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900">Chat History</h3>
             <button
@@ -289,33 +291,48 @@ export const AIChatbot: React.FC = () => {
       )}
 
       {/* Chat Panel */}
-      <div className="flex-1 flex flex-col bg-white rounded-lg shadow-lg">
+      <div className="flex-1 flex flex-col bg-white rounded-lg shadow-lg min-h-0">
         {/* Header */}
-        <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-orange-500 to-orange-600">
+        <div className="p-3 sm:p-4 border-b border-gray-200 bg-gradient-to-r from-orange-500 to-orange-600 flex-shrink-0">
           <div className="flex items-center justify-between text-white">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <img
-                src="/src/assets/icons/hank-logo.svg"
+                src={hankLogo}
                 alt="Hank"
-                className="w-8 h-8"
+                className="w-6 h-6 sm:w-8 sm:h-8"
               />
               <div>
-                <h2 className="text-lg font-bold">Hank</h2>
-                <p className="text-xs text-orange-100">Your AI Estimating Assistant</p>
+                <h2 className="text-base sm:text-lg font-bold">Hank</h2>
+                <p className="text-[10px] sm:text-xs text-orange-100 hidden sm:block">Your AI Estimating Assistant</p>
               </div>
             </div>
-            <button
-              onClick={() => setShowHistory(!showHistory)}
-              className="p-2 hover:bg-orange-600 rounded-lg transition-colors"
-              title="Chat History"
-            >
-              <History className="w-5 h-5" />
-            </button>
+            <div className="flex items-center gap-1 sm:gap-2">
+              {/* Mobile Estimate Toggle */}
+              {currentEstimate.length > 0 && (
+                <button
+                  onClick={() => setShowEstimate(!showEstimate)}
+                  className="lg:hidden p-2 hover:bg-orange-600 rounded-lg transition-colors relative"
+                  title="View Estimate"
+                >
+                  <FileText className="w-5 h-5" />
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                    {currentEstimate.length}
+                  </span>
+                </button>
+              )}
+              <button
+                onClick={() => setShowHistory(!showHistory)}
+                className="p-2 hover:bg-orange-600 rounded-lg transition-colors"
+                title="Chat History"
+              >
+                <History className="w-5 h-5" />
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto p-2 sm:p-4 space-y-3 sm:space-y-4">
           {messages.map((message) => (
             <div
               key={message.id}
@@ -323,38 +340,38 @@ export const AIChatbot: React.FC = () => {
                 message.role === 'user' ? 'flex-row-reverse' : ''
               }`}
             >
-              {/* Avatar */}
+              {/* Avatar - Hidden on mobile for user messages */}
               <div
-                className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                className={`flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center ${
                   message.role === 'user'
-                    ? 'bg-blue-500'
+                    ? 'bg-blue-500 hidden sm:flex'
                     : 'bg-orange-500'
                 }`}
               >
                 {message.role === 'user' ? (
-                  <User className="w-5 h-5 text-white" />
+                  <User className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 ) : (
                   <img
-                    src="/src/assets/icons/hank-logo.svg"
+                    src={hankLogo}
                     alt="Hank"
-                    className="w-6 h-6"
+                    className="w-5 h-5 sm:w-6 sm:h-6"
                   />
                 )}
               </div>
 
               {/* Message Bubble */}
               <div
-                className={`flex-1 max-w-[80%] px-4 py-3 rounded-lg ${
+                className={`flex-1 sm:max-w-[80%] px-3 py-2 sm:px-4 sm:py-3 rounded-lg ${
                   message.role === 'user'
                     ? 'bg-blue-500 text-white ml-auto'
                     : 'bg-gray-100 text-gray-900'
                 }`}
               >
-                <div className="whitespace-pre-wrap break-words">
+                <div className="whitespace-pre-wrap break-words text-sm sm:text-base">
                   {message.content}
                 </div>
                 <div
-                  className={`text-xs mt-1 ${
+                  className={`text-[10px] sm:text-xs mt-1 ${
                     message.role === 'user' ? 'text-blue-100' : 'text-gray-500'
                   }`}
                 >
@@ -371,7 +388,7 @@ export const AIChatbot: React.FC = () => {
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center">
                 <img
-                  src="/src/assets/icons/hank-logo.svg"
+                  src={hankLogo}
                   alt="Hank"
                   className="w-6 h-6"
                 />
@@ -386,7 +403,7 @@ export const AIChatbot: React.FC = () => {
         </div>
 
         {/* Input */}
-        <div className="p-4 border-t border-gray-200">
+        <div className="p-2 sm:p-4 border-t border-gray-200 flex-shrink-0">
           <div className="flex gap-2">
             <input
               ref={inputRef}
@@ -395,25 +412,37 @@ export const AIChatbot: React.FC = () => {
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Type your message..."
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="flex-1 px-3 py-2 sm:px-4 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
               disabled={isLoading}
             />
             <button
               onClick={handleSendMessage}
               disabled={!input.trim() || isLoading}
-              className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+              className="px-3 sm:px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
             >
-              <Send className="w-5 h-5" />
+              <Send className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
         </div>
       </div>
 
-      {/* Estimate Preview Panel */}
-      <div className="w-80 bg-white rounded-lg shadow-lg p-4 overflow-y-auto">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          Current Estimate
-        </h3>
+      {/* Estimate Preview Panel - Desktop: Sidebar, Mobile: Modal */}
+      <div className={`
+        ${showEstimate ? 'fixed inset-0 z-50 lg:relative' : 'hidden lg:block'}
+        lg:w-80 bg-white rounded-lg shadow-lg p-4 overflow-y-auto
+      `}>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">
+            Current Estimate
+          </h3>
+          {/* Mobile close button */}
+          <button
+            onClick={() => setShowEstimate(false)}
+            className="lg:hidden text-gray-500 hover:text-gray-700 p-1"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
 
         {currentEstimate.length === 0 ? (
           <p className="text-gray-500 text-sm text-center py-8">
