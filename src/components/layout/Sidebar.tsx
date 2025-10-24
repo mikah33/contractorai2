@@ -12,7 +12,8 @@ import {
   BarChart3,
   Users,
   UserCog,
-  Code
+  Code,
+  Bot
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useData } from '../../contexts/DataContext';
@@ -58,6 +59,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
 
   const navigation = [
     { name: t('navigation.dashboard'), icon: Home, href: '/' },
+    { name: 'AI Team', icon: Bot, href: '/ai-team', badge: 'New!' },
     { name: t('navigation.calculator'), icon: Calculator, href: '/pricing' },
     { name: t('navigation.finance'), icon: BarChart2, href: '/finance' },
     { name: t('navigation.estimates'), icon: FileText, href: '/estimates' },

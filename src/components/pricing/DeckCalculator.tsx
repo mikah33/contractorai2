@@ -1117,6 +1117,9 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                       className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                       placeholder={t('calculators.deck.enterHeightInches')}
                     />
+                    <p className="mt-1 text-sm text-slate-500">
+                      💡 Tip: {staircase.heightAboveGrade > 0 ? `${(staircase.heightAboveGrade / 12).toFixed(1)} feet` : 'Enter height in inches (e.g., 8 feet = 96 inches)'}
+                    </p>
                   </div>
 
                   <div>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bot, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import AIChatbot from '../components/ai-calculator/AIChatbot';
 
 const AICalculator: React.FC = () => {
@@ -9,12 +9,16 @@ const AICalculator: React.FC = () => {
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-orange-500 rounded-lg">
-              <Bot className="w-8 h-8 text-white" />
+            <div className="p-3 bg-orange-500 rounded-lg">
+              <img
+                src="/src/assets/icons/hank-logo.svg"
+                alt="Hank"
+                className="w-12 h-12"
+              />
             </div>
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
-                AI Calculator
+                Hank
               </h1>
               <p className="text-gray-600">
                 Create estimates through conversation

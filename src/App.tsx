@@ -43,6 +43,7 @@ import ConfigureFramingCalculator from './pages/ConfigureFramingCalculator';
 import ConfigureJunkRemovalCalculator from './pages/ConfigureJunkRemovalCalculator';
 import ConfigureExcavationCalculator from './pages/ConfigureExcavationCalculator';
 import AICalculator from './pages/AICalculator';
+import AITeamHub from './pages/AITeamHub';
 import { PricingProvider } from './contexts/PricingContext';
 import { ProjectProvider } from './contexts/ProjectContext';
 import { DataProvider } from './contexts/DataContext';
@@ -144,6 +145,7 @@ function App() {
                     <Route path="/pricing/configure/junk-removal" element={<ConfigureJunkRemovalCalculator />} />
                     <Route path="/pricing/configure/excavation" element={<ConfigureExcavationCalculator />} />
                     <Route path="/calculator-widgets" element={<CalculatorWidgets />} />
+                    <Route path="/ai-team" element={<AITeamHub />} />
                     <Route path="/ai-calculator" element={<AICalculator />} />
                     <Route path="/finance" element={<FinanceTracker />} />
                     <Route path="/estimates" element={<EstimateGenerator />} />

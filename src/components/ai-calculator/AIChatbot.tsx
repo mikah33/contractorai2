@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Loader2 } from 'lucide-react';
+import { Send, User, Loader2, FileText, History, Trash2, Plus, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { WELCOME_MESSAGE } from '../../lib/ai/chatbot-config';
+import { chatHistoryManager, ChatSession } from '../../lib/ai/chatHistory';
 
 interface Message {
   id: string;
@@ -21,6 +23,8 @@ interface EstimateLineItem {
 }
 
 export const AIChatbot: React.FC = () => {
+  const navigate = useNavigate();
+  const [sessionId] = useState(() => `session-${Date.now()}`);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -32,6 +36,12 @@ export const AIChatbot: React.FC = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [currentEstimate, setCurrentEstimate] = useState<EstimateLineItem[]>([]);
+
+  const handleRemoveItem = (itemId: string) => {
+    setCurrentEstimate(prev => prev.filter(item => item.id !== itemId));
+  };
+  const [showHistory, setShowHistory] = useState(false);
+  const [chatHistory, setChatHistory] = useState<ChatSession[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -40,10 +50,27 @@ export const AIChatbot: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Focus input on mount
+  // Focus input on mount and load chat history
   useEffect(() => {
     inputRef.current?.focus();
+    const loadHistory = async () => {
+      const sessions = await chatHistoryManager.getAllSessions();
+      setChatHistory(sessions);
+    };
+    loadHistory();
   }, []);
+
+  // Auto-save chat on every message or estimate change
+  useEffect(() => {
+    if (messages.length > 1) { // Don't save just the welcome message
+      const saveChat = async () => {
+        await chatHistoryManager.autoSave(sessionId, messages, currentEstimate);
+        const sessions = await chatHistoryManager.getAllSessions();
+        setChatHistory(sessions);
+      };
+      saveChat();
+    }
+  }, [messages, currentEstimate, sessionId]);
 
   const handleSendMessage = async () => {
     if (!input.trim() || isLoading) return;
@@ -122,15 +149,168 @@ export const AIChatbot: React.FC = () => {
 
   const totalEstimate = currentEstimate.reduce((sum, item) => sum + item.totalPrice, 0);
 
+  const handleNewChat = () => {
+    setMessages([
+      {
+        id: '1',
+        role: 'assistant',
+        content: WELCOME_MESSAGE,
+        timestamp: new Date()
+      }
+    ]);
+    setCurrentEstimate([]);
+    setShowHistory(false);
+  };
+
+  const handleLoadSession = (session: ChatSession) => {
+    // Convert timestamp strings back to Date objects
+    const messagesWithDates = session.messages.map(msg => ({
+      ...msg,
+      timestamp: new Date(msg.timestamp)
+    }));
+    setMessages(messagesWithDates);
+    setCurrentEstimate(session.estimate);
+    setShowHistory(false);
+  };
+
+  const handleDeleteSession = async (sessionId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    await chatHistoryManager.deleteSession(sessionId);
+    const sessions = await chatHistoryManager.getAllSessions();
+    setChatHistory(sessions);
+  };
+
+  const handleGenerateEstimate = () => {
+    // Generate UUID v4 for estimate ID
+    const generateUUID = () => {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    };
+
+    // Create estimate items from AI chatbot line items
+    const items = currentEstimate.map((item) => ({
+      id: item.id,
+      description: item.name,
+      quantity: item.quantity,
+      unit: item.unit,
+      unitPrice: item.unitPrice,
+      totalPrice: item.totalPrice,
+      type: item.type
+    }));
+
+    // Create new estimate
+    const newEstimate = {
+      id: generateUUID(),
+      title: 'AI Generated Estimate',
+      clientName: '',
+      projectName: '',
+      items: items,
+      subtotal: totalEstimate,
+      taxRate: 0,
+      taxAmount: 0,
+      total: totalEstimate,
+      status: 'draft' as const,
+      notes: 'Generated from AI Estimating Assistant',
+      terms: 'Valid for 30 days from the date of issue.',
+      createdAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toDateString()
+    };
+
+    // Navigate to estimate page with the AI data
+    navigate('/estimates', { state: { fromCalculator: true, calculatorData: newEstimate } });
+  };
+
   return (
     <div className="flex h-[calc(100vh-200px)] max-w-6xl mx-auto gap-4">
+      {/* Chat History Sidebar */}
+      {showHistory && (
+        <div className="w-80 bg-white rounded-lg shadow-lg p-4 overflow-y-auto">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Chat History</h3>
+            <button
+              onClick={() => setShowHistory(false)}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              ✕
+            </button>
+          </div>
+
+          <button
+            onClick={handleNewChat}
+            className="w-full mb-4 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors flex items-center justify-center gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            New Chat
+          </button>
+
+          <div className="space-y-2">
+            {chatHistory.length === 0 ? (
+              <p className="text-gray-500 text-sm text-center py-4">
+                No chat history yet
+              </p>
+            ) : (
+              chatHistory.map((session) => (
+                <div
+                  key={session.id}
+                  onClick={() => handleLoadSession(session)}
+                  className="p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 cursor-pointer transition-colors"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {session.title}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {new Date(session.updatedAt).toLocaleDateString()} at{' '}
+                        {new Date(session.updatedAt).toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                      <p className="text-xs text-gray-600 mt-1">
+                        {session.messages.length} messages • {session.estimate.length} items
+                      </p>
+                    </div>
+                    <button
+                      onClick={(e) => handleDeleteSession(session.sessionId, e)}
+                      className="text-red-500 hover:text-red-700 p-1"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Chat Panel */}
       <div className="flex-1 flex flex-col bg-white rounded-lg shadow-lg">
         {/* Header */}
         <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-orange-500 to-orange-600">
-          <div className="flex items-center gap-2 text-white">
-            <Bot className="w-6 h-6" />
-            <h2 className="text-lg font-semibold">AI Estimating Assistant</h2>
+          <div className="flex items-center justify-between text-white">
+            <div className="flex items-center gap-3">
+              <img
+                src="/src/assets/icons/hank-logo.svg"
+                alt="Hank"
+                className="w-8 h-8"
+              />
+              <div>
+                <h2 className="text-lg font-bold">Hank</h2>
+                <p className="text-xs text-orange-100">Your AI Estimating Assistant</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowHistory(!showHistory)}
+              className="p-2 hover:bg-orange-600 rounded-lg transition-colors"
+              title="Chat History"
+            >
+              <History className="w-5 h-5" />
+            </button>
           </div>
         </div>
 
@@ -154,7 +334,11 @@ export const AIChatbot: React.FC = () => {
                 {message.role === 'user' ? (
                   <User className="w-5 h-5 text-white" />
                 ) : (
-                  <Bot className="w-5 h-5 text-white" />
+                  <img
+                    src="/src/assets/icons/hank-logo.svg"
+                    alt="Hank"
+                    className="w-6 h-6"
+                  />
                 )}
               </div>
 
@@ -186,7 +370,11 @@ export const AIChatbot: React.FC = () => {
           {isLoading && (
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center">
-                <Bot className="w-5 h-5 text-white" />
+                <img
+                  src="/src/assets/icons/hank-logo.svg"
+                  alt="Hank"
+                  className="w-6 h-6"
+                />
               </div>
               <div className="bg-gray-100 px-4 py-3 rounded-lg">
                 <Loader2 className="w-5 h-5 animate-spin text-orange-500" />
@@ -236,17 +424,26 @@ export const AIChatbot: React.FC = () => {
             {currentEstimate.map((item) => (
               <div
                 key={item.id}
-                className="p-3 bg-gray-50 rounded-lg border border-gray-200"
+                className="p-3 bg-gray-50 rounded-lg border border-gray-200 group hover:border-red-300 transition-colors"
               >
                 <div className="flex justify-between items-start mb-1">
-                  <span className="font-medium text-sm text-gray-900">
+                  <span className="font-medium text-sm text-gray-900 flex-1">
                     {item.name}
                   </span>
-                  {item.isCustom && (
-                    <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded">
-                      Custom
-                    </span>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {item.isCustom && (
+                      <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded">
+                        Custom
+                      </span>
+                    )}
+                    <button
+                      onClick={() => handleRemoveItem(item.id)}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-red-100 rounded"
+                      title="Remove item"
+                    >
+                      <X className="w-4 h-4 text-red-600" />
+                    </button>
+                  </div>
                 </div>
                 <div className="text-xs text-gray-600">
                   {item.quantity} {item.unit} × {formatCurrency(item.unitPrice)}
@@ -258,12 +455,20 @@ export const AIChatbot: React.FC = () => {
             ))}
 
             <div className="pt-3 mt-3 border-t border-gray-300">
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center mb-4">
                 <span className="text-lg font-bold text-gray-900">Total:</span>
                 <span className="text-2xl font-bold text-orange-600">
                   {formatCurrency(totalEstimate)}
                 </span>
               </div>
+
+              <button
+                onClick={handleGenerateEstimate}
+                className="w-full px-4 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors flex items-center justify-center gap-2 font-semibold"
+              >
+                <FileText className="w-5 h-5" />
+                Generate Estimate
+              </button>
             </div>
           </div>
         )}

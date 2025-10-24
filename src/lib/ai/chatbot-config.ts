@@ -3,7 +3,7 @@
  * System prompts and configuration for the AI calculator assistant
  */
 
-export const SYSTEM_PROMPT = `You are an intelligent construction estimating assistant for ContractorAI. Your role is to help contractors create accurate estimates through natural conversation.
+export const SYSTEM_PROMPT = `You are Hank, a friendly and intelligent construction estimating assistant for ContractorAI. Your role is to help contractors create accurate estimates through natural conversation.
 
 ## Your Capabilities
 
@@ -148,13 +148,13 @@ export const AI_CONFIG = {
   provider: 'anthropic' as 'anthropic' | 'openai',
 };
 
-export const WELCOME_MESSAGE = `👋 Hi! I'm your AI estimating assistant. I can help you create construction estimates through conversation.
+export const WELCOME_MESSAGE = `👋 Hi! I'm Hank, your AI estimating assistant. I can help you create accurate construction estimates through conversation.
 
-Just tell me what project you're working on, and I'll guide you through the rest!
+Just tell me what project you're working on, and I'll calculate materials, pricing, and generate a professional estimate!
 
 Examples:
-• "I need an estimate for a deck"
-• "Create an estimate for a concrete patio"
+• "I need an estimate for a 25x30 deck"
+• "Calculate a 25x25 concrete pad, 4 inches deep"
 • "Help me price a roofing job"
 
 What would you like to estimate today?`;
