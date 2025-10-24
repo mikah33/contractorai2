@@ -176,27 +176,54 @@ async function syncCustomerFromStripe(customerId: string) {
     const periodStart = periodStartTimestamp ? new Date(periodStartTimestamp * 1000).toISOString() : null;
     const periodEnd = periodEndTimestamp ? new Date(periodEndTimestamp * 1000).toISOString() : null;
 
-    // store subscription state
-    const { error: subError } = await supabase.from('stripe_subscriptions').upsert(
-      {
-        customer_id: customerId,
-        subscription_id: subscription.id,
-        price_id: subscription.items.data[0].price.id,
-        current_period_start: periodStart,
-        current_period_end: periodEnd,
-        cancel_at_period_end: subscription.cancel_at_period_end,
-        status: subscription.status,
-      },
-      {
-        onConflict: 'subscription_id',
-      },
-    );
+    // store subscription state - use customer_id for upsert since it's unique and always present
+    // First, try to find existing record by customer_id
+    const { data: existingSub } = await supabase
+      .from('stripe_subscriptions')
+      .select('id')
+      .eq('customer_id', customerId)
+      .single();
 
-    if (subError) {
-      console.error('Error syncing subscription:', subError);
-      throw new Error('Failed to sync subscription in database');
+    if (existingSub) {
+      // Update existing record
+      const { error: subError } = await supabase
+        .from('stripe_subscriptions')
+        .update({
+          subscription_id: subscription.id,
+          price_id: subscription.items.data[0].price.id,
+          current_period_start: periodStart,
+          current_period_end: periodEnd,
+          cancel_at_period_end: subscription.cancel_at_period_end,
+          status: subscription.status,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', existingSub.id);
+
+      if (subError) {
+        console.error('Error updating subscription:', subError);
+        throw new Error('Failed to update subscription in database');
+      }
+      console.info(`Successfully updated subscription for customer: ${customerId}`);
+    } else {
+      // Insert new record
+      const { error: subError } = await supabase
+        .from('stripe_subscriptions')
+        .insert({
+          customer_id: customerId,
+          subscription_id: subscription.id,
+          price_id: subscription.items.data[0].price.id,
+          current_period_start: periodStart,
+          current_period_end: periodEnd,
+          cancel_at_period_end: subscription.cancel_at_period_end,
+          status: subscription.status,
+        });
+
+      if (subError) {
+        console.error('Error inserting subscription:', subError);
+        throw new Error('Failed to insert subscription in database');
+      }
+      console.info(`Successfully created subscription for customer: ${customerId}`);
     }
-    console.info(`Successfully synced subscription for customer: ${customerId}`);
   } catch (error) {
     console.error(`Failed to sync subscription for customer ${customerId}:`, error);
     throw error;

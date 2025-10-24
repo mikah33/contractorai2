@@ -351,7 +351,7 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    console.log('OpenAI Response:', JSON.stringify(data, null, 2));
+    console.log('🤖 OpenAI Response:', JSON.stringify(data, null, 2));
 
     let assistantMessage = '';
     const functionResults: any[] = [];
@@ -364,7 +364,10 @@ serve(async (req) => {
       }
 
       // Process tool calls
-      console.log('Tool calls:', choice.message?.tool_calls);
+      console.log('🔧 Tool calls received:', choice.message?.tool_calls);
+      console.log('👤 User ID:', userId);
+      console.log('✅ Will process tools:', !!(choice.message?.tool_calls && userId));
+
       if (choice.message?.tool_calls && userId) {
         const supabaseClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -372,8 +375,14 @@ serve(async (req) => {
           const toolName = toolCall.function.name;
           const toolInput = JSON.parse(toolCall.function.arguments);
 
+          console.log(`\n🛠️  Processing tool: ${toolName}`);
+          console.log(`📝 Tool input:`, toolInput);
+
           try {
             if (toolName === 'add_expense') {
+              console.log('💰 ADD_EXPENSE CALLED with:', toolInput);
+              console.log('💰 Inserting into finance_expenses table...');
+
               // Add expense to database (finance_expenses table)
               const { data: expense, error } = await supabaseClient
                 .from('finance_expenses')
@@ -391,10 +400,11 @@ serve(async (req) => {
                 .single();
 
               if (error) {
-                console.error('Error adding expense:', error);
+                console.error('❌ Error adding expense:', error);
                 throw error;
               }
-              console.log('Expense added successfully:', expense);
+              console.log('✅ Expense added successfully:', expense);
+              console.log('💵 Expense ID:', expense.id);
               functionResults.push({ tool: toolName, success: true, data: expense });
 
             } else if (toolName === 'add_revenue') {
@@ -520,11 +530,19 @@ serve(async (req) => {
       }
     }
 
+    const responseData = {
+      message: assistantMessage || 'Recording that financial transaction now.',
+      functionResults,
+      debug: {
+        toolsCalled: functionResults.length,
+        userId: userId ? 'present' : 'missing'
+      }
+    };
+
+    console.log('📤 Sending response:', responseData);
+
     return new Response(
-      JSON.stringify({
-        message: assistantMessage || 'Recording that financial transaction now.',
-        functionResults
-      }),
+      JSON.stringify(responseData),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
