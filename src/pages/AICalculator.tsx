@@ -1,6 +1,7 @@
 import React from 'react';
 import { Sparkles } from 'lucide-react';
 import AIChatbot from '../components/ai-calculator/AIChatbot';
+import hankLogo from '../assets/icons/hank-logo.svg';
 
 const AICalculator: React.FC = () => {
   return (
@@ -11,7 +12,7 @@ const AICalculator: React.FC = () => {
           <div className="flex items-center gap-3 mb-2">
             <div className="p-3 bg-orange-500 rounded-lg">
               <img
-                src="/src/assets/icons/hank-logo.svg"
+                src={hankLogo}
                 alt="Hank"
                 className="w-12 h-12"
               />

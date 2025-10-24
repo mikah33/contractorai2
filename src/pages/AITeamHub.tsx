@@ -1,6 +1,10 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bot, DollarSign, Users, Briefcase, Construction } from 'lucide-react';
+import hankLogo from '../assets/icons/hank-logo.svg';
+import saulLogo from '../assets/icons/saul-logo.svg';
+import cindyLogo from '../assets/icons/cindy-logo.svg';
+import billLogo from '../assets/icons/bill-logo.svg';
 
 interface TeamMember {
   id: string;
@@ -22,7 +26,7 @@ const AITeamHub: React.FC = () => {
       name: 'Hank',
       role: 'AI Estimator',
       description: 'Creates accurate construction estimates through conversation. Calculates materials, pricing, and generates professional estimates.',
-      icon: <img src="/src/assets/icons/hank-logo.svg" alt="Hank" className="w-16 h-16" />,
+      icon: <img src={hankLogo} alt="Hank" className="w-16 h-16" />,
       color: 'from-orange-500 to-orange-600',
       available: true,
       route: '/ai-calculator'
@@ -32,7 +36,7 @@ const AITeamHub: React.FC = () => {
       name: 'Saul',
       role: 'Finance Tracker',
       description: 'Manages invoices, tracks payments, monitors cash flow, and provides financial insights for your business.',
-      icon: <img src="/src/assets/icons/saul-logo.svg" alt="Saul" className="w-16 h-16" />,
+      icon: <img src={saulLogo} alt="Saul" className="w-16 h-16" />,
       color: 'from-green-500 to-green-600',
       available: false
     },
@@ -41,7 +45,7 @@ const AITeamHub: React.FC = () => {
       name: 'Cindy',
       role: 'Customer Concierge',
       description: 'Keeps clients updated on project progress, handles questions, and ensures exceptional customer satisfaction.',
-      icon: <img src="/src/assets/icons/cindy-logo.svg" alt="Cindy" className="w-16 h-16" />,
+      icon: <img src={cindyLogo} alt="Cindy" className="w-16 h-16" />,
       color: 'from-purple-500 to-purple-600',
       available: false
     },
@@ -50,7 +54,7 @@ const AITeamHub: React.FC = () => {
       name: 'Bill',
       role: 'Project Manager',
       description: 'Coordinates employees, manages project timelines, schedules tasks, and keeps everything running smoothly.',
-      icon: <img src="/src/assets/icons/bill-logo.svg" alt="Bill" className="w-16 h-16" />,
+      icon: <img src={billLogo} alt="Bill" className="w-16 h-16" />,
       color: 'from-blue-500 to-blue-600',
       available: false
     }
