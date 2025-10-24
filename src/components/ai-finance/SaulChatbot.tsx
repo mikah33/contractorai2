@@ -2,12 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, User, Loader2, DollarSign, History, Plus, X, TrendingUp, TrendingDown, Trash2 } from 'lucide-react';
 import { SAUL_WELCOME_MESSAGE } from '../../lib/ai/saul-config';
 import { saulChatHistoryManager, SaulChatSession } from '../../lib/ai/saulChatHistory';
-import { createClient } from '@supabase/supabase-js';
+import { useAuthStore } from '../../stores/authStore';
 import saulLogo from '../../assets/icons/saul-logo.svg';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || import.meta.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 interface Message {
   id: string;
@@ -28,6 +26,7 @@ interface FinancialContext {
 
 
 export const SaulChatbot: React.FC = () => {
+  const { session } = useAuthStore();
   const [sessionId] = useState(() => `saul-session-${Date.now()}`);
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -97,11 +96,10 @@ export const SaulChatbot: React.FC = () => {
 
     try {
       // Get user session token for authentication
-      const { data: { session } } = await supabase.auth.getSession();
       const authToken = session?.access_token;
 
       if (!authToken) {
-        throw new Error('User not authenticated');
+        throw new Error('User not authenticated. Please log in and try again.');
       }
 
       // Call Supabase Edge Function for Saul AI processing
