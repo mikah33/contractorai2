@@ -326,7 +326,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: 'gpt-4o',
-        temperature: 0.3, // Lower temperature for financial accuracy
+        temperature: 0.7, // Higher temperature for better function calling
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           ...messages.map((m: Message) => ({
@@ -335,7 +335,8 @@ serve(async (req) => {
           }))
         ],
         tools,
-        tool_choice: 'auto'
+        tool_choice: 'auto',
+        parallel_tool_calls: false
       })
     });
 
@@ -345,6 +346,8 @@ serve(async (req) => {
     }
 
     const data = await response.json();
+    console.log('OpenAI Response:', JSON.stringify(data, null, 2));
+
     let assistantMessage = '';
     const functionResults: any[] = [];
 
@@ -356,6 +359,7 @@ serve(async (req) => {
       }
 
       // Process tool calls
+      console.log('Tool calls:', choice.message?.tool_calls);
       if (choice.message?.tool_calls && userId) {
         const supabaseClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -365,9 +369,9 @@ serve(async (req) => {
 
           try {
             if (toolName === 'add_expense') {
-              // Add expense to database
+              // Add expense to database (finance_expenses table)
               const { data: expense, error } = await supabaseClient
-                .from('receipts')
+                .from('finance_expenses')
                 .insert({
                   user_id: userId,
                   amount: toolInput.amount,
@@ -381,7 +385,11 @@ serve(async (req) => {
                 .select()
                 .single();
 
-              if (error) throw error;
+              if (error) {
+                console.error('Error adding expense:', error);
+                throw error;
+              }
+              console.log('Expense added successfully:', expense);
               functionResults.push({ tool: toolName, success: true, data: expense });
 
             } else if (toolName === 'add_revenue') {
