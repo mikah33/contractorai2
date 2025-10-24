@@ -75,26 +75,19 @@ export const SaulChatbot: React.FC = () => {
       if (!session?.user?.id) return;
 
       try {
-        // Get current month date range
-        const now = new Date();
-        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-        const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
-
-        // Fetch expenses
+        // Fetch ALL expenses (no date filter - show all-time totals)
         const { data: expenses } = await supabase
           .from('finance_expenses')
           .select('amount, category, notes, date')
           .eq('user_id', session.user.id)
-          .gte('date', monthStart)
-          .lte('date', monthEnd);
+          .order('date', { ascending: false });
 
-        // Fetch revenue
+        // Fetch ALL revenue (no date filter - show all-time totals)
         const { data: payments } = await supabase
           .from('finance_payments')
           .select('amount')
           .eq('user_id', session.user.id)
-          .gte('date', monthStart)
-          .lte('date', monthEnd);
+          .order('date', { ascending: false });
 
         const totalExpenses = expenses?.reduce((sum, e) => sum + parseFloat(e.amount || 0), 0) || 0;
         const totalRevenue = payments?.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0) || 0;
@@ -631,7 +624,7 @@ export const SaulChatbot: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-1 text-xs text-green-600 mt-1">
                   <TrendingUp className="w-3 h-3" />
-                  This month
+                  All Time
                 </div>
               </div>
 
@@ -642,7 +635,7 @@ export const SaulChatbot: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-1 text-xs text-red-600 mt-1">
                   <TrendingDown className="w-3 h-3" />
-                  This month
+                  All Time
                 </div>
               </div>
 

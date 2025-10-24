@@ -41,7 +41,6 @@ export const SaulExpenseDashboard: React.FC<SaulExpenseDashboardProps> = ({
   const [totalProfit, setTotalProfit] = useState(0);
   const [outstandingInvoices, setOutstandingInvoices] = useState(0);
   const [recurringExpensesCount, setRecurringExpensesCount] = useState(0);
-  const [budgetUtilization, setBudgetUtilization] = useState(0);
 
   const fetchExpenses = async () => {
     if (!userId) return; // Don't fetch without user ID
@@ -146,25 +145,6 @@ export const SaulExpenseDashboard: React.FC<SaulExpenseDashboardProps> = ({
 
       if (!recurringError) {
         setRecurringExpensesCount((recurringData || []).length);
-      }
-
-      // Build budget query with user and project filter - use budget_items table
-      let budgetQuery = supabase
-        .from('budget_items')
-        .select('budgeted_amount, actual_amount')
-        .eq('user_id', userId);
-
-      if (projectFilter) {
-        budgetQuery = budgetQuery.eq('project_id', projectFilter);
-      }
-
-      const { data: budgetData, error: budgetError } = await budgetQuery;
-
-      if (!budgetError && budgetData && budgetData.length > 0) {
-        const totalBudget = budgetData.reduce((sum, b) => sum + parseFloat(b.budgeted_amount || 0), 0);
-        const totalSpent = budgetData.reduce((sum, b) => sum + parseFloat(b.actual_amount || 0), 0);
-        const utilization = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
-        setBudgetUtilization(utilization);
       }
     } catch (error) {
       console.error('Error fetching financial data:', error);
@@ -339,37 +319,13 @@ export const SaulExpenseDashboard: React.FC<SaulExpenseDashboardProps> = ({
               </div>
 
               {/* Stats Row */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-purple-50 rounded-xl border border-purple-200 p-4">
-                  <div className="flex items-center gap-2 text-purple-700 mb-1">
-                    <Calendar className="w-4 h-4" />
-                    <span className="text-xs font-medium">Recurring Expenses</span>
-                  </div>
-                  <div className="text-xl font-bold text-purple-900">
-                    {recurringExpensesCount} active
-                  </div>
+              <div className="bg-purple-50 rounded-xl border border-purple-200 p-4">
+                <div className="flex items-center gap-2 text-purple-700 mb-1">
+                  <Calendar className="w-4 h-4" />
+                  <span className="text-xs font-medium">Recurring Expenses</span>
                 </div>
-
-                <div className={`rounded-xl border p-4 ${
-                  budgetUtilization <= 75 ? 'bg-teal-50 border-teal-200' :
-                  budgetUtilization <= 90 ? 'bg-orange-50 border-orange-200' :
-                  'bg-red-50 border-red-200'
-                }`}>
-                  <div className={`flex items-center gap-2 mb-1 ${
-                    budgetUtilization <= 75 ? 'text-teal-700' :
-                    budgetUtilization <= 90 ? 'text-orange-700' :
-                    'text-red-700'
-                  }`}>
-                    <DollarSign className="w-4 h-4" />
-                    <span className="text-xs font-medium">Budget Used</span>
-                  </div>
-                  <div className={`text-xl font-bold ${
-                    budgetUtilization <= 75 ? 'text-teal-900' :
-                    budgetUtilization <= 90 ? 'text-orange-900' :
-                    'text-red-900'
-                  }`}>
-                    {budgetUtilization.toFixed(0)}%
-                  </div>
+                <div className="text-xl font-bold text-purple-900">
+                  {recurringExpensesCount} active
                 </div>
               </div>
 
