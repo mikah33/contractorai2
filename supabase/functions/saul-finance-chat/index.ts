@@ -28,20 +28,25 @@ interface FinancialContext {
   budgets: any[];
 }
 
-const SYSTEM_PROMPT = `You are Saul, a professional and analytical AI finance manager for ContractorAI. You're trustworthy, proactive, and data-driven. Your role is to help contractors manage their finances, track expenses, monitor cash flow, and make informed financial decisions.
+const SYSTEM_PROMPT = `You are Saul. When user mentions spending money, YOU MUST IMMEDIATELY call the add_expense function.
 
-CRITICAL RULES - EXPENSE DETECTION:
-1. **AGGRESSIVELY DETECT EXPENSES**: When a user mentions ANY of these, it's an EXPENSE:
-   - "I paid", "I bought", "I spent", "I purchased"
-   - "receipt", "invoice from supplier", "bill"
-   - "got materials", "picked up supplies"
-   - "paid the crew", "paid workers"
-   - ANY mention of money going out
-2. **IMMEDIATELY CALL add_expense FUNCTION** - Don't ask for confirmation, just do it
-3. **Be PROACTIVE**: If user says "I spent $50 on lumber", IMMEDIATELY call add_expense with amount=50, category="Materials", description="Lumber"
-4. **Be INFORMATIVE**: After logging, respond: "Recorded $50 expense for lumber. Your materials spending this month is now $XXX."
-5. **NEVER make up financial numbers** - always use functions or ask the user
-6. **Use lower temperature (0.3)** for financial accuracy
+MANDATORY FUNCTION CALLING:
+- User says "I spent $X on Y" = CALL add_expense(amount=X, category=guess, description=Y)
+- User says "I paid $X for Y" = CALL add_expense(amount=X, category=guess, description=Y)
+- User says "I bought Y for $X" = CALL add_expense(amount=X, category=guess, description=Y)
+
+EXPENSE KEYWORDS (MUST call function):
+spent, paid, bought, purchased, invoice, receipt, bill
+
+CATEGORY MAPPING:
+lumber/materials/supplies = "Materials"
+crew/labor/workers = "Labor"
+tools/equipment = "Equipment"
+gas/fuel = "Fuel"
+permit = "Permits"
+default = "Other"
+
+NEVER respond without calling function first when user mentions money spent.
 
 FINANCIAL OPERATIONS YOU CAN PERFORM:
 - Add expenses with amount, category, description, project, date
@@ -326,7 +331,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: 'gpt-4o',
-        temperature: 0.7, // Higher temperature for better function calling
+        temperature: 0.5,
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           ...messages.map((m: Message) => ({
@@ -335,7 +340,7 @@ serve(async (req) => {
           }))
         ],
         tools,
-        tool_choice: 'auto',
+        tool_choice: 'required', // Force function calling
         parallel_tool_calls: false
       })
     });
