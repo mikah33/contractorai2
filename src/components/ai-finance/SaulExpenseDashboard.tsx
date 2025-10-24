@@ -208,83 +208,83 @@ export const SaulExpenseDashboard: React.FC<SaulExpenseDashboardProps> = ({
             </div>
           </div>
         ) : (
-          /* Table View */
-          <div className="space-y-4">
-            {/* Filter */}
-            <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-gray-500" />
-              <select
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-              >
-                <option value="">All Categories</option>
-                {categories.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Total */}
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <span className="text-sm font-medium text-gray-700">Total:</span>
-              <span className="text-lg font-bold text-gray-900">{formatCurrency(totalAmount)}</span>
-            </div>
-
-            {/* Expenses Table */}
-            <div className="overflow-hidden border border-gray-200 rounded-lg">
-              <div className="overflow-x-auto max-h-[400px] overflow-y-auto">
-                {expensesToShow.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Receipt className="mx-auto h-12 w-12 text-gray-400" />
-                    <h3 className="mt-2 text-sm font-medium text-gray-900">No expenses</h3>
-                    <p className="mt-1 text-sm text-gray-500">
-                      {activeTab === 'session'
-                        ? 'Add expenses by chatting with Saul'
-                        : 'No expenses found'}
-                    </p>
-                  </div>
-                ) : (
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50 sticky top-0">
-                      <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Vendor</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Amount</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {expensesToShow.map((expense) => (
-                        <tr key={expense.id} className="hover:bg-gray-50">
-                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                            {format(new Date(expense.date), 'MMM d, yyyy')}
-                            {new Date(expense.created_at) >= sessionStartTime && (
-                              <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                                New
-                              </span>
-                            )}
-                          </td>
-                          <td className="px-4 py-3 text-sm">
-                            <div className="font-medium text-gray-900">{expense.vendor}</div>
-                            {expense.notes && (
-                              <div className="text-xs text-gray-500 truncate max-w-xs">{expense.notes}</div>
-                            )}
-                          </td>
-                          <td className="px-4 py-3 whitespace-nowrap">
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                              {expense.category}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
-                            {formatCurrency(parseFloat(expense.amount.toString()))}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
+          /* List View - Cleaner card-based design */
+          <div className="space-y-3">
+            {/* Filter & Total Header */}
+            <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200">
+              <div className="flex items-center gap-2 mb-3">
+                <Filter className="w-4 h-4 text-gray-600" />
+                <select
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  className="flex-1 px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                >
+                  <option value="">All Categories</option>
+                  {categories.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
               </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold text-gray-600">Total Expenses:</span>
+                <span className="text-2xl font-bold text-red-600">{formatCurrency(totalAmount)}</span>
+              </div>
+              <div className="text-xs text-gray-500 mt-1">
+                {expensesToShow.length} {expensesToShow.length === 1 ? 'transaction' : 'transactions'}
+              </div>
+            </div>
+
+            {/* Expenses List - Clean cards */}
+            <div className="space-y-2 max-h-[500px] overflow-y-auto">
+              {expensesToShow.length === 0 ? (
+                <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+                  <Receipt className="mx-auto h-12 w-12 text-gray-400" />
+                  <h3 className="mt-2 text-sm font-semibold text-gray-900">No expenses yet</h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    {activeTab === 'session'
+                      ? 'Start adding expenses by chatting with Saul'
+                      : 'No expenses found for this period'}
+                  </p>
+                </div>
+              ) : (
+                expensesToShow.map((expense) => (
+                  <div
+                    key={expense.id}
+                    className="bg-white p-4 rounded-xl border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-sm font-semibold text-gray-900 truncate">
+                            {expense.vendor}
+                          </span>
+                          {new Date(expense.created_at) >= sessionStartTime && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-100 text-green-700 border border-green-200">
+                              NEW
+                            </span>
+                          )}
+                        </div>
+                        {expense.notes && (
+                          <p className="text-xs text-gray-600 mb-2 line-clamp-2">{expense.notes}</p>
+                        )}
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
+                            {expense.category}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {format(new Date(expense.date), 'MMM d, yyyy')}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex-shrink-0 text-right">
+                        <div className="text-lg font-bold text-red-600">
+                          {formatCurrency(parseFloat(expense.amount.toString()))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         )}
