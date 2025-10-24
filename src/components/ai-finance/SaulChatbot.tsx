@@ -1,7 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, User, Loader2, DollarSign, History, Plus, X, TrendingUp, TrendingDown } from 'lucide-react';
+import { Send, User, Loader2, DollarSign, History, Plus, X, TrendingUp, TrendingDown, Trash2 } from 'lucide-react';
 import { SAUL_WELCOME_MESSAGE } from '../../lib/ai/saul-config';
+import { saulChatHistoryManager, SaulChatSession } from '../../lib/ai/saulChatHistory';
+import { createClient } from '@supabase/supabase-js';
 import saulLogo from '../../assets/icons/saul-logo.svg';
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || import.meta.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 interface Message {
   id: string;
@@ -20,14 +26,6 @@ interface FinancialContext {
   budgets: any[];
 }
 
-interface ChatSession {
-  id: string;
-  sessionId: string;
-  title: string;
-  messages: Message[];
-  financialContext: FinancialContext;
-  updatedAt: string;
-}
 
 export const SaulChatbot: React.FC = () => {
   const [sessionId] = useState(() => `saul-session-${Date.now()}`);
@@ -52,7 +50,7 @@ export const SaulChatbot: React.FC = () => {
   });
   const [showHistory, setShowHistory] = useState(false);
   const [showFinancials, setShowFinancials] = useState(false);
-  const [chatHistory, setChatHistory] = useState<ChatSession[]>([]);
+  const [chatHistory, setChatHistory] = useState<SaulChatSession[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -61,10 +59,27 @@ export const SaulChatbot: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Focus input on mount
+  // Focus input on mount and load chat history
   useEffect(() => {
     inputRef.current?.focus();
+    const loadHistory = async () => {
+      const sessions = await saulChatHistoryManager.getAllSessions();
+      setChatHistory(sessions);
+    };
+    loadHistory();
   }, []);
+
+  // Auto-save chat on every message or financial context change
+  useEffect(() => {
+    if (messages.length > 1) { // Don't save just the welcome message
+      const saveChat = async () => {
+        await saulChatHistoryManager.autoSave(sessionId, messages, financialContext);
+        const sessions = await saulChatHistoryManager.getAllSessions();
+        setChatHistory(sessions);
+      };
+      saveChat();
+    }
+  }, [messages, financialContext, sessionId]);
 
   const handleSendMessage = async () => {
     if (!input.trim() || isLoading) return;
@@ -81,13 +96,20 @@ export const SaulChatbot: React.FC = () => {
     setIsLoading(true);
 
     try {
+      // Get user session token for authentication
+      const { data: { session } } = await supabase.auth.getSession();
+      const authToken = session?.access_token;
+
+      if (!authToken) {
+        throw new Error('User not authenticated');
+      }
+
       // Call Supabase Edge Function for Saul AI processing
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || import.meta.env.NEXT_PUBLIC_SUPABASE_URL;
       const response = await fetch(`${supabaseUrl}/functions/v1/saul-finance-chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`
+          'Authorization': `Bearer ${authToken}`
         },
         body: JSON.stringify({
           messages: [...messages, userMessage],
@@ -150,7 +172,29 @@ export const SaulChatbot: React.FC = () => {
         timestamp: new Date()
       }
     ]);
+    setFinancialContext({
+      currentMonth: { revenue: 0, expenses: 0, profit: 0 },
+      recentTransactions: [],
+      budgets: []
+    });
     setShowHistory(false);
+  };
+
+  const handleLoadSession = (session: SaulChatSession) => {
+    const messagesWithDates = session.messages.map(msg => ({
+      ...msg,
+      timestamp: new Date(msg.timestamp)
+    }));
+    setMessages(messagesWithDates);
+    setFinancialContext(session.financialContext);
+    setShowHistory(false);
+  };
+
+  const handleDeleteSession = async (sessionId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    await saulChatHistoryManager.deleteSession(sessionId);
+    const sessions = await saulChatHistoryManager.getAllSessions();
+    setChatHistory(sessions);
   };
 
   const profitMargin = financialContext.currentMonth.revenue > 0
@@ -189,14 +233,32 @@ export const SaulChatbot: React.FC = () => {
               chatHistory.map((session) => (
                 <div
                   key={session.id}
+                  onClick={() => handleLoadSession(session)}
                   className="p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 cursor-pointer transition-colors"
                 >
-                  <p className="text-sm font-medium text-gray-900 truncate">
-                    {session.title}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {new Date(session.updatedAt).toLocaleDateString()}
-                  </p>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {session.title}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {new Date(session.updatedAt).toLocaleDateString()} at{' '}
+                        {new Date(session.updatedAt).toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                      <p className="text-xs text-gray-600 mt-1">
+                        {session.messages.length} messages
+                      </p>
+                    </div>
+                    <button
+                      onClick={(e) => handleDeleteSession(session.sessionId, e)}
+                      className="text-red-500 hover:text-red-700 p-1"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               ))
             )}
