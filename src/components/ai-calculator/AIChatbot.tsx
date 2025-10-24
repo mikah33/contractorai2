@@ -61,9 +61,13 @@ export const AIChatbot: React.FC = () => {
 
     try {
       // Call Supabase Edge Function for AI processing
-      const response = await fetch('/api/ai-calculator-chat', {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || import.meta.env.NEXT_PUBLIC_SUPABASE_URL;
+      const response = await fetch(`${supabaseUrl}/functions/v1/ai-calculator-chat`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`
+        },
         body: JSON.stringify({
           messages: [...messages, userMessage],
           currentEstimate
