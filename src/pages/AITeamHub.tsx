@@ -38,7 +38,8 @@ const AITeamHub: React.FC = () => {
       description: 'Manages invoices, tracks payments, monitors cash flow, and provides financial insights for your business.',
       icon: <img src={saulLogo} alt="Saul" className="w-16 h-16" />,
       color: 'from-green-500 to-green-600',
-      available: false
+      available: true,
+      route: '/saul-finance'
     },
     {
       id: 'cindy',
