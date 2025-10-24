@@ -84,13 +84,12 @@ export const SaulExpenseDashboard: React.FC<SaulExpenseDashboardProps> = ({
       );
       setSessionExpenses(sessionExp);
 
-      // Build revenue query with user and project filter
+      // Build revenue query with user and project filter - use finance_payments table
       let revenueQuery = supabase
-        .from('payments')
-        .select('amount, status')
+        .from('finance_payments')
+        .select('amount')
         .eq('user_id', userId)
-        .eq('status', 'completed')
-        .order('payment_date', { ascending: false })
+        .order('created_at', { ascending: false })
         .limit(50);
 
       if (projectFilter) {

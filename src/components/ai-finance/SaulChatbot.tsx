@@ -90,12 +90,11 @@ export const SaulChatbot: React.FC = () => {
 
         // Fetch revenue
         const { data: payments } = await supabase
-          .from('payments')
-          .select('amount, description, payment_date')
+          .from('finance_payments')
+          .select('amount')
           .eq('user_id', session.user.id)
-          .gte('payment_date', monthStart)
-          .lte('payment_date', monthEnd)
-          .eq('status', 'completed');
+          .gte('date', monthStart)
+          .lte('date', monthEnd);
 
         const totalExpenses = expenses?.reduce((sum, e) => sum + parseFloat(e.amount || 0), 0) || 0;
         const totalRevenue = payments?.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0) || 0;
@@ -322,13 +321,12 @@ export const SaulChatbot: React.FC = () => {
 
       // Fetch revenue
       const { data: payments, error: paymentsError } = await supabase
-        .from('payments')
+        .from('finance_payments')
         .select('*')
         .eq('user_id', session.user.id)
-        .gte('payment_date', monthStart)
-        .lte('payment_date', monthEnd)
-        .eq('status', 'completed')
-        .order('payment_date', { ascending: false });
+        .gte('date', monthStart)
+        .lte('date', monthEnd)
+        .order('date', { ascending: false });
 
       if (paymentsError) throw paymentsError;
 
@@ -347,10 +345,10 @@ export const SaulChatbot: React.FC = () => {
 
       // Prepare revenue data for PDF
       const revenueList = payments?.map(p => ({
-        date: p.payment_date,
-        description: p.description || 'Payment',
+        date: p.date,
+        description: p.client_name || 'Payment',
         amount: parseFloat(p.amount || 0),
-        paymentMethod: p.payment_method || 'Unknown'
+        paymentMethod: p.method || 'Unknown'
       })) || [];
 
       // Group expenses by category
