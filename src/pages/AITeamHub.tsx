@@ -44,11 +44,12 @@ const AITeamHub: React.FC = () => {
     {
       id: 'cindy',
       name: 'Cindy',
-      role: 'Customer Concierge',
-      description: 'Keeps clients updated on project progress, handles questions, and ensures exceptional customer satisfaction.',
+      role: 'Client Relationship Manager',
+      description: 'Manages clients, tracks projects, schedules events, and drafts customer communications with your approval.',
       icon: <img src={cindyLogo} alt="Cindy" className="w-16 h-16" />,
-      color: 'from-purple-500 to-purple-600',
-      available: false
+      color: 'from-blue-500 to-blue-600',
+      available: true,
+      route: '/cindy-crm'
     },
     {
       id: 'bill',
@@ -56,7 +57,7 @@ const AITeamHub: React.FC = () => {
       role: 'Project Manager',
       description: 'Coordinates employees, manages project timelines, schedules tasks, and keeps everything running smoothly.',
       icon: <img src={billLogo} alt="Bill" className="w-16 h-16" />,
-      color: 'from-blue-500 to-blue-600',
+      color: 'from-purple-500 to-purple-600',
       available: false
     }
   ];
@@ -169,7 +170,7 @@ const AITeamHub: React.FC = () => {
           <Construction className="w-12 h-12 text-blue-600 mx-auto mb-4" />
           <h3 className="text-2xl font-bold text-gray-900 mb-2">More AI Team Members Coming Soon!</h3>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            We're actively developing Saul, Cindy, and Bill to help automate even more of your business operations.
+            We're actively developing Bill to help automate even more of your business operations.
             Stay tuned for updates!
           </p>
         </div>
