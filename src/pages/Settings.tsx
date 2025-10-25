@@ -7,6 +7,7 @@ import { useData } from '../contexts/DataContext';
 import { useAuthStore } from '../stores/authStore';
 import { requestNotificationPermission, registerServiceWorker, showNotification } from '../utils/notifications';
 import StripeConnectButton from '../components/stripe/StripeConnectButton';
+import { GmailConnection } from '../components/settings/GmailConnection';
 
 const Settings = () => {
   const { t, i18n } = useTranslation();
@@ -504,6 +505,12 @@ const Settings = () => {
       <div className="mt-6">
         <h2 className="text-xl font-bold text-gray-900 mb-4">Payment Settings</h2>
         <StripeConnectButton />
+      </div>
+
+      {/* Gmail Integration Section */}
+      <div className="mt-6">
+        <h2 className="text-xl font-bold text-gray-900 mb-4">Email Integration</h2>
+        <GmailConnection />
       </div>
 
       {/* Calculator Widgets Section */}

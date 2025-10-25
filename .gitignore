@@ -32,3 +32,4 @@ setup-*.html
 test-*.html
 .env
 scripts/apply-client-columns.ts
+docs/SETUP_COMPLETE.md

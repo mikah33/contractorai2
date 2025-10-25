@@ -16,6 +16,7 @@ import EmployeesManager from './pages/EmployeesManager';
 import AdAccountsSetup from './pages/AdAccountsSetup';
 import AdOAuthCallback from './pages/AdOAuthCallback';
 import MetaOAuthCallback from './pages/MetaOAuthCallback';
+import GmailOAuthCallback from './pages/GmailOAuthCallback';
 import AnalyticsDashboard from './pages/AnalyticsDashboard';
 import Subscriptions from './pages/Subscriptions';
 import ResetPassword from './pages/ResetPassword';
@@ -45,6 +46,7 @@ import ConfigureExcavationCalculator from './pages/ConfigureExcavationCalculator
 import AICalculator from './pages/AICalculator';
 import AITeamHub from './pages/AITeamHub';
 import SaulFinance from './pages/SaulFinance';
+import CindyCRM from './pages/CindyCRM';
 import { PricingProvider } from './contexts/PricingContext';
 import { ProjectProvider } from './contexts/ProjectContext';
 import { DataProvider } from './contexts/DataContext';
@@ -149,6 +151,7 @@ function App() {
                     <Route path="/ai-team" element={<AITeamHub />} />
                     <Route path="/ai-calculator" element={<AICalculator />} />
                     <Route path="/saul-finance" element={<SaulFinance />} />
+                    <Route path="/cindy-crm" element={<CindyCRM />} />
                     <Route path="/finance" element={<FinanceTracker />} />
                     <Route path="/estimates" element={<EstimateGenerator />} />
                     <Route path="/projects" element={<ProjectManager />} />
@@ -159,6 +162,7 @@ function App() {
                     <Route path="/ad-accounts" element={<AdAccountsSetup />} />
                     <Route path="/ad-oauth-callback" element={<AdOAuthCallback />} />
                     <Route path="/meta-oauth-callback" element={<MetaOAuthCallback />} />
+                    <Route path="/gmail-oauth-callback" element={<GmailOAuthCallback />} />
                     <Route path="/analytics" element={<AnalyticsDashboard />} />
                     <Route path="/subscriptions" element={<Subscriptions />} />
                     <Route path="/settings" element={<Settings />} />
