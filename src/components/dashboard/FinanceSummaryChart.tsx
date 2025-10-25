@@ -1,63 +1,84 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { DollarSign } from 'lucide-react';
+import { useFinanceStore } from '../../stores/financeStoreSupabase';
 
 const FinanceSummaryChart = () => {
-  // In a real app, we would use a charting library like Chart.js or Recharts
-  // For now, we'll create a simple static chart for demonstration
+  const { financialSummary } = useFinanceStore();
+
 
   return (
     <div>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3 mb-6">
         <div className="p-3 bg-blue-50 rounded-lg border border-blue-100">
           <p className="text-sm text-blue-700 font-medium">Total Revenue</p>
-          <div className="flex items-end">
-            <span className="text-xl font-bold text-blue-900">$0</span>
-            <span className="ml-2 text-xs text-green-600 flex items-center">
-              +0%
-            </span>
-          </div>
+          <span className="text-xl font-bold text-blue-900">
+            ${financialSummary.totalRevenue.toLocaleString()}
+          </span>
         </div>
         <div className="p-3 bg-green-50 rounded-lg border border-green-100">
-          <p className="text-sm text-green-700 font-medium">Project Margins</p>
-          <div className="flex items-end">
-            <span className="text-xl font-bold text-green-900">0%</span>
-            <span className="ml-2 text-xs text-green-600 flex items-center">
-              +0%
-            </span>
-          </div>
+          <p className="text-sm text-green-700 font-medium">Profit Margin</p>
+          <span className="text-xl font-bold text-green-900">
+            {financialSummary.profitMargin.toFixed(1)}%
+          </span>
         </div>
         <div className="p-3 bg-amber-50 rounded-lg border border-amber-100">
           <p className="text-sm text-amber-700 font-medium">Outstanding Invoices</p>
-          <div className="flex items-end">
-            <span className="text-xl font-bold text-amber-900">$0</span>
-            <span className="ml-2 text-xs text-red-600 flex items-center">
-              +0%
-            </span>
-          </div>
+          <span className="text-xl font-bold text-amber-900">
+            ${financialSummary.outstandingInvoices.toLocaleString()}
+          </span>
         </div>
       </div>
       
-      <div className="w-full h-60 bg-gray-50 rounded-lg relative flex items-end p-4">
+      <div className="w-full h-60 bg-gray-50 rounded-lg relative p-4">
         {/* Simplified bar chart */}
         <div className="absolute top-2 left-2 text-xs text-gray-500">Revenue vs. Expenses (Last 6 Months)</div>
-        
-        {[0, 0, 0, 0, 0, 0].map((height, i) => (
-          <div key={i} className="flex flex-col items-center mx-2 flex-1">
-            <div className="w-full flex space-x-1">
-              <div 
-                className="bg-blue-500 rounded-t-sm" 
-                style={{ height: `${height}px`, width: '45%' }}
-              ></div>
-              <div 
-                className="bg-teal-500 rounded-t-sm" 
-                style={{ height: `${height * 0.7}px`, width: '45%' }}
-              ></div>
-            </div>
-            <div className="text-xs text-gray-500 mt-2">
-              {['May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'][i]}
-            </div>
-          </div>
-        ))}
+
+        <div className="h-full w-full flex items-end justify-between pt-8 pb-8">
+          {(() => {
+            const monthlyData = financialSummary.monthlyData || [];
+            const last6Months = monthlyData.slice(-6);
+
+            // Pad with empty months if less than 6
+            while (last6Months.length < 6) {
+              const date = new Date();
+              date.setMonth(date.getMonth() - (6 - last6Months.length));
+              last6Months.unshift({
+                month: date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+                revenue: 0,
+                expenses: 0
+              });
+            }
+
+            const maxValue = Math.max(
+              ...last6Months.map(d => Math.max(d.revenue, d.expenses)),
+              1
+            );
+
+            return last6Months.map((data, i) => (
+              <div key={i} className="flex flex-col items-center flex-1 max-w-[16%]">
+                <div className="w-full flex justify-center items-end space-x-1 h-40">
+                  <div
+                    className="bg-blue-500 rounded-t-sm w-[40%]"
+                    style={{
+                      height: `${Math.max((data.revenue / maxValue) * 100, 2)}%`,
+                      minHeight: data.revenue > 0 ? '4px' : '0'
+                    }}
+                  ></div>
+                  <div
+                    className="bg-teal-500 rounded-t-sm w-[40%]"
+                    style={{
+                      height: `${Math.max((data.expenses / maxValue) * 100, 2)}%`,
+                      minHeight: data.expenses > 0 ? '4px' : '0'
+                    }}
+                  ></div>
+                </div>
+                <div className="text-xs text-gray-500 mt-2 whitespace-nowrap">
+                  {data.month.split(' ')[0]}
+                </div>
+              </div>
+            ));
+          })()}
+        </div>
         
         {/* Legend */}
         <div className="absolute bottom-2 right-2 flex items-center text-xs">

@@ -1,59 +1,154 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Calculator } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { CalculatorEstimateHeader } from '../calculators/CalculatorEstimateHeader';
+import { useCalculatorTab } from '../../contexts/CalculatorTabContext';
+import { useCustomCalculator } from '../../hooks/useCustomCalculator';
+import { useCustomMaterials } from '../../hooks/useCustomMaterials';
 
-const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
+const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSuccess }) => {
+  const { t } = useTranslation();
+  const { activeTab } = useCalculatorTab();
+  const { materials: customMaterials, pricing: customPricing, loading: loadingCustom, isConfigured } = useCustomCalculator('concrete', activeTab === 'custom');
+  const { getCustomPrice, getCustomUnitValue } = useCustomMaterials('concrete');
   const [concreteType, setConcreteType] = useState<'wall' | 'flatwork'>('flatwork');
   const [length, setLength] = useState<number | ''>('');
   const [width, setWidth] = useState<number | ''>('');
   const [height, setHeight] = useState<number | ''>('');
+  const [thickness, setThickness] = useState<number | ''>(''); // For wall thickness in inches
   const [unit, setUnit] = useState<'imperial' | 'metric'>('imperial');
   const [reinforcement, setReinforcement] = useState<'none' | 'rebar' | 'mesh'>('none');
   const [rebarSpacing, setRebarSpacing] = useState<number>(12); // inches or 30cm
   const [meshType, setMeshType] = useState<'6x6' | '4x4'>('6x6');
-  const [deliveryMethod, setDeliveryMethod] = useState<'bags' | 'truck'>('bags');
+  const [deliveryMethod, setDeliveryMethod] = useState<'bags' | 'truck'>('truck'); // Default to ready-mix truck
+  const [addColor, setAddColor] = useState<boolean>(false);
+  const [colorPricePerYard, setColorPricePerYard] = useState<number | ''>('');
+  const [addFiber, setAddFiber] = useState<boolean>(false);
+  const [fiberPricePerYard, setFiberPricePerYard] = useState<number | ''>('');
+  const [lastCalculation, setLastCalculation] = useState<CalculationResult[] | null>(null);
+
+  // Default pricing with dynamic pricing support
+  const defaultPricing = {
+    bagPrice: unit === 'imperial' ? getCustomPrice('Concrete Bag', 6.98, 'concrete') : getCustomPrice('Concrete Bag', 7.50, 'concrete'),
+    truckPricePerYard: getCustomPrice('3000 PSI Concrete', 185, 'concrete'),
+    deliveryFee: getCustomPrice('Delivery Fee', 150, 'concrete'),
+    rebarPrice: unit === 'imperial' ? getCustomPrice('#4 Rebar', 8.98, 'reinforcement') : getCustomPrice('#4 Rebar', 9.50, 'reinforcement'),
+    meshPrice6x6: getCustomPrice('Wire Mesh', 12.98, 'reinforcement'),
+    meshPrice4x4: getCustomPrice('Wire Mesh 4x4', 16.98, 'reinforcement')
+  };
+
+  // Determine active pricing based on tab
+  const activePricing = useMemo(() => {
+    if (activeTab === 'custom' && isConfigured && customPricing) {
+      return {
+        bagPrice: customPricing.concrete_bag_price || defaultPricing.bagPrice,
+        truckPricePerYard: customPricing.concrete_truck_per_yard || defaultPricing.truckPricePerYard,
+        deliveryFee: customPricing.concrete_delivery_fee || defaultPricing.deliveryFee,
+        rebarPrice: customPricing.rebar_price || defaultPricing.rebarPrice,
+        meshPrice6x6: customPricing.mesh_price_6x6 || defaultPricing.meshPrice6x6,
+        meshPrice4x4: customPricing.mesh_price_4x4 || defaultPricing.meshPrice4x4
+      };
+    }
+    return defaultPricing;
+  }, [activeTab, isConfigured, customPricing, unit]);
+
+  // Get current inputs for saving
+  const getCurrentInputs = () => ({
+    concreteType,
+    length,
+    width,
+    height,
+    thickness,
+    unit,
+    reinforcement,
+    rebarSpacing,
+    meshType,
+    deliveryMethod,
+    addColor,
+    colorPricePerYard,
+    addFiber,
+    fiberPricePerYard
+  });
+
+  // Load saved estimate inputs
+  const handleLoadEstimate = (inputs: Record<string, any>) => {
+    setConcreteType(inputs.concreteType || 'flatwork');
+    setLength(inputs.length ?? '');
+    setWidth(inputs.width ?? '');
+    setHeight(inputs.height ?? '');
+    setThickness(inputs.thickness ?? '');
+    setUnit(inputs.unit || 'imperial');
+    setReinforcement(inputs.reinforcement || 'none');
+    setRebarSpacing(inputs.rebarSpacing ?? 12);
+    setMeshType(inputs.meshType || '6x6');
+    setDeliveryMethod(inputs.deliveryMethod || 'truck');
+    setAddColor(inputs.addColor ?? false);
+    setColorPricePerYard(inputs.colorPricePerYard ?? '');
+    setAddFiber(inputs.addFiber ?? false);
+    setFiberPricePerYard(inputs.fiberPricePerYard ?? '');
+  };
+
+  // Reset all inputs to defaults for new estimate
+  const handleNewEstimate = () => {
+    setConcreteType('flatwork');
+    setLength('');
+    setWidth('');
+    setHeight('');
+    setThickness('');
+    setUnit('imperial');
+    setReinforcement('none');
+    setRebarSpacing(12);
+    setMeshType('6x6');
+    setDeliveryMethod('truck');
+    setAddColor(false);
+    setColorPricePerYard('');
+    setAddFiber(false);
+    setFiberPricePerYard('');
+    setLastCalculation(null);
+  };
 
   const handleCalculate = () => {
-    if (typeof length === 'number' && typeof width === 'number' && 
-        (concreteType === 'flatwork' || (concreteType === 'wall' && typeof height === 'number'))) {
+    if (typeof length === 'number' &&
+        (concreteType === 'flatwork' ? (typeof width === 'number' && typeof height === 'number') :
+         (typeof height === 'number' && typeof thickness === 'number'))) {
       let volume: number;
       let volumeUnit: string;
       let bagsNeeded: number;
       let bagsUnit: string;
-      
+
       if (unit === 'imperial') {
-        // For walls: length and width in feet, height in feet
+        // For walls: length in feet, height in feet, thickness in inches
         // For flatwork: length and width in feet, depth in inches
-        volume = concreteType === 'wall' 
-          ? (length * width * height) / 27 // Convert cubic feet to cubic yards
+        volume = concreteType === 'wall'
+          ? (length * height * (thickness / 12)) / 27 // Linear feet × height × (thickness in feet) / 27
           : (length * width * (height / 12)) / 27; // Convert depth from inches to feet, then to cubic yards
-        volumeUnit = 'cubic yards';
+        volumeUnit = t('calculators.concrete.cubicYards');
         bagsNeeded = Math.ceil(volume * 40); // Approx 40 bags per cubic yard
-        bagsUnit = '60lb bags';
+        bagsUnit = t('calculators.concrete.lbBags');
       } else {
         volume = concreteType === 'wall'
-          ? length * width * height // Already in cubic meters
+          ? (length * height * (thickness / 100)) // Linear meters × height × (thickness in meters)
           : length * width * (height / 100); // Convert depth from cm to meters
-        volumeUnit = 'cubic meters';
+        volumeUnit = t('calculators.concrete.cubicMeters');
         bagsNeeded = Math.ceil(volume * 90);
-        bagsUnit = '25kg bags';
+        bagsUnit = t('calculators.concrete.kgBags');
       }
 
       const results: CalculationResult[] = [
         {
-          label: 'Concrete Volume',
+          label: t('calculators.concrete.concreteVolume'),
           value: Number(volume.toFixed(2)),
           unit: volumeUnit
         }
       ];
 
       if (deliveryMethod === 'bags') {
-        const bagPrice = unit === 'imperial' ? 6.98 : 7.50; // Price per bag
-        const bagCost = bagsNeeded * bagPrice;
+        const bagCost = bagsNeeded * (activePricing?.bagPrice || defaultPricing.bagPrice);
 
         results.push(
           {
-            label: 'Bags of Concrete',
+            label: t('calculators.concrete.bagsOfConcrete'),
             value: bagsNeeded,
             unit: bagsUnit,
             cost: bagCost
@@ -62,12 +157,38 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       } else {
         // Truck delivery
         const minLoad = 1; // Minimum load in cubic yards
-        const truckPrice = 185; // Price per cubic yard
-        const deliveryFee = volume < minLoad ? 150 : 0; // Additional fee for small loads
-        const truckCost = (Math.max(volume, minLoad) * truckPrice) + deliveryFee;
+        const truckPrice = activePricing?.truckPricePerYard || defaultPricing.truckPricePerYard;
+        const deliveryFee = volume < minLoad ? (activePricing?.deliveryFee || defaultPricing.deliveryFee) : 0;
+        let truckCost = (Math.max(volume, minLoad) * truckPrice) + deliveryFee;
+
+        // Add color cost if selected
+        if (addColor && typeof colorPricePerYard === 'number') {
+          const colorCost = Math.max(volume, minLoad) * colorPricePerYard;
+          truckCost += colorCost;
+
+          results.push({
+            label: 'Concrete Color Additive',
+            value: Math.max(volume, minLoad),
+            unit: volumeUnit,
+            cost: colorCost
+          });
+        }
+
+        // Add fiber cost if selected
+        if (addFiber && typeof fiberPricePerYard === 'number') {
+          const fiberCost = Math.max(volume, minLoad) * fiberPricePerYard;
+          truckCost += fiberCost;
+
+          results.push({
+            label: 'Fiber Reinforcement Additive',
+            value: Math.max(volume, minLoad),
+            unit: volumeUnit,
+            cost: fiberCost
+          });
+        }
 
         results.push({
-          label: 'Ready-Mix Truck',
+          label: t('calculators.concrete.readyMix'),
           value: Math.max(volume, minLoad),
           unit: volumeUnit,
           cost: truckCost
@@ -75,9 +196,19 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
         if (volume < minLoad) {
           results.push({
-            label: 'Note',
+            label: t('calculators.concrete.note'),
             value: minLoad,
-            unit: 'yard minimum load required'
+            unit: t('calculators.concrete.minimumLoad')
+          });
+        }
+
+        // Add small load fee warning for volumes under 3 cubic yards
+        if (volume < 3) {
+          results.push({
+            label: '⚠️ Small Load Fee Notice',
+            value: 0,
+            unit: 'Orders under 3 cubic yards typically incur a $150-$300 small load fee. Please add this to your estimate.',
+            isWarning: true
           });
         }
       }
@@ -89,48 +220,99 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         const lengthBars = Math.ceil(width / spacing) + 1;
         const widthBars = Math.ceil(length / spacing) + 1;
         const totalLength = (length * lengthBars) + (width * widthBars);
-        const rebarPrice = unit === 'imperial' ? 8.98 : 9.50; // Price per bar
+        const rebarPrice = activePricing?.rebarPrice || defaultPricing.rebarPrice;
         const rebarCost = Math.ceil(totalLength / 20) * rebarPrice; // 20ft rebar lengths
-        
+
         results.push({
-          label: 'Rebar Length Needed',
+          label: t('calculators.concrete.rebarLengthNeeded'),
           value: Number(totalLength.toFixed(2)),
-          unit: unit === 'imperial' ? 'feet' : 'meters',
+          unit: unit === 'imperial' ? t('calculators.concrete.feet') : t('calculators.concrete.meters'),
           cost: rebarCost
         });
       } else if (reinforcement === 'mesh') {
         const area = length * width;
         const sheetSize = unit === 'imperial' ? 100 : 9.29; // 100 sqft or 9.29 sqm per sheet
         const sheetsNeeded = Math.ceil(area / sheetSize);
-        const meshPrice = meshType === '6x6' ? 12.98 : 16.98; // Price per sheet
+        const meshPrice = meshType === '6x6'
+          ? (activePricing?.meshPrice6x6 || defaultPricing.meshPrice6x6)
+          : (activePricing?.meshPrice4x4 || defaultPricing.meshPrice4x4);
         const meshCost = sheetsNeeded * meshPrice;
-        
+
         results.push({
-          label: `${meshType} Mesh Sheets Needed`,
+          label: `${meshType} ${t('calculators.concrete.meshSheetsNeeded')}`,
           value: sheetsNeeded,
-          unit: 'sheets',
+          unit: t('calculators.concrete.sheets'),
           cost: meshCost
         });
       }
-      
+
+      setLastCalculation(results);
       onCalculate(results);
     }
   };
 
-  const isFormValid = 
-    typeof length === 'number' && 
-    typeof width === 'number' &&
-    (concreteType === 'flatwork' || (concreteType === 'wall' && typeof height === 'number'));
+  // Show loading state if custom calculator data is loading
+  if (activeTab === 'custom' && loadingCustom) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
+        <div className="flex items-center mb-6">
+          <Calculator className="h-6 w-6 text-orange-500 mr-2" />
+          <h2 className="text-xl font-bold text-slate-800">{t('calculators.concrete.title')}</h2>
+        </div>
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading custom configuration...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show message if custom tab but not configured
+  if (activeTab === 'custom' && !isConfigured) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
+        <div className="flex items-center mb-6">
+          <Calculator className="h-6 w-6 text-orange-500 mr-2" />
+          <h2 className="text-xl font-bold text-slate-800">{t('calculators.concrete.title')}</h2>
+        </div>
+        <div className="text-center py-12">
+          <Calculator className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Configuration Required</h3>
+          <p className="text-gray-600 mb-4">
+            This calculator hasn't been configured yet. Click the gear icon to set up your custom materials and pricing.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const isFormValid =
+    typeof length === 'number' &&
+    (concreteType === 'flatwork'
+      ? (typeof width === 'number' && typeof height === 'number')
+      : (typeof height === 'number' && typeof thickness === 'number'));
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
       <div className="flex items-center mb-6">
         <Calculator className="h-6 w-6 text-orange-500 mr-2" />
-        <h2 className="text-xl font-bold text-slate-800">Concrete Calculator</h2>
+        <h2 className="text-xl font-bold text-slate-800">{t('calculators.concrete.title')}</h2>
       </div>
-      
+
+      <CalculatorEstimateHeader
+        calculatorType="concrete"
+        currentData={getCurrentInputs()}
+        resultsData={lastCalculation ? { results: lastCalculation } : undefined}
+        onLoad={(estimateData, resultsData) => {
+          handleLoadEstimate(estimateData);
+          if (resultsData?.results) {
+            setLastCalculation(resultsData.results);
+          }
+        }}
+      />
+
       <div className="mb-4">
-        <div className="flex justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:justify-between gap-3 mb-4">
           <div className="inline-flex rounded-md shadow-sm">
             <button
               type="button"
@@ -141,7 +323,7 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               } border border-slate-300`}
               onClick={() => setConcreteType('flatwork')}
             >
-              Flatwork
+              {t('calculators.concrete.flatwork')}
             </button>
             <button
               type="button"
@@ -152,7 +334,7 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               } border border-slate-300`}
               onClick={() => setConcreteType('wall')}
             >
-              Wall
+              {t('calculators.concrete.wall')}
             </button>
           </div>
 
@@ -166,7 +348,7 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               } border border-slate-300`}
               onClick={() => setUnit('imperial')}
             >
-              Imperial
+              {t('calculators.concrete.imperial')}
             </button>
             <button
               type="button"
@@ -177,40 +359,41 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               } border border-slate-300`}
               onClick={() => setUnit('metric')}
             >
-              Metric
+              {t('calculators.concrete.metric')}
             </button>
           </div>
 
           <div className="inline-flex rounded-md shadow-sm">
             <button
               type="button"
-              className={`px-4 py-2 text-sm font-medium rounded-l-lg ${
+              className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 text-sm font-medium rounded-l-lg ${
                 deliveryMethod === 'bags'
                   ? 'bg-orange-500 text-white'
                   : 'bg-white text-slate-700 hover:bg-slate-100'
               } border border-slate-300`}
               onClick={() => setDeliveryMethod('bags')}
             >
-              Bags
+              {t('calculators.concrete.bags')}
             </button>
             <button
               type="button"
-              className={`px-4 py-2 text-sm font-medium rounded-r-lg ${
+              className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 text-sm font-medium rounded-r-lg ${
                 deliveryMethod === 'truck'
                   ? 'bg-orange-500 text-white'
                   : 'bg-white text-slate-700 hover:bg-slate-100'
               } border border-slate-300`}
               onClick={() => setDeliveryMethod('truck')}
             >
-              Ready-Mix Truck
+              <span className="hidden sm:inline">{t('calculators.concrete.readyMixTruck')}</span>
+              <span className="sm:hidden">{t('calculators.concrete.truck')}</span>
             </button>
           </div>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label htmlFor="length" className="block text-sm font-medium text-slate-700 mb-1">
-              Length ({unit === 'imperial' ? 'feet' : 'meters'})
+              {concreteType === 'wall' ? 'Total Linear Feet' : t('calculators.concrete.length')} ({unit === 'imperial' ? t('calculators.concrete.feet') : t('calculators.concrete.meters')})
             </label>
             <input
               type="number"
@@ -220,49 +403,161 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               value={length}
               onChange={(e) => setLength(e.target.value ? Number(e.target.value) : '')}
               className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-              placeholder={`Enter length in ${unit === 'imperial' ? 'feet' : 'meters'}`}
+              placeholder={concreteType === 'wall' ? 'Total wall length' : `${t('calculators.concrete.enterLength')} ${unit === 'imperial' ? t('calculators.concrete.feet') : t('calculators.concrete.meters')}`}
             />
           </div>
-          
-          <div>
-            <label htmlFor="width" className="block text-sm font-medium text-slate-700 mb-1">
-              Width ({unit === 'imperial' ? 'feet' : 'meters'})
-            </label>
-            <input
-              type="number"
-              id="width"
-              min="0"
-              step="0.01"
-              value={width}
-              onChange={(e) => setWidth(e.target.value ? Number(e.target.value) : '')}
-              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-              placeholder={`Enter width in ${unit === 'imperial' ? 'feet' : 'meters'}`}
-            />
-          </div>
-          
-          <div>
-            <label htmlFor="height" className="block text-sm font-medium text-slate-700 mb-1">
-              {concreteType === 'wall' ? 'Height' : 'Thickness'} ({unit === 'imperial' ? (concreteType === 'wall' ? 'feet' : 'inches') : (concreteType === 'wall' ? 'meters' : 'centimeters')})
-            </label>
-            <input
-              type="number"
-              id="height"
-              min="0"
-              step={concreteType === 'wall' ? '0.01' : '0.5'}
-              value={height}
-              onChange={(e) => setHeight(e.target.value ? Number(e.target.value) : '')}
-              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-              placeholder={`Enter ${concreteType === 'wall' ? 'height' : 'thickness'} in ${unit === 'imperial' ? (concreteType === 'wall' ? 'feet' : 'inches') : (concreteType === 'wall' ? 'meters' : 'centimeters')}`}
-            />
-          </div>
+
+          {concreteType === 'flatwork' && (
+            <div>
+              <label htmlFor="width" className="block text-sm font-medium text-slate-700 mb-1">
+                {t('calculators.concrete.width')} ({unit === 'imperial' ? t('calculators.concrete.feet') : t('calculators.concrete.meters')})
+              </label>
+              <input
+                type="number"
+                id="width"
+                min="0"
+                step="0.01"
+                value={width}
+                onChange={(e) => setWidth(e.target.value ? Number(e.target.value) : '')}
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                placeholder={`${t('calculators.concrete.enterWidth')} ${unit === 'imperial' ? t('calculators.concrete.feet') : t('calculators.concrete.meters')}`}
+              />
+            </div>
+          )}
+
+          {concreteType === 'wall' && (
+            <div>
+              <label htmlFor="height" className="block text-sm font-medium text-slate-700 mb-1">
+                Height of Wall ({unit === 'imperial' ? 'feet' : t('calculators.concrete.meters')})
+              </label>
+              <input
+                type="number"
+                id="height"
+                min="0"
+                step="0.01"
+                value={height}
+                onChange={(e) => setHeight(e.target.value ? Number(e.target.value) : '')}
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                placeholder="e.g., 8"
+              />
+            </div>
+          )}
+
+          {concreteType === 'wall' && (
+            <div>
+              <label htmlFor="thickness" className="block text-sm font-medium text-slate-700 mb-1">
+                Wall Thickness ({unit === 'imperial' ? t('calculators.concrete.inches') : 'cm'})
+              </label>
+              <input
+                type="number"
+                id="thickness"
+                min="0"
+                step="0.5"
+                value={thickness}
+                onChange={(e) => setThickness(e.target.value ? Number(e.target.value) : '')}
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                placeholder="e.g., 8"
+              />
+            </div>
+          )}
+
+          {concreteType === 'flatwork' && (
+            <div>
+              <label htmlFor="flatworkThickness" className="block text-sm font-medium text-slate-700 mb-1">
+                {t('calculators.concrete.thickness')} ({unit === 'imperial' ? t('calculators.concrete.inches') : t('calculators.concrete.centimeters')})
+              </label>
+              <input
+                type="number"
+                id="flatworkThickness"
+                min="0"
+                step="0.5"
+                value={height}
+                onChange={(e) => setHeight(e.target.value ? Number(e.target.value) : '')}
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                placeholder={`${t('calculators.concrete.enterThickness')} ${unit === 'imperial' ? t('calculators.concrete.inches') : t('calculators.concrete.centimeters')}`}
+              />
+            </div>
+          )}
         </div>
 
+        {/* Color and Fiber Add-ons - Only show for Ready-Mix Truck */}
+        {deliveryMethod === 'truck' && (
+          <div className="mt-6 border-t border-slate-200 pt-6">
+            <h3 className="text-lg font-medium text-slate-800 mb-4">Concrete Add-ons</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex items-start space-x-3">
+                <input
+                  type="checkbox"
+                  id="addColor"
+                  checked={addColor}
+                  onChange={(e) => setAddColor(e.target.checked)}
+                  className="mt-1 h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                />
+                <div className="flex-1">
+                  <label htmlFor="addColor" className="block text-sm font-medium text-slate-700 mb-1">
+                    Add Color to Concrete
+                  </label>
+                  {addColor && (
+                    <div className="mt-2">
+                      <label htmlFor="colorPrice" className="block text-xs text-slate-600 mb-1">
+                        Price per Cubic Yard ($)
+                      </label>
+                      <input
+                        type="number"
+                        id="colorPrice"
+                        min="0"
+                        step="0.01"
+                        value={colorPricePerYard}
+                        onChange={(e) => setColorPricePerYard(e.target.value ? Number(e.target.value) : '')}
+                        className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        placeholder="e.g., 15.00"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-3">
+                <input
+                  type="checkbox"
+                  id="addFiber"
+                  checked={addFiber}
+                  onChange={(e) => setAddFiber(e.target.checked)}
+                  className="mt-1 h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                />
+                <div className="flex-1">
+                  <label htmlFor="addFiber" className="block text-sm font-medium text-slate-700 mb-1">
+                    Add Fiber Reinforcement
+                  </label>
+                  {addFiber && (
+                    <div className="mt-2">
+                      <label htmlFor="fiberPrice" className="block text-xs text-slate-600 mb-1">
+                        Price per Cubic Yard ($)
+                      </label>
+                      <input
+                        type="number"
+                        id="fiberPrice"
+                        min="0"
+                        step="0.01"
+                        value={fiberPricePerYard}
+                        onChange={(e) => setFiberPricePerYard(e.target.value ? Number(e.target.value) : '')}
+                        className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        placeholder="e.g., 8.00"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="mt-6 border-t border-slate-200 pt-6">
-          <h3 className="text-lg font-medium text-slate-800 mb-4">Reinforcement Options</h3>
+          <h3 className="text-lg font-medium text-slate-800 mb-4">{t('calculators.concrete.reinforcementOptions')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label htmlFor="reinforcement" className="block text-sm font-medium text-slate-700 mb-1">
-                Reinforcement Type
+                {t('calculators.concrete.reinforcementType')}
               </label>
               <select
                 id="reinforcement"
@@ -270,16 +565,16 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 onChange={(e) => setReinforcement(e.target.value as 'none' | 'rebar' | 'mesh')}
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               >
-                <option value="none">No Reinforcement</option>
-                <option value="rebar">Rebar Grid</option>
-                <option value="mesh">Wire Mesh</option>
+                <option value="none">{t('calculators.concrete.noReinforcement')}</option>
+                <option value="rebar">{t('calculators.concrete.rebarGrid')}</option>
+                <option value="mesh">{t('calculators.concrete.wireMesh')}</option>
               </select>
             </div>
 
             {reinforcement === 'rebar' && (
               <div>
                 <label htmlFor="rebarSpacing" className="block text-sm font-medium text-slate-700 mb-1">
-                  Rebar Spacing ({unit === 'imperial' ? 'inches' : 'cm'})
+                  {t('calculators.concrete.rebarSpacing')} ({unit === 'imperial' ? t('calculators.concrete.inches') : 'cm'})
                 </label>
                 <select
                   id="rebarSpacing"
@@ -289,10 +584,10 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 >
                   {unit === 'imperial' ? (
                     <>
-                      <option value="12">12 inches</option>
-                      <option value="16">16 inches</option>
-                      <option value="18">18 inches</option>
-                      <option value="24">24 inches</option>
+                      <option value="12">12 {t('calculators.concrete.inches')}</option>
+                      <option value="16">16 {t('calculators.concrete.inches')}</option>
+                      <option value="18">18 {t('calculators.concrete.inches')}</option>
+                      <option value="24">24 {t('calculators.concrete.inches')}</option>
                     </>
                   ) : (
                     <>
@@ -309,7 +604,7 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             {reinforcement === 'mesh' && (
               <div>
                 <label htmlFor="meshType" className="block text-sm font-medium text-slate-700 mb-1">
-                  Mesh Type
+                  {t('calculators.concrete.meshType')}
                 </label>
                 <select
                   id="meshType"
@@ -325,7 +620,7 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
           </div>
         </div>
       </div>
-      
+
       <button
         onClick={handleCalculate}
         disabled={!isFormValid}
@@ -335,7 +630,7 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             : 'bg-slate-300 cursor-not-allowed'
         }`}
       >
-        Calculate Materials
+        {t('calculators.calculateMaterials')}
       </button>
     </div>
   );

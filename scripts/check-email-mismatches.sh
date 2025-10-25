@@ -1,0 +1,38 @@
+#!/bin/bash
+
+# Check which Stripe customers don't have matching auth users
+
+echo "🔍 Stripe Customers with No Auth User Match"
+echo "================================================"
+echo ""
+
+echo "Missing matches from auto-link:"
+echo ""
+echo "1. cus_TIMw3jKroT1Nkn - aaronjp743@gmail.com"
+echo "2. cus_THcOfhUwPIIO90 - aaronjp743@gmail.com (duplicate)"
+echo "3. cus_T4rwMDcwPSrcO3 - mikah.albertson@elevatedsystems.info"
+echo "4. cus_T4ElmdeyWdbvcR - mikah.albertson@elevatedsystems.info (duplicate)"
+echo "5. cus_T4CiiCM8ivuaoI - mikahsautodetailing@gmail.com"
+echo ""
+
+echo "These users signed up with DIFFERENT emails than what they entered in Stripe checkout."
+echo ""
+echo "To fix this, you have 3 options:"
+echo ""
+echo "Option 1: Manual SQL linking (one-time fix)"
+echo "  - If you know which auth user corresponds to which Stripe customer"
+echo "  - Run SQL like: INSERT INTO stripe_customers (user_id, customer_id) VALUES ('auth-user-id', 'cus_XXX')"
+echo ""
+echo "Option 2: Update Stripe customer metadata"
+echo "  - In Stripe dashboard, add metadata 'userId' = 'auth-user-id' to each customer"
+echo "  - Then run auto-link again - it will use metadata"
+echo ""
+echo "Option 3: Ask users to re-subscribe"
+echo "  - They'll go through checkout again with proper linking"
+echo "  - New subscription will be created with correct linking"
+echo ""
+echo "📊 Current Status:"
+echo "  ✅ Linked: 4 customers"
+echo "  ❌ Not linked: 5 customers"
+echo ""
+echo "Next step: Identify which auth emails these 5 customers actually used to sign up"

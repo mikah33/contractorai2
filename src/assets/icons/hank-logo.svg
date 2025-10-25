@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1092 1092">
+  <!-- Hard Hat -->
+  <circle cx="546" cy="336" r="230" fill="#FF5722"/>
+  <rect x="477" y="90" width="138" height="246" fill="#D84315"/>
+  <rect x="273" y="341" width="546" height="69" rx="10" fill="#FF5722"/>
+
+  <!-- Face -->
+  <circle cx="546" cy="560" r="210" fill="#FFD54F"/>
+
+  <!-- Ears -->
+  <ellipse cx="330" cy="500" rx="35" ry="55" fill="#FFD54F"/>
+  <ellipse cx="762" cy="500" rx="35" ry="55" fill="#FFD54F"/>
+
+  <!-- Eyes -->
+  <circle cx="455" cy="480" r="25" fill="#5D4037"/>
+  <circle cx="637" cy="480" r="25" fill="#5D4037"/>
+
+  <!-- Neck -->
+  <rect x="478" y="690" width="136" height="92" fill="#FFA726"/>
+
+  <!-- Body/Overalls -->
+  <path d="M 182,752 Q 182,900 318,1000 L 318,900 L 364,900 L 364,982 L 728,982 L 728,900 L 774,900 L 774,1000 Q 910,900 910,752 Z" fill="#00897B"/>
+  <path d="M 318,752 L 318,900 L 364,900 L 364,752 Z" fill="#FFB300"/>
+  <path d="M 728,752 L 728,900 L 774,900 L 774,752 Z" fill="#FFB300"/>
+  <rect x="318" y="900" width="46" height="46" fill="#37474F"/>
+  <rect x="728" y="900" width="46" height="46" fill="#37474F"/>
+  <rect x="318" y="982" width="410" height="46" fill="#FFB300"/>
+</svg>

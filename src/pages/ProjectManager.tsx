@@ -1,16 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Plus, Search, Filter, MoreVertical, Calendar, Users, CheckCircle, Clock, AlertCircle, 
-  MessageSquare, Upload, Camera, FileText, ChevronDown, ChevronUp, Trash2, Edit, 
-  Paperclip, Send, User, Sparkles, BarChart2, ArrowRight, Tag, Flag, Zap, DollarSign, X
+import { useTranslation } from 'react-i18next';
+import {
+  Plus, Search, Filter, MoreVertical, Calendar, Users, CheckCircle, Clock, AlertCircle,
+  MessageSquare, Upload, Camera, FileText, ChevronDown, ChevronUp, Trash2, Edit,
+  Paperclip, Send, User, Sparkles, BarChart2, ArrowRight, Tag, Flag, Zap, DollarSign, X,
+  Phone, Mail, Briefcase, StickyNote, UserPlus
 } from 'lucide-react';
 import TaskList from '../components/projects/TaskList';
 import TeamMemberSelector from '../components/projects/TeamMemberSelector';
 import ProjectProgressGallery from '../components/projects/ProjectProgressGallery';
 import ProjectComments from '../components/projects/ProjectComments';
-import ProjectAIInsights from '../components/projects/ProjectAIInsights';
 import useProjectStore from '../stores/projectStore';
-import useClientsStore from '../stores/clientsStore';
+import { useClientsStore } from '../stores/clientsStore';
+import { estimateService } from '../services/estimateService';
+import { supabase } from '../lib/supabase';
+import AddClientModal from '../components/clients/AddClientModal';
+import EditProjectModal from '../components/projects/EditProjectModal';
 
 interface Project {
   id: string;
@@ -33,7 +38,7 @@ interface Task {
   id: string;
   title: string;
   status: 'todo' | 'in-progress' | 'completed';
-  assignee: string;
+  assignee: string | string[]; // Support both single and multiple assignees
   dueDate: string;
   priority: 'low' | 'medium' | 'high';
 }
@@ -46,13 +51,17 @@ interface Comment {
   attachments?: string[];
 }
 
+
 const ProjectManager: React.FC = () => {
-  const { 
+  const { t } = useTranslation();
+  const {
     projects,
     progressUpdates,
-    fetchProjects, 
-    addProject, 
-    addComment, 
+    fetchProjects,
+    addProject,
+    updateProject,
+    deleteProject,
+    addComment,
     addTask,
     updateTask,
     deleteTask,
@@ -70,6 +79,8 @@ const ProjectManager: React.FC = () => {
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showAddClientModal, setShowAddClientModal] = useState(false);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [uploadDescription, setUploadDescription] = useState('');
   const [uploadTaskId, setUploadTaskId] = useState('');
   const [uploadImages, setUploadImages] = useState<File[]>([]);
@@ -78,17 +89,20 @@ const ProjectManager: React.FC = () => {
   const [newComment, setNewComment] = useState('');
   const [newTask, setNewTask] = useState({
     title: '',
-    assignee: '',
+    assignee: [] as string[],
     dueDate: '',
     priority: 'medium' as 'low' | 'medium' | 'high',
     status: 'todo' as 'todo' | 'in-progress' | 'completed'
   });
-  const [activeTab, setActiveTab] = useState<'overview' | 'tasks' | 'team' | 'progress' | 'comments' | 'insights'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'tasks' | 'team' | 'progress' | 'comments' | 'estimates'>('overview');
+  const [projectEstimates, setProjectEstimates] = useState<any[]>([]);
+  const [fullTeamMembers, setFullTeamMembers] = useState<any[]>([]);
   
   // Form state for new project
   const [newProject, setNewProject] = useState({
     name: '',
     client: '',
+    clientId: '',
     status: 'active' as const,
     priority: 'medium' as const,
     startDate: new Date().toISOString().split('T')[0],
@@ -97,11 +111,40 @@ const ProjectManager: React.FC = () => {
     description: ''
   });
 
-  // Fetch projects and clients on mount
+  // Fetch projects and clients on mount (cached if already loaded)
   useEffect(() => {
-    fetchProjects();
+    fetchProjects(); // Will use cache if already loaded
     fetchClients();
-  }, [fetchProjects, fetchClients]);
+
+    // Debug tools disabled - enable if needed for troubleshooting
+    // import('../components/projects/TestClientSave').then(({ testClientSave }) => {
+    //   testClientSave();
+    // });
+    // import('../utils/debugClientSave').then(({ debugClientSave }) => {
+    //   debugClientSave();
+    // });
+  }, []); // Empty deps - only run once on mount
+
+  // Fetch estimates when estimates tab is selected
+  useEffect(() => {
+    const fetchProjectEstimates = async () => {
+      if (activeTab === 'estimates' && selectedProject) {
+        try {
+          const result = await estimateService.getEstimates();
+          if (result.success && result.data) {
+            // Filter estimates for current project
+            const filtered = result.data.filter((est: any) => est.projectId === selectedProject.id);
+            setProjectEstimates(filtered);
+          }
+        } catch (error) {
+          console.error('Error fetching project estimates:', error);
+          setProjectEstimates([]);
+        }
+      }
+    };
+
+    fetchProjectEstimates();
+  }, [activeTab, selectedProject]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -160,11 +203,24 @@ const ProjectManager: React.FC = () => {
       alert('Please enter project name and budget');
       return;
     }
-    
+
     try {
+      console.log('🚀 Creating project with data:', {
+        name: newProject.name,
+        client: newProject.client || 'Direct Client',
+        clientId: newProject.clientId || undefined,
+        status: newProject.status,
+        priority: newProject.priority,
+        startDate: newProject.startDate,
+        endDate: newProject.endDate,
+        budget: newProject.budget,
+        description: newProject.description
+      });
+
       await addProject({
         name: newProject.name,
         client: newProject.client || 'Direct Client',
+        clientId: newProject.clientId || undefined,
         status: newProject.status,
         priority: newProject.priority,
         startDate: newProject.startDate,
@@ -177,6 +233,7 @@ const ProjectManager: React.FC = () => {
       setNewProject({
         name: '',
         client: '',
+        clientId: '',
         status: 'active',
         priority: 'medium',
         startDate: new Date().toISOString().split('T')[0],
@@ -185,20 +242,54 @@ const ProjectManager: React.FC = () => {
         description: ''
       });
       setShowProjectModal(false);
+      await fetchProjects(); // Refresh project list
     } catch (error) {
       console.error('Error creating project:', error);
       alert('Failed to create project. Please try again.');
     }
   };
 
-  // Get team members from selected project
-  const teamMembers = selectedProject?.team?.map((name, index) => ({
-    id: `${selectedProject.id}-${index}`,
-    name: name,
-    role: '',
-    email: '',
-    phone: ''
-  })) || [];
+  // Fetch full team member details from database
+  useEffect(() => {
+    const fetchTeamMembers = async () => {
+      if (selectedProject?.id) {
+        try {
+          console.log('🔵 Fetching team members for project:', selectedProject.id);
+          const { data, error } = await supabase
+            .from('project_team_members')
+            .select('*')
+            .eq('project_id', selectedProject.id);
+
+          if (error) {
+            console.error('❌ Error fetching team members:', error);
+            setFullTeamMembers([]);
+          } else {
+            console.log('✅ Fetched team members:', data);
+            setFullTeamMembers(data || []);
+          }
+        } catch (error) {
+          console.error('❌ Error fetching team members:', error);
+          setFullTeamMembers([]);
+        }
+      } else {
+        setFullTeamMembers([]);
+      }
+    };
+
+    fetchTeamMembers();
+  }, [selectedProject?.id, activeTab]); // Added activeTab to refetch when switching to team tab
+
+  // Get team members with full data from database
+  const teamMembers = fullTeamMembers.map(tm => ({
+    id: tm.id,
+    name: tm.member_name,
+    role: tm.member_role || '',
+    email: tm.member_email || '',
+    phone: tm.member_phone || '',
+    permissions: tm.permissions || []
+  }));
+
+  console.log('👥 Team members for display:', teamMembers);
 
   // Load progress updates when project changes
   useEffect(() => {
@@ -230,15 +321,15 @@ const ProjectManager: React.FC = () => {
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Project Manager</h1>
-            <p className="text-gray-600">Manage your construction projects efficiently</p>
+            <h1 className="text-2xl font-bold text-gray-900">{t('projects.title')}</h1>
+            <p className="text-gray-600">{t('projects.subtitle')}</p>
           </div>
           <button
             onClick={() => setShowProjectModal(true)}
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
           >
             <Plus className="w-4 h-4" />
-            New Project
+            {t('projects.newProject')}
           </button>
         </div>
 
@@ -248,23 +339,23 @@ const ProjectManager: React.FC = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
               type="text"
-              placeholder="Search projects..."
+              placeholder={t('projects.searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
-          
+
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
-            <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="on_hold">On Hold</option>
-            <option value="cancelled">Cancelled</option>
-            <option value="completed">Completed</option>
+            <option value="all">{t('projects.allStatus')}</option>
+            <option value="active">{t('projects.active')}</option>
+            <option value="on_hold">{t('projects.onHold')}</option>
+            <option value="cancelled">{t('projects.cancelled')}</option>
+            <option value="completed">{t('projects.completed')}</option>
           </select>
 
         </div>
@@ -287,8 +378,15 @@ const ProjectManager: React.FC = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       <Flag className={`w-4 h-4 ${getPriorityColor(project.priority)}`} />
-                      <button className="text-gray-400 hover:text-gray-600">
-                        <MoreVertical className="w-4 h-4" />
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingProject(project);
+                        }}
+                        className="text-gray-400 hover:text-blue-600"
+                        title="Edit project"
+                      >
+                        <Edit className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
@@ -301,7 +399,7 @@ const ProjectManager: React.FC = () => {
 
                   <div className="mb-4">
                     <div className="flex justify-between text-sm text-gray-600 mb-1">
-                      <span>Progress</span>
+                      <span>{t('projects.progress')}</span>
                       <span>{project.progress}%</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
@@ -326,7 +424,7 @@ const ProjectManager: React.FC = () => {
                   <div className="flex items-center gap-2 mt-4">
                     <Users className="w-4 h-4 text-gray-400" />
                     <div className="flex -space-x-2">
-                      {project.team.slice(0, 3).map((member, index) => (
+                      {(project.team || []).slice(0, 3).map((member, index) => (
                         <div
                           key={index}
                           className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-xs text-white border-2 border-white"
@@ -334,9 +432,9 @@ const ProjectManager: React.FC = () => {
                           {member.split(' ').map(n => n[0]).join('')}
                         </div>
                       ))}
-                      {project.team.length > 3 && (
+                      {(project.team || []).length > 3 && (
                         <div className="w-6 h-6 bg-gray-400 rounded-full flex items-center justify-center text-xs text-white border-2 border-white">
-                          +{project.team.length - 3}
+                          +{(project.team || []).length - 3}
                         </div>
                       )}
                     </div>
@@ -361,13 +459,32 @@ const ProjectManager: React.FC = () => {
                     <h2 className="text-2xl font-semibold text-gray-900">{selectedProject.name}</h2>
                     <p className="text-sm text-gray-600 mt-1">{selectedProject.client}</p>
                   </div>
-                  <button
-                    onClick={() => setSelectedProject(null)}
-                    className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                    aria-label="Close details"
-                  >
-                    <X className="w-6 h-6" />
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={async () => {
+                        if (window.confirm(`Are you sure you want to delete "${selectedProject.name}"? This action cannot be undone.`)) {
+                          try {
+                            await deleteProject(selectedProject.id);
+                            setSelectedProject(null);
+                          } catch (error) {
+                            console.error('Error deleting project:', error);
+                            alert('Failed to delete project. Please try again.');
+                          }
+                        }
+                      }}
+                      className="text-red-400 hover:text-red-600 p-2 rounded-lg hover:bg-red-50 transition-colors"
+                      aria-label="Delete project"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => setSelectedProject(null)}
+                      className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                      aria-label="Close details"
+                    >
+                      <X className="w-6 h-6" />
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -383,7 +500,7 @@ const ProjectManager: React.FC = () => {
                       : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
                   }`}
                 >
-                  Overview
+                  {t('projects.overview')}
                 </button>
                 <button
                   type="button"
@@ -394,7 +511,7 @@ const ProjectManager: React.FC = () => {
                       : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
                   }`}
                 >
-                  Tasks
+                  {t('projects.tasks')}
                 </button>
                 <button
                   type="button"
@@ -405,7 +522,7 @@ const ProjectManager: React.FC = () => {
                       : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
                   }`}
                 >
-                  Team
+                  {t('projects.team')}
                 </button>
                 <button
                   onClick={() => {
@@ -419,7 +536,7 @@ const ProjectManager: React.FC = () => {
                   }`}
                   type="button"
                 >
-                  Progress
+                  {t('projects.progress')}
                 </button>
                 <button
                   type="button"
@@ -430,18 +547,18 @@ const ProjectManager: React.FC = () => {
                       : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
                   }`}
                 >
-                  Comments
+                  {t('projects.comments')}
                 </button>
                 <button
                   type="button"
-                  onClick={() => setActiveTab('insights')}
+                  onClick={() => setActiveTab('estimates')}
                   className={`px-3 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
-                    activeTab === 'insights'
+                    activeTab === 'estimates'
                       ? 'border-blue-500 text-blue-600'
                       : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
                   }`}
                 >
-                  AI Insights
+                  {t('projects.estimates')}
                 </button>
               </nav>
             </div>
@@ -460,7 +577,7 @@ const ProjectManager: React.FC = () => {
                   {/* Progress */}
                   <div className="mb-6">
                     <div className="flex justify-between text-sm text-gray-600 mb-2">
-                      <span>Progress</span>
+                      <span>{t('projects.progress')}</span>
                       <span>{selectedProject.progress}%</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-3">
@@ -473,14 +590,14 @@ const ProjectManager: React.FC = () => {
 
                   {/* Budget */}
                   <div className="mb-6">
-                    <h3 className="font-medium text-gray-900 mb-2">Budget</h3>
+                    <h3 className="font-medium text-gray-900 mb-2">{t('projects.budget')}</h3>
                     <div className="bg-gray-50 rounded-lg p-4">
                       <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm text-gray-600">Spent</span>
+                        <span className="text-sm text-gray-600">{t('projects.spent')}</span>
                         <span className="font-medium">${selectedProject.spent.toLocaleString()}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Budget</span>
+                        <span className="text-sm text-gray-600">{t('projects.budget')}</span>
                         <span className="font-medium">${selectedProject.budget.toLocaleString()}</span>
                       </div>
                     </div>
@@ -488,9 +605,9 @@ const ProjectManager: React.FC = () => {
 
                   {/* Team */}
                   <div className="mb-6">
-                    <h3 className="font-medium text-gray-900 mb-2">Team</h3>
+                    <h3 className="font-medium text-gray-900 mb-2">{t('projects.team')}</h3>
                     <div className="space-y-2">
-                      {selectedProject.team.map((member, index) => (
+                      {(selectedProject.team || []).map((member, index) => (
                         <div key={index} className="flex items-center gap-3">
                           <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-sm text-white">
                             {member.split(' ').map(n => n[0]).join('')}
@@ -504,12 +621,12 @@ const ProjectManager: React.FC = () => {
                   {/* Tasks */}
                   <div className="mb-6">
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="font-medium text-gray-900">Tasks</h3>
+                      <h3 className="font-medium text-gray-900">{t('projects.tasks')}</h3>
                       <button
                         onClick={() => setShowTaskModal(true)}
                         className="text-blue-600 hover:text-blue-700 text-sm"
                       >
-                        Add Task
+                        {t('projects.addTask')}
                       </button>
                     </div>
                     <div className="space-y-2">
@@ -521,7 +638,21 @@ const ProjectManager: React.FC = () => {
                           }`}></div>
                           <div className="flex-1">
                             <p className="text-sm font-medium text-gray-900">{task.title}</p>
-                            <p className="text-xs text-gray-600">{task.assignee}</p>
+                            <p className="text-xs text-gray-600">
+                              {(() => {
+                                const assignee = task.assignee;
+                                if (Array.isArray(assignee)) {
+                                  // Filter out UUID-like strings and keep only real names
+                                  const filtered = assignee.filter(a => !a.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i));
+                                  return filtered.length > 0 ? filtered.join(', ') : 'Unassigned';
+                                }
+                                // Check if single assignee is a UUID
+                                if (typeof assignee === 'string' && assignee.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+                                  return 'Unassigned';
+                                }
+                                return assignee || 'Unassigned';
+                              })()}
+                            </p>
                           </div>
                         </div>
                       ))}
@@ -530,9 +661,9 @@ const ProjectManager: React.FC = () => {
 
                   {/* Comments */}
                   <div>
-                    <h3 className="font-medium text-gray-900 mb-3">Comments</h3>
+                    <h3 className="font-medium text-gray-900 mb-3">{t('projects.comments')}</h3>
                     <div className="space-y-4 mb-4">
-                      {selectedProject.comments.map((comment) => (
+                      {(selectedProject.comments || []).map((comment) => (
                         <div key={comment.id} className="flex gap-3">
                           <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-sm">
                             {comment.author.split(' ').map(n => n[0]).join('')}
@@ -545,15 +676,15 @@ const ProjectManager: React.FC = () => {
                                   {comment.attachments.map((attachment, idx) => {
                                     const isImage = attachment.match(/\.(jpg|jpeg|png|gif|webp)$/i);
                                     return isImage ? (
-                                      <img 
-                                        key={idx} 
-                                        src={attachment} 
+                                      <img
+                                        key={idx}
+                                        src={attachment}
                                         alt={`Attachment ${idx + 1}`}
                                         className="h-16 w-16 object-cover rounded cursor-pointer hover:opacity-75"
                                         onClick={() => window.open(attachment, '_blank')}
                                       />
                                     ) : (
-                                      <a 
+                                      <a
                                         key={idx}
                                         href={attachment}
                                         target="_blank"
@@ -580,7 +711,7 @@ const ProjectManager: React.FC = () => {
                     <div className="flex gap-2">
                       <input
                         type="text"
-                        placeholder="Add a comment..."
+                        placeholder={t('projects.addCommentPlaceholder')}
                         value={newComment}
                         onChange={(e) => setNewComment(e.target.value)}
                         className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
@@ -599,37 +730,6 @@ const ProjectManager: React.FC = () => {
 
               {activeTab === 'tasks' && (
                 <div>
-                  {/* Quick Add Task Button */}
-                  <div className="mb-4 flex gap-2">
-                    <button
-                      onClick={async () => {
-                        const newTask = {
-                          title: `Task created at ${new Date().toLocaleTimeString()}`,
-                          status: 'todo' as const,
-                          assignee: 'Current User',
-                          dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                          priority: 'medium' as const,
-                          description: 'This is a test task'
-                        };
-                        try {
-                          await addTask(selectedProject.id, newTask);
-                          await fetchProjects();
-                          const updated = projects.find(p => p.id === selectedProject.id);
-                          if (updated) setSelectedProject(updated);
-                        } catch (error) {
-                          console.error('Error creating task:', error);
-                        }
-                      }}
-                      className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center gap-2"
-                    >
-                      <Plus className="w-4 h-4" />
-                      Quick Add Test Task
-                    </button>
-                    <div className="text-sm text-gray-600 py-2">
-                      Tasks in this project: {selectedProject.tasks?.length || 0}
-                    </div>
-                  </div>
-                  
                   <TaskList 
                     tasks={selectedProject.tasks || []} 
                   team={teamMembers}
@@ -691,8 +791,8 @@ const ProjectManager: React.FC = () => {
               )}
 
               {activeTab === 'comments' && (
-                <ProjectComments 
-                  comments={selectedProject.comments.map(c => ({
+                <ProjectComments
+                  comments={(selectedProject.comments || []).map(c => ({
                     id: c.id,
                     text: c.content,
                     date: c.timestamp,
@@ -726,9 +826,73 @@ const ProjectManager: React.FC = () => {
                 />
               )}
 
-              {activeTab === 'insights' && (
-                <ProjectAIInsights project={selectedProject} />
+              {activeTab === 'estimates' && (
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-medium text-gray-900">Project Estimates</h3>
+                    <button
+                      onClick={() => window.location.href = `/estimates?project_id=${selectedProject.id}`}
+                      className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      New Estimate
+                    </button>
+                  </div>
+
+                  {projectEstimates.length === 0 ? (
+                    <div className="text-center py-12 bg-gray-50 rounded-lg">
+                      <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-500">No estimates for this project yet</p>
+                      <button
+                        onClick={() => window.location.href = `/estimates?project_id=${selectedProject.id}`}
+                        className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                      >
+                        Create First Estimate
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {projectEstimates.map((estimate) => (
+                        <div key={estimate.id} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <h4 className="text-base font-medium text-gray-900">{estimate.title}</h4>
+                              <p className="text-sm text-gray-500 mt-1">
+                                {estimate.clientName || 'No client'} • {new Date(estimate.createdAt).toLocaleDateString()}
+                              </p>
+                              <div className="mt-2 flex items-center space-x-4">
+                                <span className="text-sm text-gray-600">
+                                  Items: {estimate.items?.length || 0}
+                                </span>
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                  estimate.status === 'draft' ? 'bg-gray-100 text-gray-800' :
+                                  estimate.status === 'sent' ? 'bg-blue-100 text-blue-800' :
+                                  estimate.status === 'approved' ? 'bg-green-100 text-green-800' :
+                                  'bg-red-100 text-red-800'
+                                }`}>
+                                  {estimate.status}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="text-right ml-4">
+                              <p className="text-lg font-semibold text-gray-900">
+                                ${estimate.total?.toFixed(2) || '0.00'}
+                              </p>
+                              <button
+                                onClick={() => window.location.href = `/estimates?id=${estimate.id}`}
+                                className="mt-2 text-sm text-blue-600 hover:text-blue-800"
+                              >
+                                View →
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               )}
+
               </div>
             </div>
           </div>
@@ -760,14 +924,37 @@ const ProjectManager: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Client Name</label>
-                <input
-                  type="text"
-                  value={newProject.client}
-                  onChange={(e) => setNewProject({...newProject, client: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter client name (optional)"
-                />
+                <label className="block text-sm font-medium text-gray-700 mb-1">Client</label>
+                <div className="flex gap-2">
+                  <select
+                    value={newProject.clientId}
+                    onChange={(e) => {
+                      const clientId = e.target.value;
+                      const client = clients.find(c => c.id === clientId);
+                      setNewProject({
+                        ...newProject,
+                        clientId: clientId,
+                        client: client?.name || ''
+                      });
+                    }}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">{t('projects.selectClient')}</option>
+                    {clients.map((client) => (
+                      <option key={client.id} value={client.id}>
+                        {client.name} {client.company ? `- ${client.company}` : ''}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddClientModal(true)}
+                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center gap-2 whitespace-nowrap"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    Add New
+                  </button>
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -792,27 +979,27 @@ const ProjectManager: React.FC = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                  <select 
+                  <select
                     value={newProject.status}
                     onChange={(e) => setNewProject({...newProject, status: e.target.value as any})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   >
-                    <option value="active">Active</option>
-                    <option value="on_hold">On Hold</option>
-                    <option value="cancelled">Cancelled</option>
-                    <option value="completed">Completed</option>
+                    <option value="active">{t('projects.active')}</option>
+                    <option value="on_hold">{t('projects.onHold')}</option>
+                    <option value="cancelled">{t('projects.cancelled')}</option>
+                    <option value="completed">{t('projects.completed')}</option>
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
-                  <select 
+                  <select
                     value={newProject.priority}
                     onChange={(e) => setNewProject({...newProject, priority: e.target.value as any})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   >
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
+                    <option value="low">{t('common.low')}</option>
+                    <option value="medium">{t('common.medium')}</option>
+                    <option value="high">{t('common.high')}</option>
                   </select>
                 </div>
               </div>
@@ -860,6 +1047,38 @@ const ProjectManager: React.FC = () => {
         </div>
       )}
 
+      {/* Add Client Modal */}
+      <AddClientModal
+        isOpen={showAddClientModal}
+        onAdd={async (clientData: any) => {
+          try {
+            const { addClient } = useClientsStore.getState();
+            await addClient(clientData);
+            await fetchClients(); // Refresh client list
+            setShowAddClientModal(false);
+          } catch (error) {
+            console.error('Error adding client:', error);
+            alert('Failed to add client');
+          }
+        }}
+        onClose={() => setShowAddClientModal(false)}
+      />
+
+      {/* Edit Project Modal */}
+      {editingProject && (
+        <EditProjectModal
+          project={editingProject}
+          clients={clients}
+          onSave={async (updatedProject) => {
+            await updateProject(updatedProject.id, updatedProject);
+            await fetchProjects(); // Refresh projects
+            setEditingProject(null);
+          }}
+          onClose={() => setEditingProject(null)}
+          onAddClient={() => setShowAddClientModal(true)}
+        />
+      )}
+
       {/* New Task Modal */}
       {showTaskModal && (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-4">
@@ -894,16 +1113,49 @@ const ProjectManager: React.FC = () => {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Assignee</label>
-                  <select 
-                    value={newTask.assignee}
-                    onChange={(e) => setNewTask({...newTask, assignee: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                    <option value="">Select assignee</option>
-                    {teamMembers.map(member => (
-                      <option key={member.id} value={member.name}>{member.name}</option>
-                    ))}
-                  </select>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Assignees (select multiple)</label>
+                  <div className="border border-gray-300 rounded-md p-3 max-h-40 overflow-y-auto">
+                    {teamMembers.length === 0 ? (
+                      <p className="text-sm text-gray-500">No team members available. Add team members first.</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {teamMembers.map(member => (
+                          <label key={member.id} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
+                            <input
+                              type="checkbox"
+                              checked={newTask.assignee.includes(member.name)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setNewTask({...newTask, assignee: [...newTask.assignee, member.name]});
+                                } else {
+                                  setNewTask({...newTask, assignee: newTask.assignee.filter(a => a !== member.name)});
+                                }
+                              }}
+                              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            />
+                            <span className="text-sm text-gray-700">{member.name}</span>
+                            {member.role && <span className="text-xs text-gray-500">({member.role})</span>}
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {newTask.assignee.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {newTask.assignee.map(assignee => (
+                        <span key={assignee} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          {assignee}
+                          <button
+                            type="button"
+                            onClick={() => setNewTask({...newTask, assignee: newTask.assignee.filter(a => a !== assignee)})}
+                            className="ml-1.5 inline-flex items-center justify-center flex-shrink-0 h-4 w-4 rounded-full text-blue-400 hover:bg-blue-200 hover:text-blue-500 focus:outline-none"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
@@ -918,24 +1170,24 @@ const ProjectManager: React.FC = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                  <select 
+                  <select
                     value={newTask.status}
                     onChange={(e) => setNewTask({...newTask, status: e.target.value as 'todo' | 'in-progress' | 'completed'})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                    <option value="todo">To Do</option>
-                    <option value="in-progress">In Progress</option>
-                    <option value="completed">Completed</option>
+                    <option value="todo">{t('tasks.todo')}</option>
+                    <option value="in-progress">{t('tasks.inProgress')}</option>
+                    <option value="completed">{t('tasks.completed')}</option>
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
-                  <select 
+                  <select
                     value={newTask.priority}
                     onChange={(e) => setNewTask({...newTask, priority: e.target.value as 'low' | 'medium' | 'high'})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
+                    <option value="low">{t('common.low')}</option>
+                    <option value="medium">{t('common.medium')}</option>
+                    <option value="high">{t('common.high')}</option>
                   </select>
                 </div>
               </div>
@@ -957,7 +1209,7 @@ const ProjectManager: React.FC = () => {
                       setShowTaskModal(false);
                       setNewTask({
                         title: '',
-                        assignee: '',
+                        assignee: [],
                         dueDate: '',
                         priority: 'medium',
                         status: 'todo'
@@ -1006,11 +1258,11 @@ const ProjectManager: React.FC = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Related Task</label>
-                <select 
+                <select
                   value={uploadTaskId}
                   onChange={(e) => setUploadTaskId(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                  <option value="">Select a task</option>
+                  <option value="">{t('projects.selectTask')}</option>
                   {selectedProject?.tasks.map(task => (
                     <option key={task.id} value={task.id}>{task.title}</option>
                   ))}
@@ -1125,6 +1377,7 @@ const ProjectManager: React.FC = () => {
           </div>
         </div>
       )}
+
     </div>
   );
 };

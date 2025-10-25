@@ -4,7 +4,7 @@ export const stripeProducts = [
     name: 'Contractor AI',
     description: 'Complete contractor management solution with AI-powered pricing, project management, and financial tracking.',
     mode: 'subscription' as const,
-    price: 49.99,
+    price: 24.99,
     currency: 'usd',
     interval: 'month',
   },

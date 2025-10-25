@@ -1,8 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Layout } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { CalculatorEstimateHeader } from '../calculators/CalculatorEstimateHeader';
+import { useCalculatorTab } from '../../contexts/CalculatorTabContext';
+import { useCustomCalculator } from '../../hooks/useCustomCalculator';
+import { useCustomMaterials } from '../../hooks/useCustomMaterials';
 
 const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
+  const { t } = useTranslation();
+  const { activeTab } = useCalculatorTab();
+  const { materials: customMaterials, pricing: customPricing, loading: loadingCustom, isConfigured } =
+    useCustomCalculator('pavers', activeTab === 'custom');
+  const { getCustomPrice, getCustomUnitValue } = useCustomMaterials('pavers');
+
   const [inputType, setInputType] = useState<'dimensions' | 'area'>('dimensions');
   const [length, setLength] = useState<number | ''>('');
   const [width, setWidth] = useState<number | ''>('');
@@ -19,9 +30,101 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const [wasteFactor, setWasteFactor] = useState<5 | 10 | 15 | 20>(10);
   const [paverCostPerSqFt, setPaverCostPerSqFt] = useState<number | ''>('');
 
+  // Active pricing from custom materials or manual input
+  const activePaverCostPerSqFt = useMemo(() => {
+    if (activeTab === 'custom' && customPricing?.paver_cost_per_sqft) {
+      return customPricing.paver_cost_per_sqft;
+    }
+    return paverCostPerSqFt;
+  }, [activeTab, customPricing, paverCostPerSqFt]);
+
+  const activePricing = useMemo(() => {
+    if (activeTab === 'custom') {
+      return {
+        baseMaterialPerCubicYard: getCustomPrice('Base Material', 45, 'base'),
+        beddingMaterialPerCubicYard: getCustomPrice('Sand', 55, 'bedding'),
+        polymericSandPerBag: getCustomPrice('Polymeric Sand', 45, 'pavers'),
+        edgeBlock4x8: getCustomPrice('Edge Blocks 4x8', 1.50, 'edging'),
+        edgeBlock6x9: getCustomPrice('Edge Blocks 6x9', 2.00, 'edging'),
+        edgeBlock6x12: getCustomPrice('Edge Blocks 6x12', 2.25, 'edging'),
+        edgeBlockCustom: getCustomPrice('Edge Blocks Custom', 2.00, 'edging')
+      };
+    }
+    return {
+      baseMaterialPerCubicYard: 45,
+      beddingMaterialPerCubicYard: 55,
+      polymericSandPerBag: 45,
+      edgeBlock4x8: 1.50,
+      edgeBlock6x9: 2.00,
+      edgeBlock6x12: 2.25,
+      edgeBlockCustom: 2.00
+    };
+  }, [activeTab, getCustomPrice]);
+
+  // Auto-update cost when switching to custom tab
+  useEffect(() => {
+    if (activeTab === 'custom' && customPricing?.paver_cost_per_sqft) {
+      setPaverCostPerSqFt(customPricing.paver_cost_per_sqft);
+    }
+  }, [activeTab, customPricing]);
+
+  const getCurrentInputs = () => ({
+    inputType,
+    length,
+    width,
+    area,
+    baseDepth,
+    beddingType,
+    beddingDepth,
+    hasBorder,
+    borderLength,
+    borderStyle,
+    edgeBlockSize,
+    customEdgeWidth,
+    customEdgeLength,
+    wasteFactor,
+    paverCostPerSqFt
+  });
+
+  const handleLoadEstimate = (inputs: any) => {
+    setInputType(inputs.inputType || 'dimensions');
+    setLength(inputs.length || '');
+    setWidth(inputs.width || '');
+    setArea(inputs.area || '');
+    setBaseDepth(inputs.baseDepth || '');
+    setBeddingType(inputs.beddingType || 'sand');
+    setBeddingDepth(inputs.beddingDepth || '');
+    setHasBorder(inputs.hasBorder || false);
+    setBorderLength(inputs.borderLength || '');
+    setBorderStyle(inputs.borderStyle || 'soldier');
+    setEdgeBlockSize(inputs.edgeBlockSize || '6x9');
+    setCustomEdgeWidth(inputs.customEdgeWidth || '');
+    setCustomEdgeLength(inputs.customEdgeLength || '');
+    setWasteFactor(inputs.wasteFactor || 10);
+    setPaverCostPerSqFt(inputs.paverCostPerSqFt || '');
+  };
+
+  const handleNewEstimate = () => {
+    setInputType('dimensions');
+    setLength('');
+    setWidth('');
+    setArea('');
+    setBaseDepth('');
+    setBeddingType('sand');
+    setBeddingDepth('');
+    setHasBorder(false);
+    setBorderLength('');
+    setBorderStyle('soldier');
+    setEdgeBlockSize('6x9');
+    setCustomEdgeWidth('');
+    setCustomEdgeLength('');
+    setWasteFactor(10);
+    setPaverCostPerSqFt('');
+  };
+
   const handleCalculate = () => {
     let baseArea: number;
-    
+
     if (inputType === 'dimensions' && typeof length === 'number' && typeof width === 'number') {
       baseArea = length * width;
     } else if (inputType === 'area' && typeof area === 'number') {
@@ -30,15 +133,18 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       return;
     }
 
-    if (typeof baseDepth === 'number' && typeof beddingDepth === 'number' && typeof paverCostPerSqFt === 'number') {
+    const effectiveCost = typeof activePaverCostPerSqFt === 'number' ? activePaverCostPerSqFt : paverCostPerSqFt;
+
+    if (typeof baseDepth === 'number' && typeof beddingDepth === 'number' && typeof effectiveCost === 'number') {
       const areaWithWaste = baseArea * (1 + wasteFactor / 100);
       const baseVolume = (areaWithWaste * baseDepth) / 324;
       const beddingVolume = (areaWithWaste * beddingDepth) / 324;
 
-      const jointSandBags = Math.ceil(baseArea / 60);
+      const jointSandCoverage = getCustomUnitValue('Polymeric Sand', 60, 'pavers'); // sq ft per bag
+      const jointSandBags = Math.ceil(baseArea / jointSandCoverage);
 
-      // Calculate paver cost
-      const paverCost = baseArea * paverCostPerSqFt;
+      // Calculate paver cost using active pricing
+      const paverCost = baseArea * effectiveCost;
 
       const results: CalculationResult[] = [
         {
@@ -61,19 +167,19 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
           label: 'Base Material Needed',
           value: Number(baseVolume.toFixed(2)),
           unit: 'cubic yards',
-          cost: baseVolume * 45 // Approximate cost of base material per cubic yard
+          cost: baseVolume * activePricing.baseMaterialPerCubicYard
         },
         {
           label: `${beddingType.replace('-', ' ').replace(/(^\w|\s\w)/g, l => l.toUpperCase())} Needed`,
           value: Number(beddingVolume.toFixed(2)),
           unit: 'cubic yards',
-          cost: beddingVolume * 55 // Approximate cost of bedding material per cubic yard
+          cost: beddingVolume * activePricing.beddingMaterialPerCubicYard
         },
         {
           label: 'Polymeric Sand Needed',
           value: jointSandBags,
           unit: '60lb bags',
-          cost: jointSandBags * 45 // Updated price to $45 per bag
+          cost: jointSandBags * activePricing.polymericSandPerBag
         }
       ];
 
@@ -95,27 +201,27 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         const edgeBlocksNeeded = Math.ceil(borderLength / effectiveLength);
         const totalBlocks = borderStyle === 'double-sailor' ? edgeBlocksNeeded * 2 : edgeBlocksNeeded;
 
-        const styleLabel = borderStyle.split('-').map(word => 
+        const styleLabel = borderStyle.split('-').map(word =>
           word.charAt(0).toUpperCase() + word.slice(1)
         ).join(' ');
-        
-        const sizeLabel = edgeBlockSize === 'custom' 
+
+        const sizeLabel = edgeBlockSize === 'custom'
           ? `${customEdgeWidth}"x${customEdgeLength}"`
           : edgeBlockSize;
 
-        // Updated prices for edge blocks
+        // Get edge block price from active pricing
         const getEdgeBlockPrice = (size: string) => {
           switch (size) {
-            case '6x9': return 2.00; // Updated to $2.00 per piece
-            case '4x8': return 1.50; // Updated to $1.50 per piece
-            case '6x12': return 2.25;
-            default: return 2.00; // Default price for custom size
+            case '6x9': return activePricing.edgeBlock6x9;
+            case '4x8': return activePricing.edgeBlock4x8;
+            case '6x12': return activePricing.edgeBlock6x12;
+            default: return activePricing.edgeBlockCustom;
           }
         };
 
         const edgeBlockPrice = getEdgeBlockPrice(edgeBlockSize);
         const edgeBlockCost = totalBlocks * edgeBlockPrice;
-        
+
         results.push({
           label: `Edge Blocks Needed (${sizeLabel}, ${styleLabel})`,
           value: totalBlocks,
@@ -137,12 +243,12 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     }
   };
 
-  const isFormValid = 
+  const isFormValid =
     ((inputType === 'dimensions' && typeof length === 'number' && typeof width === 'number') ||
     (inputType === 'area' && typeof area === 'number')) &&
     typeof baseDepth === 'number' &&
     typeof beddingDepth === 'number' &&
-    typeof paverCostPerSqFt === 'number' &&
+    (typeof paverCostPerSqFt === 'number' || (activeTab === 'custom' && typeof activePaverCostPerSqFt === 'number')) &&
     (!hasBorder || (
       typeof borderLength === 'number' &&
       (edgeBlockSize !== 'custom' || (
@@ -151,13 +257,55 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       ))
     ));
 
+  // Loading state
+  if (activeTab === 'custom' && loadingCustom) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
+        <div className="flex items-center mb-6">
+          <Layout className="h-6 w-6 text-orange-500 mr-2" />
+          <h2 className="text-xl font-bold text-slate-800">{t('calculators.pavers.title')}</h2>
+        </div>
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading custom configuration...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Not configured state
+  if (activeTab === 'custom' && !isConfigured) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
+        <div className="flex items-center mb-6">
+          <Layout className="h-6 w-6 text-orange-500 mr-2" />
+          <h2 className="text-xl font-bold text-slate-800">{t('calculators.pavers.title')}</h2>
+        </div>
+        <div className="text-center py-12">
+          <Layout className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Configuration Required</h3>
+          <p className="text-gray-600 mb-4">
+            This calculator hasn't been configured yet. Click the gear icon to set up your custom materials and pricing.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
       <div className="flex items-center mb-6">
         <Layout className="h-6 w-6 text-orange-500 mr-2" />
-        <h2 className="text-xl font-bold text-slate-800">Pavers Calculator</h2>
+        <h2 className="text-xl font-bold text-slate-800">{t('calculators.pavers.title')}</h2>
       </div>
-      
+
+      <CalculatorEstimateHeader
+        calculatorType="pavers"
+        currentInputs={getCurrentInputs()}
+        onLoadEstimate={handleLoadEstimate}
+        onNewEstimate={handleNewEstimate}
+      />
+
       <div className="mb-4">
         <div className="mb-6">
           <div className="flex justify-start mb-4">
@@ -171,7 +319,7 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 } border border-slate-300`}
                 onClick={() => setInputType('dimensions')}
               >
-                Use Dimensions
+                {t('calculators.useDimensions')}
               </button>
               <button
                 type="button"
@@ -182,7 +330,7 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 } border border-slate-300`}
                 onClick={() => setInputType('area')}
               >
-                Use Square Footage
+                {t('calculators.useSquareFootage')}
               </button>
             </div>
           </div>
@@ -191,7 +339,7 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="length" className="block text-sm font-medium text-slate-700 mb-1">
-                  Length (feet)
+                  {t('calculators.lengthFeet')}
                 </label>
                 <input
                   type="number"
@@ -201,13 +349,13 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   value={length}
                   onChange={(e) => setLength(e.target.value ? Number(e.target.value) : '')}
                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  placeholder="Enter length in feet"
+                  placeholder={t('calculators.enterLength')}
                 />
               </div>
-              
+
               <div>
                 <label htmlFor="width" className="block text-sm font-medium text-slate-700 mb-1">
-                  Width (feet)
+                  {t('calculators.widthFeet')}
                 </label>
                 <input
                   type="number"
@@ -217,7 +365,7 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   value={width}
                   onChange={(e) => setWidth(e.target.value ? Number(e.target.value) : '')}
                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  placeholder="Enter width in feet"
+                  placeholder={t('calculators.enterWidth')}
                 />
               </div>
             </div>
@@ -243,6 +391,11 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         <div className="mb-6">
           <label htmlFor="paverCostPerSqFt" className="block text-sm font-medium text-slate-700 mb-1">
             Paver Cost per Square Foot
+            {activeTab === 'custom' && customPricing?.paver_cost_per_sqft && (
+              <span className="ml-2 text-xs text-blue-600 font-normal">
+                (Using custom pricing: ${customPricing.paver_cost_per_sqft}/sq ft)
+              </span>
+            )}
           </label>
           <input
             type="number"
@@ -253,7 +406,13 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             onChange={(e) => setPaverCostPerSqFt(e.target.value ? Number(e.target.value) : '')}
             className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             placeholder="Enter paver cost per square foot"
+            disabled={activeTab === 'custom' && customPricing?.paver_cost_per_sqft !== undefined}
           />
+          <p className="text-sm text-slate-500 mt-1">
+            {activeTab === 'custom' && customPricing?.paver_cost_per_sqft
+              ? 'Custom pricing is being used from your materials configuration'
+              : 'Enter the cost per square foot for paver materials'}
+          </p>
         </div>
 
         <div className="mb-6">
@@ -453,7 +612,7 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             : 'bg-slate-300 cursor-not-allowed'
         }`}
       >
-        Calculate Materials
+        {t('calculators.calculateMaterials')}
       </button>
     </div>
   );

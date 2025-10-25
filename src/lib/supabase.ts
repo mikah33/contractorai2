@@ -1,17 +1,42 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Use environment variables for configuration
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://ujhgwcurllkkeouzwvgk.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqaGd3Y3VybGxra2VvdXp3dmdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcwMzIzMjQsImV4cCI6MjA3MjYwODMyNH0.ez6RDJ2FxgSfb7mo2Xug1lXaynKLR-2nJFO-x64UNnY';
-
-// Debug logging
-console.log('Supabase URL:', supabaseUrl);
-console.log('Supabase Key (first 20 chars):', supabaseAnonKey.substring(0, 20) + '...');
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // Validate environment variables
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('Missing Supabase environment variables. Using fallback values.');
+  console.error('Supabase configuration error:', {
+    urlExists: !!supabaseUrl,
+    keyExists: !!supabaseAnonKey,
+    urlValue: supabaseUrl,
+    env: import.meta.env
+  });
+  throw new Error('Missing Supabase environment variables. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY');
 }
 
-// Create Supabase client
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Validate URL format
+if (!supabaseUrl.startsWith('http://') && !supabaseUrl.startsWith('https://')) {
+  console.error('Invalid Supabase URL format:', supabaseUrl);
+  throw new Error(`Invalid supabaseUrl: Must be a valid HTTP or HTTPS URL. Got: ${supabaseUrl}`);
+}
+
+// Create Supabase client with optimized auth persistence
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+    storage: window.localStorage, // Explicitly use localStorage
+    storageKey: 'contractorai-auth', // Custom storage key
+    flowType: 'pkce' // Use PKCE flow for better security
+  },
+  global: {
+    headers: {
+      'x-client-info': 'contractorai-web'
+    }
+  },
+  db: {
+    schema: 'public'
+  }
+});

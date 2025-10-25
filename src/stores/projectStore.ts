@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
 import { CalendarService } from '../services/calendarService';
+import { getCachedProjects } from '../lib/storeQueryBridge';
 
 // Helper function to get current user ID
 const getCurrentUserId = async () => {
@@ -70,9 +71,10 @@ interface ProjectStore {
   progressUpdates: ProgressUpdate[];
   loading: boolean;
   error: string | null;
-  
+  hasLoadedOnce: boolean;
+
   // Actions
-  fetchProjects: () => Promise<void>;
+  fetchProjects: (force?: boolean) => Promise<void>;
   addProject: (project: Omit<Project, 'id' | 'tasks' | 'comments' | 'progress' | 'spent' | 'team'>) => Promise<void>;
   updateProject: (id: string, project: Partial<Project>) => Promise<void>;
   deleteProject: (id: string) => Promise<void>;
@@ -103,16 +105,37 @@ const useProjectStore = create<ProjectStore>((set, get) => ({
   progressUpdates: [],
   loading: false,
   error: null,
+  hasLoadedOnce: false,
 
-  fetchProjects: async () => {
+  fetchProjects: async (force = false) => {
+    console.log('🔵 fetchProjects called, force:', force);
+
+    // Skip cache for now to debug - always fetch fresh data
+    // TODO: Re-enable cache after debugging
+    /*
+    const cachedProjects = getCachedProjects();
+    if (cachedProjects && cachedProjects.length > 0 && !force) {
+      console.log('📦 Using cached projects:', cachedProjects.length);
+      set({
+        projects: cachedProjects,
+        loading: false,
+        hasLoadedOnce: true,
+        error: null
+      });
+      return;
+    }
+    */
+
     set({ loading: true, error: null });
     try {
+      console.log('📡 Fetching projects from Supabase...');
       // Fetch ALL projects - no user filter
       const { data: projects, error: projectError } = await supabase
         .from('projects')
         .select('*')
         .order('created_at', { ascending: false });
 
+      console.log('📊 Projects response:', { count: projects?.length || 0, projects, error: projectError });
       if (projectError) throw projectError;
 
       // No need to fetch clients - client_name is stored directly in projects table
@@ -123,7 +146,8 @@ const useProjectStore = create<ProjectStore>((set, get) => ({
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (tasksError) console.error('Error fetching tasks:', tasksError);
+      console.log('📋 Fetched tasks from database:', tasks?.length || 0, tasks);
+      if (tasksError) console.error('❌ Error fetching tasks:', tasksError);
 
       // Fetch comments for all projects
       const { data: comments, error: commentsError } = await supabase
@@ -131,7 +155,8 @@ const useProjectStore = create<ProjectStore>((set, get) => ({
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (commentsError) console.error('Error fetching comments:', commentsError);
+      console.log('💬 Fetched comments from database:', comments?.length || 0, comments);
+      if (commentsError) console.error('❌ Error fetching comments:', commentsError);
 
       // Fetch team members for all projects
       const { data: teamMembers, error: teamError } = await supabase
@@ -142,15 +167,23 @@ const useProjectStore = create<ProjectStore>((set, get) => ({
 
       // Convert database format to component format
       const formattedProjects: Project[] = (projects || []).map(p => {
-        const projectTasks = (tasks || []).filter(t => t.project_id === p.id).map(t => ({
-          id: t.id,
-          title: t.title,
-          status: t.status as 'todo' | 'in-progress' | 'completed',
-          assignee: t.assignee || '',
-          dueDate: t.due_date || '',
-          priority: t.priority as 'low' | 'medium' | 'high',
-          projectId: t.project_id
-        }));
+        const projectTasks = (tasks || []).filter(t => t.project_id === p.id).map(t => {
+          console.log(`  ✓ Task for project ${p.id}:`, t.title);
+          // Parse assignee: if it contains comma, split into array
+          const assigneeData = t.assignee
+            ? (t.assignee.includes(',') ? t.assignee.split(',') : t.assignee)
+            : '';
+
+          return {
+            id: t.id,
+            title: t.title,
+            status: t.status as 'todo' | 'in-progress' | 'completed',
+            assignee: assigneeData,
+            dueDate: t.due_date || '',
+            priority: t.priority as 'low' | 'medium' | 'high',
+            projectId: t.project_id
+          };
+        });
 
         const projectComments = (comments || []).filter(c => c.project_id === p.id).map(c => ({
           id: c.id,
@@ -177,7 +210,7 @@ const useProjectStore = create<ProjectStore>((set, get) => ({
           id: p.id,
           name: p.name,
           client: clientName, // Client name is stored directly in projects table
-          clientId: null, // No client_id in the SQL schema
+          clientId: p.client_id || null, // Load client_id from database
           status: p.status || 'active',
           priority: p.priority || 'medium',
           startDate: p.start_date || new Date().toISOString(),
@@ -193,7 +226,7 @@ const useProjectStore = create<ProjectStore>((set, get) => ({
         };
       });
 
-      set({ projects: formattedProjects, loading: false });
+      set({ projects: formattedProjects, loading: false, hasLoadedOnce: true });
     } catch (error) {
       console.error('Error fetching projects:', error);
       set({ error: error.message || 'Failed to fetch projects', loading: false });
@@ -209,21 +242,28 @@ const useProjectStore = create<ProjectStore>((set, get) => ({
       console.log('Adding project with user_id:', userId);
       
       // Prepare data matching exact SQL structure
+      const insertData: any = {
+        name: projectData.name,
+        client_name: projectData.client || null,
+        status: projectData.status || 'active',
+        priority: projectData.priority || 'medium',
+        start_date: projectData.startDate || null,
+        end_date: projectData.endDate || null,
+        budget: projectData.budget || 0,
+        spent: 0,
+        progress: 0,
+        description: projectData.description || null,
+        user_id: userId
+      };
+
+      // Add client_id if provided
+      if (projectData.clientId) {
+        insertData.client_id = projectData.clientId;
+      }
+
       const { data, error } = await supabase
         .from('projects')
-        .insert({
-          name: projectData.name,
-          client_name: projectData.client || null, // SQL has client_name, not client_id
-          status: projectData.status || 'active',
-          priority: projectData.priority || 'medium',
-          start_date: projectData.startDate || null,
-          end_date: projectData.endDate || null,
-          budget: projectData.budget || 0,
-          spent: 0,
-          progress: 0,
-          description: projectData.description || null,
-          user_id: userId
-        })
+        .insert(insertData)
         .select()
         .single();
 
@@ -246,7 +286,7 @@ const useProjectStore = create<ProjectStore>((set, get) => ({
         id: data.id,
         name: data.name,
         client: data.client_name || projectData.client || 'Direct Client',
-        clientId: null, // No client_id in SQL schema
+        clientId: data.client_id || null, // Load client_id from database response
         status: data.status,
         priority: projectData.priority || 'medium',
         startDate: data.start_date,
@@ -294,7 +334,8 @@ const useProjectStore = create<ProjectStore>((set, get) => ({
       // Prepare updates for Supabase
       const dbUpdates: any = {};
       if (updates.name !== undefined) dbUpdates.name = updates.name;
-      if (updates.client !== undefined) dbUpdates.client_name = updates.client; // Use client_name, not client_id
+      if (updates.client !== undefined) dbUpdates.client_name = updates.client;
+      if (updates.clientId !== undefined) dbUpdates.client_id = updates.clientId; // Add client_id support
       if (updates.status !== undefined) dbUpdates.status = updates.status;
       if (updates.priority !== undefined) dbUpdates.priority = updates.priority;
       if (updates.startDate !== undefined) dbUpdates.start_date = updates.startDate;
@@ -304,6 +345,8 @@ const useProjectStore = create<ProjectStore>((set, get) => ({
       if (updates.progress !== undefined) dbUpdates.progress = updates.progress;
       if (updates.description !== undefined) dbUpdates.description = updates.description;
       dbUpdates.updated_at = new Date().toISOString();
+
+      console.log('Updating project with:', dbUpdates);
 
       const { error } = await supabase
         .from('projects')
@@ -367,11 +410,16 @@ const useProjectStore = create<ProjectStore>((set, get) => ({
     try {
       const userId = await getCurrentUserId();
       
+      // Convert assignee array to comma-separated string for database storage
+      const assigneeValue = Array.isArray(task.assignee)
+        ? (task.assignee.length > 0 ? task.assignee.join(',') : null)
+        : (task.assignee || null);
+
       const taskData: any = {
         project_id: projectId,
         title: task.title,
         status: task.status,
-        assignee: task.assignee || null,
+        assignee: assigneeValue,
         due_date: task.dueDate || null,  // Send null instead of empty string
         priority: task.priority
       };
@@ -395,28 +443,34 @@ const useProjectStore = create<ProjectStore>((set, get) => ({
       }
 
       console.log('✅ Task saved to database:', data);
+      alert('Task saved successfully!');
+
+      // Parse assignee back to array if it's a comma-separated string
+      const assigneeData = data.assignee
+        ? (data.assignee.includes(',') ? data.assignee.split(',') : data.assignee)
+        : '';
 
       const newTask: Task = {
         id: data.id,
         title: data.title,
         status: data.status as 'todo' | 'in-progress' | 'completed',
-        assignee: data.assignee || '',
+        assignee: assigneeData,
         dueDate: data.due_date || '',
         priority: data.priority as 'low' | 'medium' | 'high',
         projectId: data.project_id
       };
 
       set(state => ({
-        projects: state.projects.map(p => 
-          p.id === projectId 
-            ? { ...p, tasks: [...p.tasks, newTask] }
+        projects: state.projects.map(p =>
+          p.id === projectId
+            ? { ...p, tasks: [...(p.tasks || []), newTask] }
             : p
         )
       }));
       console.log('✅ Task added to local state');
     } catch (error) {
       console.error('❌ Error adding task:', error);
-      alert('Failed to save task. Check console for details.');
+      alert(`Failed to save task: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   },
 
@@ -440,11 +494,11 @@ const useProjectStore = create<ProjectStore>((set, get) => ({
       if (error) throw error;
 
       set(state => ({
-        projects: state.projects.map(p => 
-          p.id === projectId 
+        projects: state.projects.map(p =>
+          p.id === projectId
             ? {
                 ...p,
-                tasks: p.tasks.map(t => 
+                tasks: (p.tasks || []).map(t =>
                   t.id === taskId ? { ...t, ...updates } : t
                 )
               }
@@ -453,6 +507,7 @@ const useProjectStore = create<ProjectStore>((set, get) => ({
       }));
     } catch (error) {
       console.error('Error updating task:', error);
+      alert(`Error updating task: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   },
 
@@ -466,14 +521,15 @@ const useProjectStore = create<ProjectStore>((set, get) => ({
       if (error) throw error;
 
       set(state => ({
-        projects: state.projects.map(p => 
-          p.id === projectId 
-            ? { ...p, tasks: p.tasks.filter(t => t.id !== taskId) }
+        projects: state.projects.map(p =>
+          p.id === projectId
+            ? { ...p, tasks: (p.tasks || []).filter(t => t.id !== taskId) }
             : p
         )
       }));
     } catch (error) {
       console.error('Error deleting task:', error);
+      alert(`Error deleting task: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   },
 
@@ -554,17 +610,18 @@ const useProjectStore = create<ProjectStore>((set, get) => ({
       };
 
       set(state => ({
-        projects: state.projects.map(p => 
-          p.id === projectId 
-            ? { ...p, comments: [...p.comments, newComment] }
+        projects: state.projects.map(p =>
+          p.id === projectId
+            ? { ...p, comments: [...(p.comments || []), newComment] }
             : p
         )
       }));
       console.log('✅ Comment added to local state');
+      alert('Comment saved successfully!');
     } catch (error: any) {
       console.error('❌ Error adding comment:', error);
       const errorMessage = error.message || 'Failed to save comment';
-      alert(`Error: ${errorMessage}`);
+      alert(`Error saving comment: ${errorMessage}`);
       throw error; // Re-throw to let the component handle it
     }
   },
@@ -579,14 +636,15 @@ const useProjectStore = create<ProjectStore>((set, get) => ({
       if (error) throw error;
 
       set(state => ({
-        projects: state.projects.map(p => 
-          p.id === projectId 
-            ? { ...p, comments: p.comments.filter(c => c.id !== commentId) }
+        projects: state.projects.map(p =>
+          p.id === projectId
+            ? { ...p, comments: (p.comments || []).filter(c => c.id !== commentId) }
             : p
         )
       }));
     } catch (error) {
       console.error('Error deleting comment:', error);
+      alert(`Error deleting comment: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   },
 
@@ -600,7 +658,7 @@ const useProjectStore = create<ProjectStore>((set, get) => ({
         project_id: projectId,
         member_name: memberName,
         member_email: email || null,
-        role: role || null
+        member_role: role || null
       };
       
       // Only add user_id if we have a valid one

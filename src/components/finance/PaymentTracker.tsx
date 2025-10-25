@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Plus, DollarSign, Calendar, User, FileText, Check, X, Edit, Trash } from 'lucide-react';
 import { format } from 'date-fns';
+import EmployeePayments from './EmployeePayments';
+import ContractorPayments from './ContractorPayments';
 
 interface Payment {
   id: string;
@@ -23,7 +25,8 @@ interface Client {
 interface Project {
   id: string;
   name: string;
-  clientId: string;
+  clientId: string | null;
+  clientName?: string;
   totalAmount: number;
   paidAmount: number;
 }
@@ -31,9 +34,11 @@ interface Project {
 interface Invoice {
   id: string;
   projectId: string;
-  amount: number;
+  totalAmount: number;
+  balance: number;
   dueDate: string;
-  status: 'draft' | 'sent' | 'paid' | 'overdue';
+  status: 'draft' | 'sent' | 'outstanding' | 'partial' | 'paid' | 'overdue';
+  invoiceNumber?: string;
 }
 
 interface PaymentTrackerProps {
@@ -55,6 +60,7 @@ const PaymentTracker: React.FC<PaymentTrackerProps> = ({
   onEditPayment,
   onDeletePayment
 }) => {
+  const [activeTab, setActiveTab] = useState<'received' | 'employee' | 'contractor'>('received');
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
   const [formData, setFormData] = useState<Omit<Payment, 'id'>>({
@@ -68,12 +74,25 @@ const PaymentTracker: React.FC<PaymentTrackerProps> = ({
     notes: ''
   });
 
-  const filteredProjects = formData.clientId 
-    ? projects.filter(project => project.clientId === formData.clientId)
-    : projects;
+  // DEBUG: Log all data to console
+  console.log('🔍 PAYMENT TRACKER DEBUG:');
+  console.log('  Total projects received:', projects?.length || 0);
+  console.log('  All projects:', projects);
+  console.log('  Selected clientId:', formData.clientId);
+  console.log('  All clients:', clients);
+
+  const filteredProjects = formData.clientId
+    ? (projects || []).filter(project => {
+        console.log(`  Comparing project "${project?.name}": project.clientId="${project?.clientId}" vs formData.clientId="${formData.clientId}"`);
+        return project?.clientId === formData.clientId;
+      })
+    : (projects || []);
+
+  console.log('  Filtered projects count:', filteredProjects.length);
+  console.log('  Filtered projects:', filteredProjects);
 
   const filteredInvoices = formData.projectId
-    ? invoices.filter(invoice => invoice.projectId === formData.projectId && invoice.status !== 'paid')
+    ? (invoices || []).filter(invoice => invoice?.projectId === formData.projectId && invoice?.status !== 'paid')
     : [];
 
   const handleClientChange = (clientId: string) => {
@@ -86,11 +105,15 @@ const PaymentTracker: React.FC<PaymentTrackerProps> = ({
   };
 
   const handleProjectChange = (projectId: string) => {
-    setFormData({
-      ...formData,
-      projectId,
-      invoiceId: undefined // Reset invoice when project changes
-    });
+    try {
+      setFormData({
+        ...formData,
+        projectId,
+        invoiceId: undefined // Reset invoice when project changes
+      });
+    } catch (error) {
+      console.error('Error changing project:', error);
+    }
   };
 
   const handleInvoiceSelect = (invoiceId: string) => {
@@ -99,7 +122,7 @@ const PaymentTracker: React.FC<PaymentTrackerProps> = ({
       setFormData({
         ...formData,
         invoiceId,
-        amount: invoice.amount
+        amount: invoice.balance || invoice.totalAmount || 0
       });
     }
   };
@@ -162,13 +185,15 @@ const PaymentTracker: React.FC<PaymentTrackerProps> = ({
   };
 
   const getClientName = (clientId: string) => {
-    const client = clients.find(c => c.id === clientId);
-    return client ? client.name : 'Unknown Client';
+    if (!clientId || !clients) return 'Unknown Client';
+    const client = (clients || []).find(c => c?.id === clientId);
+    return client?.name || 'Unknown Client';
   };
 
   const getProjectName = (projectId: string) => {
-    const project = projects.find(p => p.id === projectId);
-    return project ? project.name : 'Unknown Project';
+    if (!projectId || !projects) return 'Unknown Project';
+    const project = (projects || []).find(p => p?.id === projectId);
+    return project?.name || 'Unknown Project';
   };
 
   const getStatusColor = (status: Payment['status']) => {
@@ -217,19 +242,62 @@ const PaymentTracker: React.FC<PaymentTrackerProps> = ({
   return (
     <div className="bg-white rounded-lg shadow-md">
       <div className="p-6 border-b border-gray-200">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-medium text-gray-900">Payment Tracker</h3>
-          {!showAddForm && (
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Payment Tracker</h3>
+
+        {/* Tabs */}
+        <div className="border-b border-gray-200">
+          <nav className="flex space-x-8" aria-label="Tabs">
             <button
-              onClick={() => setShowAddForm(true)}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              onClick={() => setActiveTab('received')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'received'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
             >
-              <Plus className="h-4 w-4 mr-2" />
-              Record Payment
+              Received Payments
             </button>
-          )}
+            <button
+              onClick={() => setActiveTab('employee')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'employee'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Employee Payments
+            </button>
+            <button
+              onClick={() => setActiveTab('contractor')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'contractor'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              1099 Contractors
+            </button>
+          </nav>
         </div>
       </div>
+
+      {/* Tab Content */}
+      {activeTab === 'received' && (
+        <>
+          <div className="p-6 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <h4 className="text-md font-medium text-gray-900">Received Payments</h4>
+              {!showAddForm && (
+                <button
+                  onClick={() => setShowAddForm(true)}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Record Payment
+                </button>
+              )}
+            </div>
+          </div>
 
       {showAddForm && (
         <div className="p-6 border-b border-gray-200 bg-gray-50">
@@ -238,16 +306,16 @@ const PaymentTracker: React.FC<PaymentTrackerProps> = ({
               <div>
                 <label className="block text-sm font-medium text-gray-700">Client (Optional)</label>
                 <select
-                  value={formData.clientId}
+                  value={formData.clientId || ''}
                   onChange={(e) => handleClientChange(e.target.value)}
                   className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
                 >
                   <option value="">All Clients</option>
-                  {clients.map(client => (
-                    <option key={client.id} value={client.id}>{client.name}</option>
+                  {(clients || []).map(client => (
+                    <option key={client?.id || Math.random()} value={client?.id || ''}>{client?.name || 'Unknown'}</option>
                   ))}
                 </select>
-                {clients.length === 0 && (
+                {(clients || []).length === 0 && (
                   <p className="mt-1 text-xs text-yellow-500">No clients available.</p>
                 )}
               </div>
@@ -262,14 +330,23 @@ const PaymentTracker: React.FC<PaymentTrackerProps> = ({
                 >
                   <option value="">Select Project</option>
                   {/* Show all projects if no client selected, otherwise filter */}
-                  {(formData.clientId ? filteredProjects : projects).map(project => (
-                    <option key={project.id} value={project.id}>
-                      {project.name}
-                      {!formData.clientId && project.clientId ? ` (${getClientName(project.clientId)})` : ''}
-                    </option>
-                  ))}
+                  {(formData.clientId ? filteredProjects : projects || []).map(project => {
+                    if (!project || !project.id) return null;
+
+                    const projectName = project.name || 'Unknown Project';
+                    const clientInfo = !formData.clientId && project.clientName ? ` (${project.clientName})` : '';
+
+                    return (
+                      <option key={project.id} value={project.id}>
+                        {projectName}{clientInfo}
+                      </option>
+                    );
+                  })}
                 </select>
-                {projects.length === 0 && (
+                {formData.clientId && filteredProjects.length === 0 && (
+                  <p className="mt-1 text-xs text-yellow-500">No projects found for this client.</p>
+                )}
+                {!formData.clientId && (projects || []).length === 0 && (
                   <p className="mt-1 text-xs text-red-500">No projects available. Please create a project first.</p>
                 )}
               </div>
@@ -278,32 +355,40 @@ const PaymentTracker: React.FC<PaymentTrackerProps> = ({
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700">Apply to Invoice (Optional)</label>
                   <div className="mt-1 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                    {filteredInvoices.map(invoice => (
-                      <div 
-                        key={invoice.id}
-                        onClick={() => handleInvoiceSelect(invoice.id)}
-                        className={`cursor-pointer border rounded-md p-3 ${
-                          formData.invoiceId === invoice.id 
-                            ? 'border-blue-500 bg-blue-50' 
-                            : 'border-gray-300 hover:bg-gray-50'
-                        }`}
-                      >
-                        <div className="flex justify-between items-center">
-                          <div className="text-sm font-medium text-gray-900">Invoice #{invoice.id.slice(-4)}</div>
-                          <div className="text-sm font-medium text-gray-900">${invoice.amount.toFixed(2)}</div>
+                    {filteredInvoices.map(invoice => {
+                      if (!invoice || !invoice.id) return null;
+
+                      return (
+                        <div
+                          key={invoice.id}
+                          onClick={() => handleInvoiceSelect(invoice.id)}
+                          className={`cursor-pointer border rounded-md p-3 ${
+                            formData.invoiceId === invoice.id
+                              ? 'border-blue-500 bg-blue-50'
+                              : 'border-gray-300 hover:bg-gray-50'
+                          }`}
+                        >
+                          <div className="flex justify-between items-center">
+                            <div className="text-sm font-medium text-gray-900">
+                              {invoice.invoiceNumber || `Invoice #${invoice.id.slice(-4)}`}
+                            </div>
+                            <div className="text-sm font-medium text-gray-900">
+                              ${(invoice.balance || invoice.totalAmount || 0).toFixed(2)}
+                            </div>
+                          </div>
+                          <div className="mt-1 text-xs text-gray-500">
+                            Due: {invoice.dueDate ? format(new Date(invoice.dueDate), 'MMM d, yyyy') : 'N/A'}
+                          </div>
+                          <div className="mt-1">
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                              invoice.status === 'overdue' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {invoice.status ? invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1) : 'Unknown'}
+                            </span>
+                          </div>
                         </div>
-                        <div className="mt-1 text-xs text-gray-500">
-                          Due: {format(new Date(invoice.dueDate), 'MMM d, yyyy')}
-                        </div>
-                        <div className="mt-1">
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                            invoice.status === 'overdue' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'
-                          }`}>
-                            {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -318,8 +403,8 @@ const PaymentTracker: React.FC<PaymentTrackerProps> = ({
                     type="number"
                     step="0.01"
                     min="0"
-                    value={formData.amount}
-                    onChange={(e) => setFormData({...formData, amount: parseFloat(e.target.value)})}
+                    value={formData.amount || ''}
+                    onChange={(e) => setFormData({...formData, amount: parseFloat(e.target.value) || 0})}
                     required
                     className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   />
@@ -442,7 +527,7 @@ const PaymentTracker: React.FC<PaymentTrackerProps> = ({
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {payments.length === 0 ? (
+            {(payments || []).length === 0 ? (
               <tr>
                 <td colSpan={7} className="px-6 py-12">
                   <div className="text-center">
@@ -455,7 +540,7 @@ const PaymentTracker: React.FC<PaymentTrackerProps> = ({
                 </td>
               </tr>
             ) : (
-              payments.map((payment) => (
+              (payments || []).map((payment) => (
                 <tr key={payment.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {format(new Date(payment.date), 'MMM d, yyyy')}
@@ -503,6 +588,20 @@ const PaymentTracker: React.FC<PaymentTrackerProps> = ({
           </tbody>
         </table>
       </div>
+        </>
+      )}
+
+      {activeTab === 'employee' && (
+        <div className="p-6">
+          <EmployeePayments />
+        </div>
+      )}
+
+      {activeTab === 'contractor' && (
+        <div className="p-6">
+          <ContractorPayments />
+        </div>
+      )}
     </div>
   );
 };

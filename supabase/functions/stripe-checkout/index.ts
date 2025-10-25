@@ -5,6 +5,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2.49.1';
 const supabase = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
 const stripeSecret = Deno.env.get('STRIPE_SECRET_KEY')!;
 const stripe = new Stripe(stripeSecret, {
+  apiVersion: '2024-11-20.acacia', // Use latest API version for customer_update support
   appInfo: {
     name: 'Bolt Integration',
     version: '1.0.0',
@@ -43,20 +44,17 @@ Deno.serve(async (req) => {
       return corsResponse({ error: 'Method not allowed' }, 405);
     }
 
-    const { price_id, success_url, cancel_url, mode } = await req.json();
+    const body = await req.json();
+    const { price_id, priceId, success_url, cancel_url, mode } = body;
+    const finalPriceId = priceId || price_id;
 
-    const error = validateParameters(
-      { price_id, success_url, cancel_url, mode },
-      {
-        cancel_url: 'string',
-        price_id: 'string',
-        success_url: 'string',
-        mode: { values: ['payment', 'subscription'] },
-      },
-    );
+    // Set default URLs if not provided
+    const finalSuccessUrl = success_url || `${req.headers.get('origin') || 'http://localhost:5174'}/subscription-success`;
+    const finalCancelUrl = cancel_url || `${req.headers.get('origin') || 'http://localhost:5174'}/subscriptions`;
+    const finalMode = mode || 'subscription';
 
-    if (error) {
-      return corsResponse({ error }, 400);
+    if (!finalPriceId) {
+      return corsResponse({ error: 'Missing required parameter: priceId or price_id' }, 400);
     }
 
     const authHeader = req.headers.get('Authorization')!;
@@ -177,19 +175,26 @@ Deno.serve(async (req) => {
       }
     }
 
-    // create Checkout Session
+    // create Checkout Session - use redirect mode for now (embedded has issues)
+    // Since we always create the customer above with the correct email,
+    // passing the customer ID automatically locks the email to what's in the customer record
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
+      // Email is locked because:
+      // 1. We pass customer ID (not customer_email)
+      // 2. The customer was already created with user.email
+      // 3. Stripe won't allow changing the email on an existing customer during checkout
       payment_method_types: ['card'],
       line_items: [
         {
-          price: price_id,
+          price: finalPriceId,
           quantity: 1,
         },
       ],
-      mode,
-      success_url,
-      cancel_url,
+      mode: finalMode,
+      allow_promotion_codes: true, // Enable coupon code field
+      success_url: finalSuccessUrl,
+      cancel_url: finalCancelUrl,
     });
 
     console.log(`Created checkout session ${session.id} for customer ${customerId}`);

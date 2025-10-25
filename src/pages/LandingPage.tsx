@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, CheckCircle, Shield, Zap, PenTool as Tool, BarChart2, Users, Clock, Award, Star, ChevronRight } from 'lucide-react';
+import InstallPrompt from '../components/pwa/InstallPrompt';
+import InstallPromptDebug from '../components/pwa/InstallPromptDebug';
+import InstallButton from '../components/pwa/InstallButton';
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -15,6 +18,10 @@ const LandingPage = () => {
 
   return (
     <div className="min-h-screen bg-white">
+      {/* iOS Install Prompt - Debug Version */}
+      <InstallPromptDebug />
+      {/* <InstallPrompt showOnLoad={true} /> */}
+
       {/* Navigation */}
       <nav className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -24,7 +31,8 @@ const LandingPage = () => {
               <span className="ml-2 text-xl font-bold text-gray-900">ContractorAI</span>
             </div>
             <div className="flex items-center space-x-4">
-              <button 
+              <InstallButton variant="minimal" />
+              <button
                 onClick={handleLogin}
                 className="text-gray-700 hover:text-gray-900"
               >
