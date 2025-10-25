@@ -58,7 +58,8 @@ const AITeamHub: React.FC = () => {
       description: 'Coordinates employees, manages project timelines, schedules tasks, and keeps everything running smoothly.',
       icon: <img src={billLogo} alt="Bill" className="w-16 h-16" />,
       color: 'from-purple-500 to-purple-600',
-      available: false
+      available: true,
+      route: '/bill-project-manager'
     }
   ];
 

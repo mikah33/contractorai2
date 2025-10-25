@@ -47,6 +47,7 @@ import AICalculator from './pages/AICalculator';
 import AITeamHub from './pages/AITeamHub';
 import SaulFinance from './pages/SaulFinance';
 import CindyCRM from './pages/CindyCRM';
+import BillProjectManager from './pages/BillProjectManager';
 import { PricingProvider } from './contexts/PricingContext';
 import { ProjectProvider } from './contexts/ProjectContext';
 import { DataProvider } from './contexts/DataContext';
@@ -152,6 +153,7 @@ function App() {
                     <Route path="/ai-calculator" element={<AICalculator />} />
                     <Route path="/saul-finance" element={<SaulFinance />} />
                     <Route path="/cindy-crm" element={<CindyCRM />} />
+                    <Route path="/bill-project-manager" element={<BillProjectManager />} />
                     <Route path="/finance" element={<FinanceTracker />} />
                     <Route path="/estimates" element={<EstimateGenerator />} />
                     <Route path="/projects" element={<ProjectManager />} />

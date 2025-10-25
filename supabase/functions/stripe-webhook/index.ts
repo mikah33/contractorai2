@@ -137,6 +137,63 @@ async function handleEvent(event: Stripe.Event) {
 // based on the excellent https://github.com/t3dotgg/stripe-recommendations
 async function syncCustomerFromStripe(customerId: string) {
   try {
+    // Fetch customer details first to get metadata
+    const customer = await stripe.customers.retrieve(customerId);
+
+    // Try to find or create stripe_customers record
+    let userId = customer.metadata?.userId || customer.metadata?.user_id;
+
+    // If no metadata userId, try to find user by email as fallback
+    if (!userId && customer.email) {
+      console.info(`No userId in metadata for ${customerId}, trying email lookup: ${customer.email}`);
+      const { data: authUser } = await supabase.auth.admin.listUsers();
+      const matchingUser = authUser.users.find(u => u.email === customer.email);
+
+      if (matchingUser) {
+        userId = matchingUser.id;
+        console.info(`✅ Found user by email: ${customer.email} -> ${userId}`);
+
+        // Update Stripe customer with userId metadata for future
+        try {
+          await stripe.customers.update(customerId, {
+            metadata: { userId: matchingUser.id }
+          });
+          console.info(`✅ Updated Stripe customer ${customerId} with userId metadata`);
+        } catch (updateError) {
+          console.error('Failed to update customer metadata:', updateError);
+        }
+      } else {
+        console.warn(`⚠️ No auth user found for email: ${customer.email}`);
+      }
+    }
+
+    if (userId) {
+      // Check if stripe_customers record exists
+      const { data: existingCustomer } = await supabase
+        .from('stripe_customers')
+        .select('customer_id')
+        .eq('user_id', userId)
+        .single();
+
+      if (!existingCustomer) {
+        // Auto-link customer to user
+        const { error: linkError } = await supabase
+          .from('stripe_customers')
+          .insert({
+            user_id: userId,
+            customer_id: customerId,
+          });
+
+        if (linkError) {
+          console.error('Error auto-linking customer:', linkError);
+        } else {
+          console.info(`✅ Auto-linked customer ${customerId} to user ${userId}`);
+        }
+      }
+    } else {
+      console.warn(`⚠️ Could not find userId for customer ${customerId} (email: ${customer.email})`);
+    }
+
     // fetch latest subscription data from Stripe
     const subscriptions = await stripe.subscriptions.list({
       customer: customerId,
