@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, User, Loader2, Calendar, Users, Briefcase, Mail, X } from 'lucide-react';
 import { BILL_WELCOME_MESSAGE } from '../../lib/ai/bill-config';
+import { supabase } from '../../lib/supabase';
 import billLogo from '../../assets/icons/bill-logo.svg';
 
 interface Message {
@@ -58,13 +59,19 @@ export const BillChatbot: React.FC = () => {
     setIsLoading(true);
 
     try {
+      // Get user session token
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No active session');
+      }
+
       // Call Supabase Edge Function for Bill AI processing
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || import.meta.env.NEXT_PUBLIC_SUPABASE_URL;
       const response = await fetch(`${supabaseUrl}/functions/v1/bill-project-manager`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`
+          'Authorization': `Bearer ${session.access_token}`
         },
         body: JSON.stringify({
           messages: [...messages, userMessage]
@@ -108,13 +115,19 @@ export const BillChatbot: React.FC = () => {
 
     setIsLoading(true);
     try {
+      // Get user session token
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No active session');
+      }
+
       // Send the email via edge function
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || import.meta.env.NEXT_PUBLIC_SUPABASE_URL;
       const response = await fetch(`${supabaseUrl}/functions/v1/send-employee-email`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`
+          'Authorization': `Bearer ${session.access_token}`
         },
         body: JSON.stringify(pendingEmail)
       });
