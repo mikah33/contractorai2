@@ -5,6 +5,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2.49.1';
 const supabase = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
 const stripeSecret = Deno.env.get('STRIPE_SECRET_KEY')!;
 const stripe = new Stripe(stripeSecret, {
+  apiVersion: '2024-11-20.acacia', // Use latest API version for customer_update support
   appInfo: {
     name: 'Bolt Integration',
     version: '1.0.0',
@@ -175,8 +176,14 @@ Deno.serve(async (req) => {
     }
 
     // create Checkout Session - use redirect mode for now (embedded has issues)
+    // Since we always create the customer above with the correct email,
+    // passing the customer ID automatically locks the email to what's in the customer record
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
+      // Email is locked because:
+      // 1. We pass customer ID (not customer_email)
+      // 2. The customer was already created with user.email
+      // 3. Stripe won't allow changing the email on an existing customer during checkout
       payment_method_types: ['card'],
       line_items: [
         {
