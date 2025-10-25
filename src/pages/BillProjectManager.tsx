@@ -1,7 +1,73 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { BillChatbot } from '../components/ai-project-manager/BillChatbot';
+import { supabase } from '../lib/supabase';
+import { useAuthStore } from '../stores/authStore';
+
+interface Stats {
+  employees: number;
+  projects: number;
+  eventsThisWeek: number;
+}
 
 const BillProjectManager: React.FC = () => {
+  const { user } = useAuthStore();
+  const [stats, setStats] = useState<Stats>({
+    employees: 0,
+    projects: 0,
+    eventsThisWeek: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (user) {
+      fetchStats();
+    }
+  }, [user]);
+
+  const fetchStats = async () => {
+    try {
+      setLoading(true);
+
+      // Fetch active employees count
+      const { count: employeesCount } = await supabase
+        .from('employees')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user!.id)
+        .eq('status', 'active');
+
+      // Fetch active projects count
+      const { count: projectsCount } = await supabase
+        .from('projects')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user!.id)
+        .eq('status', 'active');
+
+      // Fetch events this week
+      const today = new Date();
+      const startOfWeek = new Date(today);
+      startOfWeek.setDate(today.getDate() - today.getDay()); // Sunday
+      const endOfWeek = new Date(today);
+      endOfWeek.setDate(today.getDate() + (6 - today.getDay())); // Saturday
+
+      const { count: eventsCount } = await supabase
+        .from('calendar_events')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user!.id)
+        .gte('start_date', startOfWeek.toISOString())
+        .lte('start_date', endOfWeek.toISOString());
+
+      setStats({
+        employees: employeesCount || 0,
+        projects: projectsCount || 0,
+        eventsThisWeek: eventsCount || 0,
+      });
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto">
@@ -21,7 +87,9 @@ const BillProjectManager: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Active Employees</p>
-                <p className="text-2xl font-bold text-purple-600">-</p>
+                <p className="text-2xl font-bold text-purple-600">
+                  {loading ? '...' : stats.employees}
+                </p>
               </div>
               <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
                 👥
@@ -33,7 +101,9 @@ const BillProjectManager: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Active Projects</p>
-                <p className="text-2xl font-bold text-blue-600">-</p>
+                <p className="text-2xl font-bold text-blue-600">
+                  {loading ? '...' : stats.projects}
+                </p>
               </div>
               <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                 📋
@@ -45,7 +115,9 @@ const BillProjectManager: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">This Week</p>
-                <p className="text-2xl font-bold text-green-600">-</p>
+                <p className="text-2xl font-bold text-green-600">
+                  {loading ? '...' : stats.eventsThisWeek}
+                </p>
               </div>
               <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
                 📅

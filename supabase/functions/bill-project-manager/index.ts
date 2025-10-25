@@ -6,7 +6,7 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 );
 
-const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
+const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
 
 // Helper function for CORS
 function corsResponse(body: any, status = 200) {
@@ -20,104 +20,215 @@ function corsResponse(body: any, status = 200) {
   });
 }
 
-// Function definitions for Bill AI
+const SYSTEM_PROMPT = `You are Bill, a highly organized and efficient AI Project Manager for ContractorAI. Your role is to help contractors manage their projects, coordinate employees, schedule tasks, and maintain smooth operations.
+
+## Your Capabilities
+
+### 1. Employee Management
+- View all active employees with their roles, rates, and contact info
+- Check employee availability and schedules
+- Assign employees to projects and tasks
+- Track employee hours and workload
+- Send emails to employees (with user approval)
+
+### 2. Project Coordination
+- View all projects with status, timeline, and team
+- Create and manage project tasks
+- Track project progress and milestones
+- Coordinate team members across projects
+- Update project status and priorities
+
+### 3. Calendar & Scheduling
+- View upcoming events and deadlines
+- Schedule new events for projects or employees
+- Check availability before scheduling
+- Send calendar invitations to team members
+- Track project milestones and due dates
+
+### 4. Team Communication
+- Draft emails to employees (requires user approval before sending)
+- Suggest meeting times based on availability
+- Notify team members of schedule changes
+- Send project updates and reminders
+
+## Conversation Guidelines
+
+### Be Proactive & Organized
+- Always think ahead about scheduling conflicts
+- Suggest optimal employee assignments based on skills and availability
+- Flag potential issues before they become problems
+- Keep track of project deadlines and dependencies
+
+### Communication Style
+- Professional but friendly, like a capable project coordinator
+- Clear and action-oriented
+- Use bullet points for lists and summaries
+- Confirm important actions before executing
+
+## Function Calling Rules
+
+### Always Use Functions For:
+- Fetching employee data: get_employees()
+- Fetching project data: get_projects()
+- Fetching calendar events: get_calendar_events()
+- Creating calendar events: create_calendar_event()
+- Sending emails: draft_employee_email() (requires approval)
+
+### Information Presentation
+
+When showing employees format like this:
+
+👥 ACTIVE EMPLOYEES
+
+1. John Smith - Lead Carpenter
+   - Rate: $85/hour
+   - Contact: john@example.com | (555) 123-4567
+   - Status: Available
+
+When showing projects format like this:
+
+📋 ACTIVE PROJECTS
+
+1. Johnson Deck - In Progress
+   - Client: Tom Johnson
+   - Timeline: May 1-15, 2024
+   - Team: John Smith (lead), Mike Johnson
+   - Status: 60% complete
+
+When showing calendar format like this:
+
+📅 UPCOMING THIS WEEK
+
+Monday, May 6
+- 8:00 AM: Johnson Deck - Day 3 (John, Mike)
+- 2:00 PM: Miller site visit
+
+## Important Rules
+
+1. **Never send emails without explicit approval**
+2. **Always verify employee/project data with functions**
+3. **Check calendar conflicts before scheduling**
+4. **Confirm assignments with user before notifying employees**
+5. **Be transparent about what actions you're taking**
+6. **Flag scheduling conflicts immediately**
+
+## Your Goal
+
+Be the reliable project manager that keeps everything organized, everyone informed, and projects running smoothly. Help contractors focus on the work while you handle the coordination!`;
+
+// Function definitions for Bill AI (OpenAI format)
 const BILL_FUNCTIONS = [
   {
-    name: 'get_employees',
-    description: 'Get all active employees with their details, rates, and contact information',
-    parameters: {
-      type: 'object',
-      properties: {
-        status: {
-          type: 'string',
-          enum: ['active', 'inactive', 'all'],
-          description: 'Filter by employment status. Default is active.',
+    type: 'function',
+    function: {
+      name: 'get_employees',
+      description: 'Get all active employees with their details, rates, and contact information',
+      parameters: {
+        type: 'object',
+        properties: {
+          status: {
+            type: 'string',
+            enum: ['active', 'inactive', 'all'],
+            description: 'Filter by employment status. Default is active.',
+          },
         },
       },
     },
   },
   {
-    name: 'get_projects',
-    description: 'Get all projects with their status, timeline, and team assignments',
-    parameters: {
-      type: 'object',
-      properties: {
-        status: {
-          type: 'string',
-          enum: ['active', 'completed', 'scheduled', 'all'],
-          description: 'Filter by project status. Default is active.',
+    type: 'function',
+    function: {
+      name: 'get_projects',
+      description: 'Get all projects with their status, timeline, and team assignments',
+      parameters: {
+        type: 'object',
+        properties: {
+          status: {
+            type: 'string',
+            enum: ['active', 'completed', 'scheduled', 'all'],
+            description: 'Filter by project status. Default is active.',
+          },
         },
       },
     },
   },
   {
-    name: 'get_calendar_events',
-    description: 'Get calendar events within a date range',
-    parameters: {
-      type: 'object',
-      properties: {
-        start_date: {
-          type: 'string',
-          description: 'Start date in YYYY-MM-DD format. Default is today.',
-        },
-        end_date: {
-          type: 'string',
-          description: 'End date in YYYY-MM-DD format. Default is 7 days from start.',
+    type: 'function',
+    function: {
+      name: 'get_calendar_events',
+      description: 'Get calendar events within a date range',
+      parameters: {
+        type: 'object',
+        properties: {
+          start_date: {
+            type: 'string',
+            description: 'Start date in YYYY-MM-DD format. Default is today.',
+          },
+          end_date: {
+            type: 'string',
+            description: 'End date in YYYY-MM-DD format. Default is 7 days from start.',
+          },
         },
       },
     },
   },
   {
-    name: 'create_calendar_event',
-    description: 'Create a new calendar event',
-    parameters: {
-      type: 'object',
-      properties: {
-        title: {
-          type: 'string',
-          description: 'Event title',
+    type: 'function',
+    function: {
+      name: 'create_calendar_event',
+      description: 'Create a new calendar event',
+      parameters: {
+        type: 'object',
+        properties: {
+          title: {
+            type: 'string',
+            description: 'Event title',
+          },
+          description: {
+            type: 'string',
+            description: 'Event description (optional)',
+          },
+          start_date: {
+            type: 'string',
+            description: 'Start date and time in ISO format',
+          },
+          end_date: {
+            type: 'string',
+            description: 'End date and time in ISO format',
+          },
+          all_day: {
+            type: 'boolean',
+            description: 'Whether this is an all-day event',
+          },
         },
-        description: {
-          type: 'string',
-          description: 'Event description (optional)',
-        },
-        start_date: {
-          type: 'string',
-          description: 'Start date and time in ISO format',
-        },
-        end_date: {
-          type: 'string',
-          description: 'End date and time in ISO format',
-        },
-        all_day: {
-          type: 'boolean',
-          description: 'Whether this is an all-day event',
-        },
+        required: ['title', 'start_date', 'end_date'],
       },
-      required: ['title', 'start_date', 'end_date'],
     },
   },
   {
-    name: 'draft_employee_email',
-    description: 'Draft an email to employees. This requires user approval before sending.',
-    parameters: {
-      type: 'object',
-      properties: {
-        recipients: {
-          type: 'array',
-          items: { type: 'string' },
-          description: 'Email addresses of recipients',
+    type: 'function',
+    function: {
+      name: 'draft_employee_email',
+      description: 'Draft an email to employees. This requires user approval before sending.',
+      parameters: {
+        type: 'object',
+        properties: {
+          recipients: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'Email addresses of recipients',
+          },
+          subject: {
+            type: 'string',
+            description: 'Email subject line',
+          },
+          body: {
+            type: 'string',
+            description: 'Email body content',
+          },
         },
-        subject: {
-          type: 'string',
-          description: 'Email subject line',
-        },
-        body: {
-          type: 'string',
-          description: 'Email body content',
-        },
+        required: ['recipients', 'subject', 'body'],
       },
-      required: ['recipients', 'subject', 'body'],
     },
   },
 ];
@@ -244,98 +355,101 @@ Deno.serve(async (req) => {
       return corsResponse({ error: 'Unauthorized' }, 401);
     }
 
-    // Call Anthropic API with function calling
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    // Call OpenAI API with function calling
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY!,
-        'anthropic-version': '2023-06-01',
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'claude-3-5-sonnet-20241022',
-        max_tokens: 2000,
-        temperature: 0.7,
-        system: `You are Bill, an AI Project Manager for ContractorAI. Help contractors manage employees, projects, and schedules. Use the provided functions to access real data. Always be professional, organized, and proactive.`,
-        messages: messages.map((m: any) => ({
-          role: m.role === 'assistant' ? 'assistant' : 'user',
-          content: m.content,
-        })),
+        model: 'gpt-4o',
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          ...messages.map((m: any) => ({
+            role: m.role === 'system' ? 'system' : m.role,
+            content: m.content,
+          })),
+        ],
         tools: BILL_FUNCTIONS,
+        tool_choice: 'auto',
       }),
     });
 
     if (!response.ok) {
       const error = await response.text();
-      console.error('Anthropic API error:', error);
-      throw new Error(`Anthropic API error: ${response.status}`);
+      console.error('OpenAI API error:', error);
+      throw new Error(`OpenAI API error: ${response.status}`);
     }
 
-    let result = await response.json();
+    const data = await response.json();
     let emailDraft = null;
+    let assistantMessage = '';
 
-    // Handle function calls
-    while (result.stop_reason === 'tool_use') {
-      const toolUse = result.content.find((block: any) => block.type === 'tool_use');
-      if (!toolUse) break;
-
-      const functionResult = await executeFunction(
-        toolUse.name,
-        toolUse.input,
-        user.id
-      );
-
-      // If it's an email draft, save it for approval
-      if (toolUse.name === 'draft_employee_email' && functionResult.requiresApproval) {
-        emailDraft = functionResult.draft;
+    // Process OpenAI response
+    const choice = data.choices?.[0];
+    if (choice) {
+      if (choice.message?.content) {
+        assistantMessage = choice.message.content;
       }
 
-      // Continue conversation with function result
-      const followUpResponse = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': ANTHROPIC_API_KEY!,
-          'anthropic-version': '2023-06-01',
-        },
-        body: JSON.stringify({
-          model: 'claude-3-5-sonnet-20241022',
-          max_tokens: 2000,
-          temperature: 0.7,
-          system: `You are Bill, an AI Project Manager for ContractorAI. Help contractors manage employees, projects, and schedules.`,
-          messages: [
-            ...messages.map((m: any) => ({
-              role: m.role === 'assistant' ? 'assistant' : 'user',
-              content: m.content,
-            })),
-            {
-              role: 'assistant',
-              content: result.content,
-            },
-            {
-              role: 'user',
-              content: [
-                {
-                  type: 'tool_result',
-                  tool_use_id: toolUse.id,
-                  content: JSON.stringify(functionResult),
-                },
-              ],
-            },
-          ],
-          tools: BILL_FUNCTIONS,
-        }),
-      });
+      // Process tool calls
+      if (choice.message?.tool_calls) {
+        const toolResults = [];
 
-      result = await followUpResponse.json();
+        for (const toolCall of choice.message.tool_calls) {
+          const toolName = toolCall.function.name;
+          const toolInput = JSON.parse(toolCall.function.arguments);
+
+          const functionResult = await executeFunction(
+            toolName,
+            toolInput,
+            user.id
+          );
+
+          // If it's an email draft, save it for approval
+          if (toolName === 'draft_employee_email' && functionResult.requiresApproval) {
+            emailDraft = functionResult.draft;
+          }
+
+          toolResults.push({
+            tool_call_id: toolCall.id,
+            role: 'tool',
+            name: toolName,
+            content: JSON.stringify(functionResult),
+          });
+        }
+
+        // If we have tool results, make another API call to get the final response
+        if (toolResults.length > 0) {
+          const followUpResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${OPENAI_API_KEY}`,
+            },
+            body: JSON.stringify({
+              model: 'gpt-4o',
+              messages: [
+                { role: 'system', content: SYSTEM_PROMPT },
+                ...messages.map((m: any) => ({
+                  role: m.role === 'system' ? 'system' : m.role,
+                  content: m.content,
+                })),
+                choice.message,
+                ...toolResults,
+              ],
+            }),
+          });
+
+          const followUpData = await followUpResponse.json();
+          assistantMessage = followUpData.choices?.[0]?.message?.content || assistantMessage;
+        }
+      }
     }
 
-    // Extract text response
-    const textBlock = result.content.find((block: any) => block.type === 'text');
-    const message = textBlock?.text || "I'm not sure how to respond to that.";
-
     return corsResponse({
-      message,
+      message: assistantMessage || "I'm not sure how to respond to that.",
       emailDraft,
     });
   } catch (error: any) {
