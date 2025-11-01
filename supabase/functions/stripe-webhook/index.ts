@@ -60,6 +60,16 @@ async function handleEvent(event: Stripe.Event) {
     return;
   }
 
+  // Handle subscription update/delete events directly
+  if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.deleted') {
+    const subscription = stripeData as Stripe.Subscription;
+    const customerId = typeof subscription.customer === 'string' ? subscription.customer : subscription.customer.id;
+
+    console.info(`Processing ${event.type} for customer: ${customerId}`);
+    await syncCustomerFromStripe(customerId);
+    return;
+  }
+
   if (!('customer' in stripeData)) {
     return;
   }
@@ -127,6 +137,63 @@ async function handleEvent(event: Stripe.Event) {
 // based on the excellent https://github.com/t3dotgg/stripe-recommendations
 async function syncCustomerFromStripe(customerId: string) {
   try {
+    // Fetch customer details first to get metadata
+    const customer = await stripe.customers.retrieve(customerId);
+
+    // Try to find or create stripe_customers record
+    let userId = customer.metadata?.userId || customer.metadata?.user_id;
+
+    // If no metadata userId, try to find user by email as fallback
+    if (!userId && customer.email) {
+      console.info(`No userId in metadata for ${customerId}, trying email lookup: ${customer.email}`);
+      const { data: authUser } = await supabase.auth.admin.listUsers();
+      const matchingUser = authUser.users.find(u => u.email === customer.email);
+
+      if (matchingUser) {
+        userId = matchingUser.id;
+        console.info(`✅ Found user by email: ${customer.email} -> ${userId}`);
+
+        // Update Stripe customer with userId metadata for future
+        try {
+          await stripe.customers.update(customerId, {
+            metadata: { userId: matchingUser.id }
+          });
+          console.info(`✅ Updated Stripe customer ${customerId} with userId metadata`);
+        } catch (updateError) {
+          console.error('Failed to update customer metadata:', updateError);
+        }
+      } else {
+        console.warn(`⚠️ No auth user found for email: ${customer.email}`);
+      }
+    }
+
+    if (userId) {
+      // Check if stripe_customers record exists
+      const { data: existingCustomer } = await supabase
+        .from('stripe_customers')
+        .select('customer_id')
+        .eq('user_id', userId)
+        .single();
+
+      if (!existingCustomer) {
+        // Auto-link customer to user
+        const { error: linkError } = await supabase
+          .from('stripe_customers')
+          .insert({
+            user_id: userId,
+            customer_id: customerId,
+          });
+
+        if (linkError) {
+          console.error('Error auto-linking customer:', linkError);
+        } else {
+          console.info(`✅ Auto-linked customer ${customerId} to user ${userId}`);
+        }
+      }
+    } else {
+      console.warn(`⚠️ Could not find userId for customer ${customerId} (email: ${customer.email})`);
+    }
+
     // fetch latest subscription data from Stripe
     const subscriptions = await stripe.subscriptions.list({
       customer: customerId,
@@ -141,7 +208,7 @@ async function syncCustomerFromStripe(customerId: string) {
       const { error: noSubError } = await supabase.from('stripe_subscriptions').upsert(
         {
           customer_id: customerId,
-          subscription_status: 'not_started',
+          status: 'not_started',
         },
         {
           onConflict: 'customer_id',
@@ -152,38 +219,68 @@ async function syncCustomerFromStripe(customerId: string) {
         console.error('Error updating subscription status:', noSubError);
         throw new Error('Failed to update subscription status in database');
       }
+      return;
     }
 
     // assumes that a customer can only have a single subscription
     const subscription = subscriptions.data[0];
 
-    // store subscription state
-    const { error: subError } = await supabase.from('stripe_subscriptions').upsert(
-      {
-        customer_id: customerId,
-        subscription_id: subscription.id,
-        price_id: subscription.items.data[0].price.id,
-        current_period_start: subscription.current_period_start,
-        current_period_end: subscription.current_period_end,
-        cancel_at_period_end: subscription.cancel_at_period_end,
-        ...(subscription.default_payment_method && typeof subscription.default_payment_method !== 'string'
-          ? {
-              payment_method_brand: subscription.default_payment_method.card?.brand ?? null,
-              payment_method_last4: subscription.default_payment_method.card?.last4 ?? null,
-            }
-          : {}),
-        status: subscription.status,
-      },
-      {
-        onConflict: 'customer_id',
-      },
-    );
+    // For subscriptions with 100% promo codes, dates are in items, not root
+    const periodStartTimestamp = subscription.current_period_start || subscription.items.data[0]?.current_period_start;
+    const periodEndTimestamp = subscription.current_period_end || subscription.items.data[0]?.current_period_end;
 
-    if (subError) {
-      console.error('Error syncing subscription:', subError);
-      throw new Error('Failed to sync subscription in database');
+    // Convert Unix timestamps to ISO strings for PostgreSQL
+    const periodStart = periodStartTimestamp ? new Date(periodStartTimestamp * 1000).toISOString() : null;
+    const periodEnd = periodEndTimestamp ? new Date(periodEndTimestamp * 1000).toISOString() : null;
+
+    // store subscription state - use customer_id for upsert since it's unique and always present
+    // First, try to find existing record by customer_id
+    const { data: existingSub } = await supabase
+      .from('stripe_subscriptions')
+      .select('id')
+      .eq('customer_id', customerId)
+      .single();
+
+    if (existingSub) {
+      // Update existing record
+      const { error: subError } = await supabase
+        .from('stripe_subscriptions')
+        .update({
+          subscription_id: subscription.id,
+          price_id: subscription.items.data[0].price.id,
+          current_period_start: periodStart,
+          current_period_end: periodEnd,
+          cancel_at_period_end: subscription.cancel_at_period_end,
+          status: subscription.status,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', existingSub.id);
+
+      if (subError) {
+        console.error('Error updating subscription:', subError);
+        throw new Error('Failed to update subscription in database');
+      }
+      console.info(`Successfully updated subscription for customer: ${customerId}`);
+    } else {
+      // Insert new record
+      const { error: subError } = await supabase
+        .from('stripe_subscriptions')
+        .insert({
+          customer_id: customerId,
+          subscription_id: subscription.id,
+          price_id: subscription.items.data[0].price.id,
+          current_period_start: periodStart,
+          current_period_end: periodEnd,
+          cancel_at_period_end: subscription.cancel_at_period_end,
+          status: subscription.status,
+        });
+
+      if (subError) {
+        console.error('Error inserting subscription:', subError);
+        throw new Error('Failed to insert subscription in database');
+      }
+      console.info(`Successfully created subscription for customer: ${customerId}`);
     }
-    console.info(`Successfully synced subscription for customer: ${customerId}`);
   } catch (error) {
     console.error(`Failed to sync subscription for customer ${customerId}:`, error);
     throw error;

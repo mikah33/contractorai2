@@ -1,6 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Paintbrush } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { CalculatorEstimateHeader } from '../calculators/CalculatorEstimateHeader';
+import { useCalculatorTab } from '../../contexts/CalculatorTabContext';
+import { useCustomCalculator } from '../../hooks/useCustomCalculator';
+import { useCustomMaterials } from '../../hooks/useCustomMaterials';
 
 interface Opening {
   width: number;
@@ -14,6 +19,10 @@ interface Surface {
 }
 
 const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
+  const { t } = useTranslation();
+  const { activeTab } = useCalculatorTab();
+  const { materials: customMaterials, pricing: customPricing, loading: loadingCustom, isConfigured } = useCustomCalculator('paint', activeTab === 'custom');
+  const { getCustomPrice, getCustomUnitValue } = useCustomMaterials('paint');
   const [paintLocation, setPaintLocation] = useState<'interior' | 'exterior'>('interior');
   const [unit, setUnit] = useState<'imperial' | 'metric'>('imperial');
   const [surfaces, setSurfaces] = useState<Surface[]>([{ length: 0, height: 0, condition: 'good' }]);
@@ -38,6 +47,48 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
   const removeSurface = (index: number) => {
     setSurfaces(surfaces.filter((_, i) => i !== index));
+  };
+
+  const getCurrentInputs = () => ({
+    paintLocation,
+    unit,
+    surfaces,
+    doors,
+    windows,
+    coats,
+    paintType,
+    paintFinish,
+    includePrimer,
+    includeWaste,
+    wasteFactor
+  });
+
+  const handleLoadEstimate = (inputs: any) => {
+    setPaintLocation(inputs.paintLocation || 'interior');
+    setUnit(inputs.unit || 'imperial');
+    setSurfaces(inputs.surfaces || [{ length: 0, height: 0, condition: 'good' }]);
+    setDoors(inputs.doors || []);
+    setWindows(inputs.windows || []);
+    setCoats(inputs.coats || 2);
+    setPaintType(inputs.paintType || 'standard');
+    setPaintFinish(inputs.paintFinish || 'eggshell');
+    setIncludePrimer(inputs.includePrimer || false);
+    setIncludeWaste(inputs.includeWaste !== undefined ? inputs.includeWaste : true);
+    setWasteFactor(inputs.wasteFactor || 10);
+  };
+
+  const handleNewEstimate = () => {
+    setPaintLocation('interior');
+    setUnit('imperial');
+    setSurfaces([{ length: 0, height: 0, condition: 'good' }]);
+    setDoors([]);
+    setWindows([]);
+    setCoats(2);
+    setPaintType('standard');
+    setPaintFinish('eggshell');
+    setIncludePrimer(false);
+    setIncludeWaste(true);
+    setWasteFactor(10);
   };
 
   const addDoor = () => {
@@ -68,24 +119,81 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     setWindows(windows.filter((_, i) => i !== index));
   };
 
-  const getPaintPrice = () => {
-    const prices = {
+  // Determine which data source to use based on active tab with dynamic pricing
+  const activePaintPrices = useMemo(() => {
+    if (activeTab === 'custom' && isConfigured && customMaterials.length > 0) {
+      const customPaints = customMaterials.filter(m => m.category === 'paint-type');
+      if (customPaints.length > 0) {
+        const priceMap: any = { interior: {}, exterior: {} };
+        customPaints.forEach(m => {
+          const metadata = m.metadata || {};
+          const location = metadata.location || 'interior';
+          const quality = metadata.quality || 'standard';
+          priceMap[location][quality] = {
+            gallon: m.price,
+            coverage: metadata.coverage || (location === 'interior' ? 400 : 350)
+          };
+        });
+        return priceMap;
+      }
+    }
+    return {
       interior: {
-        economy: { gallon: 25.98, coverage: 400 },
-        standard: { gallon: 35.98, coverage: 400 },
-        premium: { gallon: 45.98, coverage: 400 }
+        economy: { gallon: getCustomPrice('Interior Paint - Economy', 25.98, 'paint'), coverage: getCustomUnitValue('Interior Paint - Economy', 400, 'paint') },
+        standard: { gallon: getCustomPrice('Interior Paint - Standard', 35.98, 'paint'), coverage: getCustomUnitValue('Interior Paint - Standard', 400, 'paint') },
+        premium: { gallon: getCustomPrice('Interior Paint - Premium', 45.98, 'paint'), coverage: getCustomUnitValue('Interior Paint - Premium', 400, 'paint') }
       },
       exterior: {
-        economy: { gallon: 30.98, coverage: 350 },
-        standard: { gallon: 40.98, coverage: 350 },
-        premium: { gallon: 50.98, coverage: 350 }
+        economy: { gallon: getCustomPrice('Exterior Paint - Economy', 30.98, 'paint'), coverage: getCustomUnitValue('Exterior Paint - Economy', 350, 'paint') },
+        standard: { gallon: getCustomPrice('Exterior Paint - Standard', 40.98, 'paint'), coverage: getCustomUnitValue('Exterior Paint - Standard', 350, 'paint') },
+        premium: { gallon: getCustomPrice('Exterior Paint - Premium', 50.98, 'paint'), coverage: getCustomUnitValue('Exterior Paint - Premium', 350, 'paint') }
       }
     };
-    return prices[paintLocation][paintType];
+  }, [activeTab, isConfigured, customMaterials, getCustomPrice, getCustomUnitValue]);
+
+  const activePrimerPrices = useMemo(() => {
+    if (activeTab === 'custom' && isConfigured && customMaterials.length > 0) {
+      const customPrimers = customMaterials.filter(m => m.category === 'paint-primer');
+      if (customPrimers.length > 0) {
+        const primerMap: any = {};
+        customPrimers.forEach(m => {
+          const metadata = m.metadata || {};
+          const location = metadata.location || 'interior';
+          primerMap[location] = m.price;
+        });
+        return primerMap;
+      }
+    }
+    return {
+      interior: getCustomPrice('Interior Primer', 25.98, 'primer'),
+      exterior: getCustomPrice('Exterior Primer', 30.98, 'primer')
+    };
+  }, [activeTab, isConfigured, customMaterials, getCustomPrice]);
+
+  // Auto-select when switching tabs
+  useEffect(() => {
+    if (activeTab === 'custom' && activePaintPrices) {
+      const availableTypes = Object.keys(activePaintPrices[paintLocation] || {});
+      if (availableTypes.length > 0 && !availableTypes.includes(paintType)) {
+        setPaintType(availableTypes[0] as any);
+      }
+    } else if (activeTab === 'default') {
+      if (!['economy', 'standard', 'premium'].includes(paintType)) {
+        setPaintType('standard');
+      }
+    }
+  }, [activeTab, activePaintPrices, paintLocation]);
+
+  const getPaintPrice = () => {
+    const priceData = activePaintPrices[paintLocation]?.[paintType];
+    if (!priceData) {
+      return { gallon: 35.98, coverage: 400 };
+    }
+    return priceData;
   };
 
   const getPrimerPrice = () => {
-    return paintLocation === 'interior' ? 25.98 : 30.98;
+    return activePrimerPrices[paintLocation] || (paintLocation === 'interior' ? 25.98 : 30.98);
   };
 
   const handleCalculate = () => {
@@ -106,78 +214,124 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     const paintInfo = getPaintPrice();
     const totalCoats = coats;
     const coveragePerGallon = paintInfo.coverage;
-    
+
     // Adjust coverage based on surface condition
     const conditionFactors = { good: 1, fair: 0.9, poor: 0.8 };
-    const averageConditionFactor = surfaces.reduce((sum, surface) => 
+    const averageConditionFactor = surfaces.reduce((sum, surface) =>
       sum + conditionFactors[surface.condition], 0) / surfaces.length;
-    
+
     const effectiveCoverage = coveragePerGallon * averageConditionFactor;
     const gallonsNeeded = Math.ceil((areaWithWaste * totalCoats) / effectiveCoverage);
-    
+
     const paintCost = gallonsNeeded * paintInfo.gallon;
 
     const results: CalculationResult[] = [
       {
-        label: 'Total Wall Area',
+        label: t('calculators.paint.totalWallArea'),
         value: Number(totalArea.toFixed(2)),
-        unit: 'square feet'
+        unit: t('calculators.paint.squareFeet')
       },
       {
-        label: `Paint Needed (${paintType}, ${paintFinish})`,
+        label: `${t('calculators.paint.paintNeeded')} (${t(`calculators.paint.paintType.${paintType}`)}, ${t(`calculators.paint.paintFinish.${paintFinish}`)})`,
         value: gallonsNeeded,
-        unit: 'gallons',
+        unit: t('calculators.paint.gallons'),
         cost: paintCost
       }
     ];
 
     if (includePrimer) {
-      const primerGallons = Math.ceil(areaWithWaste / 400); // Primer typically covers 400 sq ft
+      const primerCoverage = getCustomUnitValue('Primer', 400, 'primer'); // sq ft per gallon
+      const primerGallons = Math.ceil(areaWithWaste / primerCoverage);
       const primerCost = primerGallons * getPrimerPrice();
-      
+
       results.push({
-        label: 'Primer Needed',
+        label: t('calculators.paint.primerNeeded'),
         value: primerGallons,
-        unit: 'gallons',
+        unit: t('calculators.paint.gallons'),
         cost: primerCost
       });
     }
 
     // Add supplies
-    const suppliesCost = Math.ceil(totalArea / 400) * 25; // Basic supplies per 400 sq ft
+    const suppliesPerArea = 400; // Basic supplies per 400 sq ft
+    const suppliesSets = Math.ceil(totalArea / suppliesPerArea);
+    const suppliesUnitPrice = getCustomPrice('Painting Supplies Set', 25, 'supplies');
+    const suppliesCost = suppliesSets * suppliesUnitPrice;
     results.push({
-      label: 'Painting Supplies',
-      value: 1,
-      unit: 'set',
+      label: t('calculators.paint.paintingSupplies'),
+      value: suppliesSets,
+      unit: t('calculators.paint.set'),
       cost: suppliesCost
     });
 
     // Calculate total cost
     const totalCost = results.reduce((sum, item) => sum + (item.cost || 0), 0);
     results.push({
-      label: 'Total Cost',
+      label: t('calculators.paint.totalCost'),
       value: Number(totalCost.toFixed(2)),
-      unit: 'USD',
+      unit: t('calculators.paint.usd'),
       isTotal: true
     });
 
     onCalculate(results);
   };
 
-  const isFormValid = surfaces.every(surface => 
-    typeof surface.length === 'number' && 
-    surface.length > 0 && 
-    typeof surface.height === 'number' && 
+  const isFormValid = surfaces.every(surface =>
+    typeof surface.length === 'number' &&
+    surface.length > 0 &&
+    typeof surface.height === 'number' &&
     surface.height > 0
   );
+
+  // Show loading state if custom calculator data is loading
+  if (activeTab === 'custom' && loadingCustom) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
+        <div className="flex items-center mb-6">
+          <Paintbrush className="h-6 w-6 text-orange-500 mr-2" />
+          <h2 className="text-xl font-bold text-slate-800">{t('calculators.paint.title')}</h2>
+        </div>
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading custom configuration...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show message if custom tab but not configured
+  if (activeTab === 'custom' && !isConfigured) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
+        <div className="flex items-center mb-6">
+          <Paintbrush className="h-6 w-6 text-orange-500 mr-2" />
+          <h2 className="text-xl font-bold text-slate-800">{t('calculators.paint.title')}</h2>
+        </div>
+        <div className="text-center py-12">
+          <Paintbrush className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Configuration Required</h3>
+          <p className="text-gray-600 mb-4">
+            This calculator hasn't been configured yet. Click the gear icon to set up your custom materials and pricing.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
       <div className="flex items-center mb-6">
         <Paintbrush className="h-6 w-6 text-orange-500 mr-2" />
-        <h2 className="text-xl font-bold text-slate-800">Paint Calculator</h2>
+        <h2 className="text-xl font-bold text-slate-800">{t('calculators.paint.title')}</h2>
       </div>
-      
+
+      <CalculatorEstimateHeader
+        calculatorType="paint"
+        getCurrentInputs={getCurrentInputs}
+        onLoadEstimate={handleLoadEstimate}
+        onNewEstimate={handleNewEstimate}
+      />
+
       <div className="mb-4">
         <div className="flex justify-between mb-4">
           <div className="inline-flex rounded-md shadow-sm">
@@ -190,7 +344,7 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               } border border-slate-300`}
               onClick={() => setPaintLocation('interior')}
             >
-              Interior
+              {t('calculators.paint.interior')}
             </button>
             <button
               type="button"
@@ -201,7 +355,7 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               } border border-slate-300`}
               onClick={() => setPaintLocation('exterior')}
             >
-              Exterior
+              {t('calculators.paint.exterior')}
             </button>
           </div>
 
@@ -215,7 +369,7 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               } border border-slate-300`}
               onClick={() => setUnit('imperial')}
             >
-              Imperial
+              {t('calculators.paint.imperial')}
             </button>
             <button
               type="button"
@@ -226,19 +380,19 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               } border border-slate-300`}
               onClick={() => setUnit('metric')}
             >
-              Metric
+              {t('calculators.paint.metric')}
             </button>
           </div>
         </div>
 
         <div className="border-t border-slate-200 pt-6 mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium text-slate-800">Surfaces to Paint</h3>
+            <h3 className="text-lg font-medium text-slate-800">{t('calculators.paint.surfacesToPaint')}</h3>
             <button
               onClick={addSurface}
               className="px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors"
             >
-              Add Surface
+              {t('calculators.paint.addSurface')}
             </button>
           </div>
 
@@ -247,7 +401,7 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Length ({unit === 'imperial' ? 'feet' : 'meters'})
+                    {t('calculators.paint.length')} ({unit === 'imperial' ? t('calculators.paint.feet') : t('calculators.paint.meters')})
                   </label>
                   <input
                     type="number"
@@ -260,7 +414,7 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Height ({unit === 'imperial' ? 'feet' : 'meters'})
+                    {t('calculators.paint.height')} ({unit === 'imperial' ? t('calculators.paint.feet') : t('calculators.paint.meters')})
                   </label>
                   <input
                     type="number"
@@ -273,16 +427,16 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Surface Condition
+                    {t('calculators.paint.surfaceCondition')}
                   </label>
                   <select
                     value={surface.condition}
                     onChange={(e) => updateSurface(index, 'condition', e.target.value as 'good' | 'fair' | 'poor')}
                     className="w-full p-2 border border-slate-300 rounded-md"
                   >
-                    <option value="good">Good - Smooth, clean surface</option>
-                    <option value="fair">Fair - Minor repairs needed</option>
-                    <option value="poor">Poor - Significant prep required</option>
+                    <option value="good">{t('calculators.paint.conditionGood')}</option>
+                    <option value="fair">{t('calculators.paint.conditionFair')}</option>
+                    <option value="poor">{t('calculators.paint.conditionPoor')}</option>
                   </select>
                 </div>
               </div>
@@ -291,7 +445,7 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   onClick={() => removeSurface(index)}
                   className="mt-2 text-red-500 hover:text-red-600"
                 >
-                  Remove Surface
+                  {t('calculators.paint.removeSurface')}
                 </button>
               )}
             </div>
@@ -302,31 +456,31 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                Paint Type
+                {t('calculators.paint.paintTypeLabel')}
               </label>
               <select
                 value={paintType}
                 onChange={(e) => setPaintType(e.target.value as typeof paintType)}
                 className="w-full p-2 border border-slate-300 rounded-md"
               >
-                <option value="economy">Economy Grade</option>
-                <option value="standard">Standard Grade</option>
-                <option value="premium">Premium Grade</option>
+                <option value="economy">{t('calculators.paint.paintType.economy')}</option>
+                <option value="standard">{t('calculators.paint.paintType.standard')}</option>
+                <option value="premium">{t('calculators.paint.paintType.premium')}</option>
               </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                Paint Finish
+                {t('calculators.paint.paintFinishLabel')}
               </label>
               <select
                 value={paintFinish}
                 onChange={(e) => setPaintFinish(e.target.value as typeof paintFinish)}
                 className="w-full p-2 border border-slate-300 rounded-md"
               >
-                <option value="flat">Flat</option>
-                <option value="eggshell">Eggshell</option>
-                <option value="satin">Satin</option>
-                <option value="semi-gloss">Semi-Gloss</option>
+                <option value="flat">{t('calculators.paint.paintFinish.flat')}</option>
+                <option value="eggshell">{t('calculators.paint.paintFinish.eggshell')}</option>
+                <option value="satin">{t('calculators.paint.paintFinish.satin')}</option>
+                <option value="semi-gloss">{t('calculators.paint.paintFinish.semiGloss')}</option>
               </select>
             </div>
           </div>
@@ -336,15 +490,15 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                Number of Coats
+                {t('calculators.paint.numberOfCoats')}
               </label>
               <select
                 value={coats}
                 onChange={(e) => setCoats(Number(e.target.value) as 1 | 2)}
                 className="w-full p-2 border border-slate-300 rounded-md"
               >
-                <option value={1}>Single Coat</option>
-                <option value={2}>Two Coats</option>
+                <option value={1}>{t('calculators.paint.singleCoat')}</option>
+                <option value={2}>{t('calculators.paint.twoCoats')}</option>
               </select>
             </div>
             <div className="flex items-center">
@@ -356,7 +510,7 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
               />
               <label htmlFor="includePrimer" className="ml-2 block text-sm font-medium text-slate-700">
-                Include Primer
+                {t('calculators.paint.includePrimer')}
               </label>
             </div>
           </div>
@@ -372,14 +526,14 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
             />
             <label htmlFor="includeWaste" className="ml-2 block text-sm font-medium text-slate-700">
-              Include Waste Factor
+              {t('calculators.paint.includeWasteFactor')}
             </label>
           </div>
 
           {includeWaste && (
             <div>
               <label htmlFor="wasteFactor" className="block text-sm font-medium text-slate-700 mb-1">
-                Waste Factor Percentage
+                {t('calculators.paint.wasteFactorPercentage')}
               </label>
               <select
                 id="wasteFactor"
@@ -387,15 +541,15 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 onChange={(e) => setWasteFactor(Number(e.target.value) as 5 | 10 | 15)}
                 className="w-full p-2 border border-slate-300 rounded-md"
               >
-                <option value={5}>5% - Simple room, few cuts</option>
-                <option value={10}>10% - Average complexity</option>
-                <option value={15}>15% - Complex layout, many cuts</option>
+                <option value={5}>{t('calculators.paint.wasteFactor5')}</option>
+                <option value={10}>{t('calculators.paint.wasteFactor10')}</option>
+                <option value={15}>{t('calculators.paint.wasteFactor15')}</option>
               </select>
             </div>
           )}
         </div>
       </div>
-      
+
       <button
         onClick={handleCalculate}
         disabled={!isFormValid}
@@ -405,7 +559,7 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             : 'bg-slate-300 cursor-not-allowed'
         }`}
       >
-        Calculate Materials
+        {t('calculators.calculateMaterials')}
       </button>
     </div>
   );

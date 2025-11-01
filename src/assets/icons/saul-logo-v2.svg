@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- Professional businessman with tie, briefcase, and documents -->
+  <g fill="#000000">
+    <!-- Head -->
+    <circle cx="100" cy="45" r="22"/>
+
+    <!-- Body (suit) -->
+    <ellipse cx="100" cy="90" rx="32" ry="20"/>
+    <path d="M 68 90 L 68 150 Q 68 160, 78 160 L 90 160 L 90 185 L 110 185 L 110 160 L 122 160 Q 132 160, 132 150 L 132 90 Z"/>
+
+    <!-- Tie -->
+    <path d="M 100 67 L 95 85 L 100 115 L 105 85 Z" fill="#FFFFFF"/>
+
+    <!-- Arms -->
+    <rect x="40" y="90" width="28" height="50" rx="14"/>
+    <rect x="132" y="90" width="28" height="50" rx="14"/>
+
+    <!-- Briefcase (in left hand) -->
+    <rect x="25" y="135" width="35" height="30" rx="3"/>
+    <rect x="38" y="130" width="9" height="8" rx="2"/>
+    <line x1="32" y1="145" x2="53" y2="145" stroke="#FFFFFF" stroke-width="2"/>
+
+    <!-- Documents (in right hand) -->
+    <rect x="140" y="130" width="25" height="32" rx="2" fill="#FFFFFF" stroke="#000000" stroke-width="3"/>
+    <line x1="145" y1="140" x2="160" y2="140" stroke="#000000" stroke-width="2"/>
+    <line x1="145" y1="146" x2="160" y2="146" stroke="#000000" stroke-width="2"/>
+    <line x1="145" y1="152" x2="155" y2="152" stroke="#000000" stroke-width="2"/>
+  </g>
+</svg>

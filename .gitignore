@@ -23,3 +23,16 @@ dist-ssr
 *.sln
 *.sw?
 .env
+.env.local
+.env.production
+.env.backup-KEEP-SAFE
+docs/NETLIFY-ENV-VARS.md
+
+# Test files
+*.test.html
+debug-*.html
+setup-*.html
+test-*.html
+.env
+scripts/apply-client-columns.ts
+docs/SETUP_COMPLETE.md

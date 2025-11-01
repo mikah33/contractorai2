@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Check, CreditCard, Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { stripeProducts } from '../stripe-config';
 import { useAuthStore } from '../stores/authStore';
 import { supabase } from '../lib/supabase';
 
 const SubscriptionPlans = () => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState('');
   const { user, subscription } = useAuthStore();
@@ -59,9 +61,9 @@ const SubscriptionPlans = () => {
   return (
     <div className="py-8">
       <div className="text-center mb-12">
-        <h1 className="text-3xl font-bold text-gray-900">Subscription Plans</h1>
+        <h1 className="text-3xl font-bold text-gray-900">{t('subscriptions.title')}</h1>
         <p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
-          Choose the perfect plan for your business. All plans include our core features with different levels of functionality.
+          {t('subscriptions.subtitle')}
         </p>
       </div>
 
@@ -93,27 +95,27 @@ const SubscriptionPlans = () => {
               <ul className="mb-8 space-y-4">
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 shrink-0" />
-                  <span className="ml-3 text-gray-600">AI-powered pricing calculator</span>
+                  <span className="ml-3 text-gray-600">{t('subscriptions.feature1')}</span>
                 </li>
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 shrink-0" />
-                  <span className="ml-3 text-gray-600">Advanced project management</span>
+                  <span className="ml-3 text-gray-600">{t('subscriptions.feature2')}</span>
                 </li>
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 shrink-0" />
-                  <span className="ml-3 text-gray-600">Financial tracking and reporting</span>
+                  <span className="ml-3 text-gray-600">{t('subscriptions.feature3')}</span>
                 </li>
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 shrink-0" />
-                  <span className="ml-3 text-gray-600">Professional estimate generator</span>
+                  <span className="ml-3 text-gray-600">{t('subscriptions.feature4')}</span>
                 </li>
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 shrink-0" />
-                  <span className="ml-3 text-gray-600">Calendar and scheduling</span>
+                  <span className="ml-3 text-gray-600">{t('subscriptions.feature5')}</span>
                 </li>
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 shrink-0" />
-                  <span className="ml-3 text-gray-600">Ad performance analyzer</span>
+                  <span className="ml-3 text-gray-600">{t('subscriptions.feature6')}</span>
                 </li>
               </ul>
 
@@ -132,13 +134,13 @@ const SubscriptionPlans = () => {
                   ) : (
                     <CreditCard className="w-4 h-4 mr-2" />
                   )}
-                  {isCurrentPlan(product.priceId) ? 'Current Plan' : 'Subscribe Now'}
+                  {isCurrentPlan(product.priceId) ? t('subscriptions.currentPlan') : t('subscriptions.subscribeNow')}
                 </div>
               </button>
 
               {isCurrentPlan(product.priceId) && (
                 <p className="mt-2 text-xs text-center text-gray-500">
-                  You are currently subscribed to this plan
+                  {t('subscriptions.currentlySubscribed')}
                 </p>
               )}
             </div>
@@ -147,13 +149,13 @@ const SubscriptionPlans = () => {
 
         <div className="mt-16 text-center">
           <h3 className="text-xl font-semibold text-gray-900 mb-4">
-            Need Help?
+            {t('subscriptions.needHelp')}
           </h3>
           <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
-            Have questions about our pricing or need a custom solution? We're here to help.
+            {t('subscriptions.needHelpDescription')}
           </p>
           <button className="inline-flex items-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-            Contact Support
+            {t('subscriptions.contactSupport')}
           </button>
         </div>
 
@@ -161,26 +163,26 @@ const SubscriptionPlans = () => {
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
             <div className="text-center">
               <h4 className="text-lg font-semibold text-gray-900 mb-2">
-                30-Day Money-Back Guarantee
+                {t('subscriptions.guarantee')}
               </h4>
               <p className="text-gray-600">
-                Try our service risk-free. If you're not completely satisfied, get a full refund.
+                {t('subscriptions.guaranteeDescription')}
               </p>
             </div>
             <div className="text-center">
               <h4 className="text-lg font-semibold text-gray-900 mb-2">
-                Secure Payments
+                {t('subscriptions.securePayments')}
               </h4>
               <p className="text-gray-600">
-                All transactions are secured with 256-bit SSL encryption powered by Stripe.
+                {t('subscriptions.securePaymentsDescription')}
               </p>
             </div>
             <div className="text-center">
               <h4 className="text-lg font-semibold text-gray-900 mb-2">
-                24/7 Support
+                {t('subscriptions.support247')}
               </h4>
               <p className="text-gray-600">
-                Get help whenever you need it from our dedicated support team.
+                {t('subscriptions.support247Description')}
               </p>
             </div>
           </div>

@@ -1,6 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Ruler } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { CalculatorEstimateHeader } from '../calculators/CalculatorEstimateHeader';
+import { useCalculatorTab } from '../../contexts/CalculatorTabContext';
+import { useCustomCalculator } from '../../hooks/useCustomCalculator';
+import { useCustomMaterials } from '../../hooks/useCustomMaterials';
 
 interface Opening {
   width: number;
@@ -10,6 +15,10 @@ interface Opening {
 }
 
 const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
+  const { t } = useTranslation();
+  const { activeTab } = useCalculatorTab();
+  const { materials: customMaterials, pricing: customPricing, loading: loadingCustom, isConfigured } = useCustomCalculator('framing', activeTab === 'custom');
+  const { getCustomPrice, getCustomUnitValue } = useCustomMaterials('framing');
   const [framingType, setFramingType] = useState<'wall' | 'floor' | 'ceiling'>('wall');
   const [length, setLength] = useState<number | ''>('');
   const [height, setHeight] = useState<number | ''>('');
@@ -23,6 +32,30 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const [includeSheathing, setIncludeSheathing] = useState(true);
   const [sheathingType, setSheathingType] = useState<'osb' | 'plywood'>('osb');
   const [sheathingThickness, setSheathingThickness] = useState<'7/16' | '15/32' | '19/32'>('7/16');
+
+  // Default prices
+  const defaultLumberPrices = {
+    '2x4': 3.98,
+    '2x6': 5.98
+  };
+
+  const defaultSheathingPrices = {
+    'osb': {
+      '7/16': 15.98,
+      '15/32': 18.98,
+      '19/32': 22.98
+    },
+    'plywood': {
+      '7/16': 24.98,
+      '15/32': 28.98,
+      '19/32': 32.98
+    }
+  };
+
+  const defaultHardwarePrices = {
+    tiedown: 12.98,
+    nailBox: 89.98
+  };
 
   const addOpening = (type: 'door' | 'window') => {
     setOpenings([...openings, {
@@ -44,27 +77,62 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   };
 
   const getLumberPrice = (size: '2x4' | '2x6') => {
-    const prices = {
-      '2x4': 3.98,
-      '2x6': 5.98
-    };
-    return prices[size];
+    const defaultPrice = defaultLumberPrices[size] || 0;
+    return getCustomPrice(`lumber_${size}`, defaultPrice, 'lumber');
   };
 
   const getSheathingPrice = (type: 'osb' | 'plywood', thickness: '7/16' | '15/32' | '19/32') => {
-    const prices = {
-      'osb': {
-        '7/16': 15.98,
-        '15/32': 18.98,
-        '19/32': 22.98
-      },
-      'plywood': {
-        '7/16': 24.98,
-        '15/32': 28.98,
-        '19/32': 32.98
-      }
-    };
-    return prices[type][thickness];
+    const defaultPrice = defaultSheathingPrices[type]?.[thickness] || 0;
+    const materialName = `${type}_${thickness.replace(/\//g, '_')}`;
+    return getCustomPrice(materialName, defaultPrice, 'sheathing');
+  };
+
+  const getCurrentInputs = () => ({
+    framingType,
+    length,
+    height,
+    studSpacing,
+    plateCount,
+    lumberSize,
+    openings,
+    includeBlocking,
+    includeFireblocking,
+    includeTiedowns,
+    includeSheathing,
+    sheathingType,
+    sheathingThickness
+  });
+
+  const handleLoadEstimate = (inputs: any) => {
+    setFramingType(inputs.framingType || 'wall');
+    setLength(inputs.length || '');
+    setHeight(inputs.height || '');
+    setStudSpacing(inputs.studSpacing || 16);
+    setPlateCount(inputs.plateCount || 2);
+    setLumberSize(inputs.lumberSize || '2x4');
+    setOpenings(inputs.openings || []);
+    setIncludeBlocking(inputs.includeBlocking || false);
+    setIncludeFireblocking(inputs.includeFireblocking || false);
+    setIncludeTiedowns(inputs.includeTiedowns || false);
+    setIncludeSheathing(inputs.includeSheathing !== undefined ? inputs.includeSheathing : true);
+    setSheathingType(inputs.sheathingType || 'osb');
+    setSheathingThickness(inputs.sheathingThickness || '7/16');
+  };
+
+  const handleNewEstimate = () => {
+    setFramingType('wall');
+    setLength('');
+    setHeight('');
+    setStudSpacing(16);
+    setPlateCount(2);
+    setLumberSize('2x4');
+    setOpenings([]);
+    setIncludeBlocking(false);
+    setIncludeFireblocking(false);
+    setIncludeTiedowns(false);
+    setIncludeSheathing(true);
+    setSheathingType('osb');
+    setSheathingThickness('7/16');
   };
 
   const handleCalculate = () => {
@@ -73,26 +141,27 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       const studLength = framingType === 'wall' ? height : length;
       const spacing = studSpacing / 12; // Convert to feet
       const studCount = Math.ceil(length / spacing) + 1; // Add one for end stud
-      
+
       // Add extra studs for openings
       const openingStuds = openings.reduce((sum, opening) => {
         // Each opening needs jack studs and king studs
         return sum + (opening.roughOpening ? 4 : 2);
       }, 0);
-      
+
       const totalStuds = studCount + openingStuds;
-      
+
       // Calculate plates
+      const lumberStandardLength = getCustomUnitValue('Lumber', 16, 'lumber'); // ft per piece
       const plateLength = length;
       const platesNeeded = plateCount; // 2 for standard, 3 for double top plate
-      const platePieces = Math.ceil(plateLength / 16) * platesNeeded; // 16ft standard lumber length
-      
+      const platePieces = Math.ceil(plateLength / lumberStandardLength) * platesNeeded;
+
       // Calculate headers
       const headerPieces = openings.reduce((sum, opening) => {
         const headerLength = opening.width + 1; // Add 1ft for overlap
-        return sum + (Math.ceil(headerLength / 16) * 2); // Double headers
+        return sum + (Math.ceil(headerLength / lumberStandardLength) * 2); // Double headers
       }, 0);
-      
+
       const lumberPrice = getLumberPrice(lumberSize);
       const studCost = totalStuds * lumberPrice;
       const plateCost = platePieces * lumberPrice;
@@ -100,24 +169,24 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
       const results: CalculationResult[] = [
         {
-          label: `${lumberSize} Studs (${studSpacing}" o.c.)`,
+          label: t('calculators.framing.studs', { size: lumberSize, spacing: studSpacing }),
           value: totalStuds,
-          unit: 'pieces',
+          unit: t('calculators.framing.pieces'),
           cost: studCost
         },
         {
-          label: `${lumberSize} Plates`,
+          label: t('calculators.framing.plates', { size: lumberSize }),
           value: platePieces,
-          unit: 'pieces',
+          unit: t('calculators.framing.pieces'),
           cost: plateCost
         }
       ];
 
       if (openings.length > 0) {
         results.push({
-          label: `${lumberSize} Headers`,
+          label: t('calculators.framing.headers', { size: lumberSize }),
           value: headerPieces,
-          unit: 'pieces',
+          unit: t('calculators.framing.pieces'),
           cost: headerCost
         });
       }
@@ -126,9 +195,9 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         const blockingPieces = Math.ceil(studCount / 2);
         const blockingCost = blockingPieces * lumberPrice;
         results.push({
-          label: 'Blocking',
+          label: t('calculators.framing.blocking'),
           value: blockingPieces,
-          unit: 'pieces',
+          unit: t('calculators.framing.pieces'),
           cost: blockingCost
         });
       }
@@ -137,20 +206,21 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         const fireblockingPieces = Math.ceil(studCount / 3);
         const fireblockingCost = fireblockingPieces * lumberPrice;
         results.push({
-          label: 'Fireblocking',
+          label: t('calculators.framing.fireblocking'),
           value: fireblockingPieces,
-          unit: 'pieces',
+          unit: t('calculators.framing.pieces'),
           cost: fireblockingCost
         });
       }
 
       if (includeTiedowns) {
         const tiedownCount = Math.ceil(length / 16) + 1;
-        const tiedownCost = tiedownCount * 12.98;
+        const tiedownPrice = getCustomPrice('tiedown', defaultHardwarePrices.tiedown, 'hardware');
+        const tiedownCost = tiedownCount * tiedownPrice;
         results.push({
-          label: 'Tie-downs',
+          label: t('calculators.framing.tiedowns'),
           value: tiedownCount,
-          unit: 'pieces',
+          unit: t('calculators.framing.pieces'),
           cost: tiedownCost
         });
       }
@@ -160,11 +230,11 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         const sheetArea = 32; // 4x8 sheet
         const sheetsNeeded = Math.ceil(wallArea / sheetArea);
         const sheathingCost = sheetsNeeded * getSheathingPrice(sheathingType, sheathingThickness);
-        
+
         results.push({
-          label: `${sheathingType.toUpperCase()} Sheathing (${sheathingThickness}")`,
+          label: t('calculators.framing.sheathing', { type: sheathingType.toUpperCase(), thickness: sheathingThickness }),
           value: sheetsNeeded,
-          unit: '4x8 sheets',
+          unit: t('calculators.framing.sheets'),
           cost: sheathingCost
         });
       }
@@ -173,19 +243,19 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       // Using 30-degree Passlode 3" hot-dipped nails
       const nailsPerConnection = 2; // Standard framing connection
       const nailsNeeded = Math.ceil((totalStuds + platePieces + headerPieces) * nailsPerConnection);
-      const nailsPerStrip = 30; // Typical strip count for framing nailers
+      const nailsPerStrip = getCustomUnitValue('Framing Nails', 30, 'hardware'); // nails per strip
       const nailStripsNeeded = Math.ceil(nailsNeeded / nailsPerStrip);
-      const nailsPerBox = 1000; // Standard box size for Passlode nails
+      const nailsPerBox = getCustomUnitValue('Nail Box', 1000, 'hardware'); // nails per box
       const nailBoxesNeeded = Math.ceil(nailStripsNeeded * nailsPerStrip / nailsPerBox);
-      
-      // Passlode 3" hot-dipped galvanized nails cost (updated price)
-      const nailBoxPrice = 89.98; // Price per 1000-count box
+
+      // Passlode 3" hot-dipped galvanized nails cost
+      const nailBoxPrice = getCustomPrice('nail_box', defaultHardwarePrices.nailBox, 'hardware');
       const nailCost = nailBoxesNeeded * nailBoxPrice;
 
       results.push({
-        label: '3" Passlode Hot-Dipped Nails',
+        label: t('calculators.framing.nails'),
         value: nailBoxesNeeded,
-        unit: '1000ct boxes',
+        unit: t('calculators.framing.nailBoxes'),
         cost: nailCost
       });
 
@@ -193,17 +263,59 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     }
   };
 
-  const isFormValid = 
-    typeof length === 'number' && 
+  // Show loading state if custom calculator data is loading
+  if (activeTab === 'custom' && loadingCustom) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
+        <div className="flex items-center mb-6">
+          <Ruler className="h-6 w-6 text-orange-500 mr-2" />
+          <h2 className="text-xl font-bold text-slate-800">{t('calculators.framing.title')}</h2>
+        </div>
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading custom configuration...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show message if custom tab but not configured
+  if (activeTab === 'custom' && !isConfigured) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
+        <div className="flex items-center mb-6">
+          <Ruler className="h-6 w-6 text-orange-500 mr-2" />
+          <h2 className="text-xl font-bold text-slate-800">{t('calculators.framing.title')}</h2>
+        </div>
+        <div className="text-center py-12">
+          <Ruler className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Configuration Required</h3>
+          <p className="text-gray-600 mb-4">
+            This calculator hasn't been configured yet. Click the gear icon to set up your custom materials and pricing.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const isFormValid =
+    typeof length === 'number' &&
     (framingType === 'floor' || typeof height === 'number');
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
       <div className="flex items-center mb-6">
         <Ruler className="h-6 w-6 text-orange-500 mr-2" />
-        <h2 className="text-xl font-bold text-slate-800">Framing Calculator</h2>
+        <h2 className="text-xl font-bold text-slate-800">{t('calculators.framing.title')}</h2>
       </div>
-      
+
+      <CalculatorEstimateHeader
+        calculatorType="framing"
+        getCurrentInputs={getCurrentInputs}
+        onLoadEstimate={handleLoadEstimate}
+        onNewEstimate={handleNewEstimate}
+      />
+
       <div className="mb-4">
         <div className="flex justify-between mb-4">
           <div className="inline-flex rounded-md shadow-sm">
@@ -216,7 +328,7 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               } border border-slate-300 rounded-l-lg`}
               onClick={() => setFramingType('wall')}
             >
-              Wall
+              {t('calculators.framing.wall')}
             </button>
             <button
               type="button"
@@ -227,7 +339,7 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               } border-t border-b border-slate-300`}
               onClick={() => setFramingType('floor')}
             >
-              Floor
+              {t('calculators.framing.floor')}
             </button>
             <button
               type="button"
@@ -238,7 +350,7 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               } border border-slate-300 rounded-r-lg`}
               onClick={() => setFramingType('ceiling')}
             >
-              Ceiling
+              {t('calculators.framing.ceiling')}
             </button>
           </div>
         </div>
@@ -246,7 +358,7 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div>
             <label htmlFor="length" className="block text-sm font-medium text-slate-700 mb-1">
-              Length (feet)
+              {t('calculators.framing.length')}
             </label>
             <input
               type="number"
@@ -256,14 +368,14 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               value={length}
               onChange={(e) => setLength(e.target.value ? Number(e.target.value) : '')}
               className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-              placeholder="Enter length in feet"
+              placeholder={t('calculators.framing.lengthPlaceholder')}
             />
           </div>
-          
+
           {framingType === 'wall' && (
             <div>
               <label htmlFor="height" className="block text-sm font-medium text-slate-700 mb-1">
-                Height (feet)
+                {t('calculators.framing.height')}
               </label>
               <input
                 type="number"
@@ -273,7 +385,7 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 value={height}
                 onChange={(e) => setHeight(e.target.value ? Number(e.target.value) : '')}
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                placeholder="Enter height in feet"
+                placeholder={t('calculators.framing.heightPlaceholder')}
               />
             </div>
           )}
@@ -282,7 +394,7 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div>
             <label htmlFor="studSpacing" className="block text-sm font-medium text-slate-700 mb-1">
-              Stud Spacing
+              {t('calculators.framing.studSpacing')}
             </label>
             <select
               id="studSpacing"
@@ -290,14 +402,14 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               onChange={(e) => setStudSpacing(Number(e.target.value) as 16 | 24)}
               className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             >
-              <option value={16}>16" on center</option>
-              <option value={24}>24" on center</option>
+              <option value={16}>{t('calculators.framing.spacing16')}</option>
+              <option value={24}>{t('calculators.framing.spacing24')}</option>
             </select>
           </div>
 
           <div>
             <label htmlFor="lumberSize" className="block text-sm font-medium text-slate-700 mb-1">
-              Lumber Size
+              {t('calculators.framing.lumberSize')}
             </label>
             <select
               id="lumberSize"
@@ -305,15 +417,15 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               onChange={(e) => setLumberSize(e.target.value as '2x4' | '2x6')}
               className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             >
-              <option value="2x4">2x4 Lumber</option>
-              <option value="2x6">2x6 Lumber</option>
+              <option value="2x4">{t('calculators.framing.lumber2x4')}</option>
+              <option value="2x6">{t('calculators.framing.lumber2x6')}</option>
             </select>
           </div>
 
           {framingType === 'wall' && (
             <div>
               <label htmlFor="plateCount" className="block text-sm font-medium text-slate-700 mb-1">
-                Plate Configuration
+                {t('calculators.framing.plateConfiguration')}
               </label>
               <select
                 id="plateCount"
@@ -321,8 +433,8 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 onChange={(e) => setPlateCount(Number(e.target.value) as 2 | 3)}
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               >
-                <option value={2}>Single Top Plate</option>
-                <option value={3}>Double Top Plate</option>
+                <option value={2}>{t('calculators.framing.singleTopPlate')}</option>
+                <option value={3}>{t('calculators.framing.doubleTopPlate')}</option>
               </select>
             </div>
           )}
@@ -331,19 +443,19 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         {framingType === 'wall' && (
           <div className="border-t border-slate-200 pt-6 mb-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-slate-800">Openings</h3>
+              <h3 className="text-lg font-medium text-slate-800">{t('calculators.framing.openings')}</h3>
               <div className="flex space-x-2">
                 <button
                   onClick={() => addOpening('door')}
                   className="px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors"
                 >
-                  Add Door
+                  {t('calculators.framing.addDoor')}
                 </button>
                 <button
                   onClick={() => addOpening('window')}
                   className="px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors"
                 >
-                  Add Window
+                  {t('calculators.framing.addWindow')}
                 </button>
               </div>
             </div>
@@ -353,7 +465,7 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Width (feet)
+                      {t('calculators.framing.widthFeet')}
                     </label>
                     <input
                       type="number"
@@ -366,7 +478,7 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Height (feet)
+                      {t('calculators.framing.heightFeet')}
                     </label>
                     <input
                       type="number"
@@ -379,7 +491,7 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Include Rough Opening
+                      {t('calculators.framing.includeRoughOpening')}
                     </label>
                     <div className="flex items-center h-[42px]">
                       <input
@@ -388,7 +500,7 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                         onChange={(e) => updateOpening(index, 'roughOpening', e.target.checked)}
                         className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
                       />
-                      <span className="ml-2 text-sm text-slate-600">Add 2" to dimensions</span>
+                      <span className="ml-2 text-sm text-slate-600">{t('calculators.framing.add2Inches')}</span>
                     </div>
                   </div>
                 </div>
@@ -396,7 +508,7 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   onClick={() => removeOpening(index)}
                   className="mt-2 text-red-500 hover:text-red-600"
                 >
-                  Remove Opening
+                  {t('calculators.framing.removeOpening')}
                 </button>
               </div>
             ))}
@@ -404,7 +516,7 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         )}
 
         <div className="border-t border-slate-200 pt-6 mb-6">
-          <h3 className="text-lg font-medium text-slate-800 mb-4">Additional Options</h3>
+          <h3 className="text-lg font-medium text-slate-800 mb-4">{t('calculators.framing.additionalOptions')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex items-center">
               <input
@@ -415,10 +527,10 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
               />
               <label htmlFor="includeBlocking" className="ml-2 block text-sm font-medium text-slate-700">
-                Include Blocking
+                {t('calculators.framing.includeBlocking')}
               </label>
             </div>
-            
+
             {framingType === 'wall' && (
               <div className="flex items-center">
                 <input
@@ -429,11 +541,11 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
                 />
                 <label htmlFor="includeFireblocking" className="ml-2 block text-sm font-medium text-slate-700">
-                  Include Fireblocking
+                  {t('calculators.framing.includeFireblocking')}
                 </label>
               </div>
             )}
-            
+
             <div className="flex items-center">
               <input
                 type="checkbox"
@@ -443,7 +555,7 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
               />
               <label htmlFor="includeTiedowns" className="ml-2 block text-sm font-medium text-slate-700">
-                Include Tie-downs
+                {t('calculators.framing.includeTiedowns')}
               </label>
             </div>
           </div>
@@ -459,7 +571,7 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
             />
             <label htmlFor="includeSheathing" className="ml-2 block text-sm font-medium text-slate-700">
-              Include Sheathing
+              {t('calculators.framing.includeSheathing')}
             </label>
           </div>
 
@@ -467,7 +579,7 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="sheathingType" className="block text-sm font-medium text-slate-700 mb-1">
-                  Sheathing Type
+                  {t('calculators.framing.sheathingType')}
                 </label>
                 <select
                   id="sheathingType"
@@ -475,14 +587,14 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   onChange={(e) => setSheathingType(e.target.value as 'osb' | 'plywood')}
                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 >
-                  <option value="osb">OSB</option>
-                  <option value="plywood">Plywood</option>
+                  <option value="osb">{t('calculators.framing.osb')}</option>
+                  <option value="plywood">{t('calculators.framing.plywood')}</option>
                 </select>
               </div>
-              
+
               <div>
                 <label htmlFor="sheathingThickness" className="block text-sm font-medium text-slate-700 mb-1">
-                  Thickness
+                  {t('calculators.framing.thickness')}
                 </label>
                 <select
                   id="sheathingThickness"
@@ -499,7 +611,7 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
           )}
         </div>
       </div>
-      
+
       <button
         onClick={handleCalculate}
         disabled={!isFormValid}
@@ -509,7 +621,7 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             : 'bg-slate-300 cursor-not-allowed'
         }`}
       >
-        Calculate Materials
+        {t('calculators.calculateMaterials')}
       </button>
     </div>
   );

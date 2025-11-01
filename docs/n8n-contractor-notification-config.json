@@ -1,0 +1,140 @@
+{
+  "name": "Contractor Notification - Estimate Responses",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "c517e30d-c255-4cf0-9f0e-4cc069493ce8",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "webhook-customer-response",
+      "name": "Webhook - Customer Response",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.action }}",
+              "operation": "equals",
+              "value2": "accept"
+            }
+          ]
+        }
+      },
+      "id": "if-accepted",
+      "name": "IF Accepted or Declined",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "sendTo": "your-email@example.com",
+        "subject": "=✅ Customer Accepted Estimate - {{ $json.customerName }}",
+        "emailType": "html",
+        "message": "=<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }\n    .container { max-width: 600px; margin: 0 auto; padding: 20px; }\n    .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }\n    .content { background: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px; }\n    .info-box { background: white; border-left: 4px solid #10b981; padding: 15px; margin: 15px 0; border-radius: 4px; }\n    .label { font-weight: bold; color: #6b7280; font-size: 14px; }\n    .value { color: #111827; font-size: 16px; margin: 5px 0 15px 0; }\n    .footer { text-align: center; margin-top: 20px; color: #6b7280; font-size: 14px; }\n    .button { display: inline-block; background: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 20px; }\n  </style>\n</head>\n<body>\n  <div class=\"container\">\n    <div class=\"header\">\n      <h1 style=\"margin: 0; font-size: 28px;\">🎉 Estimate Approved!</h1>\n      <p style=\"margin: 10px 0 0; font-size: 16px; opacity: 0.9;\">Great news from your customer</p>\n    </div>\n    \n    <div class=\"content\">\n      <h2 style=\"color: #111827; margin-top: 0;\">Customer Information</h2>\n      \n      <div class=\"info-box\">\n        <div class=\"label\">Customer Name</div>\n        <div class=\"value\">{{ $json.customerName }}</div>\n        \n        <div class=\"label\">Email Address</div>\n        <div class=\"value\">{{ $json.customerEmail }}</div>\n        \n        <div class=\"label\">Estimate ID</div>\n        <div class=\"value\">{{ $json.estimateId }}</div>\n        \n        <div class=\"label\">Approved At</div>\n        <div class=\"value\">{{ $json.respondedAt }}</div>\n      </div>\n      \n      <h3 style=\"color: #111827;\">✅ Status Updated</h3>\n      <p>The estimate status has been automatically updated to <strong>\"approved\"</strong> in your ContractorAI dashboard.</p>\n      \n      <h3 style=\"color: #111827;\">📋 Next Steps</h3>\n      <ul style=\"color: #4b5563;\">\n        <li>Contact the customer to schedule a start date</li>\n        <li>Review project details and materials needed</li>\n        <li>Convert the estimate to an invoice when ready</li>\n        <li>Begin work as scheduled</li>\n      </ul>\n      \n      <div style=\"text-align: center;\">\n        <a href=\"https://contractorai.work/estimates\" class=\"button\">View in Dashboard</a>\n      </div>\n      \n      <div class=\"footer\">\n        <p>This is an automated notification from ContractorAI</p>\n      </div>\n    </div>\n  </div>\n</body>\n</html>",
+        "options": {}
+      },
+      "id": "gmail-accepted",
+      "name": "Send Email - Accepted",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [650, 200],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "your-email@example.com",
+        "subject": "=❌ Customer Declined Estimate - {{ $json.customerName }}",
+        "emailType": "html",
+        "message": "=<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }\n    .container { max-width: 600px; margin: 0 auto; padding: 20px; }\n    .header { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }\n    .content { background: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px; }\n    .info-box { background: white; border-left: 4px solid #ef4444; padding: 15px; margin: 15px 0; border-radius: 4px; }\n    .label { font-weight: bold; color: #6b7280; font-size: 14px; }\n    .value { color: #111827; font-size: 16px; margin: 5px 0 15px 0; }\n    .footer { text-align: center; margin-top: 20px; color: #6b7280; font-size: 14px; }\n    .button { display: inline-block; background: #ef4444; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 20px; }\n  </style>\n</head>\n<body>\n  <div class=\"container\">\n    <div class=\"header\">\n      <h1 style=\"margin: 0; font-size: 28px;\">❌ Estimate Declined</h1>\n      <p style=\"margin: 10px 0 0; font-size: 16px; opacity: 0.9;\">Customer response received</p>\n    </div>\n    \n    <div class=\"content\">\n      <h2 style=\"color: #111827; margin-top: 0;\">Customer Information</h2>\n      \n      <div class=\"info-box\">\n        <div class=\"label\">Customer Name</div>\n        <div class=\"value\">{{ $json.customerName }}</div>\n        \n        <div class=\"label\">Email Address</div>\n        <div class=\"value\">{{ $json.customerEmail }}</div>\n        \n        <div class=\"label\">Estimate ID</div>\n        <div class=\"value\">{{ $json.estimateId }}</div>\n        \n        <div class=\"label\">Declined At</div>\n        <div class=\"value\">{{ $json.respondedAt }}</div>\n      </div>\n      \n      <h3 style=\"color: #111827;\">💡 Suggested Actions</h3>\n      <ul style=\"color: #4b5563;\">\n        <li>Follow up with the customer to understand their concerns</li>\n        <li>Ask if they'd like to discuss alternative options or pricing</li>\n        <li>Keep the estimate on file in case they reconsider</li>\n        <li>Request feedback to improve future estimates</li>\n      </ul>\n      \n      <div style=\"text-align: center;\">\n        <a href=\"mailto:{{ $json.customerEmail }}\" class=\"button\">Reply to Customer</a>\n      </div>\n      \n      <div class=\"footer\">\n        <p>This is an automated notification from ContractorAI</p>\n      </div>\n    </div>\n  </div>\n</body>\n</html>",
+        "options": {}
+      },
+      "id": "gmail-declined",
+      "name": "Send Email - Declined",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [650, 400],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"success\": true, \"message\": \"Notification sent successfully\", \"action\": $json.action, \"customer\": $json.customerName } }}"
+      },
+      "id": "respond-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [850, 300]
+    }
+  ],
+  "connections": {
+    "Webhook - Customer Response": {
+      "main": [
+        [
+          {
+            "node": "IF Accepted or Declined",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Accepted or Declined": {
+      "main": [
+        [
+          {
+            "node": "Send Email - Accepted",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Email - Declined",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email - Accepted": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email - Declined": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

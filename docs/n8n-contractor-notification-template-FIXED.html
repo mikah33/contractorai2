@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Estimate Response Notification</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f4f7fa;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f7fa; padding: 50px 20px;">
+    <tr>
+      <td align="center">
+        <!-- Main Container -->
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);">
+
+          <!-- Dynamic Header - Green for Accept, Red for Decline -->
+          <tr>
+            <td style="background: {{ $json.body.accepted ? 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)' : 'linear-gradient(135deg, #e53e3e 0%, #c53030 100%)' }}; padding: 50px 40px; text-align: center;">
+              <div style="font-size: 72px; margin-bottom: 20px;">{{ $json.body.accepted ? '✅' : '❌' }}</div>
+              <h1 style="margin: 0; color: #ffffff; font-size: 32px; font-weight: 700; letter-spacing: -0.5px;">
+                {{ $json.body.accepted ? 'Estimate Accepted!' : 'Estimate Declined' }}
+              </h1>
+              <p style="margin: 12px 0 0; color: rgba(255, 255, 255, 0.95); font-size: 17px; font-weight: 400;">
+                {{ $json.body.accepted ? 'Great news - your customer has approved the estimate' : 'Customer has declined this estimate' }}
+              </p>
+            </td>
+          </tr>
+
+          <!-- Body Content -->
+          <tr>
+            <td style="padding: 45px 40px;">
+
+              <!-- Alert Box -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: {{ $json.body.accepted ? '#f0fdf4' : '#fef2f2' }}; border-left: 4px solid {{ $json.body.accepted ? '#48bb78' : '#e53e3e' }}; border-radius: 8px; margin-bottom: 35px;">
+                <tr>
+                  <td style="padding: 20px 25px;">
+                    <p style="margin: 0; font-size: 15px; color: {{ $json.body.accepted ? '#065f46' : '#991b1b' }}; line-height: 1.6; font-weight: 600;">
+                      {{ $json.body.accepted ? '🎉 Customer has accepted your estimate and is ready to proceed!' : '⚠️ Customer has declined this estimate. Consider following up to understand their concerns.' }}
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Customer Details Card -->
+              <h2 style="margin: 0 0 20px; font-size: 20px; color: #1a202c; font-weight: 700;">Customer Information</h2>
+
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f9fafb; border-radius: 12px; margin-bottom: 30px; overflow: hidden;">
+                <tr>
+                  <td style="padding: 25px;">
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                          <p style="margin: 0 0 5px; font-size: 13px; color: #6b7280; font-weight: 600;">Customer Name</p>
+                          <p style="margin: 0; font-size: 16px; color: #111827; font-weight: 600;">{{ $json.body.customerName }}</p>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                          <p style="margin: 0 0 5px; font-size: 13px; color: #6b7280; font-weight: 600;">Email Address</p>
+                          <p style="margin: 0; font-size: 16px; color: #111827;">
+                            <a href="mailto:{{ $json.body.customerEmail }}" style="color: #2c5282; text-decoration: none;">{{ $json.body.customerEmail }}</a>
+                          </p>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                          <p style="margin: 0 0 5px; font-size: 13px; color: #6b7280; font-weight: 600;">Estimate ID</p>
+                          <p style="margin: 0; font-size: 16px; color: #111827; font-family: monospace;">{{ $json.body.estimateId }}</p>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                          <p style="margin: 0 0 5px; font-size: 13px; color: #6b7280; font-weight: 600;">Response Status</p>
+                          <p style="margin: 0;">
+                            <span style="display: inline-block; padding: 6px 14px; background-color: {{ $json.body.accepted ? '#48bb78' : '#e53e3e' }}; color: #ffffff; border-radius: 20px; font-size: 14px; font-weight: 700;">
+                              {{ $json.body.accepted ? 'ACCEPTED' : 'DECLINED' }}
+                            </span>
+                          </p>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 12px 0;">
+                          <p style="margin: 0 0 5px; font-size: 13px; color: #6b7280; font-weight: 600;">Responded At</p>
+                          <p style="margin: 0; font-size: 16px; color: #111827;">{{ $json.body.respondedAt }}</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Divider -->
+              <div style="height: 1px; background: linear-gradient(to right, transparent, #cbd5e0, transparent); margin: 35px 0;"></div>
+
+              <!-- Next Steps Section - Different for Accept vs Decline -->
+              <h3 style="margin: 0 0 20px; font-size: 18px; color: #1a202c; font-weight: 700;">
+                {{ $json.body.accepted ? '✓ Recommended Next Steps' : '💡 Suggested Actions' }}
+              </h3>
+
+              <!-- Accepted Next Steps -->
+              {{ $json.body.accepted ? '<ul style="margin: 0 0 30px; padding-left: 20px; color: #4a5568; line-height: 1.8;"><li style="margin-bottom: 8px;"><strong>Contact the customer</strong> to schedule a start date</li><li style="margin-bottom: 8px;"><strong>Review project details</strong> and materials needed</li><li style="margin-bottom: 8px;"><strong>Convert estimate to invoice</strong> when ready to begin</li><li><strong>Begin work</strong> as scheduled</li></ul>' : '' }}
+
+              <!-- Declined Next Steps -->
+              {{ $json.body.declined ? '<ul style="margin: 0 0 30px; padding-left: 20px; color: #4a5568; line-height: 1.8;"><li style="margin-bottom: 8px;"><strong>Follow up</strong> with the customer to understand their concerns</li><li style="margin-bottom: 8px;"><strong>Ask</strong> if they\'d like to discuss alternative options or pricing</li><li style="margin-bottom: 8px;"><strong>Keep estimate on file</strong> in case they reconsider</li><li><strong>Request feedback</strong> to improve future estimates</li></ul>' : '' }}
+
+              <!-- Action Buttons -->
+              <table cellpadding="0" cellspacing="0" style="margin: 0 auto; text-align: center;">
+                <tr>
+                  <td style="padding: 0 8px;">
+                    <a href="mailto:{{ $json.body.customerEmail }}" style="display: inline-block; padding: 16px 32px; background-color: #2c5282; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: 700; font-size: 15px; box-shadow: 0 4px 12px rgba(44, 82, 130, 0.4);">
+                      📧 Email Customer
+                    </a>
+                  </td>
+                  <td style="padding: 0 8px;">
+                    <a href="https://contractorai.work/estimates" style="display: inline-block; padding: 16px 32px; background-color: #718096; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: 700; font-size: 15px; box-shadow: 0 4px 12px rgba(113, 128, 150, 0.4);">
+                      📋 View in Dashboard
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Footer Info -->
+              <div style="border-top: 2px solid #e2e8f0; padding-top: 25px; margin-top: 40px; text-align: center;">
+                <p style="margin: 0 0 8px; font-size: 13px; color: #6b7280; line-height: 1.6;">
+                  This notification was automatically generated by ContractorAI
+                </p>
+                <p style="margin: 0; font-size: 12px; color: #a0aec0; line-height: 1.5;">
+                  Estimate ID: {{ $json.body.estimateId }}
+                </p>
+              </div>
+
+            </td>
+          </tr>
+
+        </table>
+
+        <!-- Email Footer -->
+        <table width="600" cellpadding="0" cellspacing="0" style="margin-top: 25px;">
+          <tr>
+            <td style="text-align: center; padding: 0 20px;">
+              <p style="margin: 0; font-size: 12px; color: #a0aec0; line-height: 1.6;">
+                You're receiving this because you're set as the contractor notification email.<br>
+                Update your notification preferences in ContractorAI Settings.
+              </p>
+            </td>
+          </tr>
+        </table>
+
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

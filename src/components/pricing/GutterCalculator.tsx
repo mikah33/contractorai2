@@ -1,6 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Droplets } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { CalculatorEstimateHeader } from '../calculators/CalculatorEstimateHeader';
+import { useCalculatorTab } from '../../contexts/CalculatorTabContext';
+import { useCustomCalculator } from '../../hooks/useCustomCalculator';
+import { useCustomMaterials } from '../../hooks/useCustomMaterials';
 
 type GutterSize = '5' | '6' | 'custom';
 type GutterMaterial = 'aluminum' | 'vinyl' | 'galvanized' | 'copper';
@@ -36,6 +41,10 @@ const gutterMaterials: Record<GutterMaterial, Record<GutterSize, GutterOption>> 
 };
 
 const GuttersCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
+  const { t } = useTranslation();
+  const { activeTab } = useCalculatorTab();
+  const { materials: customMaterials, pricing: customPricing, loading: loadingCustom, isConfigured } = useCustomCalculator('gutter', activeTab === 'custom');
+  const { getCustomPrice, getCustomUnitValue } = useCustomMaterials('gutter');
   const [roofLength, setRoofLength] = useState<number | ''>('');
   const [gutterMaterial, setGutterMaterial] = useState<GutterMaterial>('aluminum');
   const [gutterSize, setGutterSize] = useState<GutterSize>('5');
@@ -51,6 +60,142 @@ const GuttersCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   const [includeEndcaps, setIncludeEndcaps] = useState(true);
   const [includeCorners, setIncludeCorners] = useState(true);
   const [cornerCount, setCornerCount] = useState<number | ''>('');
+
+  // Build active gutter materials from custom or default
+  const activeGutterMaterials = useMemo(() => {
+    if (activeTab === 'custom' && isConfigured && customMaterials.length > 0) {
+      const customGutters = customMaterials.filter(m => m.category === 'gutters');
+      if (customGutters.length > 0) {
+        const materialMap: Record<string, Record<GutterSize, GutterOption>> = {};
+        customGutters.forEach(m => {
+          const materialKey = m.id.substring(0, 10);
+          const metadata = m.metadata || {};
+          materialMap[materialKey] = {
+            '5': { name: `5" ${m.name}`, pricePerFoot: metadata.price_5 || m.price, maxSpan: metadata.maxSpan_5 || 35 },
+            '6': { name: `6" ${m.name}`, pricePerFoot: metadata.price_6 || m.price, maxSpan: metadata.maxSpan_6 || 40 },
+            'custom': { name: `Custom ${m.name}`, pricePerFoot: 0, maxSpan: 0 }
+          };
+        });
+        return Object.keys(materialMap).length > 0 ? materialMap : gutterMaterials;
+      }
+    }
+    return gutterMaterials;
+  }, [activeTab, isConfigured, customMaterials]);
+
+  // Build active downspout pricing from custom or default
+  const activeDownspoutPrices = useMemo(() => {
+    if (activeTab === 'custom' && isConfigured && customMaterials.length > 0) {
+      const customDownspouts = customMaterials.filter(m => m.category === 'downspouts');
+      if (customDownspouts.length > 0) {
+        const priceMap: Record<string, number> = {};
+        customDownspouts.forEach(m => {
+          const metadata = m.metadata || {};
+          priceMap['2x3'] = metadata.price_2x3 || m.price;
+          priceMap['3x4'] = metadata.price_3x4 || m.price;
+          priceMap['custom'] = 0;
+        });
+        return priceMap;
+      }
+    }
+    return { '2x3': 3.98, '3x4': 5.98, 'custom': 0 };
+  }, [activeTab, isConfigured, customMaterials]);
+
+  // Build active guard/accessory pricing from custom or default
+  const activeAccessoryPricing = useMemo(() => {
+    if (activeTab === 'custom' && isConfigured && customPricing && Object.keys(customPricing).length > 0) {
+      return {
+        leafGuard: customPricing.leaf_guard || 4.98,
+        leafGuardCopper: customPricing.leaf_guard_copper || 8.98,
+        heatTape: customPricing.heat_tape || 6.98,
+        endcap: customPricing.endcap || 4.98,
+        endcapCopper: customPricing.endcap_copper || 12.98,
+        corner: customPricing.corner || 8.98,
+        cornerCopper: customPricing.corner_copper || 24.98,
+        hanger: customPricing.hanger || 1.98,
+        hangerCopper: customPricing.hanger_copper || 3.98
+      };
+    }
+    return {
+      leafGuard: 4.98,
+      leafGuardCopper: 8.98,
+      heatTape: 6.98,
+      endcap: 4.98,
+      endcapCopper: 12.98,
+      corner: 8.98,
+      cornerCopper: 24.98,
+      hanger: 1.98,
+      hangerCopper: 3.98
+    };
+  }, [activeTab, isConfigured, customPricing]);
+
+  // Auto-select valid material when switching tabs
+  useEffect(() => {
+    if (activeTab === 'custom' && Object.keys(activeGutterMaterials).length > 0) {
+      if (!activeGutterMaterials[gutterMaterial as keyof typeof activeGutterMaterials]) {
+        setGutterMaterial(Object.keys(activeGutterMaterials)[0] as GutterMaterial);
+        setGutterSize('5');
+      }
+    } else if (activeTab === 'default') {
+      if (!gutterMaterials[gutterMaterial]) {
+        setGutterMaterial('aluminum');
+        setGutterSize('5');
+      }
+    }
+  }, [activeTab, activeGutterMaterials]);
+
+  const getCurrentInputs = () => ({
+    roofLength,
+    gutterMaterial,
+    gutterSize,
+    customGutterPrice,
+    customGutterMaxSpan,
+    downspoutSize,
+    customDownspoutPrice,
+    roofPitch,
+    valleyCount,
+    includeLeafGuards,
+    includeHeatTape,
+    heatTapeLength,
+    includeEndcaps,
+    includeCorners,
+    cornerCount
+  });
+
+  const handleLoadEstimate = (inputs: any) => {
+    setRoofLength(inputs.roofLength ?? '');
+    setGutterMaterial(inputs.gutterMaterial ?? 'aluminum');
+    setGutterSize(inputs.gutterSize ?? '5');
+    setCustomGutterPrice(inputs.customGutterPrice ?? '');
+    setCustomGutterMaxSpan(inputs.customGutterMaxSpan ?? '');
+    setDownspoutSize(inputs.downspoutSize ?? '2x3');
+    setCustomDownspoutPrice(inputs.customDownspoutPrice ?? '');
+    setRoofPitch(inputs.roofPitch ?? 4);
+    setValleyCount(inputs.valleyCount ?? '');
+    setIncludeLeafGuards(inputs.includeLeafGuards ?? false);
+    setIncludeHeatTape(inputs.includeHeatTape ?? false);
+    setHeatTapeLength(inputs.heatTapeLength ?? '');
+    setIncludeEndcaps(inputs.includeEndcaps ?? true);
+    setIncludeCorners(inputs.includeCorners ?? true);
+    setCornerCount(inputs.cornerCount ?? '');
+  };
+
+  const handleNewEstimate = () => {
+    setRoofLength('');
+    setGutterMaterial('aluminum');
+    setGutterSize('5');
+    setCustomGutterPrice('');
+    setCustomGutterMaxSpan('');
+    setDownspoutSize('2x3');
+    setCustomDownspoutPrice('');
+    setRoofPitch(4);
+    setValleyCount('');
+    setIncludeLeafGuards(false);
+    setIncludeHeatTape(false);
+    setHeatTapeLength('');
+    setIncludeEndcaps(true);
+    setIncludeCorners(true);
+    setCornerCount('');
+  };
 
   const handleCalculate = () => {
     if (typeof roofLength === 'number') {
@@ -71,7 +216,7 @@ const GuttersCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       // Calculate gutter cost
       let gutterPricePerFoot = gutterSize === 'custom' && typeof customGutterPrice === 'number'
         ? customGutterPrice
-        : gutterMaterials[gutterMaterial][gutterSize].pricePerFoot;
+        : activeGutterMaterials[gutterMaterial]?.[gutterSize]?.pricePerFoot || 0;
 
       const gutterCost = totalGutterLength * gutterPricePerFoot;
       totalCost += gutterCost;
@@ -84,17 +229,16 @@ const GuttersCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       });
 
       // Calculate downspouts (1 per 35 feet of gutter)
-      const downspoutsNeeded = Math.ceil(totalGutterLength / 35);
-      const downspoutLength = 15; // Average 15 feet per downspout
+      const downspoutSpacing = getCustomUnitValue('Downspout Spacing', 35, 'downspouts'); // ft per downspout
+      const downspoutsNeeded = Math.ceil(totalGutterLength / downspoutSpacing);
+      const downspoutLength = getCustomUnitValue('Downspout Length', 15, 'downspouts'); // ft per downspout
       const totalDownspoutLength = downspoutsNeeded * downspoutLength;
-      
-      const downspoutPrices = {
-        '2x3': 3.98,
-        '3x4': 5.98,
-        'custom': typeof customDownspoutPrice === 'number' ? customDownspoutPrice : 0
-      };
-      
-      const downspoutCost = totalDownspoutLength * downspoutPrices[downspoutSize];
+
+      const downspoutPrice = downspoutSize === 'custom' && typeof customDownspoutPrice === 'number'
+        ? customDownspoutPrice
+        : activeDownspoutPrices[downspoutSize] || 0;
+
+      const downspoutCost = totalDownspoutLength * downspoutPrice;
       totalCost += downspoutCost;
 
       results.push({
@@ -106,8 +250,9 @@ const GuttersCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
       // Add endcaps if included
       if (includeEndcaps) {
-        const endcapsNeeded = Math.ceil(totalGutterLength / 50) * 2; // Two per section
-        const endcapPrice = gutterMaterial === 'copper' ? 12.98 : 4.98;
+        const endcapSectionLength = getCustomUnitValue('Endcap Section', 50, 'accessories'); // ft per section
+        const endcapsNeeded = Math.ceil(totalGutterLength / endcapSectionLength) * 2; // Two per section
+        const endcapPrice = gutterMaterial === 'copper' ? activeAccessoryPricing.endcapCopper : activeAccessoryPricing.endcap;
         const endcapCost = endcapsNeeded * endcapPrice;
         totalCost += endcapCost;
 
@@ -121,7 +266,7 @@ const GuttersCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
       // Add corners if included
       if (includeCorners && typeof cornerCount === 'number') {
-        const cornerPrice = gutterMaterial === 'copper' ? 24.98 : 8.98;
+        const cornerPrice = gutterMaterial === 'copper' ? activeAccessoryPricing.cornerCopper : activeAccessoryPricing.corner;
         const cornerCost = cornerCount * cornerPrice;
         totalCost += cornerCost;
 
@@ -135,7 +280,7 @@ const GuttersCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
       // Calculate leaf guards if included
       if (includeLeafGuards) {
-        const leafGuardPrice = gutterMaterial === 'copper' ? 8.98 : 4.98;
+        const leafGuardPrice = gutterMaterial === 'copper' ? activeAccessoryPricing.leafGuardCopper : activeAccessoryPricing.leafGuard;
         const leafGuardCost = totalGutterLength * leafGuardPrice;
         totalCost += leafGuardCost;
 
@@ -149,7 +294,7 @@ const GuttersCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
       // Calculate heat tape if included
       if (includeHeatTape && typeof heatTapeLength === 'number') {
-        const heatTapeCost = heatTapeLength * 6.98;
+        const heatTapeCost = heatTapeLength * activeAccessoryPricing.heatTape;
         totalCost += heatTapeCost;
 
         results.push({
@@ -161,8 +306,9 @@ const GuttersCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       }
 
       // Add hangers and misc hardware
-      const hangersNeeded = Math.ceil(totalGutterLength / 2); // One every 2 feet
-      const hangerPrice = gutterMaterial === 'copper' ? 3.98 : 1.98;
+      const hangerSpacing = getCustomUnitValue('Hanger Spacing', 2, 'accessories'); // ft per hanger
+      const hangersNeeded = Math.ceil(totalGutterLength / hangerSpacing); // One every 2 feet
+      const hangerPrice = gutterMaterial === 'copper' ? activeAccessoryPricing.hangerCopper : activeAccessoryPricing.hanger;
       const hangerCost = hangersNeeded * hangerPrice;
       totalCost += hangerCost;
 
@@ -195,13 +341,55 @@ const GuttersCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     (!includeCorners || typeof cornerCount === 'number') &&
     (!includeHeatTape || typeof heatTapeLength === 'number');
 
+  // Show loading state if custom calculator data is loading
+  if (activeTab === 'custom' && loadingCustom) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
+        <div className="flex items-center mb-6">
+          <Droplets className="h-6 w-6 text-orange-500 mr-2" />
+          <h2 className="text-xl font-bold text-slate-800">{t('calculators.gutters.title')}</h2>
+        </div>
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading custom configuration...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show message if custom tab but not configured
+  if (activeTab === 'custom' && !isConfigured) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
+        <div className="flex items-center mb-6">
+          <Droplets className="h-6 w-6 text-orange-500 mr-2" />
+          <h2 className="text-xl font-bold text-slate-800">{t('calculators.gutters.title')}</h2>
+        </div>
+        <div className="text-center py-12">
+          <Droplets className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Configuration Required</h3>
+          <p className="text-gray-600 mb-4">
+            This calculator hasn't been configured yet. Click the gear icon to set up your custom materials and pricing.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
       <div className="flex items-center mb-6">
         <Droplets className="h-6 w-6 text-orange-500 mr-2" />
-        <h2 className="text-xl font-bold text-slate-800">Gutters Calculator</h2>
+        <h2 className="text-xl font-bold text-slate-800">{t('calculators.gutters.title')}</h2>
       </div>
-      
+
+      <CalculatorEstimateHeader
+        calculatorType="gutter"
+        currentInputs={getCurrentInputs()}
+        onLoadEstimate={handleLoadEstimate}
+        onNewEstimate={handleNewEstimate}
+      />
+
       <div className="mb-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div>
@@ -491,7 +679,7 @@ const GuttersCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             : 'bg-slate-300 cursor-not-allowed'
         }`}
       >
-        Calculate Materials
+        {t('calculators.calculateMaterials')}
       </button>
     </div>
   );

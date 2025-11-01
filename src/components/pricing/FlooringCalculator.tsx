@@ -1,6 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { CalculatorProps, CalculationResult } from '../../types';
 import { Grid } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { CalculatorEstimateHeader } from '../calculators/CalculatorEstimateHeader';
+import { useCalculatorTab } from '../../contexts/CalculatorTabContext';
+import { useCustomCalculator } from '../../hooks/useCustomCalculator';
+import { useCustomMaterials } from '../../hooks/useCustomMaterials';
 
 type FlooringType = 'hardwood' | 'laminate' | 'vinyl' | 'carpet' | 'engineered';
 type InstallPattern = 'straight' | 'diagonal' | 'herringbone';
@@ -187,6 +192,10 @@ const underlaymentOptions = {
 };
 
 const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
+  const { t } = useTranslation();
+  const { activeTab } = useCalculatorTab();
+  const { materials: customMaterials, pricing: customPricing, loading: loadingCustom, isConfigured } = useCustomCalculator('flooring', activeTab === 'custom');
+  const { getCustomPrice, getCustomUnitValue } = useCustomMaterials('flooring');
   const [inputType, setInputType] = useState<'dimensions' | 'area'>('dimensions');
   const [length, setLength] = useState<number | ''>('');
   const [width, setWidth] = useState<number | ''>('');
@@ -207,9 +216,135 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
   const isCustomSelection = (option: FlooringOption) => option.name.startsWith('Custom');
 
+  // Determine which data source to use based on active tab
+  const activeFlooringOptions = useMemo(() => {
+    if (activeTab === 'custom' && isConfigured && customMaterials.length > 0) {
+      const customFlooring = customMaterials.filter(m => m.category === 'flooring-material');
+      if (customFlooring.length > 0) {
+        const optionsByType: Record<FlooringType, FlooringOption[]> = {
+          hardwood: [],
+          engineered: [],
+          laminate: [],
+          vinyl: [],
+          carpet: []
+        };
+        customFlooring.forEach(m => {
+          const metadata = m.metadata || {};
+          const type = (metadata.flooring_type || 'hardwood') as FlooringType;
+          optionsByType[type].push({
+            name: m.name,
+            width: metadata.width || 5,
+            length: metadata.length || 48,
+            piecesPerBox: metadata.pieces_per_box || 10,
+            sqftPerBox: metadata.sqft_per_box || 20,
+            pricePerBox: m.price,
+            requiresUnderlayment: metadata.requires_underlayment !== false,
+            patterns: metadata.patterns || ['straight']
+          });
+        });
+        // Keep at least the custom option for each type
+        Object.keys(optionsByType).forEach((key) => {
+          const type = key as FlooringType;
+          if (optionsByType[type].length === 0) {
+            optionsByType[type] = flooringOptions[type];
+          }
+        });
+        return optionsByType;
+      }
+    }
+    return flooringOptions;
+  }, [activeTab, isConfigured, customMaterials]);
+
+  const activeUnderlaymentOptions = useMemo(() => {
+    if (activeTab === 'custom' && isConfigured && customMaterials.length > 0) {
+      const customUnderlayment = customMaterials.filter(m => m.category === 'flooring-underlayment');
+      if (customUnderlayment.length > 0) {
+        const optionMap: Record<string, { name: string; pricePerSqft: number }> = {};
+        customUnderlayment.forEach(m => {
+          const key = m.id.substring(0, 10);
+          optionMap[key] = {
+            name: m.name,
+            pricePerSqft: m.metadata?.price_per_sqft || m.price
+          };
+        });
+        return Object.keys(optionMap).length > 0 ? optionMap : underlaymentOptions;
+      }
+    }
+    return underlaymentOptions;
+  }, [activeTab, isConfigured, customMaterials]);
+
+  // Auto-select when switching tabs
+  useEffect(() => {
+    if (activeTab === 'custom' && activeFlooringOptions[flooringType]?.length > 0) {
+      const currentExists = activeFlooringOptions[flooringType].find((_, idx) => idx === selectedFlooring);
+      if (!currentExists) {
+        setSelectedFlooring(0);
+      }
+    } else if (activeTab === 'default') {
+      const currentExists = activeFlooringOptions[flooringType]?.find((_, idx) => idx === selectedFlooring);
+      if (!currentExists) {
+        setSelectedFlooring(0);
+      }
+    }
+  }, [activeTab, activeFlooringOptions, flooringType]);
+
+  const getCurrentInputs = () => ({
+    inputType,
+    length,
+    width,
+    area,
+    flooringType,
+    selectedFlooring,
+    installPattern,
+    wasteFactor,
+    includeUnderlayment,
+    underlaymentType,
+    includeTransitionStrips,
+    transitionStripLength,
+    customName,
+    customPricePerBox,
+    customSqftPerBox
+  });
+
+  const handleLoadEstimate = (data: any) => {
+    if (data.inputType) setInputType(data.inputType);
+    if (data.length !== undefined) setLength(data.length);
+    if (data.width !== undefined) setWidth(data.width);
+    if (data.area !== undefined) setArea(data.area);
+    if (data.flooringType) setFlooringType(data.flooringType);
+    if (data.selectedFlooring !== undefined) setSelectedFlooring(data.selectedFlooring);
+    if (data.installPattern) setInstallPattern(data.installPattern);
+    if (data.wasteFactor !== undefined) setWasteFactor(data.wasteFactor);
+    if (data.includeUnderlayment !== undefined) setIncludeUnderlayment(data.includeUnderlayment);
+    if (data.underlaymentType) setUnderlaymentType(data.underlaymentType);
+    if (data.includeTransitionStrips !== undefined) setIncludeTransitionStrips(data.includeTransitionStrips);
+    if (data.transitionStripLength !== undefined) setTransitionStripLength(data.transitionStripLength);
+    if (data.customName !== undefined) setCustomName(data.customName);
+    if (data.customPricePerBox !== undefined) setCustomPricePerBox(data.customPricePerBox);
+    if (data.customSqftPerBox !== undefined) setCustomSqftPerBox(data.customSqftPerBox);
+  };
+
+  const handleNewEstimate = () => {
+    setInputType('dimensions');
+    setLength('');
+    setWidth('');
+    setArea('');
+    setFlooringType('hardwood');
+    setSelectedFlooring(0);
+    setInstallPattern('straight');
+    setWasteFactor(10);
+    setIncludeUnderlayment(true);
+    setUnderlaymentType('standard');
+    setIncludeTransitionStrips(false);
+    setTransitionStripLength('');
+    setCustomName('');
+    setCustomPricePerBox('');
+    setCustomSqftPerBox('');
+  };
+
   const handleCalculate = () => {
     let totalArea: number;
-    
+
     if (inputType === 'dimensions' && typeof length === 'number' && typeof width === 'number') {
       totalArea = length * width;
     } else if (inputType === 'area' && typeof area === 'number') {
@@ -218,8 +353,11 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       return;
     }
 
-    let selectedOption = flooringOptions[flooringType][selectedFlooring];
-    
+    let selectedOption = activeFlooringOptions[flooringType]?.[selectedFlooring];
+    if (!selectedOption) {
+      return;
+    }
+
     // If this is a custom selection, update the option with custom values
     if (isCustomSelection(selectedOption)) {
       if (typeof customPricePerBox === 'number' && typeof customSqftPerBox === 'number') {
@@ -233,9 +371,9 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         return;
       }
     }
-    
+
     // Add waste factor
-    const patternWasteFactor = installPattern === 'diagonal' ? 1.1 : 
+    const patternWasteFactor = installPattern === 'diagonal' ? 1.1 :
                               installPattern === 'herringbone' ? 1.15 : 1;
     const areaWithWaste = totalArea * (1 + wasteFactor / 100) * patternWasteFactor;
 
@@ -245,19 +383,19 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
     const results: CalculationResult[] = [
       {
-        label: 'Total Floor Area',
+        label: t('calculators.flooring.totalArea'),
         value: Number(totalArea.toFixed(2)),
-        unit: 'square feet'
+        unit: t('calculators.flooring.squareFeet')
       },
       {
-        label: `Area with ${wasteFactor}% Waste${installPattern !== 'straight' ? ` & ${installPattern} Pattern` : ''}`,
+        label: `${t('calculators.flooring.areaWith')} ${wasteFactor}% ${t('calculators.flooring.waste')}${installPattern !== 'straight' ? ` & ${installPattern} ${t('calculators.flooring.pattern')}` : ''}`,
         value: Number(areaWithWaste.toFixed(2)),
-        unit: 'square feet'
+        unit: t('calculators.flooring.squareFeet')
       },
       {
         label: `${selectedOption.name}`,
         value: boxesNeeded,
-        unit: 'boxes',
+        unit: t('calculators.flooring.boxes'),
         cost: flooringCost
       }
     ];
@@ -266,35 +404,43 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
     // Calculate underlayment if needed
     if (includeUnderlayment && selectedOption.requiresUnderlayment) {
-      const underlaymentRolls = Math.ceil(areaWithWaste / 100); // Typical 100 sq ft rolls
-      const underlaymentCost = underlaymentRolls * (underlaymentOptions[underlaymentType].pricePerSqft * 100);
+      const underlaymentCoverage = getCustomUnitValue('Underlayment', 100, 'underlayment'); // sq ft per roll
+      const underlaymentRolls = Math.ceil(areaWithWaste / underlaymentCoverage);
+      const underlaymentPricePerSqft = activeUnderlaymentOptions[underlaymentType]?.pricePerSqft || 0.45;
+      const underlaymentPrice = getCustomPrice(
+        activeUnderlaymentOptions[underlaymentType]?.name || 'Standard Foam',
+        underlaymentPricePerSqft,
+        'underlayment'
+      );
+      const underlaymentCost = underlaymentRolls * (underlaymentPrice * underlaymentCoverage);
       totalCost += underlaymentCost;
 
       results.push({
-        label: `${underlaymentOptions[underlaymentType].name}`,
+        label: `${activeUnderlaymentOptions[underlaymentType]?.name || 'Underlayment'}`,
         value: underlaymentRolls,
-        unit: '100sf rolls',
+        unit: t('calculators.flooring.rolls100sf'),
         cost: underlaymentCost
       });
     }
 
     // Calculate transition strips if needed
     if (includeTransitionStrips && typeof transitionStripLength === 'number') {
-      const stripsNeeded = Math.ceil(transitionStripLength / 4); // 4ft strips
-      const stripsCost = stripsNeeded * 19.98;
+      const stripLength = getCustomUnitValue('Transition Strips', 4, 'trim'); // ft per piece
+      const stripsNeeded = Math.ceil(transitionStripLength / stripLength);
+      const stripsCost = stripsNeeded * getCustomPrice('Transition Strips', 19.98, 'trim');
       totalCost += stripsCost;
 
       results.push({
-        label: 'Transition Strips',
+        label: t('calculators.flooring.transitionStrips'),
         value: stripsNeeded,
-        unit: '4ft pieces',
+        unit: t('calculators.flooring.pieces4ft'),
         cost: stripsCost
       });
     }
 
     // Add total cost
     results.push({
-      label: 'Total Cost',
+      label: t('calculators.flooring.totalCost'),
       value: Number(totalCost.toFixed(2)),
       unit: 'USD',
       isTotal: true
@@ -303,22 +449,64 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     onCalculate(results);
   };
 
-  const isFormValid = 
+  const isFormValid =
     ((inputType === 'dimensions' && typeof length === 'number' && typeof width === 'number') ||
     (inputType === 'area' && typeof area === 'number')) &&
     (!includeTransitionStrips || typeof transitionStripLength === 'number') &&
-    (!isCustomSelection(flooringOptions[flooringType][selectedFlooring]) || (
+    (!isCustomSelection(activeFlooringOptions[flooringType]?.[selectedFlooring] || {} as FlooringOption) || (
       typeof customPricePerBox === 'number' &&
       typeof customSqftPerBox === 'number'
     ));
+
+  // Show loading state if custom calculator data is loading
+  if (activeTab === 'custom' && loadingCustom) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
+        <div className="flex items-center mb-6">
+          <Grid className="h-6 w-6 text-orange-500 mr-2" />
+          <h2 className="text-xl font-bold text-slate-800">{t('calculators.flooring.title')}</h2>
+        </div>
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading custom configuration...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show message if custom tab but not configured
+  if (activeTab === 'custom' && !isConfigured) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
+        <div className="flex items-center mb-6">
+          <Grid className="h-6 w-6 text-orange-500 mr-2" />
+          <h2 className="text-xl font-bold text-slate-800">{t('calculators.flooring.title')}</h2>
+        </div>
+        <div className="text-center py-12">
+          <Grid className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Configuration Required</h3>
+          <p className="text-gray-600 mb-4">
+            This calculator hasn't been configured yet. Click the gear icon to set up your custom materials and pricing.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
       <div className="flex items-center mb-6">
         <Grid className="h-6 w-6 text-orange-500 mr-2" />
-        <h2 className="text-xl font-bold text-slate-800">Flooring Calculator</h2>
+        <h2 className="text-xl font-bold text-slate-800">{t('calculators.flooring.title')}</h2>
       </div>
-      
+
+      <CalculatorEstimateHeader
+        calculatorType="flooring"
+        getCurrentInputs={getCurrentInputs}
+        onLoadEstimate={handleLoadEstimate}
+        onNewEstimate={handleNewEstimate}
+      />
+
       <div className="mb-4">
         <div className="flex justify-between mb-4">
           <div className="inline-flex rounded-md shadow-sm">
@@ -331,7 +519,7 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               } border border-slate-300`}
               onClick={() => setInputType('dimensions')}
             >
-              Use Dimensions
+              {t('calculators.flooring.useDimensions')}
             </button>
             <button
               type="button"
@@ -342,7 +530,7 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               } border border-slate-300`}
               onClick={() => setInputType('area')}
             >
-              Use Square Footage
+              {t('calculators.flooring.useSquareFootage')}
             </button>
           </div>
         </div>
@@ -351,7 +539,7 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label htmlFor="length" className="block text-sm font-medium text-slate-700 mb-1">
-                Length (feet)
+                {t('calculators.flooring.length')}
               </label>
               <input
                 type="number"
@@ -361,13 +549,13 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 value={length}
                 onChange={(e) => setLength(e.target.value ? Number(e.target.value) : '')}
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                placeholder="Enter length in feet"
+                placeholder={t('calculators.flooring.lengthPlaceholder')}
               />
             </div>
-            
+
             <div>
               <label htmlFor="width" className="block text-sm font-medium text-slate-700 mb-1">
-                Width (feet)
+                {t('calculators.flooring.width')}
               </label>
               <input
                 type="number"
@@ -377,14 +565,14 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 value={width}
                 onChange={(e) => setWidth(e.target.value ? Number(e.target.value) : '')}
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                placeholder="Enter width in feet"
+                placeholder={t('calculators.flooring.widthPlaceholder')}
               />
             </div>
           </div>
         ) : (
           <div>
             <label htmlFor="area" className="block text-sm font-medium text-slate-700 mb-1">
-              Total Area (square feet)
+              {t('calculators.flooring.totalArea')}
             </label>
             <input
               type="number"
@@ -394,16 +582,16 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               value={area}
               onChange={(e) => setArea(e.target.value ? Number(e.target.value) : '')}
               className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-              placeholder="Enter total area in square feet"
+              placeholder={t('calculators.flooring.totalAreaPlaceholder')}
             />
           </div>
         )}
 
         <div className="border-t border-slate-200 pt-6 mb-6">
-          <h3 className="text-lg font-medium text-slate-800 mb-4">Flooring Selection</h3>
+          <h3 className="text-lg font-medium text-slate-800 mb-4">{t('calculators.flooring.flooringSelection')}</h3>
           <div>
             <label htmlFor="flooringType" className="block text-sm font-medium text-slate-700 mb-1">
-              Flooring Type
+              {t('calculators.flooring.flooringType')}
             </label>
             <select
               id="flooringType"
@@ -418,17 +606,17 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               }}
               className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             >
-              <option value="hardwood">Hardwood</option>
-              <option value="engineered">Engineered Wood</option>
-              <option value="laminate">Laminate</option>
-              <option value="vinyl">Vinyl</option>
-              <option value="carpet">Carpet</option>
+              <option value="hardwood">{t('calculators.flooring.hardwood')}</option>
+              <option value="engineered">{t('calculators.flooring.engineered')}</option>
+              <option value="laminate">{t('calculators.flooring.laminate')}</option>
+              <option value="vinyl">{t('calculators.flooring.vinyl')}</option>
+              <option value="carpet">{t('calculators.flooring.carpet')}</option>
             </select>
           </div>
 
           <div className="mt-4">
             <label htmlFor="selectedFlooring" className="block text-sm font-medium text-slate-700 mb-1">
-              Product Selection
+              {t('calculators.flooring.productSelection')}
             </label>
             <select
               id="selectedFlooring"
@@ -441,7 +629,7 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               }}
               className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             >
-              {flooringOptions[flooringType].map((option, index) => (
+              {activeFlooringOptions[flooringType]?.map((option, index) => (
                 <option key={index} value={index}>
                   {option.name}
                   {!isCustomSelection(option) && ` ($${option.pricePerBox.toFixed(2)}/box, ${option.sqftPerBox} sq ft/box)`}
@@ -450,11 +638,11 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             </select>
           </div>
 
-          {isCustomSelection(flooringOptions[flooringType][selectedFlooring]) && (
+          {isCustomSelection(activeFlooringOptions[flooringType]?.[selectedFlooring] || {} as FlooringOption) && (
             <div className="mt-4 space-y-4">
               <div>
                 <label htmlFor="customName" className="block text-sm font-medium text-slate-700 mb-1">
-                  Product Name
+                  {t('calculators.flooring.productName')}
                 </label>
                 <input
                   type="text"
@@ -462,14 +650,14 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   value={customName}
                   onChange={(e) => setCustomName(e.target.value)}
                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  placeholder="Enter product name"
+                  placeholder={t('calculators.flooring.productNamePlaceholder')}
                 />
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="customPricePerBox" className="block text-sm font-medium text-slate-700 mb-1">
-                    Price per Box ($)
+                    {t('calculators.flooring.pricePerBox')}
                   </label>
                   <input
                     type="number"
@@ -479,13 +667,13 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                     value={customPricePerBox}
                     onChange={(e) => setCustomPricePerBox(e.target.value ? Number(e.target.value) : '')}
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    placeholder="Enter price per box"
+                    placeholder={t('calculators.flooring.pricePerBoxPlaceholder')}
                   />
                 </div>
-                
+
                 <div>
                   <label htmlFor="customSqftPerBox" className="block text-sm font-medium text-slate-700 mb-1">
-                    Square Feet per Box
+                    {t('calculators.flooring.sqftPerBox')}
                   </label>
                   <input
                     type="number"
@@ -495,7 +683,7 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                     value={customSqftPerBox}
                     onChange={(e) => setCustomSqftPerBox(e.target.value ? Number(e.target.value) : '')}
                     className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    placeholder="Enter sq ft coverage per box"
+                    placeholder={t('calculators.flooring.sqftPerBoxPlaceholder')}
                   />
                 </div>
               </div>
@@ -504,11 +692,11 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         </div>
 
         <div className="border-t border-slate-200 pt-6 mb-6">
-          <h3 className="text-lg font-medium text-slate-800 mb-4">Installation Details</h3>
+          <h3 className="text-lg font-medium text-slate-800 mb-4">{t('calculators.flooring.installationDetails')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label htmlFor="installPattern" className="block text-sm font-medium text-slate-700 mb-1">
-                Installation Pattern
+                {t('calculators.flooring.installationPattern')}
               </label>
               <select
                 id="installPattern"
@@ -516,7 +704,7 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 onChange={(e) => setInstallPattern(e.target.value as InstallPattern)}
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               >
-                {flooringOptions[flooringType][selectedFlooring].patterns.map(pattern => (
+                {(activeFlooringOptions[flooringType]?.[selectedFlooring]?.patterns || ['straight']).map(pattern => (
                   <option key={pattern} value={pattern}>
                     {pattern.charAt(0).toUpperCase() + pattern.slice(1)}
                   </option>
@@ -526,7 +714,7 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
             <div>
               <label htmlFor="wasteFactor" className="block text-sm font-medium text-slate-700 mb-1">
-                Waste Factor
+                {t('calculators.flooring.wasteFactor')}
               </label>
               <select
                 id="wasteFactor"
@@ -534,15 +722,15 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 onChange={(e) => setWasteFactor(Number(e.target.value) as 10 | 15 | 20)}
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               >
-                <option value={10}>10% - Simple Layout</option>
-                <option value={15}>15% - Average Complexity</option>
-                <option value={20}>20% - Complex Layout</option>
+                <option value={10}>{t('calculators.flooring.wasteFactor10')}</option>
+                <option value={15}>{t('calculators.flooring.wasteFactor15')}</option>
+                <option value={20}>{t('calculators.flooring.wasteFactor20')}</option>
               </select>
             </div>
           </div>
         </div>
 
-        {flooringOptions[flooringType][selectedFlooring].requiresUnderlayment && (
+        {(activeFlooringOptions[flooringType]?.[selectedFlooring]?.requiresUnderlayment || false) && (
           <div className="border-t border-slate-200 pt-6 mb-6">
             <div className="flex items-center mb-4">
               <input
@@ -553,14 +741,14 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
               />
               <label htmlFor="includeUnderlayment" className="ml-2 block text-sm font-medium text-slate-700">
-                Include Underlayment
+                {t('calculators.flooring.includeUnderlayment')}
               </label>
             </div>
 
             {includeUnderlayment && (
               <div>
                 <label htmlFor="underlaymentType" className="block text-sm font-medium text-slate-700 mb-1">
-                  Underlayment Type
+                  {t('calculators.flooring.underlaymentType')}
                 </label>
                 <select
                   id="underlaymentType"
@@ -568,7 +756,7 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   onChange={(e) => setUnderlaymentType(e.target.value as UnderlaymentType)}
                   className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 >
-                  {Object.entries(underlaymentOptions).map(([value, option]) => (
+                  {Object.entries(activeUnderlaymentOptions).map(([value, option]) => (
                     <option key={value} value={value}>
                       {option.name} (${option.pricePerSqft.toFixed(2)}/sqft)
                     </option>
@@ -589,14 +777,14 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
             />
             <label htmlFor="includeTransitionStrips" className="ml-2 block text-sm font-medium text-slate-700">
-              Include Transition Strips
+              {t('calculators.flooring.includeTransitionStrips')}
             </label>
           </div>
 
           {includeTransitionStrips && (
             <div>
               <label htmlFor="transitionStripLength" className="block text-sm font-medium text-slate-700 mb-1">
-                Total Transition Strip Length (feet)
+                {t('calculators.flooring.transitionStripLength')}
               </label>
               <input
                 type="number"
@@ -606,13 +794,13 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 value={transitionStripLength}
                 onChange={(e) => setTransitionStripLength(e.target.value ? Number(e.target.value) : '')}
                 className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                placeholder="Enter total length needed"
+                placeholder={t('calculators.flooring.transitionStripLengthPlaceholder')}
               />
             </div>
           )}
         </div>
       </div>
-      
+
       <button
         onClick={handleCalculate}
         disabled={!isFormValid}
@@ -622,7 +810,7 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             : 'bg-slate-300 cursor-not-allowed'
         }`}
       >
-        Calculate Materials
+        {t('calculators.calculateMaterials')}
       </button>
     </div>
   );
