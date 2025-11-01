@@ -8,7 +8,6 @@ import {
   CreditCard,
   Settings,
   Calendar,
-  X,
   BarChart3,
   Users,
   UserCog,
@@ -86,17 +85,10 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
           sidebarOpen ? 'translate-x-0 ease-out' : '-translate-x-full ease-in'
         }`}
       >
-        <div className="flex items-center justify-between h-16 px-6 bg-blue-800">
-          <div className="flex items-center">
+        <div className="flex items-center justify-between h-16 px-6 bg-blue-800 pt-safe">
+          <div className="flex items-center" style={{ marginTop: '44px' }}>
             <span className="text-xl font-bold text-white">ContractorAI</span>
           </div>
-          <button
-            type="button"
-            className="p-1 text-white lg:hidden"
-            onClick={() => setSidebarOpen(false)}
-          >
-            <X className="w-6 h-6" />
-          </button>
         </div>
         <nav className="mt-5 px-2 space-y-1 pb-64 overflow-y-auto max-h-[calc(100vh-4rem)]">
           {navigation.map((item) => {
@@ -105,6 +97,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               <Link
                 key={item.name}
                 to={item.href}
+                onClick={() => setSidebarOpen(false)}
                 className={`group flex items-center justify-between px-4 py-3 text-sm font-medium rounded-md transition-colors ${
                   isActive
                     ? 'bg-blue-800 text-white'

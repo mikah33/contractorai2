@@ -19,16 +19,42 @@ const Dashboard = () => {
   const { projects } = useCachedProjects();
   const { estimates } = useCachedEstimates();
   const { events, fetchEvents } = useCalendarStoreSupabase(); // Use same store as Calendar page
-  const { financialSummary } = useFinanceStore();
+  const {
+    financialSummary,
+    fetchReceipts,
+    fetchPayments,
+    fetchInvoices,
+    fetchRecurringExpenses,
+    fetchBudgetItems,
+    fetchProjects: fetchFinanceProjects,
+    fetchClients: fetchFinanceClients
+  } = useFinanceStore();
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
-  // Fetch events on mount (same as Calendar page)
+  // Fetch ALL data on mount - load everything at once
   useEffect(() => {
-    console.log('📊 Dashboard: Fetching events on mount');
+    console.log('📊 Dashboard: Fetching all data on mount');
+
+    // Fetch calendar events
     fetchEvents().then(() => {
       console.log('📊 Dashboard: Events fetched, count:', events.length);
     });
-  }, [fetchEvents]);
+
+    // Fetch all finance data in parallel
+    Promise.all([
+      fetchReceipts(),
+      fetchPayments(),
+      fetchInvoices(),
+      fetchRecurringExpenses(),
+      fetchBudgetItems(),
+      fetchFinanceProjects(),
+      fetchFinanceClients()
+    ]).then(() => {
+      console.log('📊 Dashboard: All finance data loaded');
+    }).catch(error => {
+      console.error('📊 Dashboard: Error loading finance data:', error);
+    });
+  }, [fetchEvents, fetchReceipts, fetchPayments, fetchInvoices, fetchRecurringExpenses, fetchBudgetItems, fetchFinanceProjects, fetchFinanceClients]);
 
   // Debug: Log when component mounts and data state
   useEffect(() => {
@@ -82,18 +108,18 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">{t('dashboard.title')}</h1>
-        <div className="flex space-x-3">
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{t('dashboard.title')}</h1>
+        <div className="flex gap-1.5">
           <button
             onClick={handleNewProject}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-2 py-1 text-xs font-medium text-white bg-blue-600 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             {t('common.newProject')}
           </button>
           <button
             onClick={handleNewEstimate}
-            className="px-4 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-600 rounded-md hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-2 py-1 text-xs font-medium text-blue-600 bg-white border border-blue-600 rounded hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             {t('common.newEstimate')}
           </button>

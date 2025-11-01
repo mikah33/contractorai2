@@ -54,7 +54,6 @@ import { DataProvider } from './contexts/DataContext';
 import { CalculatorTabProvider } from './contexts/CalculatorTabContext';
 import { useAuthStore } from './stores/authStore';
 import { useAppInitialization } from './hooks/useAppInitialization';
-import InstallPrompt from './components/pwa/InstallPrompt';
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -114,9 +113,6 @@ function App() {
       <CalculatorTabProvider>
         <PricingProvider>
           <ProjectProvider>
-            {/* iOS Install Prompt for authenticated users */}
-            <InstallPrompt showOnLoad={true} />
-
             <div className="flex h-screen bg-gray-50">
               <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 

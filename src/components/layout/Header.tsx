@@ -113,38 +113,38 @@ const Header = ({ sidebarOpen, setSidebarOpen }: HeaderProps) => {
 
         <div className="relative group">
           <button
-            className="flex items-center gap-2 p-2 text-gray-700 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex items-center gap-1 sm:gap-2 p-1 sm:p-2 text-gray-700 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             {profile?.logo_url ? (
               <img
                 src={profile.logo_url}
                 alt="Company Logo"
-                className="w-8 h-8 object-contain rounded-full border border-gray-200"
+                className="w-7 h-7 sm:w-8 sm:h-8 object-contain rounded-full border border-gray-200"
               />
             ) : (
-              <div className="flex items-center justify-center w-8 h-8 bg-blue-500 rounded-full">
-                <User className="w-4 h-4 text-white" />
+              <div className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 bg-blue-500 rounded-full">
+                <User className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
               </div>
             )}
-            <span className="hidden font-medium sm:block">{user?.email}</span>
-            <ChevronDown className="w-4 h-4" />
+            <span className="hidden text-xs sm:text-sm font-medium md:block max-w-[100px] truncate">{user?.email}</span>
+            <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4" />
           </button>
 
-          <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-            <div className="py-1">
+          <div className="absolute right-0 mt-2 bg-white rounded-lg shadow-xl z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 border border-gray-200">
+            <div className="py-1 px-1 flex flex-col gap-1">
               <button
                 onClick={handleProfileClick}
-                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                className="p-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Settings"
               >
-                <User className="w-4 h-4 mr-2" />
-                Settings
+                <User className="w-6 h-6" />
               </button>
               <button
                 onClick={handleSignOut}
-                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                className="p-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Sign Out"
               >
-                <LogOut className="w-4 h-4 mr-2" />
-                Sign Out
+                <LogOut className="w-6 h-6" />
               </button>
             </div>
           </div>

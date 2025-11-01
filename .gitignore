@@ -23,6 +23,9 @@ dist-ssr
 *.sln
 *.sw?
 .env
+.env.local
+.env.production
+.env.backup-KEEP-SAFE
 docs/NETLIFY-ENV-VARS.md
 
 # Test files

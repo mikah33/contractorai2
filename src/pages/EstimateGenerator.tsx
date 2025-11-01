@@ -875,8 +875,8 @@ const EstimateGenerator = () => {
   }, [recentEstimates, searchQuery]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6 max-w-full overflow-x-hidden px-2 sm:px-0">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
           <div className="flex items-center space-x-3">
             {currentEstimate && (
@@ -898,38 +898,33 @@ const EstimateGenerator = () => {
         </div>
         
         {currentEstimate ? (
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
             {/* Preview Button */}
             <button
               onClick={() => setActiveTab('preview')}
-              className="inline-flex items-center px-4 py-2.5 text-sm font-semibold rounded-lg text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 shadow-sm hover:shadow transition-all duration-200 whitespace-nowrap"
+              className="flex-1 sm:flex-none inline-flex items-center justify-center px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 shadow-sm transition-all duration-200"
             >
-              <Eye className="w-4 h-4 mr-2" />
-              <span className="hidden sm:inline">{t('estimates.previewInvoice')}</span>
-              <span className="sm:hidden">{t('estimates.preview')}</span>
+              <Eye className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">{t('estimates.preview')}</span>
             </button>
 
             {/* Primary Action - Send */}
             <button
               onClick={() => setShowSendModal(true)}
-              className="inline-flex items-center px-5 py-2.5 text-sm font-semibold rounded-lg text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 whitespace-nowrap"
+              className="flex-1 sm:flex-none inline-flex items-center justify-center px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg transition-all duration-200"
             >
-              <Mail className="w-4 h-4 mr-2" />
-              <span className="hidden sm:inline">{t('estimates.sendToCustomer')}</span>
-              <span className="sm:hidden">{t('estimates.send')}</span>
+              <Mail className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">{t('estimates.send')}</span>
             </button>
 
             {/* Download Dropdown */}
-            <div className="relative">
+            <div className="relative flex-1 sm:flex-none">
               <button
                 onClick={() => setShowExportMenu(!showExportMenu)}
-                className="inline-flex items-center px-4 py-2.5 text-sm font-medium rounded-lg text-gray-700 bg-white border-2 border-gray-200 hover:border-blue-500 hover:text-blue-600 hover:shadow-md transition-all duration-200 whitespace-nowrap"
+                className="w-full sm:w-auto inline-flex items-center justify-center px-3 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-700 bg-white border-2 border-gray-200 hover:border-blue-500 hover:text-blue-600 transition-all duration-200"
               >
-                <Download className="w-4 h-4 mr-2" />
-                <span>Download</span>
-                <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
+                <Download className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Download</span>
               </button>
 
               {showExportMenu && (
@@ -1077,125 +1072,70 @@ const EstimateGenerator = () => {
                   )}
                 </div>
               </div>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {t('estimates.clientAndProject')}
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {t('common.amount')}
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {t('common.status')}
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {t('estimates.date')}
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Download
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {loadingEstimates ? (
-                      <tr>
-                        <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
-                          <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2" />
-                          Loading estimates...
-                        </td>
-                      </tr>
-                    ) : filteredEstimates.length === 0 ? (
-                      <tr>
-                        <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
-                          {searchQuery ? (
-                            <>
-                              No estimates found matching "{searchQuery}"
-                              <button
-                                onClick={() => setSearchQuery('')}
-                                className="block mx-auto mt-2 text-blue-600 hover:text-blue-800"
-                              >
-                                Clear search
-                              </button>
-                            </>
-                          ) : (
-                            t('estimates.noEstimatesYet')
-                          )}
-                        </td>
-                      </tr>
+              <div className="p-4">
+                {loadingEstimates ? (
+                  <div className="py-8 text-center text-gray-500">
+                    <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2" />
+                    Loading estimates...
+                  </div>
+                ) : filteredEstimates.length === 0 ? (
+                  <div className="py-8 text-center text-gray-500">
+                    {searchQuery ? (
+                      <>
+                        No estimates found matching "{searchQuery}"
+                        <button
+                          onClick={() => setSearchQuery('')}
+                          className="block mx-auto mt-2 text-blue-600 hover:text-blue-800"
+                        >
+                          Clear search
+                        </button>
+                      </>
                     ) : (
-                    filteredEstimates.map((estimate) => (
-                      <tr key={estimate.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <div>
-                              <div className="flex items-center">
-                                <div className="text-sm font-medium text-gray-900">{estimate.client}</div>
-                                {getResponseStatusBadge(estimate.id)}
-                              </div>
-                              <div className="text-sm text-gray-500">{estimate.project}</div>
-                            </div>
+                      t('estimates.noEstimatesYet')
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {filteredEstimates.map((estimate) => (
+                      <div
+                        key={estimate.id}
+                        className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-md transition-all duration-200"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="text-sm font-semibold text-gray-900 truncate">
+                              {estimate.project || estimate.client || 'Untitled Estimate'}
+                            </h3>
+                            {getResponseStatusBadge(estimate.id)}
+                          </div>
+                          <div className="flex items-center gap-3 text-xs text-gray-500">
+                            <span>{estimate.amount}</span>
+                            <span>•</span>
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full font-medium ${getStatusColor(estimate.status)}`}>
+                              {estimate.status}
+                            </span>
                             {estimate.calculatorType && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800" title={`Created with ${estimate.calculatorType} calculator`}>
-                                <Calculator className="w-3 h-3 mr-1" />
-                                {estimate.calculatorType}
-                              </span>
+                              <>
+                                <span>•</span>
+                                <span className="inline-flex items-center">
+                                  <Calculator className="w-3 h-3 mr-1" />
+                                  {estimate.calculatorType}
+                                </span>
+                              </>
                             )}
                           </div>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-900">{estimate.amount}</td>
-                        <td className="px-6 py-4">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(estimate.status)}`}>
-                            {estimate.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-500">{estimate.date}</td>
-                        <td className="px-6 py-4 text-right text-sm font-medium">
-                          <div className="flex items-center justify-end space-x-3">
-                            {estimate.calculatorType && (
-                              <button
-                                onClick={() => handleRecalculate(estimate)}
-                                className="text-blue-600 hover:text-blue-900"
-                                title="Recalculate in Calculator"
-                              >
-                                <Calculator className="w-4 h-4" />
-                              </button>
-                            )}
-                            <button
-                              onClick={() => handleEditEstimate(estimate.id)}
-                              className="text-blue-600 hover:text-blue-900"
-                              title="Edit Estimate"
-                            >
-                              <Edit2 className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={async () => {
-                                const result = await estimateService.getEstimate(estimate.id);
-                                if (result.success && result.data) {
-                                  setCurrentEstimate(result.data);
-                                  setActiveTab('preview');
-                                  setTimeout(() => handleExportPDF(), 500);
-                                }
-                              }}
-                              className="text-gray-600 hover:text-gray-900"
-                              title="Download PDF"
-                            >
-                              <Download className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteEstimate(estimate.id)}
-                              className="text-red-600 hover:text-red-900"
-                              title="Delete Estimate"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    )))}
-                  </tbody>
-                </table>
+                        </div>
+                        <button
+                          onClick={() => handleEditEstimate(estimate.id)}
+                          className="ml-4 flex-shrink-0 inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+                        >
+                          <Edit2 className="w-4 h-4 mr-2" />
+                          Edit
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -1203,15 +1143,15 @@ const EstimateGenerator = () => {
           {currentEstimate ? (
             <>
               {/* Calculate Job Cost Banner */}
-              <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg shadow-md p-6 mb-6 border-2 border-blue-200">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="bg-blue-600 rounded-full p-3">
-                      <Calculator className="w-6 h-6 text-white" />
+              <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg shadow-md p-4 sm:p-6 mb-6 border-2 border-blue-200">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex items-start gap-3 sm:gap-4 w-full sm:w-auto">
+                    <div className="bg-blue-600 rounded-full p-2 sm:p-3 flex-shrink-0">
+                      <Calculator className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                     </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">Need to Calculate Job Costs?</h3>
-                      <p className="text-sm text-gray-600">Use our 20+ professional calculators to get accurate pricing and import directly to this estimate</p>
+                    <div className="flex-1">
+                      <h3 className="text-base sm:text-lg font-semibold text-gray-900">Need to Calculate Job Costs?</h3>
+                      <p className="text-xs sm:text-sm text-gray-600 mt-1">Use our 20+ professional calculators to get accurate pricing and import directly to this estimate</p>
                     </div>
                   </div>
                   <button
@@ -1234,9 +1174,9 @@ const EstimateGenerator = () => {
                         });
                       }
                     }}
-                    className="inline-flex items-center px-6 py-3 text-sm font-semibold rounded-lg text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 whitespace-nowrap"
+                    className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold rounded-lg text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 whitespace-nowrap"
                   >
-                    <Calculator className="w-5 h-5 mr-2" />
+                    <Calculator className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                     Go to Calculators
                   </button>
                 </div>

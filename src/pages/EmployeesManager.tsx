@@ -133,29 +133,29 @@ const EmployeesManager = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{t('employees.title')}</h1>
-          <p className="mt-1 text-sm text-gray-600">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{t('employees.title')}</h1>
+          <p className="mt-1 text-xs sm:text-sm text-gray-600">
             {t('employees.subtitle')}
           </p>
         </div>
 
-        <div className="flex space-x-2">
+        <div className="flex gap-1">
           <button
             onClick={handleExportEmployees}
-            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="inline-flex items-center px-2 py-1 border border-gray-300 text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
-            <Download className="h-4 w-4 mr-2" />
-            {t('common.export')}
+            <Download className="h-3 w-3 mr-1" />
+            <span className="hidden sm:inline">{t('common.export')}</span>
           </button>
           <button
             onClick={fetchEmployees}
             disabled={isLoading}
-            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center px-2 py-1 border border-gray-300 text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-            {t('common.refresh')}
+            <RefreshCw className={`h-3 w-3 ${isLoading ? 'animate-spin' : ''} ${isLoading ? '' : 'mr-1'}`} />
+            <span className={isLoading ? 'hidden' : 'hidden sm:inline'}>{t('common.refresh')}</span>
           </button>
           <button
             onClick={() => {
@@ -171,10 +171,11 @@ const EmployeesManager = () => {
               });
               setIsAddModalOpen(true);
             }}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
-            <UserPlus className="h-4 w-4 mr-2" />
-            {t('employees.addEmployee')}
+            <UserPlus className="h-3 w-3 mr-1" />
+            <span className="hidden sm:inline">{t('employees.addEmployee')}</span>
+            <span className="sm:hidden">Add</span>
           </button>
         </div>
       </div>
