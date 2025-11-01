@@ -31,38 +31,63 @@ interface EstimateData {
 
 export const generateEstimatePDF = (estimate: EstimateData): Blob => {
   const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const isMobile = pageWidth < 210; // Detect if viewing on mobile
 
   // Header
-  doc.setFontSize(24);
+  doc.setFontSize(20);
   doc.setTextColor(33, 37, 41);
   doc.text('ESTIMATE', 20, 20);
 
   // Company Info
-  doc.setFontSize(10);
+  doc.setFontSize(9);
   doc.setTextColor(108, 117, 125);
   doc.text(estimate.company.name, 20, 30);
-  if (estimate.company.address) doc.text(estimate.company.address, 20, 35);
-  doc.text(`${estimate.company.phone} | ${estimate.company.email}`, 20, 40);
+  if (estimate.company.address) {
+    const splitAddress = doc.splitTextToSize(estimate.company.address, pageWidth - 40);
+    doc.text(splitAddress, 20, 35);
+  }
+  const contactInfo = doc.splitTextToSize(`${estimate.company.phone} | ${estimate.company.email}`, pageWidth - 40);
+  doc.text(contactInfo, 20, estimate.company.address ? 42 : 35);
 
-  // Estimate Details (Right side)
-  doc.setFontSize(10);
-  doc.text(`Estimate #: ${estimate.estimateNumber}`, 140, 30);
-  doc.text(`Date: ${estimate.date}`, 140, 35);
+  // Estimate Details (Right side or below on mobile)
+  const detailsY = estimate.company.address ? 48 : 42;
+  doc.setFontSize(9);
+  doc.text(`Estimate #: ${estimate.estimateNumber}`, 20, detailsY);
+  doc.text(`Date: ${estimate.date}`, 20, detailsY + 5);
 
   // Client Info
-  doc.setFontSize(12);
+  const clientY = detailsY + 15;
+  doc.setFontSize(11);
   doc.setTextColor(33, 37, 41);
-  doc.text('Bill To:', 20, 55);
-  doc.setFontSize(10);
+  doc.text('Bill To:', 20, clientY);
+  doc.setFontSize(9);
   doc.setTextColor(108, 117, 125);
-  doc.text(estimate.client.name, 20, 62);
-  if (estimate.client.address) doc.text(estimate.client.address, 20, 67);
-  if (estimate.client.phone) doc.text(estimate.client.phone, 20, 72);
-  doc.text(estimate.client.email, 20, 77);
+  doc.text(estimate.client.name, 20, clientY + 7);
+  let currentY = clientY + 12;
+  if (estimate.client.address) {
+    const splitClientAddress = doc.splitTextToSize(estimate.client.address, pageWidth - 40);
+    doc.text(splitClientAddress, 20, currentY);
+    currentY += splitClientAddress.length * 5;
+  }
+  if (estimate.client.phone) {
+    doc.text(estimate.client.phone, 20, currentY);
+    currentY += 5;
+  }
+  doc.text(estimate.client.email, 20, currentY);
 
-  // Items Table
+  // Items Table - Responsive column widths
+  const tableStartY = currentY + 15;
+  const availableWidth = pageWidth - 40;
+
+  // Calculate proportional widths
+  const descWidth = availableWidth * 0.45;
+  const qtyWidth = availableWidth * 0.15;
+  const rateWidth = availableWidth * 0.20;
+  const amountWidth = availableWidth * 0.20;
+
   autoTable(doc, {
-    startY: 90,
+    startY: tableStartY,
     head: [['Description', 'Qty', 'Rate', 'Amount']],
     body: estimate.items.map(item => [
       item.description,
@@ -74,41 +99,50 @@ export const generateEstimatePDF = (estimate: EstimateData): Blob => {
     headStyles: {
       fillColor: [37, 99, 235],
       textColor: 255,
-      fontSize: 10,
-      fontStyle: 'bold'
+      fontSize: 8,
+      fontStyle: 'bold',
+      cellPadding: 3
+    },
+    bodyStyles: {
+      fontSize: 8,
+      cellPadding: 3
     },
     columnStyles: {
-      0: { cellWidth: 90 },
-      1: { cellWidth: 30, halign: 'center' },
-      2: { cellWidth: 35, halign: 'right' },
-      3: { cellWidth: 35, halign: 'right' }
+      0: { cellWidth: descWidth },
+      1: { cellWidth: qtyWidth, halign: 'center' },
+      2: { cellWidth: rateWidth, halign: 'right' },
+      3: { cellWidth: amountWidth, halign: 'right' }
     },
-    margin: { left: 20, right: 20 }
+    margin: { left: 20, right: 20 },
+    tableWidth: 'auto'
   });
 
-  // Totals
+  // Totals - Responsive positioning
   const finalY = (doc as any).lastAutoTable.finalY + 10;
+  const totalsX = pageWidth - 80;
+  const amountX = pageWidth - 20;
 
-  doc.setFontSize(10);
-  doc.text('Subtotal:', 140, finalY);
-  doc.text(`$${estimate.subtotal.toFixed(2)}`, 175, finalY, { align: 'right' });
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Subtotal:', totalsX, finalY);
+  doc.text(`$${estimate.subtotal.toFixed(2)}`, amountX, finalY, { align: 'right' });
 
   if (estimate.tax) {
-    doc.text('Tax:', 140, finalY + 7);
-    doc.text(`$${estimate.tax.toFixed(2)}`, 175, finalY + 7, { align: 'right' });
+    doc.text('Tax:', totalsX, finalY + 7);
+    doc.text(`$${estimate.tax.toFixed(2)}`, amountX, finalY + 7, { align: 'right' });
   }
 
-  doc.setFontSize(12);
+  doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
-  doc.text('Total:', 140, finalY + (estimate.tax ? 14 : 7));
-  doc.text(`$${estimate.total.toFixed(2)}`, 175, finalY + (estimate.tax ? 14 : 7), { align: 'right' });
+  doc.text('Total:', totalsX, finalY + (estimate.tax ? 14 : 7));
+  doc.text(`$${estimate.total.toFixed(2)}`, amountX, finalY + (estimate.tax ? 14 : 7), { align: 'right' });
 
   // Notes
   if (estimate.notes) {
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(10);
+    doc.setFontSize(9);
     doc.text('Notes:', 20, finalY + 25);
-    const splitNotes = doc.splitTextToSize(estimate.notes, 170);
+    const splitNotes = doc.splitTextToSize(estimate.notes, pageWidth - 40);
     doc.text(splitNotes, 20, finalY + 32);
   }
 
@@ -116,16 +150,18 @@ export const generateEstimatePDF = (estimate: EstimateData): Blob => {
   if (estimate.terms) {
     const termsY = estimate.notes ? finalY + 50 : finalY + 25;
     doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
     doc.text('Terms & Conditions:', 20, termsY);
     doc.setFont('helvetica', 'normal');
-    const splitTerms = doc.splitTextToSize(estimate.terms, 170);
+    const splitTerms = doc.splitTextToSize(estimate.terms, pageWidth - 40);
     doc.text(splitTerms, 20, termsY + 7);
   }
 
   // Footer
-  doc.setFontSize(8);
+  doc.setFontSize(7);
   doc.setTextColor(150, 150, 150);
-  doc.text('This estimate is valid for 30 days from the date of issue.', 105, 280, { align: 'center' });
+  const footerText = doc.splitTextToSize('This estimate is valid for 30 days from the date of issue.', pageWidth - 40);
+  doc.text(footerText, pageWidth / 2, 280, { align: 'center' });
 
   // Return as Blob
   return doc.output('blob');
