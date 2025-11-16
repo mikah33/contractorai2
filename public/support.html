@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support - ContractorAI</title>
+    <meta name="description" content="Get help with ContractorAI. Contact our support team, browse FAQs, or access user guides.">
+    <link rel="icon" type="image/png" href="https://contractorai.work/favicon.png">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #f7941d;
+            --dark-navy: #0a2540;
+            --white: #ffffff;
+            --light-bg: #f9fafb;
+            --text-dark: #1f2937;
+            --text-light: #6b7280;
+            --border-color: #e5e7eb;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: var(--text-dark);
+            background: var(--light-bg);
+        }
+
+        /* Header */
+        .header {
+            background: var(--dark-navy);
+            color: var(--white);
+            padding: 20px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo img {
+            height: 40px;
+        }
+
+        .header-links a {
+            color: var(--white);
+            text-decoration: none;
+            margin-left: 25px;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .header-links a:hover {
+            color: var(--primary-color);
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, var(--dark-navy) 0%, #1a3a5a 100%);
+            color: var(--white);
+            padding: 80px 0 60px;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 48px;
+            font-weight: 800;
+            margin-bottom: 15px;
+        }
+
+        .hero p {
+            font-size: 20px;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Contact Section */
+        .contact-section {
+            background: var(--white);
+            padding: 60px 0;
+        }
+
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .contact-card {
+            background: var(--white);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .contact-card:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(247, 148, 29, 0.15);
+        }
+
+        .contact-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .contact-card h3 {
+            color: var(--dark-navy);
+            font-size: 22px;
+            margin-bottom: 10px;
+        }
+
+        .contact-card p {
+            color: var(--text-light);
+            margin-bottom: 20px;
+        }
+
+        .contact-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            transition: opacity 0.2s;
+        }
+
+        .contact-link:hover {
+            opacity: 0.8;
+        }
+
+        /* FAQ Section */
+        .faq-section {
+            background: var(--light-bg);
+            padding: 60px 0;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 36px;
+            font-weight: 800;
+            color: var(--dark-navy);
+            margin-bottom: 15px;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            font-size: 18px;
+            color: var(--text-light);
+            margin-bottom: 50px;
+        }
+
+        .faq-item {
+            background: var(--white);
+            border-radius: 8px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .faq-question {
+            background: var(--white);
+            border: none;
+            width: 100%;
+            padding: 20px 25px;
+            text-align: left;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--dark-navy);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .faq-question:hover {
+            background: var(--light-bg);
+        }
+
+        .faq-icon {
+            font-size: 20px;
+            color: var(--primary-color);
+            transition: transform 0.3s;
+        }
+
+        .faq-item.active .faq-icon {
+            transform: rotate(45deg);
+        }
+
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .faq-answer-content {
+            padding: 0 25px 20px;
+            color: var(--text-dark);
+            line-height: 1.8;
+        }
+
+        .faq-item.active .faq-answer {
+            max-height: 500px;
+        }
+
+        /* Resources Section */
+        .resources-section {
+            background: var(--white);
+            padding: 60px 0;
+        }
+
+        .resource-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-top: 40px;
+        }
+
+        .resource-item {
+            padding: 25px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s;
+        }
+
+        .resource-item:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .resource-item h4 {
+            color: var(--dark-navy);
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .resource-item p {
+            color: var(--text-light);
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .resource-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .resource-link:hover {
+            text-decoration: underline;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            background: var(--dark-navy);
+            color: var(--white);
+            padding: 60px 0;
+            text-align: center;
+        }
+
+        .cta-section h2 {
+            font-size: 36px;
+            margin-bottom: 15px;
+        }
+
+        .cta-section p {
+            font-size: 18px;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 14px 32px;
+            font-size: 16px;
+            font-weight: 600;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: var(--white);
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: #ff6b35;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(247, 148, 29, 0.3);
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--dark-navy);
+            color: var(--white);
+            padding: 40px 0 20px;
+            font-size: 14px;
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .footer-links a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            margin-left: 20px;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: var(--white);
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 32px;
+            }
+
+            .hero p {
+                font-size: 16px;
+            }
+
+            .section-title {
+                font-size: 28px;
+            }
+
+            .contact-grid,
+            .resource-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header .container {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .header-links a {
+                margin: 0 10px;
+            }
+
+            .footer-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .footer-links {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .footer-links a {
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <a href="https://contractorai.work">
+                    <img src="https://contractorai.work/assets/logo-60.webp" alt="ContractorAI Logo">
+                </a>
+            </div>
+            <div class="header-links">
+                <a href="https://contractorai.work">Home</a>
+                <a href="https://contractorai.work/features.html">Features</a>
+                <a href="https://contractorai.work/login.html">Login</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1>How Can We Help You?</h1>
+            <p>Get support, find answers, or reach out to our team. We're here to help contractors succeed.</p>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="contact-section">
+        <div class="container">
+            <h2 class="section-title">Get in Touch</h2>
+            <p class="section-subtitle">Choose the best way to reach our support team</p>
+
+            <div class="contact-grid">
+                <div class="contact-card">
+                    <div class="contact-icon">📧</div>
+                    <h3>Email Support</h3>
+                    <p>Get help via email. We typically respond within 24 hours.</p>
+                    <a href="mailto:support@contractorai.work" class="contact-link">support@contractorai.work</a>
+                </div>
+
+                <div class="contact-card">
+                    <div class="contact-icon">💬</div>
+                    <h3>Live Chat</h3>
+                    <p>Chat with us directly from the app for instant help.</p>
+                    <a href="https://contractorai.work/login.html" class="contact-link">Login to Chat</a>
+                </div>
+
+                <div class="contact-card">
+                    <div class="contact-icon">📚</div>
+                    <h3>Help Center</h3>
+                    <p>Browse guides, tutorials, and documentation.</p>
+                    <a href="https://contractorai.work/faq.html" class="contact-link">View FAQs</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="faq-section">
+        <div class="container">
+            <h2 class="section-title">Frequently Asked Questions</h2>
+            <p class="section-subtitle">Quick answers to common questions</p>
+
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span>How do I reset my password?</span>
+                    <span class="faq-icon">+</span>
+                </button>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        Click "Forgot Password" on the login page, enter your email, and we'll send you a reset link. If you don't receive it within 5 minutes, check your spam folder or contact support@contractorai.work.
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span>How do I cancel my subscription?</span>
+                    <span class="faq-icon">+</span>
+                </button>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        Log in to your account, go to Settings → Subscription Plans, and click "Manage Subscription". You can cancel anytime and your access will continue until the end of your billing period.
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span>How do I export my data?</span>
+                    <span class="faq-icon">+</span>
+                </button>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        Navigate to Settings → Data & Privacy → Export Data. You can download all your estimates, invoices, clients, and financial data in PDF or CSV format. Exports are processed within 24 hours.
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span>Is there a mobile app?</span>
+                    <span class="faq-icon">+</span>
+                </button>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        Yes! ContractorAI is available on iOS (iPhone/iPad). The mobile app includes all features: estimates, invoicing, project tracking, and CRM. Download from the App Store. Android coming soon.
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span>How do I contact a real person?</span>
+                    <span class="faq-icon">+</span>
+                </button>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        Email us at support@contractorai.work and a real human will respond within 24 hours (usually much faster). Premium plan members get priority support with faster response times.
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span>What payment methods do you accept?</span>
+                    <span class="faq-icon">+</span>
+                </button>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        We accept all major credit cards (Visa, Mastercard, American Express, Discover), debit cards, and ACH bank transfers through our secure payment processor, Stripe.
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-question">
+                    <span>Do you offer refunds?</span>
+                    <span class="faq-icon">+</span>
+                </button>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        Yes! We offer a 30-day money-back guarantee. If you're not satisfied within the first 30 days, contact support@contractorai.work for a full refund, no questions asked.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Resources Section -->
+    <section class="resources-section">
+        <div class="container">
+            <h2 class="section-title">Helpful Resources</h2>
+            <p class="section-subtitle">Learn how to make the most of ContractorAI</p>
+
+            <div class="resource-grid">
+                <div class="resource-item">
+                    <h4>📖 User Guide</h4>
+                    <p>Step-by-step tutorials for all features</p>
+                    <a href="https://contractorai.work/blog.html" class="resource-link">View Guides →</a>
+                </div>
+
+                <div class="resource-item">
+                    <h4>🎥 Video Tutorials</h4>
+                    <p>Watch how to use key features</p>
+                    <a href="https://www.youtube.com/@ContractorAI1" target="_blank" rel="noopener" class="resource-link">Watch Videos →</a>
+                </div>
+
+                <div class="resource-item">
+                    <h4>💡 Tips & Tricks</h4>
+                    <p>Get more out of ContractorAI</p>
+                    <a href="https://contractorai.work/blog.html" class="resource-link">Read Blog →</a>
+                </div>
+
+                <div class="resource-item">
+                    <h4>🔐 Privacy & Security</h4>
+                    <p>Learn how we protect your data</p>
+                    <a href="https://contractorai.work/privacy" class="resource-link">Privacy Policy →</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <h2>Still Have Questions?</h2>
+            <p>Our support team is ready to help you succeed</p>
+            <a href="mailto:support@contractorai.work" class="btn btn-primary">Email Support</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div>
+                    <p>© 2025 ContractorAI. All rights reserved.</p>
+                </div>
+                <div class="footer-links">
+                    <a href="https://contractorai.work/privacy">Privacy</a>
+                    <a href="https://contractorai.work/terms.html">Terms</a>
+                    <a href="https://contractorai.work">Home</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // FAQ Accordion
+        document.querySelectorAll('.faq-question').forEach(button => {
+            button.addEventListener('click', () => {
+                const faqItem = button.parentElement;
+                const isActive = faqItem.classList.contains('active');
+
+                // Close all FAQ items
+                document.querySelectorAll('.faq-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+
+                // Open clicked item if it wasn't active
+                if (!isActive) {
+                    faqItem.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
