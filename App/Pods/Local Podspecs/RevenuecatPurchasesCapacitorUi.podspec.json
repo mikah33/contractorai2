@@ -1,0 +1,24 @@
+{
+  "name": "RevenuecatPurchasesCapacitorUi",
+  "version": "11.2.15",
+  "summary": "UI components for RevenueCat Capacitor SDK",
+  "license": "MIT",
+  "homepage": "git+https://github.com/RevenueCat/purchases-capacitor.git",
+  "authors": "RevenueCat, Inc.",
+  "source": {
+    "git": "git+https://github.com/RevenueCat/purchases-capacitor.git",
+    "tag": "11.2.15"
+  },
+  "source_files": "ios/Plugin/**/*.{swift,h,m,c,cc,mm,cpp}",
+  "platforms": {
+    "ios": "15.0"
+  },
+  "dependencies": {
+    "Capacitor": [],
+    "PurchasesHybridCommonUI": [
+      "17.19.1"
+    ]
+  },
+  "swift_versions": "5.1",
+  "swift_version": "5.1"
+}

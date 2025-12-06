@@ -1,0 +1,23 @@
+{
+	"appId": "com.elevated.contractorai",
+	"appName": "ContractorAI",
+	"webDir": "dist",
+	"ios": {
+		"contentInset": "never"
+	},
+	"server": {
+		"iosScheme": "capacitor"
+	},
+	"plugins": {
+		"Purchases": {
+			"apiKey": "appl_eqImMiOTWqoGHkqkjePGfJrLhMA"
+		}
+	},
+	"packageClassList": [
+		"LocalNotificationsPlugin",
+		"PushNotificationsPlugin",
+		"PurchasesPlugin",
+		"RevenueCatUIPlugin",
+		"CDVPlugin"
+	]
+}

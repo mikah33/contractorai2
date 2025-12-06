@@ -1,0 +1,91 @@
+{
+  "appPolicies": {
+    "eula": "",
+    "policies": [
+      {
+        "locale": "en_US",
+        "policyText": "",
+        "policyURL": ""
+      }
+    ]
+  },
+  "identifier": "87ABD4D5",
+  "nonRenewingSubscriptions": [],
+  "products": [],
+  "subscriptionGroups": [
+    {
+      "id": "6EC4630C",
+      "localizations": [],
+      "name": "ContractorAI Pro",
+      "subscriptions": [
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "34.99",
+          "familyShareable": false,
+          "groupNumber": 1,
+          "internalID": "F060AA58",
+          "localizations": [
+            {
+              "description": "Monthly subscription to ContractorAI Pro",
+              "displayName": "ContractorAI Pro Monthly",
+              "locale": "en_US"
+            }
+          ],
+          "productID": "com.elevated.contractorai.starter.monthly",
+          "recurringSubscriptionPeriod": "P1M",
+          "referenceName": "Monthly",
+          "subscriptionGroupID": "6EC4630C",
+          "type": "RecurringSubscription",
+          "winbackOffers": []
+        },
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "84.99",
+          "familyShareable": false,
+          "groupNumber": 1,
+          "internalID": "FE1EE954",
+          "localizations": [
+            {
+              "description": "3-month subscription to ContractorAI Pro",
+              "displayName": "ContractorAI Pro 3 Months",
+              "locale": "en_US"
+            }
+          ],
+          "productID": "com.elevated.contractorai.basic.3months",
+          "recurringSubscriptionPeriod": "P3M",
+          "referenceName": "3 Months",
+          "subscriptionGroupID": "6EC4630C",
+          "type": "RecurringSubscription",
+          "winbackOffers": []
+        },
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "349.99",
+          "familyShareable": false,
+          "groupNumber": 1,
+          "internalID": "1AF7F7D9",
+          "localizations": [
+            {
+              "description": "Annual subscription to ContractorAI Pro",
+              "displayName": "ContractorAI Pro Yearly",
+              "locale": "en_US"
+            }
+          ],
+          "productID": "com.elevated.contractorai.basic.1year",
+          "recurringSubscriptionPeriod": "P1Y",
+          "referenceName": "Annual",
+          "subscriptionGroupID": "6EC4630C",
+          "type": "RecurringSubscription",
+          "winbackOffers": []
+        }
+      ]
+    }
+  ],
+  "version": {
+    "major": 4,
+    "minor": 0
+  }
+}

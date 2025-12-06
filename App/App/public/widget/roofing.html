@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roofing Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --brand: #ff6b35;
+            --brand-2: #f7931e;
+            --text: #f1f5f9;
+            --muted: #94a3b8;
+            --panel: #1e293b;
+            --bg: #0f172a;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: var(--muted);
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+        }
+
+        .calc-section {
+            background: var(--panel);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--text);
+        }
+
+        .form-grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 0.75rem;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 1rem;
+        }
+
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--brand);
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"] {
+            width: 100%;
+            padding: 0.75rem;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 1rem;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="tel"]:focus {
+            outline: none;
+            border-color: var(--brand);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0;
+        }
+
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            margin: 0;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s;
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .results {
+            display: none;
+        }
+
+        .results.active {
+            display: block;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            font-weight: 600;
+        }
+
+        .result-value {
+            color: var(--muted);
+        }
+
+        .result-total {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--brand);
+            text-align: center;
+            padding: 1.5rem 0;
+            margin-top: 1rem;
+            border-top: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .lead-form {
+            display: none;
+        }
+
+        .lead-form.active {
+            display: block;
+        }
+
+        .error-msg {
+            color: var(--danger);
+            font-size: 0.8125rem;
+            margin-top: 0.25rem;
+        }
+
+        .success-msg {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--success);
+            border-radius: 8px;
+            padding: 1rem;
+            color: var(--success);
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Roofing Cost Calculator</h1>
+        <p class="subtitle">Get an instant estimate for your roofing project</p>
+
+        <!-- Calculator Form -->
+        <div id="calculator-section" class="calc-section">
+            <div class="form-grid">
+                <!-- Address Auto-Detection -->
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label for="address-search">🏠 Find Your Roof Area by Address</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input
+                            type="text"
+                            id="address-search"
+                            placeholder="Enter your address (e.g., 1600 Pennsylvania Ave NW, Washington, DC)"
+                            style="flex: 1;">
+                        <button type="button" id="search-address-btn" class="btn" style="width: auto; padding: 0 20px;">
+                            Search
+                        </button>
+                    </div>
+                    <div id="address-status" style="margin-top: 8px; font-size: 0.9rem;"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="roof-area">Roof Area (area) *</label>
+                    <input type="number" id="roof-area" min="0" step="1" placeholder="2000" required>
+                    <span style="font-size: 0.85rem; color: var(--muted); margin-top: 4px; display: block;">
+                        Or search by address above to auto-fill
+                    </span>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="roof-material">Material Type *</label>
+                        <select id="roof-material" required>
+                            <option value="350">Asphalt Shingles - $350/sq</option>
+                            <option value="475">Architectural Shingles - $475/sq</option>
+                            <option value="850">Metal Roofing - $850/sq</option>
+                            <option value="625">Tile Roofing - $625/sq</option>
+                            <option value="425">Composite Shingles - $425/sq</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="roof-pitch">Roof Pitch</label>
+                        <select id="roof-pitch">
+                            <option value="1.0">Low (0-4/12)</option>
+                            <option value="1.15" selected>Medium (5-8/12)</option>
+                            <option value="1.35">High (9-12/12)</option>
+                            <option value="1.6">Steep (12+/12)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="roof-stories">Number of Stories</label>
+                        <select id="roof-stories">
+                            <option value="1.0" selected>1 Story</option>
+                            <option value="1.15">2 Stories</option>
+                            <option value="1.3">3+ Stories</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="roof-layers">Old Layers to Remove</label>
+                        <select id="roof-layers">
+                            <option value="0" selected>0 (New Build)</option>
+                            <option value="1">1 Layer</option>
+                            <option value="2">2 Layers</option>
+                            <option value="3">3 Layers</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="roof-skylights">Number of Skylights</label>
+                    <input type="number" id="roof-skylights" min="0" value="0">
+                </div>
+
+                <div class="form-grid">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="roof-ventilation">
+                        <label for="roof-ventilation">Include Ventilation System (+$625)</label>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="roof-ice-shield" checked>
+                        <label for="roof-ice-shield">Include Ice & Water Shield</label>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="roof-warranty">
+                        <label for="roof-warranty">Extended Warranty ($27/sq)</label>
+                    </div>
+                </div>
+
+                <button type="button" class="btn" onclick="calculateRoofing()">Calculate Estimate</button>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results-section" class="calc-section results">
+            <h2 class="section-title">Your Roofing Estimate</h2>
+            <div id="results-breakdown"></div>
+            <div class="result-total" id="total-cost"></div>
+            <button type="button" class="btn" onclick="showLeadForm()">Get Detailed Quote</button>
+        </div>
+
+        <!-- Lead Capture Form -->
+        <div id="lead-form-section" class="calc-section lead-form">
+            <h2 class="section-title">Get Your Detailed Quote</h2>
+            <p class="subtitle">We'll send you a detailed breakdown and connect you with local contractors.</p>
+
+            <form id="lead-capture-form" onsubmit="submitLead(event)">
+                <div class="form-grid">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="lead-name">Name *</label>
+                            <input type="text" id="lead-name" required>
+                            <span class="error-msg" id="error-name"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="lead-email">Email *</label>
+                            <input type="email" id="lead-email" required>
+                            <span class="error-msg" id="error-email"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="lead-phone">Phone</label>
+                            <input type="tel" id="lead-phone">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="lead-address">Address</label>
+                            <input type="text" id="lead-address">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn" id="submit-btn">Get Detailed Quote</button>
+                </div>
+
+                <div id="form-status"></div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Get widget key from URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const widgetKey = urlParams.get('key') || '';
+
+        let calculationResults = null;
+        let subscriptionValid = false;
+
+        // CRITICAL: Validate widget key and subscription on load
+        async function validateWidget() {
+            if (!widgetKey) {
+                showSubscriptionError('No widget key provided. Please contact the website owner.');
+                return false;
+            }
+
+            // Clean the widget key (trim whitespace)
+            const cleanKey = widgetKey.trim();
+            console.log('Widget key from URL:', widgetKey);
+            console.log('Widget key linear feet:', widgetKey.length);
+            console.log('Cleaned key:', cleanKey);
+
+            try {
+                const response = await fetch('https://ujhgwcurllkkeouzwvgk.supabase.co/functions/v1/widget-validate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqaGd3Y3VybGxra2VvdXp3dmdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcwMzIzMjQsImV4cCI6MjA3MjYwODMyNH0.ez6RDJ2FxgSfb7mo2Xug1lXaynKLR-2nJFO-x64UNnY',
+                        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqaGd3Y3VybGxra2VvdXp3dmdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcwMzIzMjQsImV4cCI6MjA3MjYwODMyNH0.ez6RDJ2FxgSfb7mo2Xug1lXaynKLR-2nJFO-x64UNnY'
+                    },
+                    body: JSON.stringify({
+                        widgetKey: cleanKey,
+                        calculatorType: 'roofing',
+                        domain: window.location.hostname,
+                        referer: document.referrer || null
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.valid) {
+                    subscriptionValid = true;
+                    return true;
+                } else {
+                    let errorMessage = 'This calculator is temporarily unavailable.';
+
+                    if (data.reason === 'subscription_inactive') {
+                        errorMessage = '⚠️ Subscription Expired: This roofing calculator is no longer available. The website owner\'s subscription has expired.';
+                    } else if (data.reason === 'invalid_key') {
+                        errorMessage = '⚠️ Invalid Widget: This calculator widget is not properly configured. Please contact the website owner.';
+                    } else if (data.reason === 'key_disabled') {
+                        errorMessage = '⚠️ Widget Disabled: This calculator has been disabled by the website owner.';
+                    } else if (data.reason === 'rate_limited') {
+                        errorMessage = '⚠️ Too Many Requests: Please wait a minute and try again.';
+                    }
+
+                    showSubscriptionError(errorMessage);
+                    return false;
+                }
+            } catch (error) {
+                console.error('Widget validation error:', error);
+                showSubscriptionError('Unable to load calculator. Please try again later.');
+                return false;
+            }
+        }
+
+        function showSubscriptionError(message) {
+            document.getElementById('calculator-section').innerHTML = `
+                <div style="text-align: center; padding: 60px 20px; background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); border-radius: 12px;">
+                    <div style="font-size: 48px; margin-bottom: 20px;">🔒</div>
+                    <h2 style="color: #991b1b; font-size: 24px; margin-bottom: 10px;">Calculator Unavailable</h2>
+                    <p style="color: #7f1d1d; font-size: 16px; max-width: 500px; margin: 0 auto;">${message}</p>
+                </div>
+            `;
+        }
+
+        // Run validation on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            const isValid = await validateWidget();
+            if (!isValid) {
+                // Disable all form inputs
+                const inputs = document.querySelectorAll('input, select, button');
+                inputs.forEach(input => input.disabled = true);
+            }
+        });
+
+        // Address Search Function
+        async function searchAddress() {
+            const address = document.getElementById('address-search').value.trim();
+            const statusDiv = document.getElementById('address-status');
+            const searchBtn = document.getElementById('search-address-btn');
+            const roofAreaInput = document.getElementById('roof-area');
+
+            if (!address) {
+                statusDiv.innerHTML = '<span style="color: var(--danger);">⚠️ Please enter an address</span>';
+                return;
+            }
+
+            // Show loading state
+            searchBtn.disabled = true;
+            searchBtn.textContent = 'Searching...';
+            statusDiv.innerHTML = '<span style="color: var(--muted);">🔍 Analyzing roof from satellite imagery...</span>';
+
+            try {
+                const response = await fetch('https://ujhgwcurllkkeouzwvgk.supabase.co/functions/v1/get-roof-area', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ address })
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.roofAreaSqFeet) {
+                    // Auto-fill roof square feet
+                    roofAreaInput.value = data.roofAreaSqFeet;
+
+                    statusDiv.innerHTML = `
+                        <span style="color: var(--success);">
+                            ✅ Found ${data.roofAreaSqFeet.toLocaleString()} square feet roof at ${data.address}
+                            ${data.imageryDate ? `<br><small>Imagery from: ${data.imageryDate}</small>` : ''}
+                        </span>
+                    `;
+
+                    // Trigger calculation
+                    calculateRoofing();
+                } else {
+                    statusDiv.innerHTML = `<span style="color: var(--danger);">⚠️ ${data.error || 'Unable to detect roof square feet'}</span>`;
+                }
+            } catch (error) {
+                console.error('Address search error:', error);
+                statusDiv.innerHTML = '<span style="color: var(--danger);">⚠️ Error searching address. Please try again.</span>';
+            } finally {
+                searchBtn.disabled = false;
+                searchBtn.textContent = 'Search';
+            }
+        }
+
+        // Add event listener for search button
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('search-address-btn').addEventListener('click', searchAddress);
+
+            // Also allow Enter key in address field
+            document.getElementById('address-search').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    searchAddress();
+                }
+            });
+        });
+
+        function calculateRoofing() {
+            const sqft = parseFloat(document.getElementById('roof-area').value) || 0;
+            const materialPrice = parseFloat(document.getElementById('roof-material').value);
+            const pitchMult = parseFloat(document.getElementById('roof-pitch').value);
+            const storyMult = parseFloat(document.getElementById('roof-stories').value);
+            const layers = parseInt(document.getElementById('roof-layers').value) || 0;
+            const skylights = parseInt(document.getElementById('roof-skylights').value) || 0;
+            const includeVent = document.getElementById('roof-ventilation').checked;
+            const includeIce = document.getElementById('roof-ice-shield').checked;
+            const includeWarranty = document.getElementById('roof-warranty').checked;
+
+            if (!sqft || sqft <= 0) {
+                alert('Please enter a valid roof square feet');
+                return;
+            }
+
+            const results = [];
+            const squares = sqft / 100;
+
+            // Material
+            const materialCost = squares * materialPrice;
+            results.push({ label: 'Roofing Material', value: squares.toFixed(2) + ' squares', cost: materialCost });
+
+            // Underlayment
+            results.push({ label: 'Underlayment', value: squares.toFixed(2) + ' squares', cost: squares * 26 });
+
+            // Ice shield
+            if (includeIce) {
+                const rolls = Math.ceil(sqft / 200);
+                results.push({ label: 'Ice & Water Shield', value: rolls + ' rolls', cost: rolls * 70 });
+            }
+
+            // Ridge cap
+            const ridgeFeet = sqft * 0.1;
+            results.push({ label: 'Ridge Cap', value: ridgeFeet.toFixed(0) + ' linear feet', cost: ridgeFeet * 3.25 });
+
+            // Drip edge
+            const dripEdge = Math.sqrt(sqft) * 4;
+            results.push({ label: 'Drip Edge', value: dripEdge.toFixed(0) + ' linear feet', cost: dripEdge * 2.5 });
+
+            // Nails
+            results.push({ label: 'Nails & Fasteners', value: squares.toFixed(2) + ' squares', cost: squares * 32 });
+
+            // Debris disposal (if tear-off needed)
+            if (layers > 0) {
+                results.push({ label: 'Debris Disposal', value: squares.toFixed(2) + ' squares', cost: squares * 32 });
+            }
+
+            // Skylights (materials only)
+            if (skylights > 0) {
+                results.push({ label: 'Skylight Flashing', value: skylights + (skylights > 1 ? ' skylights' : ' skylight'), cost: skylights * 85 });
+            }
+
+            // Options
+            if (includeVent) {
+                results.push({ label: 'Ventilation System', value: '1 system', cost: 625 });
+            }
+
+            if (includeWarranty) {
+                results.push({ label: 'Extended Warranty', value: squares.toFixed(2) + ' squares', cost: squares * 27 });
+            }
+
+            // Calculate totals (materials only, no labor)
+            const totalCost = results.reduce((sum, item) => sum + item.cost, 0);
+
+            calculationResults = {
+                sqft,
+                materialType: document.getElementById('roof-material').selectedOptions[0].text,
+                pitch: document.getElementById('roof-pitch').selectedOptions[0].text,
+                stories: storyMult,
+                layers,
+                skylights,
+                includeVent,
+                includeIce,
+                includeWarranty,
+                breakdown: results,
+                totalCost,
+                materialCost: totalCost
+            };
+
+            displayResults(results, totalCost);
+        }
+
+        function displayResults(results, total) {
+            const breakdownDiv = document.getElementById('results-breakdown');
+            breakdownDiv.innerHTML = results.map(item => `
+                <div class="result-item">
+                    <div>
+                        <div class="result-label">${item.label}</div>
+                        <div class="result-value">${item.value}</div>
+                    </div>
+                    <div class="result-label">$${item.cost.toFixed(2)}</div>
+                </div>
+            `).join('');
+
+            document.getElementById('total-cost').innerHTML = `Total: $${total.toFixed(2)}`;
+
+            document.getElementById('results-section').classList.add('active');
+            document.getElementById('results-section').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function showLeadForm() {
+            document.getElementById('lead-form-section').classList.add('active');
+            document.getElementById('lead-form-section').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        async function submitLead(event) {
+            event.preventDefault();
+
+            const name = document.getElementById('lead-name').value.trim();
+            const email = document.getElementById('lead-email').value.trim();
+            const phone = document.getElementById('lead-phone').value.trim();
+            const address = document.getElementById('lead-address').value.trim();
+
+            // Clear previous errors
+            document.querySelectorAll('.error-msg').forEach(el => el.textContent = '');
+
+            // Validation
+            if (!name) {
+                document.getElementById('error-name').textContent = 'Name is required';
+                return;
+            }
+            if (!email || !email.includes('@')) {
+                document.getElementById('error-email').textContent = 'Valid email is required';
+                return;
+            }
+
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+
+            try {
+                // Prepare lead data
+                const leadData = {
+                    widget_key: widgetKey,
+                    name,
+                    email,
+                    phone,
+                    address,
+                    calculator_type: 'roofing',
+                    project_details: JSON.stringify(calculationResults)
+                };
+
+                // Submit to Edge Function
+                const response = await fetch('https://ujhgwcurllkkeouzwvgk.supabase.co/functions/v1/widget-lead-capture', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(leadData)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to submit lead');
+                }
+
+                const result = await response.json();
+
+                // Send postMessage to parent window
+                if (window.parent) {
+                    window.parent.postMessage({
+                        type: 'WIDGET_LEAD_CAPTURED',
+                        data: {
+                            leadId: result.lead_id,
+                            name,
+                            email,
+                            calculatorType: 'roofing',
+                            totalCost: calculationResults.totalCost
+                        }
+                    }, '*');
+                }
+
+                // Show success message
+                document.getElementById('form-status').innerHTML = `
+                    <div class="success-msg">
+                        ✓ Thank you! Your quote request has been submitted. We'll contact you shortly.
+                    </div>
+                `;
+
+                // Reset form
+                document.getElementById('lead-capture-form').reset();
+
+            } catch (error) {
+                console.error('Error submitting lead:', error);
+                document.getElementById('form-status').innerHTML = `
+                    <div class="error-msg" style="text-align: center; margin-top: 1rem;">
+                        Failed to submit. Please try again or contact support.
+                    </div>
+                `;
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Get Detailed Quote';
+            }
+        }
+    </script>
+</body>
+</html>
