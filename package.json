@@ -1,0 +1,20 @@
+{
+  "name": "contractorai2-ios",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "sync": "./scripts/sync-build.sh",
+    "open": "npx cap open ios",
+    "build-and-open": "npm run sync && npm run open"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@capacitor/cli": "^7.4.4",
+    "@capacitor/core": "^7.4.4",
+    "@capacitor/ios": "^7.4.4"
+  }
+}
