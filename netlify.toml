@@ -1,3 +1,7 @@
 [build]
-  command = "echo 'Deploying ContractorAI landing page'"
-  publish = "dist"
+  command = "exit 0"
+  publish = "."
+  ignore = "exit 0"
+
+[build.processing]
+  skip_processing = true
