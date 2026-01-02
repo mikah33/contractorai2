@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build": "echo 'iOS project - no web build required'",
     "sync": "./scripts/sync-build.sh",
     "open": "npx cap open ios",
     "build-and-open": "npm run sync && npm run open"

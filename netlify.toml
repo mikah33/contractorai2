@@ -1,0 +1,7 @@
+[build]
+  command = "echo 'iOS project - no build required'"
+  publish = "."
+
+# Skip processing for iOS project
+[build.processing]
+  skip_processing = true
