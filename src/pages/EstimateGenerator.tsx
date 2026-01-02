@@ -12,6 +12,7 @@ import EstimateEditor from '../components/estimates/EstimateEditor';
 import EstimatePreview from '../components/estimates/EstimatePreview';
 import AIEstimateAssistant from '../components/estimates/AIEstimateAssistant';
 import SendEstimateModal from '../components/estimates/SendEstimateModal';
+import AIChatPopup from '../components/ai/AIChatPopup';
 import { Estimate, EstimateItem } from '../types/estimates';
 import { estimateService } from '../services/estimateService';
 import { estimateResponseService } from '../services/estimateResponseService';
@@ -36,6 +37,7 @@ const EstimateGenerator = () => {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [estimateResponses, setEstimateResponses] = useState<Map<string, any>>(new Map());
   const [searchQuery, setSearchQuery] = useState('');
+  const [showAIEditChat, setShowAIEditChat] = useState(false);
   const hasSavedCalculator = useRef(false); // PREVENT DOUBLE SAVES
   const initialEstimateRef = useRef<string>(''); // Track initial state
 
@@ -53,6 +55,44 @@ const EstimateGenerator = () => {
     });
   };
   
+  // Check if editing a specific estimate (from EstimatesHub)
+  useEffect(() => {
+    const loadEstimateForEdit = async () => {
+      if (location.state?.editEstimateId) {
+        console.log('Loading estimate for edit:', location.state.editEstimateId);
+        try {
+          const result = await estimateService.getEstimate(location.state.editEstimateId);
+          if (result.success && result.data) {
+            const est = result.data;
+            const estimateToEdit = {
+              id: est.id,
+              title: est.title || 'Untitled Estimate',
+              clientName: est.client_name || '',
+              projectName: est.project_name || '',
+              status: est.status || 'draft',
+              createdAt: est.created_at || new Date().toISOString(),
+              expiresAt: est.expires_at || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+              items: est.items || [],
+              subtotal: est.subtotal || 0,
+              taxRate: est.tax_rate || 0,
+              taxAmount: est.tax_amount || 0,
+              total: est.total || 0,
+              notes: est.notes || '',
+              terms: est.terms || 'Valid for 30 days from the date of issue.'
+            };
+            setCurrentEstimate(estimateToEdit);
+            setActiveTab('editor');
+            // Clear the state to prevent re-loading on refresh
+            window.history.replaceState({}, document.title);
+          }
+        } catch (error) {
+          console.error('Error loading estimate for edit:', error);
+        }
+      }
+    };
+    loadEstimateForEdit();
+  }, [location.state?.editEstimateId]);
+
   // Check if coming from calculator with data
   useEffect(() => {
     const saveCalculatorData = async () => {
@@ -280,10 +320,17 @@ const EstimateGenerator = () => {
         return;
       }
     }
-    // Clear current estimate and go back to list view
-    setCurrentEstimate(null);
-    initialEstimateRef.current = '';
-    setHasUnsavedChanges(false);
+
+    // Check if we should return to a specific page (e.g., projects-hub)
+    if (location.state?.returnTo) {
+      navigate(location.state.returnTo, {
+        state: location.state.returnProjectId ? { selectedProjectId: location.state.returnProjectId } : undefined
+      });
+      return;
+    }
+
+    // Go back to estimates hub
+    navigate('/estimates-hub');
   };
 
   const handleRecalculate = (estimate: any) => {
@@ -875,22 +922,22 @@ const EstimateGenerator = () => {
   }, [recentEstimates, searchQuery]);
 
   return (
-    <div className="space-y-4 sm:space-y-6 max-w-full overflow-x-hidden px-2 sm:px-0">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+    <div className="min-h-screen pb-20 space-y-4 sm:space-y-6 max-w-full overflow-x-hidden px-2 sm:px-4" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 16px)' }}>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mt-4">
         <div>
           <div className="flex items-center space-x-3">
             {currentEstimate && (
               <button
                 onClick={handleBack}
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+                className="p-2 text-gray-300 hover:text-white hover:bg-white/10 rounded-md transition-colors"
                 title="Back to Estimates List"
               >
                 <ArrowLeft className="w-5 h-5" />
               </button>
             )}
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">{t('estimates.title')}</h1>
-              <p className="mt-1 text-sm text-gray-600">
+              <h1 className="text-2xl font-bold text-white">{t('estimates.title')}</h1>
+              <p className="mt-1 text-sm text-gray-400">
                 {t('estimates.subtitle')}
               </p>
             </div>
@@ -899,135 +946,42 @@ const EstimateGenerator = () => {
         
         {currentEstimate ? (
           <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-            {/* Preview Button */}
-            <button
-              onClick={() => setActiveTab('preview')}
-              className="flex-1 sm:flex-none inline-flex items-center justify-center px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 shadow-sm transition-all duration-200"
-            >
-              <Eye className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:inline">{t('estimates.preview')}</span>
-            </button>
-
-            {/* Primary Action - Send */}
+            {/* Send to Customer Button */}
             <button
               onClick={() => setShowSendModal(true)}
-              className="flex-1 sm:flex-none inline-flex items-center justify-center px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg transition-all duration-200"
+              className="flex-1 sm:flex-none inline-flex items-center justify-center px-4 py-2.5 text-sm font-semibold rounded-lg text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg transition-all duration-200"
             >
-              <Mail className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:inline">{t('estimates.send')}</span>
+              <Mail className="w-4 h-4 mr-2" />
+              Send to Customer
             </button>
 
-            {/* Download Dropdown */}
-            <div className="relative flex-1 sm:flex-none">
-              <button
-                onClick={() => setShowExportMenu(!showExportMenu)}
-                className="w-full sm:w-auto inline-flex items-center justify-center px-3 py-2 text-xs sm:text-sm font-medium rounded-lg text-gray-700 bg-white border-2 border-gray-200 hover:border-blue-500 hover:text-blue-600 transition-all duration-200"
-              >
-                <Download className="w-4 h-4 sm:mr-2" />
-                <span className="hidden sm:inline">Download</span>
-              </button>
-
-              {showExportMenu && (
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-2xl border border-gray-100 z-50 overflow-hidden">
-                  <div className="py-2">
-                    <button
-                      onClick={handleSaveEstimate}
-                      disabled={isGenerating}
-                      className="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150"
-                    >
-                      {isGenerating ? (
-                        <RefreshCw className="w-5 h-5 mr-3 animate-spin text-blue-500" />
-                      ) : (
-                        <FileDown className="w-5 h-5 mr-3 text-blue-500" />
-                      )}
-                      <span className="font-medium">{t('estimates.saveEstimate')}</span>
-                    </button>
-
-                    <div className="border-t border-gray-100 my-1"></div>
-
-                    <button
-                      onClick={() => {
-                        handleExportPDF();
-                        setShowExportMenu(false);
-                      }}
-                      className="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150"
-                    >
-                      <Download className="w-5 h-5 mr-3 text-green-500" />
-                      <span className="font-medium">{t('estimates.exportAsPDF')}</span>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        handleExportExcel();
-                        setShowExportMenu(false);
-                      }}
-                      className="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150"
-                    >
-                      <FileText className="w-5 h-5 mr-3 text-green-500" />
-                      <span className="font-medium">{t('estimates.exportAsExcel')}</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {currentEstimate.status === 'approved' && (
-              <button
-                onClick={handleConvertToInvoice}
-                disabled={currentEstimate.convertedToInvoice}
-                className={`inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white ${
-                  currentEstimate.convertedToInvoice
-                    ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500'
-                }`}
-                title={currentEstimate.convertedToInvoice ? t('estimates.alreadyInvoiced') : t('estimates.convertToInvoice')}
-              >
-                <Receipt className="w-4 h-4 mr-2" />
-                {currentEstimate.convertedToInvoice ? t('estimates.alreadyInvoiced') : t('estimates.convertToInvoice')}
-              </button>
-            )}
-
-            {activeTab === 'preview' && (
-              <button
-                onClick={() => setActiveTab('editor')}
-                className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                <Edit2 className="w-4 h-4 mr-2" />
-                {t('common.edit')}
-              </button>
-            )}
-            
-            {activeTab === 'editor' && (
-              <>
-                <button
-                  onClick={() => setActiveTab('preview')}
-                  className="inline-flex items-center px-4 py-2.5 text-sm font-semibold rounded-lg text-white bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 whitespace-nowrap"
-                >
-                  <Eye className="w-4 h-4 mr-2" />
-                  {t('estimates.preview')}
-                </button>
-
-                <button
-                  onClick={() => {
-                    if (confirm(t('estimates.clearDataConfirm'))) {
-                      localStorage.clear();
-                      sessionStorage.clear();
-                      window.location.href = '/estimates';
-                    }
-                  }}
-                  className="inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg text-red-600 bg-white border-2 border-red-200 hover:border-red-400 hover:bg-red-50 transition-all duration-200 whitespace-nowrap"
-                  title={t('estimates.clearDataTitle')}
-                >
-                  <X className="w-4 h-4 mr-2" />
-                  <span className="hidden sm:inline">{t('estimates.clearData')}</span>
-                </button>
-              </>
-            )}
+            {/* Convert to Invoice Button - always show but disabled if not approved or already converted */}
+            <button
+              onClick={handleConvertToInvoice}
+              disabled={currentEstimate.status !== 'approved' || currentEstimate.convertedToInvoice}
+              className={`flex-1 sm:flex-none inline-flex items-center justify-center px-4 py-2.5 text-sm font-semibold rounded-lg shadow-md transition-all duration-200 ${
+                currentEstimate.convertedToInvoice
+                  ? 'bg-gray-400 text-white cursor-not-allowed'
+                  : currentEstimate.status === 'approved'
+                    ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white'
+                    : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+              }`}
+              title={
+                currentEstimate.convertedToInvoice
+                  ? 'Already converted to invoice'
+                  : currentEstimate.status !== 'approved'
+                    ? 'Estimate must be approved first'
+                    : 'Convert to Invoice'
+              }
+            >
+              <Receipt className="w-4 h-4 mr-2" />
+              {currentEstimate.convertedToInvoice ? 'Already Invoiced' : 'Convert to Invoice'}
+            </button>
           </div>
         ) : (
-          <button 
+          <button
             onClick={handleCreateFromScratch}
-            className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             <Plus className="w-4 h-4 mr-2" />
             {t('estimates.newEstimate')}
@@ -1045,10 +999,10 @@ const EstimateGenerator = () => {
       {activeTab === 'editor' && (
         <>
           {!currentEstimate && (
-            <div className="bg-white rounded-lg shadow mb-6">
-              <div className="p-6 border-b border-gray-200">
+            <div className="bg-[#1C1C1E] rounded-lg shadow mb-6">
+              <div className="p-6 border-b border-white/10">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-medium text-gray-900">{t('estimates.yourEstimates')}</h2>
+                  <h2 className="text-lg font-medium text-white">{t('estimates.yourEstimates')}</h2>
                 </div>
                 {/* Search Bar */}
                 <div className="relative">
@@ -1059,7 +1013,7 @@ const EstimateGenerator = () => {
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    className="block w-full pl-10 pr-3 py-2 border border-white/20 rounded-md leading-5 bg-[#2C2C2E] text-white placeholder-gray-400 focus:outline-none focus:placeholder-gray-500 focus:ring-1 focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
                     placeholder="Search by Estimate ID, Client, Project, or Amount..."
                   />
                   {searchQuery && (
@@ -1067,25 +1021,25 @@ const EstimateGenerator = () => {
                       onClick={() => setSearchQuery('')}
                       className="absolute inset-y-0 right-0 pr-3 flex items-center"
                     >
-                      <X className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                      <X className="h-5 w-5 text-gray-400 hover:text-white" />
                     </button>
                   )}
                 </div>
               </div>
               <div className="p-4">
                 {loadingEstimates ? (
-                  <div className="py-8 text-center text-gray-500">
+                  <div className="py-8 text-center text-gray-400">
                     <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2" />
                     Loading estimates...
                   </div>
                 ) : filteredEstimates.length === 0 ? (
-                  <div className="py-8 text-center text-gray-500">
+                  <div className="py-8 text-center text-gray-400">
                     {searchQuery ? (
                       <>
                         No estimates found matching "{searchQuery}"
                         <button
                           onClick={() => setSearchQuery('')}
-                          className="block mx-auto mt-2 text-blue-600 hover:text-blue-800"
+                          className="block mx-auto mt-2 text-orange-500 hover:text-orange-400"
                         >
                           Clear search
                         </button>
@@ -1099,16 +1053,16 @@ const EstimateGenerator = () => {
                     {filteredEstimates.map((estimate) => (
                       <div
                         key={estimate.id}
-                        className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-md transition-all duration-200"
+                        className="flex items-center justify-between p-4 bg-[#2C2C2E] border border-white/10 rounded-lg hover:border-orange-500/50 hover:shadow-md transition-all duration-200"
                       >
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <h3 className="text-sm font-semibold text-gray-900 truncate">
+                            <h3 className="text-sm font-semibold text-white truncate">
                               {estimate.project || estimate.client || 'Untitled Estimate'}
                             </h3>
                             {getResponseStatusBadge(estimate.id)}
                           </div>
-                          <div className="flex items-center gap-3 text-xs text-gray-500">
+                          <div className="flex items-center gap-3 text-xs text-gray-400">
                             <span>{estimate.amount}</span>
                             <span>•</span>
                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full font-medium ${getStatusColor(estimate.status)}`}>
@@ -1142,42 +1096,24 @@ const EstimateGenerator = () => {
 
           {currentEstimate ? (
             <>
-              {/* Calculate Job Cost Banner */}
-              <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg shadow-md p-4 sm:p-6 mb-6 border-2 border-blue-200">
+              {/* Edit with AI Banner */}
+              <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-lg shadow-md p-4 sm:p-6 mb-6 border-2 border-orange-200">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div className="flex items-start gap-3 sm:gap-4 w-full sm:w-auto">
-                    <div className="bg-blue-600 rounded-full p-2 sm:p-3 flex-shrink-0">
-                      <Calculator className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                    <div className="bg-gradient-to-r from-orange-500 to-amber-500 rounded-full p-2 sm:p-3 flex-shrink-0">
+                      <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-base sm:text-lg font-semibold text-gray-900">Need to Calculate Job Costs?</h3>
-                      <p className="text-xs sm:text-sm text-gray-600 mt-1">Use our 20+ professional calculators to get accurate pricing and import directly to this estimate</p>
+                      <h3 className="text-base sm:text-lg font-semibold text-gray-900">Edit This Estimate with AI</h3>
+                      <p className="text-xs sm:text-sm text-gray-600 mt-1">Let AI help you modify line items, adjust pricing, add materials, or make changes to this estimate</p>
                     </div>
                   </div>
                   <button
-                    onClick={() => {
-                      // Save current estimate before navigating
-                      if (currentEstimate.id) {
-                        handleSaveEstimate().then(() => {
-                          navigate('/pricing', {
-                            state: {
-                              fromEstimate: true,
-                              estimateId: currentEstimate.id
-                            }
-                          });
-                        });
-                      } else {
-                        navigate('/pricing', {
-                          state: {
-                            fromEstimate: true
-                          }
-                        });
-                      }
-                    }}
-                    className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold rounded-lg text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 whitespace-nowrap"
+                    onClick={() => setShowAIEditChat(true)}
+                    className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold rounded-lg text-white bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 whitespace-nowrap"
                   >
-                    <Calculator className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                    Go to Calculators
+                    <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                    Edit with AI
                   </button>
                 </div>
               </div>
@@ -1267,6 +1203,25 @@ const EstimateGenerator = () => {
         }}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
+      />
+
+      {/* AI Edit Chat Popup */}
+      <AIChatPopup
+        isOpen={showAIEditChat}
+        onClose={() => setShowAIEditChat(false)}
+        mode="estimating"
+        initialContext={currentEstimate ? {
+          estimateId: currentEstimate.id,
+          title: currentEstimate.title,
+          clientName: currentEstimate.clientName,
+          projectName: currentEstimate.projectName,
+          items: currentEstimate.items,
+          subtotal: currentEstimate.subtotal,
+          taxRate: currentEstimate.taxRate,
+          taxAmount: currentEstimate.taxAmount,
+          total: currentEstimate.total,
+          notes: currentEstimate.notes
+        } : undefined}
       />
     </div>
   );

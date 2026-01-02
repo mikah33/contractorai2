@@ -22,6 +22,7 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucc
   const [rebarSpacing, setRebarSpacing] = useState<number>(12); // inches or 30cm
   const [meshType, setMeshType] = useState<'6x6' | '4x4'>('6x6');
   const [deliveryMethod, setDeliveryMethod] = useState<'bags' | 'truck'>('truck'); // Default to ready-mix truck
+  const [bagSize, setBagSize] = useState<60 | 80>(80); // 60lb or 80lb bags
   const [addColor, setAddColor] = useState<boolean>(false);
   const [colorPricePerYard, setColorPricePerYard] = useState<number | ''>('');
   const [addFiber, setAddFiber] = useState<boolean>(false);
@@ -29,8 +30,13 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucc
   const [lastCalculation, setLastCalculation] = useState<CalculationResult[] | null>(null);
 
   // Default pricing with dynamic pricing support
+  // 60lb bag = $6.98, 80lb bag = $5.89
   const defaultPricing = {
-    bagPrice: unit === 'imperial' ? getCustomPrice('Concrete Bag', 6.98, 'concrete') : getCustomPrice('Concrete Bag', 7.50, 'concrete'),
+    bagPrice60: getCustomPrice('Concrete Bag 60lb', 6.98, 'concrete'),
+    bagPrice80: getCustomPrice('Concrete Bag 80lb', 5.89, 'concrete'),
+    bagPrice: bagSize === 60
+      ? getCustomPrice('Concrete Bag 60lb', 6.98, 'concrete')
+      : getCustomPrice('Concrete Bag 80lb', 5.89, 'concrete'),
     truckPricePerYard: getCustomPrice('3000 PSI Concrete', 185, 'concrete'),
     deliveryFee: getCustomPrice('Delivery Fee', 150, 'concrete'),
     rebarPrice: unit === 'imperial' ? getCustomPrice('#4 Rebar', 8.98, 'reinforcement') : getCustomPrice('#4 Rebar', 9.50, 'reinforcement'),
@@ -65,6 +71,7 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucc
     rebarSpacing,
     meshType,
     deliveryMethod,
+    bagSize,
     addColor,
     colorPricePerYard,
     addFiber,
@@ -83,6 +90,7 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucc
     setRebarSpacing(inputs.rebarSpacing ?? 12);
     setMeshType(inputs.meshType || '6x6');
     setDeliveryMethod(inputs.deliveryMethod || 'truck');
+    setBagSize(inputs.bagSize || 80);
     setAddColor(inputs.addColor ?? false);
     setColorPricePerYard(inputs.colorPricePerYard ?? '');
     setAddFiber(inputs.addFiber ?? false);
@@ -101,6 +109,7 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucc
     setRebarSpacing(12);
     setMeshType('6x6');
     setDeliveryMethod('truck');
+    setBagSize(80);
     setAddColor(false);
     setColorPricePerYard('');
     setAddFiber(false);
@@ -124,8 +133,11 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucc
           ? (length * height * (thickness / 12)) / 27 // Linear feet × height × (thickness in feet) / 27
           : (length * width * (height / 12)) / 27; // Convert depth from inches to feet, then to cubic yards
         volumeUnit = t('calculators.concrete.cubicYards');
-        bagsNeeded = Math.ceil(volume * 40); // Approx 40 bags per cubic yard
-        bagsUnit = t('calculators.concrete.lbBags');
+        // Bag yields: 60lb = 0.45 cu ft, 80lb = 0.60 cu ft
+        // Per cubic yard (27 cu ft): 60lb = 60 bags, 80lb = 45 bags
+        const bagsPerYard = bagSize === 60 ? 60 : 45;
+        bagsNeeded = Math.ceil(volume * bagsPerYard);
+        bagsUnit = `${bagSize}${t('calculators.concrete.lbBags')}`;
       } else {
         volume = concreteType === 'wall'
           ? (length * height * (thickness / 100)) // Linear meters × height × (thickness in meters)
@@ -388,6 +400,34 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucc
               <span className="sm:hidden">{t('calculators.concrete.truck')}</span>
             </button>
           </div>
+
+          {/* Bag Size Selection - only show when bags selected */}
+          {deliveryMethod === 'bags' && (
+            <div className="inline-flex rounded-md shadow-sm">
+              <button
+                type="button"
+                className={`px-4 py-2 text-sm font-medium rounded-l-lg ${
+                  bagSize === 60
+                    ? 'bg-orange-500 text-white'
+                    : 'bg-white text-slate-700 hover:bg-slate-100'
+                } border border-slate-300`}
+                onClick={() => setBagSize(60)}
+              >
+                60lb ($6.98)
+              </button>
+              <button
+                type="button"
+                className={`px-4 py-2 text-sm font-medium rounded-r-lg ${
+                  bagSize === 80
+                    ? 'bg-orange-500 text-white'
+                    : 'bg-white text-slate-700 hover:bg-slate-100'
+                } border border-slate-300`}
+                onClick={() => setBagSize(80)}
+              >
+                80lb ($5.89)
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

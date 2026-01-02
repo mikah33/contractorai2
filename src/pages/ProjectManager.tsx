@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useLocation } from 'react-router-dom';
 import {
   Plus, Search, Filter, MoreVertical, Calendar, Users, CheckCircle, Clock, AlertCircle,
   MessageSquare, Upload, Camera, FileText, ChevronDown, ChevronUp, Trash2, Edit,
   Paperclip, Send, User, Sparkles, BarChart2, ArrowRight, Tag, Flag, Zap, DollarSign, X,
-  Phone, Mail, Briefcase, StickyNote, UserPlus
+  Phone, Mail, Briefcase, StickyNote, UserPlus, ArrowLeft
 } from 'lucide-react';
 import TaskList from '../components/projects/TaskList';
 import TeamMemberSelector from '../components/projects/TeamMemberSelector';
@@ -54,6 +55,7 @@ interface Comment {
 
 const ProjectManager: React.FC = () => {
   const { t } = useTranslation();
+  const location = useLocation();
   const {
     projects,
     progressUpdates,
@@ -115,15 +117,20 @@ const ProjectManager: React.FC = () => {
   useEffect(() => {
     fetchProjects(); // Will use cache if already loaded
     fetchClients();
-
-    // Debug tools disabled - enable if needed for troubleshooting
-    // import('../components/projects/TestClientSave').then(({ testClientSave }) => {
-    //   testClientSave();
-    // });
-    // import('../utils/debugClientSave').then(({ debugClientSave }) => {
-    //   debugClientSave();
-    // });
   }, []); // Empty deps - only run once on mount
+
+  // Handle navigation state to select a specific project
+  useEffect(() => {
+    const state = location.state as { selectedProjectId?: string } | null;
+    if (state?.selectedProjectId && projects.length > 0) {
+      const project = projects.find(p => p.id === state.selectedProjectId);
+      if (project) {
+        setSelectedProject(project as Project);
+      }
+      // Clear the navigation state so refreshing doesn't re-select
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state, projects]);
 
   // Fetch estimates when estimates tab is selected
   useEffect(() => {
@@ -444,454 +451,295 @@ const ProjectManager: React.FC = () => {
           </div>
         </div>
 
-        {/* Project Details Modal */}
+        {/* Project Details Modal - Slide Up */}
         {selectedProject && (
           <div className="fixed inset-0 z-50 overflow-hidden">
             {/* Backdrop */}
-            <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setSelectedProject(null)} />
-            
-            {/* Modal */}
-            <div className="absolute inset-4 md:inset-8 lg:inset-12 bg-white rounded-lg shadow-2xl flex flex-col max-w-6xl mx-auto">
+            <div
+              className="absolute inset-0 bg-black/50 transition-opacity"
+              onClick={() => setSelectedProject(null)}
+            />
+
+            {/* Slide-up Modal */}
+            <div className="absolute inset-x-0 bottom-0 top-12 bg-gray-50 rounded-t-3xl shadow-2xl flex flex-col animate-slide-up overflow-hidden">
               {/* Header */}
-              <div className="px-6 py-4 border-b border-gray-200 bg-white rounded-t-lg">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h2 className="text-2xl font-semibold text-gray-900">{selectedProject.name}</h2>
-                    <p className="text-sm text-gray-600 mt-1">{selectedProject.client}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={async () => {
-                        if (window.confirm(`Are you sure you want to delete "${selectedProject.name}"? This action cannot be undone.`)) {
-                          try {
-                            await deleteProject(selectedProject.id);
-                            setSelectedProject(null);
-                          } catch (error) {
-                            console.error('Error deleting project:', error);
-                            alert('Failed to delete project. Please try again.');
-                          }
+              <div className="bg-white px-4 py-4 border-b border-gray-200 flex-shrink-0">
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={() => setSelectedProject(null)}
+                    className="flex items-center gap-2 text-gray-600 active:text-gray-900"
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                    <span className="text-sm font-medium">Back</span>
+                  </button>
+                  <button
+                    onClick={async () => {
+                      if (window.confirm(`Delete "${selectedProject.name}"? This cannot be undone.`)) {
+                        try {
+                          await deleteProject(selectedProject.id);
+                          setSelectedProject(null);
+                        } catch (error) {
+                          console.error('Error deleting project:', error);
+                          alert('Failed to delete project.');
                         }
-                      }}
-                      className="text-red-400 hover:text-red-600 p-2 rounded-lg hover:bg-red-50 transition-colors"
-                      aria-label="Delete project"
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() => setSelectedProject(null)}
-                      className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                      aria-label="Close details"
-                    >
-                      <X className="w-6 h-6" />
-                    </button>
-                  </div>
+                      }
+                    }}
+                    className="p-2 text-red-400 active:text-red-600 active:bg-red-50 rounded-xl"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Project Title */}
+                <div className="mt-3">
+                  <h1 className="text-xl font-bold text-gray-900">{selectedProject.name}</h1>
+                  <p className="text-sm text-gray-500">{selectedProject.client}</p>
                 </div>
               </div>
 
-              {/* Tabs */}
-              <div className="border-b border-gray-200 bg-gray-50">
-                <nav className="flex px-6 space-x-4 overflow-x-auto">
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('overview')}
-                  className={`px-3 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
-                    activeTab === 'overview'
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
-                  }`}
-                >
-                  {t('projects.overview')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('tasks')}
-                  className={`px-3 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
-                    activeTab === 'tasks'
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
-                  }`}
-                >
-                  {t('projects.tasks')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('team')}
-                  className={`px-3 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
-                    activeTab === 'team'
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
-                  }`}
-                >
-                  {t('projects.team')}
-                </button>
-                <button
-                  onClick={() => {
-                    console.log('Progress tab clicked!');
-                    setActiveTab('progress');
-                  }}
-                  className={`px-3 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
-                    activeTab === 'progress'
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
-                  }`}
-                  type="button"
-                >
-                  {t('projects.progress')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('comments')}
-                  className={`px-3 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
-                    activeTab === 'comments'
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
-                  }`}
-                >
-                  {t('projects.comments')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('estimates')}
-                  className={`px-3 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
-                    activeTab === 'estimates'
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
-                  }`}
-                >
-                  {t('projects.estimates')}
-                </button>
-              </nav>
-            </div>
+              {/* Scrollable Content */}
+              <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 pb-24">
 
-              {/* Content */}
-              <div className="flex-1 overflow-y-auto p-6 max-h-[calc(100vh-250px)]">
-                {activeTab === 'overview' && (
-                <>
-                  {/* Project Status */}
-                  <div className="mb-6">
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(selectedProject.status)}`}>
-                      {selectedProject.status.replace('-', ' ')}
+                {/* Status & Progress Card */}
+                <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedProject.status)}`}>
+                      {selectedProject.status.replace('-', ' ').replace('_', ' ')}
                     </span>
+                    <span className="text-sm font-semibold text-gray-700">{selectedProject.progress}%</span>
                   </div>
-
-                  {/* Progress */}
-                  <div className="mb-6">
-                    <div className="flex justify-between text-sm text-gray-600 mb-2">
-                      <span>{t('projects.progress')}</span>
-                      <span>{selectedProject.progress}%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3">
-                      <div
-                        className="bg-blue-600 h-3 rounded-full"
-                        style={{ width: `${selectedProject.progress}%` }}
-                      ></div>
-                    </div>
+                  <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-purple-500 to-purple-600 rounded-full transition-all"
+                      style={{ width: `${selectedProject.progress}%` }}
+                    />
                   </div>
-
-                  {/* Budget */}
-                  <div className="mb-6">
-                    <h3 className="font-medium text-gray-900 mb-2">{t('projects.budget')}</h3>
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm text-gray-600">{t('projects.spent')}</span>
-                        <span className="font-medium">${selectedProject.spent.toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">{t('projects.budget')}</span>
-                        <span className="font-medium">${selectedProject.budget.toLocaleString()}</span>
-                      </div>
+                  <div className="flex items-center justify-between mt-3 text-xs text-gray-500">
+                    <div className="flex items-center gap-1">
+                      <Calendar className="w-3.5 h-3.5" />
+                      {selectedProject.startDate ? new Date(selectedProject.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'No date'}
+                      {selectedProject.endDate && ` - ${new Date(selectedProject.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
                     </div>
                   </div>
-
-                  {/* Team */}
-                  <div className="mb-6">
-                    <h3 className="font-medium text-gray-900 mb-2">{t('projects.team')}</h3>
-                    <div className="space-y-2">
-                      {(selectedProject.team || []).map((member, index) => (
-                        <div key={index} className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-sm text-white">
-                            {member.split(' ').map(n => n[0]).join('')}
-                          </div>
-                          <span className="text-sm text-gray-900">{member}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Tasks */}
-                  <div className="mb-6">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="font-medium text-gray-900">{t('projects.tasks')}</h3>
-                      <button
-                        onClick={() => setShowTaskModal(true)}
-                        className="text-blue-600 hover:text-blue-700 text-sm"
-                      >
-                        {t('projects.addTask')}
-                      </button>
-                    </div>
-                    <div className="space-y-2">
-                      {(selectedProject.tasks || []).map((task) => (
-                        <div key={task.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                          <div className={`w-4 h-4 rounded-full ${
-                            task.status === 'completed' ? 'bg-green-500' :
-                            task.status === 'in-progress' ? 'bg-yellow-500' : 'bg-gray-300'
-                          }`}></div>
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-900">{task.title}</p>
-                            <p className="text-xs text-gray-600">
-                              {(() => {
-                                const assignee = task.assignee;
-                                if (Array.isArray(assignee)) {
-                                  // Filter out UUID-like strings and keep only real names
-                                  const filtered = assignee.filter(a => !a.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i));
-                                  return filtered.length > 0 ? filtered.join(', ') : 'Unassigned';
-                                }
-                                // Check if single assignee is a UUID
-                                if (typeof assignee === 'string' && assignee.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
-                                  return 'Unassigned';
-                                }
-                                return assignee || 'Unassigned';
-                              })()}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Comments */}
-                  <div>
-                    <h3 className="font-medium text-gray-900 mb-3">{t('projects.comments')}</h3>
-                    <div className="space-y-4 mb-4">
-                      {(selectedProject.comments || []).map((comment) => (
-                        <div key={comment.id} className="flex gap-3">
-                          <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-sm">
-                            {comment.author.split(' ').map(n => n[0]).join('')}
-                          </div>
-                          <div className="flex-1">
-                            <div className="bg-gray-50 rounded-lg p-3">
-                              <p className="text-sm text-gray-900">{comment.content}</p>
-                              {comment.attachments && comment.attachments.length > 0 && (
-                                <div className="mt-2 flex flex-wrap gap-2">
-                                  {comment.attachments.map((attachment, idx) => {
-                                    const isImage = attachment.match(/\.(jpg|jpeg|png|gif|webp)$/i);
-                                    return isImage ? (
-                                      <img
-                                        key={idx}
-                                        src={attachment}
-                                        alt={`Attachment ${idx + 1}`}
-                                        className="h-16 w-16 object-cover rounded cursor-pointer hover:opacity-75"
-                                        onClick={() => window.open(attachment, '_blank')}
-                                      />
-                                    ) : (
-                                      <a
-                                        key={idx}
-                                        href={attachment}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="flex items-center bg-white border rounded px-2 py-1 text-xs hover:bg-gray-100"
-                                      >
-                                        <Paperclip className="h-3 w-3 mr-1" />
-                                        File {idx + 1}
-                                      </a>
-                                    );
-                                  })}
-                                </div>
-                              )}
-                            </div>
-                            <p className="text-xs text-gray-500 mt-1">
-                              {comment.author} • {new Date(comment.timestamp).toLocaleDateString()}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Add Comment */}
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        placeholder={t('projects.addCommentPlaceholder')}
-                        value={newComment}
-                        onChange={(e) => setNewComment(e.target.value)}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                        onKeyPress={(e) => e.key === 'Enter' && handleAddComment()}
-                      />
-                      <button
-                        onClick={handleAddComment}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg"
-                      >
-                        <Send className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {activeTab === 'tasks' && (
-                <div>
-                  <TaskList 
-                    tasks={selectedProject.tasks || []} 
-                  team={teamMembers}
-                  onAddTask={() => setShowTaskModal(true)}
-                  onUpdateTask={async (taskId, updates) => {
-                    console.log('Updating task:', taskId, updates);
-                    try {
-                      await updateTask(selectedProject.id, taskId, updates);
-                      await fetchProjects(); // Refresh the data
-                      const updatedProject = projects.find(p => p.id === selectedProject.id);
-                      if (updatedProject) setSelectedProject(updatedProject);
-                    } catch (error) {
-                      console.error('Error updating task:', error);
-                    }
-                  }}
-                  onDeleteTask={async (taskId) => {
-                    console.log('Deleting task:', taskId);
-                    try {
-                      await deleteTask(selectedProject.id, taskId);
-                      await fetchProjects(); // Refresh the data
-                      const updatedProject = projects.find(p => p.id === selectedProject.id);
-                      if (updatedProject) setSelectedProject(updatedProject);
-                    } catch (error) {
-                      console.error('Error deleting task:', error);
-                    }
-                  }}
-                  onAddComment={async (taskId, comment) => {
-                    console.log('Adding comment for task:', taskId, comment);
-                    try {
-                      await addComment(selectedProject.id, { author: 'Current User', content: `Task ${taskId}: ${comment}` });
-                      await fetchProjects(); // Refresh the data
-                      const updatedProject = projects.find(p => p.id === selectedProject.id);
-                      if (updatedProject) setSelectedProject(updatedProject);
-                    } catch (error) {
-                      console.error('Error adding comment:', error);
-                    }
-                  }}
-                />
                 </div>
-              )}
 
-              {activeTab === 'team' && (
-                <TeamMemberSelector 
-                  team={teamMembers}
-                  projectId={selectedProject.id}
-                  addTeamMember={addTeamMember}
-                  removeTeamMember={removeTeamMember}
-                />
-              )}
+                {/* Budget Card */}
+                <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+                  <label className="block text-xs text-gray-500 mb-3">Budget</label>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-gray-500">Spent</p>
+                      <p className="text-lg font-bold text-gray-900">${selectedProject.spent.toLocaleString()}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-gray-500">Budget</p>
+                      <p className="text-lg font-bold text-green-600">${selectedProject.budget.toLocaleString()}</p>
+                    </div>
+                  </div>
+                  {selectedProject.budget > 0 && (
+                    <div className="mt-3">
+                      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all ${
+                            (selectedProject.spent / selectedProject.budget) > 0.9 ? 'bg-red-500' :
+                            (selectedProject.spent / selectedProject.budget) > 0.7 ? 'bg-yellow-500' : 'bg-green-500'
+                          }`}
+                          style={{ width: `${Math.min((selectedProject.spent / selectedProject.budget) * 100, 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
 
-              {activeTab === 'progress' && (
-                <ProjectProgressGallery 
-                  progressUpdates={progressUpdates}
-                  tasks={selectedProject.tasks || []}
-                  team={teamMembers}
-                  onUploadProgress={() => setShowUploadModal(true)}
-                  onDeleteProgress={deleteProgressUpdate}
-                />
-              )}
-
-              {activeTab === 'comments' && (
-                <ProjectComments
-                  comments={(selectedProject.comments || []).map(c => ({
-                    id: c.id,
-                    text: c.content,
-                    date: c.timestamp,
-                    author: c.author,
-                    mentions: [],
-                    attachments: c.attachments || []
-                  }))}
-                  team={teamMembers}
-                  projectId={selectedProject.id}
-                  onAddComment={async (comment, attachments) => {
-                    console.log('Adding comment with attachments:', comment, attachments);
-                    try {
-                      await addComment(selectedProject.id, { 
-                        author: 'Current User', 
-                        content: comment 
-                      }, attachments);
-                      // The useEffect will handle updating selectedProject
-                    } catch (error) {
-                      console.error('Error adding comment:', error);
-                    }
-                  }}
-                  onDeleteComment={async (commentId) => {
-                    console.log('Deleting comment:', commentId);
-                    try {
-                      await deleteComment(selectedProject.id, commentId);
-                      // The useEffect will handle updating selectedProject
-                    } catch (error) {
-                      console.error('Error deleting comment:', error);
-                    }
-                  }}
-                />
-              )}
-
-              {activeTab === 'estimates' && (
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-medium text-gray-900">Project Estimates</h3>
+                {/* Team Card */}
+                <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="text-xs text-gray-500">Team</label>
                     <button
-                      onClick={() => window.location.href = `/estimates?project_id=${selectedProject.id}`}
-                      className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                      onClick={() => {
+                        // Open team member selector
+                        setEditingProject(selectedProject);
+                      }}
+                      className="text-xs text-purple-600 font-medium"
                     >
-                      <Plus className="w-4 h-4 mr-2" />
-                      New Estimate
+                      Manage
                     </button>
                   </div>
-
-                  {projectEstimates.length === 0 ? (
-                    <div className="text-center py-12 bg-gray-50 rounded-lg">
-                      <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-500">No estimates for this project yet</p>
-                      <button
-                        onClick={() => window.location.href = `/estimates?project_id=${selectedProject.id}`}
-                        className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-                      >
-                        Create First Estimate
-                      </button>
-                    </div>
+                  {(selectedProject.team || []).length === 0 ? (
+                    <p className="text-sm text-gray-400">No team members assigned</p>
                   ) : (
-                    <div className="space-y-3">
-                      {projectEstimates.map((estimate) => (
-                        <div key={estimate.id} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1">
-                              <h4 className="text-base font-medium text-gray-900">{estimate.title}</h4>
-                              <p className="text-sm text-gray-500 mt-1">
-                                {estimate.clientName || 'No client'} • {new Date(estimate.createdAt).toLocaleDateString()}
-                              </p>
-                              <div className="mt-2 flex items-center space-x-4">
-                                <span className="text-sm text-gray-600">
-                                  Items: {estimate.items?.length || 0}
-                                </span>
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                  estimate.status === 'draft' ? 'bg-gray-100 text-gray-800' :
-                                  estimate.status === 'sent' ? 'bg-blue-100 text-blue-800' :
-                                  estimate.status === 'approved' ? 'bg-green-100 text-green-800' :
-                                  'bg-red-100 text-red-800'
-                                }`}>
-                                  {estimate.status}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="text-right ml-4">
-                              <p className="text-lg font-semibold text-gray-900">
-                                ${estimate.total?.toFixed(2) || '0.00'}
-                              </p>
-                              <button
-                                onClick={() => window.location.href = `/estimates?id=${estimate.id}`}
-                                className="mt-2 text-sm text-blue-600 hover:text-blue-800"
-                              >
-                                View →
-                              </button>
-                            </div>
+                    <div className="flex flex-wrap gap-2">
+                      {(selectedProject.team || []).map((member, index) => (
+                        <div key={index} className="flex items-center gap-2 bg-gray-50 rounded-full px-3 py-1.5">
+                          <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-xs text-white font-medium">
+                            {member.split(' ').map(n => n[0]).join('').slice(0, 2)}
                           </div>
+                          <span className="text-sm text-gray-700">{member}</span>
                         </div>
                       ))}
                     </div>
                   )}
                 </div>
-              )}
+
+                {/* Tasks Card */}
+                <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="text-xs text-gray-500">Tasks</label>
+                    <button
+                      onClick={() => setShowTaskModal(true)}
+                      className="text-xs text-purple-600 font-medium"
+                    >
+                      Add Task
+                    </button>
+                  </div>
+                  {(selectedProject.tasks || []).length === 0 ? (
+                    <div className="text-center py-6">
+                      <CheckCircle className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                      <p className="text-sm text-gray-400">No tasks yet</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {(selectedProject.tasks || []).slice(0, 5).map((task) => (
+                        <div key={task.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                          <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
+                            task.status === 'completed' ? 'bg-green-500' :
+                            task.status === 'in-progress' ? 'bg-yellow-500' : 'bg-gray-300'
+                          }`} />
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-sm font-medium truncate ${task.status === 'completed' ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
+                              {task.title}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                      {(selectedProject.tasks || []).length > 5 && (
+                        <p className="text-xs text-gray-500 text-center pt-2">
+                          +{(selectedProject.tasks || []).length - 5} more tasks
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Comments Card */}
+                <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+                  <label className="block text-xs text-gray-500 mb-3">Comments</label>
+
+                  {(selectedProject.comments || []).length === 0 ? (
+                    <p className="text-sm text-gray-400 mb-3">No comments yet</p>
+                  ) : (
+                    <div className="space-y-3 mb-3 max-h-48 overflow-y-auto">
+                      {(selectedProject.comments || []).slice(-3).map((comment) => (
+                        <div key={comment.id} className="flex gap-2">
+                          <div className="w-7 h-7 bg-gray-200 rounded-full flex items-center justify-center text-xs font-medium text-gray-600 flex-shrink-0">
+                            {comment.author.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="bg-gray-50 rounded-xl px-3 py-2">
+                              <p className="text-sm text-gray-900">{comment.content}</p>
+                            </div>
+                            <p className="text-xs text-gray-400 mt-1">{comment.author} • {new Date(comment.timestamp).toLocaleDateString()}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Add Comment Input */}
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Add a comment..."
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                      className="flex-1 px-4 py-2.5 text-base border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      onKeyPress={(e) => e.key === 'Enter' && handleAddComment()}
+                    />
+                    <button
+                      onClick={handleAddComment}
+                      className="px-4 py-2.5 bg-purple-600 text-white rounded-xl active:bg-purple-700"
+                    >
+                      <Send className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Estimates Card */}
+                <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="text-xs text-gray-500">Estimates</label>
+                    <button
+                      onClick={() => window.location.href = `/estimates?project_id=${selectedProject.id}`}
+                      className="text-xs text-purple-600 font-medium"
+                    >
+                      Create New
+                    </button>
+                  </div>
+                  {projectEstimates.length === 0 ? (
+                    <div className="text-center py-6">
+                      <FileText className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                      <p className="text-sm text-gray-400">No estimates yet</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {projectEstimates.slice(0, 3).map((estimate) => (
+                        <button
+                          key={estimate.id}
+                          onClick={() => window.location.href = `/estimates?id=${estimate.id}`}
+                          className="w-full flex items-center justify-between p-3 bg-gray-50 rounded-xl active:bg-gray-100 text-left"
+                        >
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-gray-900 truncate">{estimate.title}</p>
+                            <p className="text-xs text-gray-500">{new Date(estimate.createdAt).toLocaleDateString()}</p>
+                          </div>
+                          <div className="text-right flex-shrink-0 ml-3">
+                            <p className="text-sm font-bold text-green-600">${estimate.total?.toFixed(2) || '0.00'}</p>
+                            <span className={`text-xs px-2 py-0.5 rounded-full ${
+                              estimate.status === 'approved' ? 'bg-green-100 text-green-700' :
+                              estimate.status === 'sent' ? 'bg-blue-100 text-blue-700' :
+                              'bg-gray-100 text-gray-600'
+                            }`}>
+                              {estimate.status}
+                            </span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Progress Photos Card */}
+                <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="text-xs text-gray-500">Progress Photos</label>
+                    <button
+                      onClick={() => setShowUploadModal(true)}
+                      className="text-xs text-purple-600 font-medium"
+                    >
+                      Upload
+                    </button>
+                  </div>
+                  {progressUpdates.length === 0 ? (
+                    <div className="text-center py-6">
+                      <Camera className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                      <p className="text-sm text-gray-400">No progress photos</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-3 gap-2">
+                      {progressUpdates.slice(0, 6).map((update) => (
+                        update.photos?.slice(0, 1).map((photo, idx) => (
+                          <img
+                            key={`${update.id}-${idx}`}
+                            src={photo}
+                            alt="Progress"
+                            className="w-full aspect-square object-cover rounded-xl"
+                            onClick={() => window.open(photo, '_blank')}
+                          />
+                        ))
+                      ))}
+                    </div>
+                  )}
+                </div>
 
               </div>
             </div>

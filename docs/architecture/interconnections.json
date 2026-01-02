@@ -1,0 +1,985 @@
+{
+  "project": {
+    "name": "ContractorAI",
+    "version": "0.1.0",
+    "path": "/git/contractorai/contractorai2",
+    "type": "SaaS Construction Management Platform",
+    "lastAnalyzed": "2025-11-04"
+  },
+  "technology": {
+    "frontend": {
+      "framework": "React",
+      "version": "18.3.1",
+      "language": "TypeScript 5.5.3",
+      "buildTool": "Vite 7.1.4",
+      "mobile": "Capacitor 7.4.4",
+      "styling": "Tailwind CSS 3.4.1",
+      "router": "React Router DOM 6.22.3",
+      "stateManagement": [
+        {
+          "name": "Zustand",
+          "version": "4.5.2",
+          "purpose": "Global state management"
+        },
+        {
+          "name": "TanStack React Query",
+          "version": "5.28.4",
+          "purpose": "Server state caching"
+        },
+        {
+          "name": "React Context",
+          "purpose": "Cross-cutting concerns"
+        }
+      ]
+    },
+    "backend": {
+      "platform": "Supabase",
+      "database": "PostgreSQL",
+      "authentication": "Supabase Auth (JWT + PKCE)",
+      "storage": "Supabase Storage",
+      "serverless": "Supabase Edge Functions (Deno)",
+      "realtime": "Supabase Realtime"
+    },
+    "external": {
+      "payments": "Stripe 19.1.0",
+      "automation": "n8n",
+      "analytics": "Google Ads API",
+      "email": "Gmail API",
+      "notifications": "Capacitor Push Notifications"
+    }
+  },
+  "architecture": {
+    "pattern": "Client-Server with Serverless Edge Functions",
+    "securityModel": "Row Level Security (RLS)",
+    "authFlow": "JWT with automatic refresh",
+    "deployment": "Hybrid Web + iOS Mobile"
+  },
+  "components": {
+    "pages": {
+      "count": 47,
+      "categories": [
+        {
+          "name": "Authentication",
+          "pages": ["LoginPage", "SignupPage", "ResetPassword"]
+        },
+        {
+          "name": "Core Features",
+          "pages": [
+            "Dashboard",
+            "PricingCalculator",
+            "EstimateGenerator",
+            "ProjectManager",
+            "FinanceTracker",
+            "Calendar",
+            "Clients",
+            "Settings",
+            "Subscriptions"
+          ]
+        },
+        {
+          "name": "AI Features",
+          "pages": ["AICalculator", "AITeamHub", "SaulFinance", "CindyCRM", "BillProjectManager"]
+        },
+        {
+          "name": "Calculators",
+          "count": 21,
+          "types": [
+            "Deck", "Roofing", "Concrete", "Siding", "Paint",
+            "Flooring", "Tile", "Drywall", "Fencing", "Pavers",
+            "Veneer", "HVAC", "Electrical", "Gutter", "Foundation",
+            "RetainingWall", "DoorsWindows", "Plumbing", "Framing",
+            "JunkRemoval", "Excavation"
+          ]
+        },
+        {
+          "name": "Analytics & Ads",
+          "pages": ["AdAnalyzer", "AdAccountsSetup", "AnalyticsDashboard"]
+        },
+        {
+          "name": "Employees",
+          "pages": ["EmployeesManager"]
+        },
+        {
+          "name": "Widgets",
+          "pages": ["CalculatorWidgets"]
+        }
+      ]
+    },
+    "stores": {
+      "count": 10,
+      "details": [
+        {
+          "name": "authStore",
+          "file": "authStore.ts",
+          "lines": 318,
+          "purpose": "User authentication, session management, profile sync",
+          "key_methods": ["signIn", "signUp", "signOut", "initialize", "fetchProfile"]
+        },
+        {
+          "name": "financeStoreSupabase",
+          "file": "financeStoreSupabase.ts",
+          "lines": 2181,
+          "purpose": "Financial tracking - transactions, expenses, invoices, payments",
+          "key_methods": [
+            "addTransaction", "updateTransaction", "deleteTransaction",
+            "addExpense", "addInvoice", "recordPayment",
+            "fetchAllFinanceData", "syncWithSupabase"
+          ],
+          "note": "Largest store - primary finance logic"
+        },
+        {
+          "name": "projectStore",
+          "file": "projectStore.ts",
+          "lines": 895,
+          "purpose": "Project management, tasks, comments, progress updates",
+          "key_methods": [
+            "createProject", "updateProject", "deleteProject",
+            "addTask", "updateTask", "addComment",
+            "fetchProjects", "fetchTasks"
+          ]
+        },
+        {
+          "name": "estimateStore",
+          "file": "estimateStore.ts",
+          "lines": 344,
+          "purpose": "Estimate generation, PDF creation, email sending",
+          "key_methods": [
+            "createEstimate", "updateEstimate", "deleteEstimate",
+            "sendEstimate", "generatePDF", "fetchEstimates"
+          ]
+        },
+        {
+          "name": "clientsStore",
+          "file": "clientsStore.ts",
+          "lines": 274,
+          "purpose": "Client relationship management",
+          "key_methods": ["addClient", "updateClient", "deleteClient", "fetchClients"]
+        },
+        {
+          "name": "calendarStoreSupabase",
+          "file": "calendarStoreSupabase.ts",
+          "lines": 252,
+          "purpose": "Calendar events, scheduling, reminders",
+          "key_methods": ["addEvent", "updateEvent", "deleteEvent", "fetchEvents"]
+        },
+        {
+          "name": "employeesStore",
+          "file": "employeesStore.ts",
+          "lines": 223,
+          "purpose": "Employee management, team assignments",
+          "key_methods": ["addEmployee", "updateEmployee", "deleteEmployee", "fetchEmployees"]
+        },
+        {
+          "name": "adAnalyzerStore",
+          "file": "adAnalyzerStore.ts",
+          "lines": 366,
+          "purpose": "Ad campaign analytics, metrics tracking",
+          "key_methods": ["connectAdAccount", "fetchCampaigns", "fetchMetrics"]
+        },
+        {
+          "name": "calendarStore",
+          "file": "calendarStore.ts",
+          "lines": 120,
+          "purpose": "Local calendar state (legacy)",
+          "note": "Being phased out in favor of calendarStoreSupabase"
+        },
+        {
+          "name": "financeStore",
+          "file": "financeStore.ts",
+          "lines": 321,
+          "purpose": "Local finance state (legacy)",
+          "note": "Being phased out in favor of financeStoreSupabase"
+        }
+      ]
+    },
+    "contexts": {
+      "count": 4,
+      "details": [
+        {
+          "name": "DataContext",
+          "file": "DataContext.tsx",
+          "purpose": "Global profile and subscription synchronization",
+          "provides": ["profile", "subscription", "refreshProfile", "refreshSubscription", "refreshAll"]
+        },
+        {
+          "name": "PricingContext",
+          "file": "PricingContext.tsx",
+          "purpose": "Calculator pricing state across calculator pages"
+        },
+        {
+          "name": "ProjectContext",
+          "file": "ProjectContext.tsx",
+          "purpose": "Active project context for related components"
+        },
+        {
+          "name": "CalculatorTabContext",
+          "file": "CalculatorTabContext.tsx",
+          "purpose": "Calculator tab navigation state"
+        }
+      ]
+    },
+    "services": {
+      "count": 9,
+      "details": [
+        {
+          "name": "analytics",
+          "file": "analytics.ts",
+          "purpose": "Analytics event tracking and reporting"
+        },
+        {
+          "name": "calendarService",
+          "file": "calendarService.ts",
+          "purpose": "Calendar operations, event management"
+        },
+        {
+          "name": "customCalculatorService",
+          "file": "customCalculatorService.ts",
+          "purpose": "Custom calculator configuration management"
+        },
+        {
+          "name": "estimateService",
+          "file": "estimateService.ts",
+          "purpose": "Estimate CRUD operations"
+        },
+        {
+          "name": "estimateResponseService",
+          "file": "estimateResponseService.ts",
+          "purpose": "Handle customer estimate responses"
+        },
+        {
+          "name": "googleAds",
+          "file": "googleAds.ts",
+          "purpose": "Google Ads API integration"
+        },
+        {
+          "name": "supabaseStorage",
+          "file": "supabaseStorage.ts",
+          "purpose": "File upload/download to Supabase Storage"
+        },
+        {
+          "name": "notifications",
+          "directory": "services/notifications/",
+          "purpose": "Push notification management"
+        },
+        {
+          "name": "supabase",
+          "file": "services/supabase.ts",
+          "purpose": "Supabase client re-export"
+        }
+      ]
+    },
+    "componentCategories": {
+      "ads": "Ad analytics and campaign management",
+      "ai-calculator": "AI-powered pricing assistant",
+      "ai-crm": "Cindy CRM AI chatbot",
+      "ai-finance": "Saul finance AI chatbot",
+      "auth": "Authentication components",
+      "calendar": "Calendar and event management",
+      "calculators": "Construction pricing calculators",
+      "clients": "Client management",
+      "common": "Shared/reusable components",
+      "dashboard": "Dashboard widgets",
+      "estimates": "Estimate generation",
+      "finance": "Financial tracking",
+      "layout": "Header, Sidebar, navigation",
+      "pricing": "Pricing calculator UI",
+      "projects": "Project management",
+      "pwa": "Progressive Web App features",
+      "settings": "User settings and preferences",
+      "stripe": "Stripe payment components",
+      "ui": "Base UI components"
+    }
+  },
+  "database": {
+    "totalTables": 54,
+    "categories": {
+      "userManagement": {
+        "tables": ["profiles"],
+        "relationships": {
+          "profiles": {
+            "primary_key": "id",
+            "foreign_keys": [
+              {"column": "id", "references": "auth.users.id", "relationship": "1:1"}
+            ]
+          }
+        }
+      },
+      "financial": {
+        "tables": [
+          "finance_transactions",
+          "finance_expenses",
+          "finance_payments",
+          "recurring_expenses",
+          "invoices",
+          "invoice_items",
+          "invoice_payments"
+        ],
+        "relationships": {
+          "finance_transactions": {
+            "foreign_keys": [
+              {"column": "user_id", "references": "auth.users.id"}
+            ]
+          },
+          "finance_expenses": {
+            "foreign_keys": [
+              {"column": "user_id", "references": "auth.users.id"}
+            ]
+          },
+          "finance_payments": {
+            "foreign_keys": [
+              {"column": "user_id", "references": "auth.users.id"},
+              {"column": "project_id", "references": "projects.id"}
+            ]
+          },
+          "invoices": {
+            "foreign_keys": [
+              {"column": "user_id", "references": "auth.users.id"},
+              {"column": "client_id", "references": "clients.id"},
+              {"column": "project_id", "references": "projects.id"}
+            ]
+          },
+          "invoice_items": {
+            "foreign_keys": [
+              {"column": "invoice_id", "references": "invoices.id"}
+            ]
+          },
+          "invoice_payments": {
+            "foreign_keys": [
+              {"column": "invoice_id", "references": "invoices.id"}
+            ]
+          }
+        }
+      },
+      "projectManagement": {
+        "tables": [
+          "projects",
+          "tasks",
+          "comments",
+          "progress_updates",
+          "project_team_members",
+          "budget_items"
+        ],
+        "relationships": {
+          "projects": {
+            "foreign_keys": [
+              {"column": "user_id", "references": "auth.users.id"},
+              {"column": "client_id", "references": "clients.id"}
+            ]
+          },
+          "tasks": {
+            "foreign_keys": [
+              {"column": "project_id", "references": "projects.id"},
+              {"column": "user_id", "references": "auth.users.id"},
+              {"column": "assigned_to", "references": "employees.id"}
+            ]
+          },
+          "comments": {
+            "foreign_keys": [
+              {"column": "project_id", "references": "projects.id"},
+              {"column": "user_id", "references": "auth.users.id"}
+            ]
+          },
+          "progress_updates": {
+            "foreign_keys": [
+              {"column": "project_id", "references": "projects.id"},
+              {"column": "user_id", "references": "auth.users.id"}
+            ]
+          },
+          "project_team_members": {
+            "foreign_keys": [
+              {"column": "project_id", "references": "projects.id"},
+              {"column": "employee_id", "references": "employees.id"}
+            ]
+          }
+        }
+      },
+      "clientManagement": {
+        "tables": ["clients", "leads"],
+        "relationships": {
+          "clients": {
+            "foreign_keys": [
+              {"column": "user_id", "references": "auth.users.id"}
+            ]
+          },
+          "leads": {
+            "foreign_keys": [
+              {"column": "user_id", "references": "auth.users.id"}
+            ]
+          }
+        }
+      },
+      "estimatesInvoices": {
+        "tables": [
+          "estimates",
+          "calculator_estimates",
+          "estimate_email_responses"
+        ],
+        "relationships": {
+          "estimates": {
+            "foreign_keys": [
+              {"column": "user_id", "references": "auth.users.id"},
+              {"column": "project_id", "references": "projects.id"}
+            ]
+          },
+          "calculator_estimates": {
+            "foreign_keys": [
+              {"column": "user_id", "references": "auth.users.id"}
+            ]
+          },
+          "estimate_email_responses": {
+            "foreign_keys": [
+              {"column": "estimate_id", "references": "calculator_estimates.id"}
+            ]
+          }
+        }
+      },
+      "employees": {
+        "tables": ["employees"],
+        "relationships": {
+          "employees": {
+            "foreign_keys": [
+              {"column": "user_id", "references": "auth.users.id"}
+            ]
+          }
+        }
+      },
+      "calendar": {
+        "tables": ["calendar_events"],
+        "relationships": {
+          "calendar_events": {
+            "foreign_keys": [
+              {"column": "user_id", "references": "auth.users.id"},
+              {"column": "project_id", "references": "projects.id"}
+            ]
+          }
+        }
+      },
+      "calculators": {
+        "tables": [
+          "custom_calculator_configs",
+          "custom_materials",
+          "custom_pricing",
+          "calculations"
+        ],
+        "relationships": {
+          "custom_calculator_configs": {
+            "foreign_keys": [
+              {"column": "user_id", "references": "auth.users.id"}
+            ]
+          },
+          "custom_materials": {
+            "foreign_keys": [
+              {"column": "user_id", "references": "auth.users.id"}
+            ]
+          },
+          "custom_pricing": {
+            "foreign_keys": [
+              {"column": "user_id", "references": "auth.users.id"}
+            ]
+          },
+          "calculations": {
+            "foreign_keys": [
+              {"column": "user_id", "references": "auth.users.id"}
+            ]
+          }
+        }
+      },
+      "stripe": {
+        "tables": [
+          "stripe_customers",
+          "stripe_subscriptions",
+          "stripe_orders"
+        ],
+        "relationships": {
+          "stripe_customers": {
+            "foreign_keys": [
+              {"column": "user_id", "references": "auth.users.id", "unique": true}
+            ]
+          },
+          "stripe_subscriptions": {
+            "foreign_keys": [
+              {"column": "customer_id", "references": "stripe_customers.customer_id"}
+            ]
+          }
+        }
+      },
+      "advertising": {
+        "tables": [
+          "ad_accounts",
+          "ad_campaigns",
+          "ad_metrics"
+        ],
+        "relationships": {
+          "ad_accounts": {
+            "foreign_keys": [
+              {"column": "user_id", "references": "auth.users.id"}
+            ]
+          },
+          "ad_campaigns": {
+            "foreign_keys": [
+              {"column": "account_id", "references": "ad_accounts.id"}
+            ]
+          },
+          "ad_metrics": {
+            "foreign_keys": [
+              {"column": "campaign_id", "references": "ad_campaigns.id"}
+            ]
+          }
+        }
+      },
+      "widgets": {
+        "tables": [
+          "widget_keys",
+          "widget_usage_logs"
+        ],
+        "relationships": {
+          "widget_keys": {
+            "foreign_keys": [
+              {"column": "user_id", "references": "auth.users.id"}
+            ]
+          },
+          "widget_usage_logs": {
+            "foreign_keys": [
+              {"column": "widget_key_id", "references": "widget_keys.id"}
+            ]
+          }
+        }
+      }
+    },
+    "indexes": [
+      "idx_finance_transactions_user_id",
+      "idx_finance_transactions_date",
+      "idx_recurring_expenses_user_id",
+      "idx_projects_user_id",
+      "idx_estimates_user_id"
+    ],
+    "rls": {
+      "enabled": true,
+      "pattern": "auth.uid() = user_id",
+      "allTablesProtected": true
+    }
+  },
+  "edgeFunctions": {
+    "count": 20,
+    "runtime": "Deno",
+    "functions": [
+      {
+        "name": "stripe-webhook",
+        "purpose": "Process Stripe webhook events (subscriptions, payments)",
+        "events": [
+          "checkout.session.completed",
+          "customer.subscription.created",
+          "customer.subscription.updated",
+          "customer.subscription.deleted",
+          "invoice.payment_succeeded",
+          "payment_intent.succeeded"
+        ],
+        "databaseWrites": ["stripe_customers", "stripe_subscriptions", "stripe_orders"]
+      },
+      {
+        "name": "stripe-checkout",
+        "purpose": "Create Stripe checkout sessions",
+        "input": "priceId",
+        "output": "checkoutUrl"
+      },
+      {
+        "name": "create-billing-portal-session",
+        "purpose": "Create Stripe billing portal session for subscription management",
+        "output": "portalUrl"
+      },
+      {
+        "name": "get-subscription-details",
+        "purpose": "Fetch current user subscription details",
+        "output": "subscriptionData"
+      },
+      {
+        "name": "stripe-connect-onboard",
+        "purpose": "Onboard contractors to Stripe Connect for accepting payments",
+        "output": "onboardingUrl"
+      },
+      {
+        "name": "send-estimate-email",
+        "purpose": "Email estimate PDFs to customers",
+        "input": "estimateId, customerEmail, pdfUrl",
+        "databaseWrites": ["estimates (status)"]
+      },
+      {
+        "name": "estimate-response",
+        "purpose": "Handle customer responses to estimates (approve/reject)",
+        "input": "estimateId, responseType, message",
+        "databaseWrites": ["estimate_email_responses", "estimates (status)"]
+      },
+      {
+        "name": "widget-key-generate",
+        "purpose": "Generate API keys for embeddable calculator widgets",
+        "output": "widgetKey",
+        "databaseWrites": ["widget_keys"]
+      },
+      {
+        "name": "ai-calculator-chat",
+        "purpose": "AI chatbot for pricing calculator assistance",
+        "integration": "OpenAI API",
+        "input": "userMessage, conversationHistory",
+        "output": "aiResponse"
+      },
+      {
+        "name": "saul-finance-chat",
+        "purpose": "AI finance assistant chatbot",
+        "integration": "OpenAI API",
+        "input": "userMessage, conversationHistory",
+        "output": "aiResponse"
+      },
+      {
+        "name": "google-ads-oauth",
+        "purpose": "OAuth flow for Google Ads integration",
+        "databaseWrites": ["ad_accounts"]
+      },
+      {
+        "name": "meta-ads-oauth",
+        "purpose": "OAuth flow for Meta/Facebook Ads integration",
+        "databaseWrites": ["ad_accounts"]
+      },
+      {
+        "name": "send-gmail",
+        "purpose": "Send emails via Gmail API",
+        "integration": "Gmail API"
+      },
+      {
+        "name": "n8n-receipt-webhook",
+        "purpose": "Receive receipt processing data from n8n workflows",
+        "input": "receiptData",
+        "databaseWrites": ["finance_expenses"]
+      },
+      {
+        "name": "link-stripe-to-unconfirmed-users",
+        "purpose": "Link existing Stripe customers to newly confirmed users"
+      },
+      {
+        "name": "check-specific-user",
+        "purpose": "Debug function to check specific user data"
+      },
+      {
+        "name": "search-user-by-partial-email",
+        "purpose": "Search users by partial email match"
+      },
+      {
+        "name": "get-invoices",
+        "purpose": "Fetch invoice data for user"
+      },
+      {
+        "name": "check-auth-simple",
+        "purpose": "Simple auth check for debugging"
+      },
+      {
+        "name": "debug-user-subscription",
+        "purpose": "Debug function to check user subscription state"
+      }
+    ]
+  },
+  "integrations": {
+    "stripe": {
+      "purpose": "Payment processing and subscription management",
+      "features": [
+        "Subscription billing",
+        "One-time payments",
+        "Stripe Connect (contractor payouts)",
+        "Billing portal"
+      ],
+      "webhooks": {
+        "endpoint": "stripe-webhook edge function",
+        "events": [
+          "checkout.session.completed",
+          "customer.subscription.created",
+          "customer.subscription.updated",
+          "customer.subscription.deleted",
+          "invoice.payment_succeeded",
+          "payment_intent.succeeded"
+        ]
+      },
+      "databaseTables": ["stripe_customers", "stripe_subscriptions", "stripe_orders"],
+      "environmentVariables": [
+        "STRIPE_SECRET_KEY",
+        "STRIPE_WEBHOOK_SECRET",
+        "VITE_STRIPE_PUBLISHABLE_KEY"
+      ]
+    },
+    "n8n": {
+      "purpose": "Workflow automation",
+      "webhooks": [
+        {
+          "name": "User Registration",
+          "url": "contractorai.app.n8n.cloud/webhook/170d14a9-ace1-49cf-baab-49dd8aec1245",
+          "trigger": "authStore.signUp()",
+          "payload": "email, fullName, companyName, phoneNumber, userId, timestamp"
+        },
+        {
+          "name": "Receipt Processing",
+          "edgeFunction": "n8n-receipt-webhook",
+          "purpose": "Process receipt images for expense tracking"
+        }
+      ]
+    },
+    "google": {
+      "services": [
+        {
+          "name": "Google Ads",
+          "purpose": "Ad campaign analytics",
+          "oauth": "google-ads-oauth edge function",
+          "tables": ["ad_accounts", "ad_campaigns", "ad_metrics"]
+        },
+        {
+          "name": "Gmail",
+          "purpose": "Email sending",
+          "oauth": "/gmail-oauth-callback page",
+          "edgeFunction": "send-gmail"
+        }
+      ],
+      "environmentVariables": [
+        "VITE_GOOGLE_CLIENT_ID",
+        "VITE_GMAIL_REDIRECT_URI"
+      ]
+    },
+    "meta": {
+      "name": "Meta/Facebook Ads",
+      "purpose": "Ad campaign analytics",
+      "oauth": "meta-ads-oauth edge function",
+      "tables": ["ad_accounts (platform='meta')"]
+    },
+    "capacitor": {
+      "purpose": "Native mobile capabilities",
+      "plugins": [
+        "@capacitor/push-notifications",
+        "@capacitor/local-notifications",
+        "@capacitor/core"
+      ]
+    }
+  },
+  "dataFlows": {
+    "authentication": {
+      "steps": [
+        "User visits app",
+        "authStore.initialize() checks for existing session",
+        "If no session → redirect to /auth/login",
+        "User enters credentials → authStore.signIn()",
+        "Supabase Auth validates → returns JWT",
+        "authStore sets user & session",
+        "DataProvider loads profile & subscription",
+        "User redirected to dashboard"
+      ],
+      "databaseTables": ["auth.users", "profiles", "stripe_customers", "stripe_subscriptions"]
+    },
+    "createProject": {
+      "steps": [
+        "User fills project form",
+        "projectStore.createProject(data)",
+        "Optimistic update in Zustand",
+        "INSERT into projects table",
+        "RLS validates user_id = auth.uid()",
+        "Database returns new project with ID",
+        "Zustand updates with server data",
+        "React Query invalidates cache",
+        "UI re-renders"
+      ],
+      "databaseTables": ["projects"]
+    },
+    "estimateWorkflow": {
+      "steps": [
+        "User creates estimate → estimateStore.createEstimate()",
+        "INSERT into estimates table",
+        "Generate PDF with jsPDF",
+        "Upload PDF to Supabase Storage (bucket: 'estimate-pdfs')",
+        "User clicks 'Send' → invoke send-estimate-email",
+        "Edge function sends email with PDF",
+        "UPDATE estimates SET status = 'sent'",
+        "Customer receives email",
+        "Customer clicks Approve/Reject → estimate-response function",
+        "INSERT into estimate_email_responses",
+        "UPDATE estimates SET status = 'approved'",
+        "Contractor receives notification"
+      ],
+      "databaseTables": ["estimates", "estimate_email_responses", "calculator_estimates"],
+      "storage": ["estimate-pdfs bucket"],
+      "edgeFunctions": ["send-estimate-email", "estimate-response"]
+    },
+    "subscriptionBilling": {
+      "steps": [
+        "User clicks Subscribe",
+        "invoke stripe-checkout edge function",
+        "Stripe creates checkout session",
+        "User redirected to Stripe",
+        "User completes payment",
+        "Stripe sends webhook: checkout.session.completed",
+        "stripe-webhook edge function processes",
+        "INSERT/UPDATE stripe_subscriptions",
+        "Link customer_id to user_id in stripe_customers",
+        "DataProvider.refreshSubscription()",
+        "UI updates with Pro status"
+      ],
+      "databaseTables": ["stripe_customers", "stripe_subscriptions"],
+      "edgeFunctions": ["stripe-checkout", "stripe-webhook"]
+    }
+  },
+  "userJourneys": {
+    "newUserOnboarding": {
+      "steps": [
+        {
+          "step": 1,
+          "action": "Signup",
+          "component": "SignupPage",
+          "store": "authStore.signUp()",
+          "database": ["auth.users (INSERT)", "profiles (INSERT via trigger)", "n8n webhook"],
+          "result": "User logged in"
+        },
+        {
+          "step": 2,
+          "action": "Profile Setup",
+          "component": "Settings",
+          "database": ["profiles (UPDATE)", "Supabase Storage (logo upload)"],
+          "result": "Profile complete"
+        },
+        {
+          "step": 3,
+          "action": "Subscribe",
+          "component": "Subscriptions",
+          "edgeFunctions": ["stripe-checkout", "stripe-webhook"],
+          "database": ["stripe_customers (INSERT)", "stripe_subscriptions (INSERT)"],
+          "result": "Pro features unlocked"
+        },
+        {
+          "step": 4,
+          "action": "Create Project",
+          "component": "ProjectManager",
+          "store": "projectStore.createProject()",
+          "database": ["projects (INSERT)"],
+          "result": "First project created"
+        },
+        {
+          "step": 5,
+          "action": "Add Client",
+          "component": "Clients",
+          "store": "clientsStore.addClient()",
+          "database": ["clients (INSERT)"],
+          "result": "Client saved"
+        },
+        {
+          "step": 6,
+          "action": "Link Client to Project",
+          "component": "ProjectManager",
+          "store": "projectStore.updateProject()",
+          "database": ["projects (UPDATE client_id)"],
+          "result": "Project-client relationship"
+        },
+        {
+          "step": 7,
+          "action": "Create Estimate",
+          "component": "EstimateGenerator",
+          "store": "estimateStore.createEstimate()",
+          "database": ["estimates (INSERT)", "Supabase Storage (PDF)"],
+          "result": "Estimate created with PDF"
+        },
+        {
+          "step": 8,
+          "action": "Send Estimate",
+          "edgeFunctions": ["send-estimate-email"],
+          "database": ["estimates (UPDATE status='sent')"],
+          "result": "Client receives estimate"
+        },
+        {
+          "step": 9,
+          "action": "Client Approves",
+          "edgeFunctions": ["estimate-response"],
+          "database": ["estimate_email_responses (INSERT)", "estimates (UPDATE status='approved')"],
+          "result": "Contractor notified"
+        },
+        {
+          "step": 10,
+          "action": "Track Expenses",
+          "component": "FinanceTracker",
+          "store": "financeStoreSupabase.addTransaction()",
+          "database": ["finance_transactions (INSERT)"],
+          "result": "Project expenses tracked"
+        }
+      ],
+      "totalDatabaseTables": 10,
+      "totalEdgeFunctions": 3
+    }
+  },
+  "security": {
+    "authenticationMethod": "Supabase Auth (JWT + PKCE)",
+    "sessionStorage": "localStorage (key: 'contractorai-auth')",
+    "authorization": "Row Level Security (RLS)",
+    "rlsPattern": "auth.uid() = user_id on all user-owned tables",
+    "apiKeys": {
+      "client": "VITE_SUPABASE_ANON_KEY (limited permissions)",
+      "server": "SUPABASE_SERVICE_ROLE_KEY (full permissions, edge functions only)"
+    },
+    "webhookSecurity": "Stripe signature verification",
+    "dataEncryption": "At rest (Supabase managed)",
+    "https": "Enforced on all connections"
+  },
+  "deployment": {
+    "frontend": {
+      "platform": "Netlify / Vercel / Supabase Hosting",
+      "buildCommand": "npm run build",
+      "outputDirectory": "dist/",
+      "domain": "contractorai.tools"
+    },
+    "backend": {
+      "platform": "Supabase Cloud",
+      "database": "Managed PostgreSQL",
+      "edgeFunctions": "Deployed to Supabase Edge Network",
+      "storage": "Supabase Storage with CDN"
+    },
+    "mobile": {
+      "platform": "iOS App Store",
+      "buildTool": "Xcode",
+      "framework": "Capacitor 7.4.4"
+    },
+    "environmentVariables": {
+      "required": [
+        "VITE_SUPABASE_URL",
+        "VITE_SUPABASE_ANON_KEY",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "STRIPE_SECRET_KEY",
+        "STRIPE_WEBHOOK_SECRET",
+        "VITE_STRIPE_PUBLISHABLE_KEY",
+        "VITE_GOOGLE_CLIENT_ID",
+        "VITE_GMAIL_REDIRECT_URI"
+      ]
+    }
+  },
+  "performanceOptimizations": {
+    "frontend": [
+      "React.lazy() for code splitting",
+      "React Query for API caching (staleTime: 5min, cacheTime: 10min)",
+      "Vite production optimizations",
+      "Tree shaking",
+      "Lazy loading images"
+    ],
+    "backend": [
+      "Database indexes on user_id and date columns",
+      "Connection pooling (Supabase managed)",
+      "Edge function caching"
+    ]
+  },
+  "scalabilityConsiderations": [
+    "Database sharding by user_id",
+    "Redis caching layer",
+    "CDN for static assets",
+    "Background job queue for long-running tasks",
+    "Microservices extraction if needed",
+    "GraphQL API for complex queries"
+  ],
+  "metrics": {
+    "totalComponents": 150,
+    "totalPages": 47,
+    "totalStores": 10,
+    "totalDatabaseTables": 54,
+    "totalEdgeFunctions": 20,
+    "totalIntegrations": 5,
+    "linesOfCode": {
+      "stores": 5294,
+      "largestStore": "financeStoreSupabase (2181 lines)"
+    }
+  }
+}

@@ -57,7 +57,10 @@ Deno.serve(async (req) => {
       return corsResponse({ error: 'Missing required parameter: priceId or price_id' }, 400);
     }
 
-    const authHeader = req.headers.get('Authorization')!;
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return corsResponse({ error: 'Unauthorized: No authorization header' }, 401);
+    }
     const token = authHeader.replace('Bearer ', '');
     const {
       data: { user },

@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.elevatedsystems.contractorai',
+  appId: 'com.elevated.contractorai',
   appName: 'ContractorAI',
   webDir: 'dist',
   ios: {
@@ -9,6 +9,11 @@ const config: CapacitorConfig = {
   },
   server: {
     iosScheme: 'capacitor'
+  },
+  plugins: {
+    Purchases: {
+      apiKey: 'appl_eqImMiOTWqoGHkqkjePGfJrLhMA' // PUBLIC iOS API key
+    }
   }
 };
 

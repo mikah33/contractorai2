@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Users, Plus, Search, Download, RefreshCw, UserPlus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useClientsStore } from '../stores/clientsStore';
@@ -9,6 +10,7 @@ import { Client } from '../stores/clientsStore';
 
 const Clients = () => {
   const { t } = useTranslation();
+  const location = useLocation();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [localSearchTerm, setLocalSearchTerm] = useState('');
@@ -31,6 +33,30 @@ const Clients = () => {
   useEffect(() => {
     fetchClients();
   }, []);
+
+  // Handle incoming navigation state to edit a specific client
+  useEffect(() => {
+    const state = location.state as { editClientId?: string; editClientName?: string } | null;
+    if (state?.editClientId && clients.length > 0) {
+      // Find client by ID
+      const clientToEdit = clients.find(c => c.id === state.editClientId);
+      if (clientToEdit) {
+        setEditingClient(clientToEdit);
+      }
+      // Clear the navigation state
+      window.history.replaceState({}, document.title);
+    } else if (state?.editClientName && clients.length > 0) {
+      // Fallback: find client by name if ID not available
+      const clientToEdit = clients.find(c =>
+        c.name.toLowerCase() === state.editClientName?.toLowerCase()
+      );
+      if (clientToEdit) {
+        setEditingClient(clientToEdit);
+      }
+      // Clear the navigation state
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state, clients]);
 
   // Debounce search
   useEffect(() => {

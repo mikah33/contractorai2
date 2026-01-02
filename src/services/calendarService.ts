@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { notificationService } from './notifications/notificationService';
 
 export interface CalendarEvent {
   id: string;
@@ -16,6 +17,8 @@ export interface CalendarEvent {
   auto_generated?: boolean;
   created_at?: string;
   location?: string;
+  reminder_minutes?: number; // Minutes before event to send notification (0 = no reminder)
+  notification_enabled?: boolean;
 }
 
 export class CalendarService {
@@ -90,8 +93,14 @@ export class CalendarService {
         console.error('Supabase error creating event:', error);
         throw error;
       }
-      
+
       console.log('Event created successfully:', data);
+
+      // Schedule notification if enabled
+      if (data && (eventData.notification_enabled !== false) && eventData.reminder_minutes !== 0) {
+        await this.scheduleEventNotification(data);
+      }
+
       return data;
     } catch (error) {
       console.error('Error creating calendar event:', error);
@@ -102,12 +111,25 @@ export class CalendarService {
   // Update an existing event
   static async updateEvent(eventId: string, updates: Partial<CalendarEvent>): Promise<void> {
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('calendar_events')
         .update(updates)
-        .eq('id', eventId);
+        .eq('id', eventId)
+        .select()
+        .single();
 
       if (error) throw error;
+
+      // Reschedule notification if date or reminder changed
+      if (data && (updates.start_date || updates.reminder_minutes !== undefined || updates.notification_enabled !== undefined)) {
+        // Cancel existing notification
+        await this.cancelEventNotification(eventId);
+
+        // Schedule new notification if enabled
+        if (data.notification_enabled !== false && data.reminder_minutes !== 0) {
+          await this.scheduleEventNotification(data);
+        }
+      }
     } catch (error) {
       console.error('Error updating calendar event:', error);
       throw error;
@@ -117,6 +139,9 @@ export class CalendarService {
   // Delete an event
   static async deleteEvent(eventId: string): Promise<void> {
     try {
+      // Cancel any scheduled notification first
+      await this.cancelEventNotification(eventId);
+
       const { error } = await supabase
         .from('calendar_events')
         .delete()
@@ -126,6 +151,116 @@ export class CalendarService {
     } catch (error) {
       console.error('Error deleting calendar event:', error);
       throw error;
+    }
+  }
+
+  // Schedule a notification for a calendar event
+  static async scheduleEventNotification(event: CalendarEvent): Promise<void> {
+    try {
+      const startDate = new Date(event.start_date);
+
+      // Don't schedule for past events
+      if (startDate <= new Date()) {
+        console.log('Event is in the past, skipping notification');
+        return;
+      }
+
+      // Default reminder: 30 minutes before for meetings, 1 day before for deadlines/milestones
+      let reminderMinutes = event.reminder_minutes;
+      if (reminderMinutes === undefined || reminderMinutes === null) {
+        switch (event.event_type) {
+          case 'meeting':
+            reminderMinutes = 30; // 30 minutes before
+            break;
+          case 'deadline':
+          case 'milestone':
+          case 'project_end':
+            reminderMinutes = 1440; // 1 day before (24 * 60)
+            break;
+          case 'task':
+            reminderMinutes = 60; // 1 hour before
+            break;
+          default:
+            reminderMinutes = 60; // 1 hour default
+        }
+      }
+
+      // Build notification body
+      let body = event.description || '';
+      if (event.location) {
+        body = body ? `${body}\n📍 ${event.location}` : `📍 ${event.location}`;
+      }
+      if (!body) {
+        body = `Scheduled for ${startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+      }
+
+      await notificationService.scheduleCalendarReminder({
+        id: `cal-${event.id}`,
+        title: event.title,
+        body,
+        scheduleAt: startDate,
+        reminderMinutes,
+        data: {
+          eventId: event.id,
+          eventType: event.event_type,
+          projectId: event.project_id,
+          estimateId: event.estimate_id,
+          taskId: event.task_id,
+        },
+      });
+
+      console.log(`Notification scheduled for event "${event.title}" - ${reminderMinutes} minutes before`);
+    } catch (error) {
+      console.error('Error scheduling event notification:', error);
+      // Don't throw - notification failure shouldn't break event creation
+    }
+  }
+
+  // Cancel a notification for a calendar event
+  static async cancelEventNotification(eventId: string): Promise<void> {
+    try {
+      await notificationService.cancelNotification(`cal-${eventId}`);
+      console.log(`Notification cancelled for event ${eventId}`);
+    } catch (error) {
+      console.error('Error cancelling event notification:', error);
+      // Don't throw - notification failure shouldn't break event deletion
+    }
+  }
+
+  // Sync all notifications for upcoming events (call on app launch or login)
+  static async syncAllEventNotifications(userId: string): Promise<void> {
+    try {
+      console.log('Syncing all event notifications...');
+
+      // Get all future events
+      const now = new Date().toISOString();
+      const { data: events, error } = await supabase
+        .from('calendar_events')
+        .select('*')
+        .eq('user_id', userId)
+        .gte('start_date', now)
+        .eq('status', 'pending')
+        .order('start_date', { ascending: true });
+
+      if (error) throw error;
+
+      // Get currently pending notifications
+      const pendingNotifications = await notificationService.getPendingNotifications();
+      const pendingIds = new Set(pendingNotifications.map(n => n.id));
+
+      // Schedule notifications for events that don't have one
+      let scheduled = 0;
+      for (const event of events || []) {
+        const notificationId = `cal-${event.id}`;
+        if (!pendingIds.has(notificationId) && event.notification_enabled !== false && event.reminder_minutes !== 0) {
+          await this.scheduleEventNotification(event);
+          scheduled++;
+        }
+      }
+
+      console.log(`Synced notifications: ${scheduled} scheduled out of ${events?.length || 0} upcoming events`);
+    } catch (error) {
+      console.error('Error syncing event notifications:', error);
     }
   }
 

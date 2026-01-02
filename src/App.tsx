@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import Header from './components/layout/Header';
-import Sidebar from './components/layout/Sidebar';
+import OnboardingModal from './components/onboarding/OnboardingModal';
+import { useOnboardingStore } from './stores/onboardingStore';
 import Dashboard from './pages/Dashboard';
 import PricingCalculator from './pages/PricingCalculator';
 import CalculatorWidgets from './pages/CalculatorWidgets';
@@ -13,15 +13,23 @@ import AdAnalyzer from './pages/AdAnalyzer';
 import Settings from './pages/Settings';
 import Clients from './pages/Clients';
 import EmployeesManager from './pages/EmployeesManager';
+import EmployeesHub from './pages/EmployeesHub';
 import AdAccountsSetup from './pages/AdAccountsSetup';
 import AdOAuthCallback from './pages/AdOAuthCallback';
 import MetaOAuthCallback from './pages/MetaOAuthCallback';
 import GmailOAuthCallback from './pages/GmailOAuthCallback';
 import AnalyticsDashboard from './pages/AnalyticsDashboard';
-import Subscriptions from './pages/Subscriptions';
+// Import SubscriptionsIOS only - Subscriptions (Stripe) loaded dynamically for non-iOS only
+import SubscriptionsIOS from './pages/SubscriptionsIOS';
 import ResetPassword from './pages/ResetPassword';
 import LoginPage from './pages/auth/LoginPage';
 import SignupPage from './pages/auth/SignupPage';
+import EmailConfirmation from './pages/auth/EmailConfirmation';
+import AuthCallback from './pages/auth/AuthCallback';
+import WelcomePage from './pages/auth/WelcomePage';
+import TermsOfService from './pages/legal/TermsOfService';
+import PrivacyPolicy from './pages/legal/PrivacyPolicy';
+import { Capacitor } from '@capacitor/core';
 import ConfigureDeckCalculator from './pages/ConfigureDeckCalculator';
 import ConfigureRoofingCalculator from './pages/ConfigureRoofingCalculator';
 import ConfigureConcreteCalculator from './pages/ConfigureConcreteCalculator';
@@ -43,22 +51,153 @@ import ConfigurePlumbingCalculator from './pages/ConfigurePlumbingCalculator';
 import ConfigureFramingCalculator from './pages/ConfigureFramingCalculator';
 import ConfigureJunkRemovalCalculator from './pages/ConfigureJunkRemovalCalculator';
 import ConfigureExcavationCalculator from './pages/ConfigureExcavationCalculator';
-import AICalculator from './pages/AICalculator';
 import AITeamHub from './pages/AITeamHub';
-import SaulFinance from './pages/SaulFinance';
-import CindyCRM from './pages/CindyCRM';
-import BillProjectManager from './pages/BillProjectManager';
+import EstimatesHub from './pages/EstimatesHub';
+import ProjectsHub from './pages/ProjectsHub';
+import PhotosGallery from './pages/PhotosGallery';
+import ClientsHub from './pages/ClientsHub';
+import FinanceHub from './pages/FinanceHub';
+import BusinessHub from './pages/BusinessHub';
+import TodoHub from './pages/TodoHub';
+import MobileBottomNav from './components/layout/MobileBottomNav';
+import GlobalAISearchBar from './components/ai/GlobalAISearchBar';
+// Deprecated: Individual chatbot pages - now redirected to unified AITeamHub
 import { PricingProvider } from './contexts/PricingContext';
 import { ProjectProvider } from './contexts/ProjectContext';
 import { DataProvider } from './contexts/DataContext';
 import { CalculatorTabProvider } from './contexts/CalculatorTabContext';
 import { useAuthStore } from './stores/authStore';
 import { useAppInitialization } from './hooks/useAppInitialization';
+import { supabase } from './lib/supabase';
+import { useEffect } from 'react';
+import { revenueCatService } from './services/revenueCatService';
 
 function App() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, initialized } = useAuthStore();
   const { isInitialized: dataInitialized, initError } = useAppInitialization();
+  const [hasActiveSubscription, setHasActiveSubscription] = useState<boolean | null>(null);
+  const [checkingSubscription, setCheckingSubscription] = useState(true);
+  const { profileCompleted, checkOnboardingStatus } = useOnboardingStore();
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  // Check subscription status when user is authenticated
+  useEffect(() => {
+    const checkSubscription = async () => {
+      if (!user) {
+        setCheckingSubscription(false);
+        return;
+      }
+
+      try {
+        console.log('[Subscription Check] Checking subscription for user:', user.id);
+
+        // Check platform
+        const platform = Capacitor.getPlatform();
+
+        if (platform === 'ios') {
+          // For iOS: Check Stripe FIRST (for web subscribers), then RevenueCat
+          console.log('[Subscription Check] iOS - Checking Stripe first for web subscribers');
+
+          // Check if user has active Stripe subscription (from web signup)
+          const { data: customer } = await supabase
+            .from('stripe_customers')
+            .select('customer_id')
+            .eq('user_id', user.id)
+            .single();
+
+          if (customer?.customer_id) {
+            const { data: stripeSubscription } = await supabase
+              .from('stripe_subscriptions')
+              .select('*')
+              .eq('customer_id', customer.customer_id)
+              .eq('status', 'active')
+              .single();
+
+            if (stripeSubscription) {
+              console.log('[Subscription Check] User has active Stripe subscription from web!');
+              setHasActiveSubscription(true);
+              setCheckingSubscription(false);
+              return;
+            }
+          }
+
+          // No Stripe subscription, check RevenueCat (Apple IAP)
+          console.log('[Subscription Check] No Stripe subscription, checking RevenueCat');
+          await revenueCatService.initialize(user.id);
+          const hasSubscription = await revenueCatService.hasActiveSubscription();
+
+          console.log('[Subscription Check] RevenueCat subscription status:', hasSubscription);
+          setHasActiveSubscription(hasSubscription);
+          setCheckingSubscription(false);
+        } else {
+          // Use Stripe for web and Android
+          console.log('[Subscription Check] Using Stripe for', platform);
+
+          // Get Stripe customer record
+          const { data: customer, error: customerError } = await supabase
+            .from('stripe_customers')
+            .select('customer_id')
+            .eq('user_id', user.id)
+            .single();
+
+          console.log('[Subscription Check] Customer data:', customer);
+
+          if (customerError || !customer?.customer_id) {
+            console.log('[Subscription Check] No customer found, showing paywall');
+            setHasActiveSubscription(false);
+            setCheckingSubscription(false);
+            return;
+          }
+
+          // Get active subscription
+          const { data: subscription, error: subError} = await supabase
+            .from('stripe_subscriptions')
+            .select('*')
+            .eq('customer_id', customer.customer_id)
+            .eq('status', 'active')
+            .single();
+
+          console.log('[Subscription Check] Subscription data:', subscription);
+
+          if (subError || !subscription) {
+            console.log('[Subscription Check] No active subscription, showing paywall');
+            setHasActiveSubscription(false);
+          } else {
+            console.log('[Subscription Check] Active subscription found:', subscription.id);
+            setHasActiveSubscription(true);
+          }
+
+          setCheckingSubscription(false);
+        }
+      } catch (error) {
+        console.error('[Subscription Check] Error:', error);
+        setHasActiveSubscription(false);
+        setCheckingSubscription(false);
+      }
+    };
+
+    checkSubscription();
+  }, [user]);
+
+  // Check onboarding status when user has active subscription
+  useEffect(() => {
+    const checkOnboarding = async () => {
+      if (user && hasActiveSubscription === true) {
+        const completed = await checkOnboardingStatus(user.id);
+        if (!completed) {
+          console.log('[Onboarding] Profile not completed, showing modal');
+          setShowOnboarding(true);
+        }
+      }
+    };
+
+    checkOnboarding();
+  }, [user, hasActiveSubscription, checkOnboardingStatus]);
+
+  // Handle onboarding completion
+  const handleOnboardingComplete = () => {
+    setShowOnboarding(false);
+  };
 
   // Show loading while auth or data initializes
   if (!initialized || (user && !dataInitialized)) {
@@ -100,26 +239,55 @@ function App() {
   if (!user) {
     return (
       <Routes>
+        <Route path="/auth/welcome" element={<WelcomePage />} />
         <Route path="/auth/login" element={<LoginPage />} />
         <Route path="/auth/signup" element={<SignupPage />} />
-        <Route path="*" element={<Navigate to="/auth/login" replace />} />
+        <Route path="/auth/confirm-email" element={<EmailConfirmation />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/legal/terms" element={<TermsOfService />} />
+        <Route path="/legal/privacy" element={<PrivacyPolicy />} />
+        <Route path="*" element={<Navigate to="/auth/welcome" replace />} />
       </Routes>
     );
   }
 
-  // Show main app when user is logged in
+  // Show subscription paywall if no active subscription
+  if (checkingSubscription) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Checking subscription...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (hasActiveSubscription === false) {
+    // iOS uses RevenueCat (Apple IAP) - Subscriptions.tsx is excluded from iOS bundle
+    return (
+      <Routes>
+        <Route path="/subscriptions" element={<SubscriptionsIOS />} />
+        <Route path="*" element={<Navigate to="/subscriptions" replace />} />
+      </Routes>
+    );
+  }
+
+  // Show main app when user is logged in and has active subscription
   return (
     <DataProvider>
       <CalculatorTabProvider>
         <PricingProvider>
           <ProjectProvider>
-            <div className="flex h-screen bg-gray-50">
-              <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+            {/* Onboarding Modal */}
+            <OnboardingModal
+              isOpen={showOnboarding}
+              onComplete={handleOnboardingComplete}
+            />
 
-              <div className="flex flex-col flex-1 overflow-hidden">
-                <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-
-                <main className="flex-1 overflow-y-auto pt-8 px-4 sm:px-6 lg:px-8 pb-8">
+            <div className="flex h-screen bg-[#0F0F0F] w-screen max-w-full overflow-x-hidden">
+              <div className="flex flex-col flex-1 overflow-hidden min-w-0">
+                <main className="flex-1 overflow-y-auto overflow-x-hidden pb-40 w-full">
                   <Routes>
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/pricing" element={<PricingCalculator />} />
@@ -146,10 +314,19 @@ function App() {
                     <Route path="/pricing/configure/excavation" element={<ConfigureExcavationCalculator />} />
                     <Route path="/calculator-widgets" element={<CalculatorWidgets />} />
                     <Route path="/ai-team" element={<AITeamHub />} />
-                    <Route path="/ai-calculator" element={<AICalculator />} />
-                    <Route path="/saul-finance" element={<SaulFinance />} />
-                    <Route path="/cindy-crm" element={<CindyCRM />} />
-                    <Route path="/bill-project-manager" element={<BillProjectManager />} />
+                    <Route path="/estimates-hub" element={<EstimatesHub />} />
+                    <Route path="/projects-hub" element={<ProjectsHub />} />
+                    <Route path="/photos-gallery" element={<PhotosGallery />} />
+                    <Route path="/clients-hub" element={<ClientsHub />} />
+                    <Route path="/finance-hub" element={<FinanceHub />} />
+                    <Route path="/business-hub" element={<BusinessHub />} />
+                    <Route path="/todo-hub" element={<TodoHub />} />
+                    <Route path="/employees-hub" element={<EmployeesHub />} />
+                    {/* Redirect deprecated chatbot routes to unified AITeamHub with mode */}
+                    <Route path="/ai-calculator" element={<Navigate to="/ai-team?mode=estimating" replace />} />
+                    <Route path="/saul-finance" element={<Navigate to="/ai-team?mode=finance" replace />} />
+                    <Route path="/cindy-crm" element={<Navigate to="/ai-team?mode=crm" replace />} />
+                    <Route path="/bill-project-manager" element={<Navigate to="/ai-team?mode=projects" replace />} />
                     <Route path="/finance" element={<FinanceTracker />} />
                     <Route path="/estimates" element={<EstimateGenerator />} />
                     <Route path="/projects" element={<ProjectManager />} />
@@ -162,12 +339,17 @@ function App() {
                     <Route path="/meta-oauth-callback" element={<MetaOAuthCallback />} />
                     <Route path="/gmail-oauth-callback" element={<GmailOAuthCallback />} />
                     <Route path="/analytics" element={<AnalyticsDashboard />} />
-                    <Route path="/subscriptions" element={<Subscriptions />} />
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/reset-password" element={<ResetPassword />} />
                     <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>
                 </main>
+
+                {/* Global AI Search Bar */}
+                <GlobalAISearchBar />
+
+                {/* Bottom Navigation */}
+                <MobileBottomNav />
               </div>
             </div>
           </ProjectProvider>

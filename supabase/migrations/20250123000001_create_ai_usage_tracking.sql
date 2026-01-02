@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS ai_api_usage (
 
     -- Request details
     request_type TEXT NOT NULL DEFAULT 'chat', -- 'chat', 'function_call', etc.
-    model TEXT NOT NULL DEFAULT 'claude-3-5-sonnet-20241022',
+    model TEXT NOT NULL DEFAULT 'claude-sonnet-4-20250514',
 
     -- Token usage
     input_tokens INTEGER NOT NULL DEFAULT 0,

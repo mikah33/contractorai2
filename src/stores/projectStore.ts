@@ -657,8 +657,7 @@ const useProjectStore = create<ProjectStore>((set, get) => ({
       const memberData: any = {
         project_id: projectId,
         member_name: memberName,
-        member_email: email || null,
-        member_role: role || null
+        member_email: email || null
       };
       
       // Only add user_id if we have a valid one

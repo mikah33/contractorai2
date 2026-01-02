@@ -1,0 +1,133 @@
+{
+  "appPolicies": {
+    "eula": "",
+    "policies": [
+      {
+        "locale": "en_US",
+        "policyText": "",
+        "policyURL": ""
+      }
+    ]
+  },
+  "identifier": "DBB29581",
+  "nonRenewingSubscriptions": [],
+  "products": [],
+  "subscriptionGroups": [
+    {
+      "id": "C528F0B0",
+      "localizations": [],
+      "name": "ContractorAI Pro",
+      "subscriptions": [
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "34.99",
+          "familyShareable": false,
+          "groupNumber": 1,
+          "internalID": "31EA98C2",
+          "localizations": [
+            {
+              "description": "Monthly subscription to ContractorAI Pro",
+              "displayName": "ContractorAI Pro Monthly",
+              "locale": "en_US"
+            }
+          ],
+          "productID": "com.elevated.contractorai.starter.monthly",
+          "recurringSubscriptionPeriod": "P1M",
+          "referenceName": "Basic - Monthly",
+          "subscriptionGroupID": "C528F0B0",
+          "type": "RecurringSubscription",
+          "winbackOffers": []
+        },
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "84.99",
+          "familyShareable": false,
+          "groupNumber": 1,
+          "internalID": "60F9D5A7",
+          "localizations": [
+            {
+              "description": "3-month subscription to ContractorAI Pro",
+              "displayName": "ContractorAI Pro 3 Months",
+              "locale": "en_US"
+            }
+          ],
+          "productID": "com.elevated.contractorai.basic.3months",
+          "recurringSubscriptionPeriod": "P3M",
+          "referenceName": "Basic - 3 Months",
+          "subscriptionGroupID": "C528F0B0",
+          "type": "RecurringSubscription",
+          "winbackOffers": []
+        },
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "349.99",
+          "familyShareable": false,
+          "groupNumber": 1,
+          "internalID": "FAE52008",
+          "localizations": [
+            {
+              "description": "Annual subscription to ContractorAI Pro",
+              "displayName": "ContractorAI Pro Yearly",
+              "locale": "en_US"
+            }
+          ],
+          "productID": "com.elevated.contractorai.basic.1year",
+          "recurringSubscriptionPeriod": "P1Y",
+          "referenceName": "Basic - Yearly",
+          "subscriptionGroupID": "C528F0B0",
+          "type": "RecurringSubscription",
+          "winbackOffers": []
+        },
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "299.99",
+          "familyShareable": false,
+          "groupNumber": 2,
+          "internalID": "C5BEEB63",
+          "localizations": [
+            {
+              "description": "Premium marketing package with website integration, lead management, and automated reviews",
+              "displayName": "Marketing Premium",
+              "locale": "en_US"
+            }
+          ],
+          "productID": "com.elevated.contractorai.marketing.premium.299",
+          "recurringSubscriptionPeriod": "P1M",
+          "referenceName": "Marketing Premium $299",
+          "subscriptionGroupID": "C528F0B0",
+          "type": "RecurringSubscription",
+          "winbackOffers": []
+        },
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "899.99",
+          "familyShareable": false,
+          "groupNumber": 3,
+          "internalID": "9061D285",
+          "localizations": [
+            {
+              "description": "Full marketing package including Meta & Google ads management",
+              "displayName": "Marketing Ads",
+              "locale": "en_US"
+            }
+          ],
+          "productID": "com.elevated.contractorai.marketing.ads.899",
+          "recurringSubscriptionPeriod": "P1M",
+          "referenceName": "ContractorAI Marketing - Ads $899",
+          "subscriptionGroupID": "C528F0B0",
+          "type": "RecurringSubscription",
+          "winbackOffers": []
+        }
+      ]
+    }
+  ],
+  "version": {
+    "major": 4,
+    "minor": 0
+  }
+}

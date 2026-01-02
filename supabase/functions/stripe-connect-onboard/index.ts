@@ -26,7 +26,13 @@ Deno.serve(async (req) => {
 
   try {
     // Get authenticated user
-    const authHeader = req.headers.get('Authorization')!;
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized: No authorization header provided' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
     const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
 
@@ -82,11 +88,18 @@ Deno.serve(async (req) => {
       }
 
       // Create Account Link for onboarding (No OAuth needed!)
-      const origin = req.headers.get('origin') || 'http://localhost:5173';
+      let origin = req.headers.get('origin') || 'http://localhost:5173';
+
+      // Capacitor apps send capacitor://localhost but Stripe requires https URLs
+      const isCapacitor = origin.startsWith('capacitor://');
+      if (isCapacitor) {
+        origin = 'https://contractorai.work';
+      }
+
       const accountLink = await stripe.accountLinks.create({
         account: accountId,
-        refresh_url: `${origin}/settings?stripe_refresh=true`,
-        return_url: `${origin}/settings?stripe_success=true`,
+        refresh_url: isCapacitor ? `${origin}?stripe=refresh` : `${origin}/settings?stripe_refresh=true`,
+        return_url: isCapacitor ? `${origin}?stripe=success` : `${origin}/settings?stripe_success=true`,
         type: 'account_onboarding',
       });
 
@@ -143,11 +156,23 @@ Deno.serve(async (req) => {
 
     // Create dashboard link
     if (action === 'dashboard') {
-      const { data: connectAccount } = await supabase
+      console.log('Dashboard action started for user:', user.id);
+
+      const { data: connectAccount, error: dbError } = await supabase
         .from('stripe_connect_accounts')
-        .select('stripe_account_id')
+        .select('stripe_account_id, details_submitted, charges_enabled')
         .eq('user_id', user.id)
         .single();
+
+      console.log('DB query result:', { connectAccount, dbError });
+
+      if (dbError) {
+        console.error('Database error:', dbError);
+        return new Response(
+          JSON.stringify({ error: 'Database error: ' + dbError.message }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
 
       if (!connectAccount) {
         return new Response(
@@ -156,12 +181,49 @@ Deno.serve(async (req) => {
         );
       }
 
+      console.log('Fetching Stripe account:', connectAccount.stripe_account_id);
+
+      // Fetch latest status from Stripe to ensure we have current data
+      const account = await stripe.accounts.retrieve(connectAccount.stripe_account_id);
+      console.log('Stripe account retrieved, details_submitted:', account.details_submitted);
+
+      // If onboarding is not complete, return an account link instead of login link
+      if (!account.details_submitted) {
+        console.log('Creating onboarding link...');
+        let origin = req.headers.get('origin') || 'http://localhost:5173';
+
+        // Capacitor apps send capacitor://localhost but Stripe requires https URLs
+        // Use contractorai.work with a simple success message
+        const isCapacitor = origin.startsWith('capacitor://');
+        if (isCapacitor) {
+          origin = 'https://contractorai.work';
+        }
+        console.log('Origin for Stripe redirect:', origin, 'isCapacitor:', isCapacitor);
+
+        // For mobile apps, redirect to homepage with success param - user closes browser and returns to app
+        const accountLink = await stripe.accountLinks.create({
+          account: connectAccount.stripe_account_id,
+          refresh_url: isCapacitor ? `${origin}?stripe=refresh` : `${origin}/settings?stripe_refresh=true`,
+          return_url: isCapacitor ? `${origin}?stripe=success` : `${origin}/settings?stripe_success=true`,
+          type: 'account_onboarding',
+        });
+        console.log('Account link created:', accountLink.url);
+
+        return new Response(
+          JSON.stringify({ url: accountLink.url, needsOnboarding: true }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      console.log('Creating login link...');
+      // Onboarding complete - create login link to Express Dashboard
       const loginLink = await stripe.accounts.createLoginLink(
         connectAccount.stripe_account_id
       );
+      console.log('Login link created:', loginLink.url);
 
       return new Response(
-        JSON.stringify({ url: loginLink.url }),
+        JSON.stringify({ url: loginLink.url, needsOnboarding: false }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }

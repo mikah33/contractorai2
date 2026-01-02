@@ -5,7 +5,6 @@ import {
   BarChart2,
   FileText,
   Clipboard,
-  CreditCard,
   Settings,
   Calendar,
   BarChart3,
@@ -16,7 +15,6 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useData } from '../../contexts/DataContext';
-import { stripeProducts } from '../../stripe-config';
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -38,7 +36,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
       };
     }
 
-    const product = stripeProducts.find(p => p.priceId === subscription.price_id);
     const endDate = subscription.current_period_end
       ? new Date(subscription.current_period_end).toLocaleDateString('en-US', {
           year: 'numeric',
@@ -48,7 +45,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
       : null;
 
     return {
-      name: product?.name || 'Pro Plan',
+      name: 'Pro Plan',
       validUntil: endDate,
       isActive: true
     };
@@ -67,7 +64,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
     { name: t('navigation.employees'), icon: UserCog, href: '/employees' },
     { name: t('navigation.calendar'), icon: Calendar, href: '/calendar' },
     { name: 'Ad Analyzer', icon: BarChart3, href: '/ad-analyzer' },
-    { name: t('navigation.subscriptions'), icon: CreditCard, href: '/subscriptions' },
     { name: t('navigation.settings'), icon: Settings, href: '/settings', badge: 'Widgets now here' },
   ];
 
@@ -81,11 +77,11 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
       ></div>
 
       <div
-        className={`fixed inset-y-0 left-0 z-30 w-64 bg-blue-900 transition duration-300 transform lg:translate-x-0 lg:static lg:inset-0 ${
+        className={`fixed inset-y-0 left-0 z-30 w-64 bg-[#0F0F0F] border-r border-[#2A2A2A] transition duration-300 transform lg:translate-x-0 lg:static lg:inset-0 ${
           sidebarOpen ? 'translate-x-0 ease-out' : '-translate-x-full ease-in'
         }`}
       >
-        <div className="flex items-center justify-between h-16 px-6 bg-blue-800 pt-safe">
+        <div className="flex items-center justify-between h-16 px-6 bg-[#0F0F0F] pt-safe">
           <div className="flex items-center" style={{ marginTop: '44px' }}>
             <span className="text-xl font-bold text-white">ContractorAI</span>
           </div>
@@ -98,18 +94,18 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                 key={item.name}
                 to={item.href}
                 onClick={() => setSidebarOpen(false)}
-                className={`group flex items-center justify-between px-4 py-3 text-sm font-medium rounded-md transition-colors ${
+                className={`group flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
                   isActive
-                    ? 'bg-blue-800 text-white'
-                    : 'text-blue-100 hover:bg-blue-800 hover:text-white'
+                    ? 'bg-[#1A1A1A] text-yellow-500'
+                    : 'text-gray-300 hover:bg-[#1A1A1A] hover:text-white'
                 }`}
               >
                 <div className="flex items-center">
-                  <item.icon className="w-5 h-5 mr-3 text-blue-300 flex-shrink-0" />
+                  <item.icon className={`w-5 h-5 mr-3 flex-shrink-0 ${isActive ? 'text-yellow-500' : 'text-gray-400'}`} />
                   <span className="truncate">{item.name}</span>
                 </div>
                 {item.badge && (
-                  <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-teal-500 text-white rounded-full whitespace-nowrap">
+                  <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-yellow-500 text-black rounded-full whitespace-nowrap">
                     {item.badge}
                   </span>
                 )}
@@ -117,26 +113,28 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
             );
           })}
         </nav>
-        
-        <div className="absolute bottom-0 w-full px-6 py-4">
-          <div className="bg-blue-800 rounded-lg p-4 text-blue-100 text-sm">
-            <p className="font-semibold mb-2">{subscriptionInfo.name}</p>
+
+        <div className="absolute bottom-0 w-full px-4 py-4">
+          <div className="bg-[#1A1A1A] rounded-xl p-4 text-gray-300 text-sm border border-[#2A2A2A]">
+            <p className="font-semibold mb-2 text-white">{subscriptionInfo.name}</p>
             {subscriptionInfo.validUntil && (
-              <p className="text-xs text-blue-300 mb-3">
+              <p className="text-xs text-gray-400 mb-3">
                 {t('common.validUntil')} {subscriptionInfo.validUntil}
               </p>
             )}
             {!subscriptionInfo.isActive && (
-              <p className="text-xs text-blue-300 mb-3">
+              <p className="text-xs text-gray-400 mb-3">
                 {t('common.upgradeMessage')}
               </p>
             )}
-            <button
-              onClick={() => navigate('/subscriptions')}
-              className="w-full py-1.5 bg-teal-500 hover:bg-teal-600 text-white rounded-md text-xs font-medium transition-colors"
+            <a
+              href="https://contractorai.work/login"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block w-full py-2 bg-yellow-500 hover:bg-yellow-600 text-black rounded-lg text-xs font-semibold transition-colors text-center"
             >
               {subscriptionInfo.isActive ? t('common.manageSubscription') : t('common.upgradeNow')}
-            </button>
+            </a>
           </div>
         </div>
       </div>

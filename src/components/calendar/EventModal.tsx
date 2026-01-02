@@ -148,11 +148,11 @@ const EventModal = ({ isOpen, onClose, selectedDate, event }: EventModalProps) =
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex items-center justify-center min-h-screen px-4">
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={onClose}></div>
+        <div className="fixed inset-0 bg-black/80 transition-opacity" onClick={onClose}></div>
 
-        <div className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4">
-          <div className="flex items-center justify-between p-4 border-b">
-            <h3 className="text-lg font-medium text-gray-900">
+        <div className="relative bg-[#1C1C1E] rounded-2xl shadow-xl max-w-2xl w-full mx-4 border border-[#3A3A3C]">
+          <div className="flex items-center justify-between p-4 border-b border-[#3A3A3C]">
+            <h3 className="text-lg font-semibold text-white">
               {event ? (isEditing ? 'Edit Event' : 'Event Details') : 'Add New Event'}
             </h3>
             <div className="flex items-center gap-2">
@@ -160,28 +160,28 @@ const EventModal = ({ isOpen, onClose, selectedDate, event }: EventModalProps) =
                 <>
                   <button
                     onClick={() => setShowNotificationModal(true)}
-                    className="text-green-600 hover:text-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 rounded-full p-1"
+                    className="text-green-500 hover:text-green-400 p-2 rounded-lg hover:bg-green-500/10"
                     title="Send Notification"
                   >
                     <Bell className="w-5 h-5" />
                   </button>
                   <button
                     onClick={() => setShowManageNotificationsModal(true)}
-                    className="text-orange-600 hover:text-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 rounded-full p-1"
+                    className="text-orange-500 hover:text-orange-400 p-2 rounded-lg hover:bg-orange-500/10"
                     title="Manage Scheduled Notifications"
                   >
                     <BellOff className="w-5 h-5" />
                   </button>
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="text-blue-600 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full p-1"
+                    className="text-blue-500 hover:text-blue-400 p-2 rounded-lg hover:bg-blue-500/10"
                     title="Edit Event"
                   >
                     <Edit3 className="w-5 h-5" />
                   </button>
                   <button
                     onClick={handleDelete}
-                    className="text-red-600 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 rounded-full p-1"
+                    className="text-red-500 hover:text-red-400 p-2 rounded-lg hover:bg-red-500/10"
                     title="Delete Event"
                   >
                     <Trash2 className="w-5 h-5" />
@@ -190,7 +190,7 @@ const EventModal = ({ isOpen, onClose, selectedDate, event }: EventModalProps) =
               )}
               <button
                 onClick={onClose}
-                className="text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full p-1"
+                className="text-zinc-400 hover:text-white p-2 rounded-lg hover:bg-zinc-700"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -200,60 +200,60 @@ const EventModal = ({ isOpen, onClose, selectedDate, event }: EventModalProps) =
           <form onSubmit={handleSubmit} className="p-4">
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Event Title</label>
+                <label className="block text-sm font-medium text-zinc-400 mb-1">Event Title</label>
                 {isEditing ? (
                   <input
                     type="text"
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    className="w-full px-3 py-2 bg-[#2C2C2E] border border-[#3A3A3C] rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   />
                 ) : (
-                  <p className="mt-1 text-gray-900 font-medium">{formData.title}</p>
+                  <p className="text-white font-medium">{formData.title}</p>
                 )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Start Date & Time</label>
+                  <label className="block text-sm font-medium text-zinc-400 mb-1">Start Date & Time</label>
                   {isEditing ? (
                     <input
                       type="datetime-local"
                       value={formData.start}
                       onChange={(e) => setFormData({ ...formData, start: e.target.value })}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      className="w-full px-3 py-2 bg-[#2C2C2E] border border-[#3A3A3C] rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       required
                     />
                   ) : (
-                    <p className="mt-1 text-gray-900">{formData.start ? format(new Date(formData.start), 'PPp') : 'No date'}</p>
+                    <p className="text-white">{formData.start ? format(new Date(formData.start), 'PPp') : 'No date'}</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">End Date & Time</label>
+                  <label className="block text-sm font-medium text-zinc-400 mb-1">End Date & Time</label>
                   {isEditing ? (
                     <input
                       type="datetime-local"
                       value={formData.end}
                       onChange={(e) => setFormData({ ...formData, end: e.target.value })}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      className="w-full px-3 py-2 bg-[#2C2C2E] border border-[#3A3A3C] rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       required
                     />
                   ) : (
-                    <p className="mt-1 text-gray-900">{formData.end ? format(new Date(formData.end), 'PPp') : 'No date'}</p>
+                    <p className="text-white">{formData.end ? format(new Date(formData.end), 'PPp') : 'No date'}</p>
                   )}
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Event Type</label>
+                  <label className="block text-sm font-medium text-zinc-400 mb-1">Event Type</label>
                   {isEditing ? (
                     <select
                       value={formData.type}
                       onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      className="w-full px-3 py-2 bg-[#2C2C2E] border border-[#3A3A3C] rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                       <option value="task">Task</option>
                       <option value="milestone">Milestone</option>
@@ -262,17 +262,17 @@ const EventModal = ({ isOpen, onClose, selectedDate, event }: EventModalProps) =
                       <option value="inspection">Inspection</option>
                     </select>
                   ) : (
-                    <p className="mt-1 text-gray-900 capitalize">{formData.type}</p>
+                    <p className="text-white capitalize">{formData.type}</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Status</label>
+                  <label className="block text-sm font-medium text-zinc-400 mb-1">Status</label>
                   {isEditing ? (
                     <select
                       value={formData.status}
                       onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      className="w-full px-3 py-2 bg-[#2C2C2E] border border-[#3A3A3C] rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                       <option value="pending">Pending</option>
                       <option value="in_progress">In Progress</option>
@@ -280,43 +280,43 @@ const EventModal = ({ isOpen, onClose, selectedDate, event }: EventModalProps) =
                       <option value="delayed">Delayed</option>
                     </select>
                   ) : (
-                    <p className="mt-1 text-gray-900 capitalize">{formData.status.replace('_', ' ')}</p>
+                    <p className="text-white capitalize">{formData.status.replace('_', ' ')}</p>
                   )}
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">Location</label>
+                <label className="block text-sm font-medium text-zinc-400 mb-1">Location</label>
                 {isEditing ? (
                   <input
                     type="text"
                     value={formData.location}
                     onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    placeholder="e.g., 123 Main St, City, State or Client's Office"
+                    className="w-full px-3 py-2 bg-[#2C2C2E] border border-[#3A3A3C] rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="e.g., 123 Main St, City, State"
                   />
                 ) : (
-                  <div className="mt-1">
+                  <div>
                     {formData.location ? (
                       <MapLink address={formData.location} className="text-sm" />
                     ) : (
-                      <p className="text-gray-400 text-sm">No location specified</p>
+                      <p className="text-zinc-500 text-sm">No location specified</p>
                     )}
                   </div>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">Description</label>
+                <label className="block text-sm font-medium text-zinc-400 mb-1">Description</label>
                 {isEditing ? (
                   <textarea
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     rows={3}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    className="w-full px-3 py-2 bg-[#2C2C2E] border border-[#3A3A3C] rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                   ></textarea>
                 ) : (
-                  <p className="mt-1 text-gray-900 whitespace-pre-wrap">{formData.description || 'No description provided'}</p>
+                  <p className="text-white whitespace-pre-wrap">{formData.description || 'No description provided'}</p>
                 )}
               </div>
 
@@ -328,14 +328,14 @@ const EventModal = ({ isOpen, onClose, selectedDate, event }: EventModalProps) =
                       id="weatherSensitive"
                       checked={formData.weatherSensitive}
                       onChange={(e) => setFormData({ ...formData, weatherSensitive: e.target.checked })}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      className="h-4 w-4 text-blue-600 bg-[#2C2C2E] border-[#3A3A3C] rounded focus:ring-blue-500"
                     />
-                    <label htmlFor="weatherSensitive" className="ml-2 block text-sm text-gray-700">
+                    <label htmlFor="weatherSensitive" className="ml-2 block text-sm text-zinc-300">
                       Weather Sensitive Task
                     </label>
                   </>
                 ) : (
-                  <p className="text-sm text-gray-700">
+                  <p className="text-sm text-zinc-300">
                     {formData.weatherSensitive ? '🌦️ Weather Sensitive Task' : 'Not weather sensitive'}
                   </p>
                 )}
@@ -346,14 +346,14 @@ const EventModal = ({ isOpen, onClose, selectedDate, event }: EventModalProps) =
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="px-4 py-2 bg-[#2C2C2E] border border-[#3A3A3C] rounded-lg text-sm font-medium text-white hover:bg-[#3A3A3C] transition-colors"
               >
                 {isEditing ? 'Cancel' : 'Close'}
               </button>
               {isEditing && (
                 <button
                   type="submit"
-                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className="px-4 py-2 bg-blue-600 rounded-lg text-sm font-medium text-white hover:bg-blue-700 transition-colors"
                 >
                   {event ? 'Save Changes' : 'Add Event'}
                 </button>

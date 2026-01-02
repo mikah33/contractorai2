@@ -25,7 +25,7 @@ interface AuthState {
   loading: boolean;
   initialized: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signUp: (email: string, password: string, metadata?: SignUpMetadata) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, metadata?: SignUpMetadata) => Promise<{ error: Error | null; user?: User | null; session?: Session | null }>;
   signOut: () => Promise<void>;
   fetchProfile: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: Error | null }>;
@@ -76,10 +76,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signUp: async (email: string, password: string, metadata?: SignUpMetadata) => {
     set({ loading: true });
     try {
+      // Clear all localStorage data before creating new account
+      localStorage.clear();
+
+      console.log('[AuthStore] Signing up:', email);
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
           data: {
             full_name: metadata?.fullName,
             company_name: metadata?.companyName,
@@ -88,43 +94,75 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
       });
 
+      console.log('[AuthStore] Signup response:', {
+        hasUser: !!data.user,
+        hasSession: !!data.session,
+        emailConfirmed: data.user?.email_confirmed_at,
+        identities: data.user?.identities?.length,
+        error: error
+      });
+
       if (error) {
         set({ loading: false });
         return { error };
       }
 
       if (data.user) {
-        set({
-          user: data.user,
-          session: data.session,
-          loading: false
-        });
+        // Check if this is a duplicate signup (user exists but no identities)
+        // This means the email is already registered
+        if (data.user.identities && data.user.identities.length === 0) {
+          console.log('[AuthStore] Email already registered - no new identity created');
+          set({ loading: false });
+          return {
+            error: new Error('This email is already registered. Please sign in instead or use password reset if you forgot your password.'),
+            user: null,
+            session: null
+          };
+        }
 
-        // Send registration data to n8n webhook
-        try {
-          await fetch('https://contractorai.app.n8n.cloud/webhook/170d14a9-ace1-49cf-baab-49dd8aec1245', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              email,
-              fullName: metadata?.fullName || '',
-              companyName: metadata?.companyName || '',
-              phoneNumber: metadata?.phoneNumber || '',
-              userId: data.user.id,
-              timestamp: new Date().toISOString(),
-              source: 'ContractorAI Web App',
-            }),
+        // Only set user/session if email is confirmed or confirmation is disabled
+        if (data.user.email_confirmed_at || data.session) {
+          console.log('[AuthStore] Email confirmed or confirmation disabled - logging in');
+          set({
+            user: data.user,
+            session: data.session,
+            loading: false
           });
-        } catch (webhookError) {
-          console.error('Webhook notification failed:', webhookError);
-          // Don't fail the signup if webhook fails
+        } else {
+          console.log('[AuthStore] Email confirmation required');
+          // Email needs confirmation, don't set user yet
+          set({ loading: false });
+        }
+
+        // Send registration data to n8n webhook (only for new signups)
+        if (data.user.identities && data.user.identities.length > 0) {
+          try {
+            await fetch('https://contractorai.app.n8n.cloud/webhook/170d14a9-ace1-49cf-baab-49dd8aec1245', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                email,
+                fullName: metadata?.fullName || '',
+                companyName: metadata?.companyName || '',
+                phoneNumber: metadata?.phoneNumber || '',
+                userId: data.user.id,
+                timestamp: new Date().toISOString(),
+                source: 'ContractorAI Web App',
+              }),
+            });
+          } catch (webhookError) {
+            console.error('Webhook notification failed:', webhookError);
+            // Don't fail the signup if webhook fails
+          }
         }
       }
 
-      return { error: null };
+      set({ loading: false });
+      return { error: null, user: data.user, session: data.session };
     } catch (error) {
+      console.error('[AuthStore] Signup exception:', error);
       set({ loading: false });
       return { error: error as Error };
     }
@@ -134,11 +172,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ loading: true });
     try {
       await supabase.auth.signOut();
-      set({ 
-        user: null, 
+
+      // Clear all localStorage data on sign out
+      localStorage.clear();
+
+      set({
+        user: null,
         profile: null,
         session: null,
-        loading: false 
+        loading: false
       });
     } catch (error) {
       console.error('Error signing out:', error);

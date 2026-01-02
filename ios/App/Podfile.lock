@@ -6,12 +6,35 @@ PODS:
     - Capacitor
   - CapacitorPushNotifications (7.0.3):
     - Capacitor
+  - PurchasesHybridCommon (17.19.1):
+    - RevenueCat (= 5.48.0)
+  - PurchasesHybridCommonUI (17.19.1):
+    - PurchasesHybridCommon (= 17.19.1)
+    - RevenueCatUI (= 5.48.0)
+  - RevenueCat (5.48.0)
+  - RevenuecatPurchasesCapacitor (11.2.15):
+    - Capacitor
+    - PurchasesHybridCommon (= 17.19.1)
+  - RevenuecatPurchasesCapacitorUi (11.2.15):
+    - Capacitor
+    - PurchasesHybridCommonUI (= 17.19.1)
+  - RevenueCatUI (5.48.0):
+    - RevenueCat (= 5.48.0)
 
 DEPENDENCIES:
   - "Capacitor (from `../../node_modules/@capacitor/ios`)"
   - "CapacitorCordova (from `../../node_modules/@capacitor/ios`)"
   - "CapacitorLocalNotifications (from `../../node_modules/@capacitor/local-notifications`)"
   - "CapacitorPushNotifications (from `../../node_modules/@capacitor/push-notifications`)"
+  - "RevenuecatPurchasesCapacitor (from `../../node_modules/@revenuecat/purchases-capacitor`)"
+  - "RevenuecatPurchasesCapacitorUi (from `../../node_modules/@revenuecat/purchases-capacitor-ui`)"
+
+SPEC REPOS:
+  trunk:
+    - PurchasesHybridCommon
+    - PurchasesHybridCommonUI
+    - RevenueCat
+    - RevenueCatUI
 
 EXTERNAL SOURCES:
   Capacitor:
@@ -22,13 +45,23 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor/local-notifications"
   CapacitorPushNotifications:
     :path: "../../node_modules/@capacitor/push-notifications"
+  RevenuecatPurchasesCapacitor:
+    :path: "../../node_modules/@revenuecat/purchases-capacitor"
+  RevenuecatPurchasesCapacitorUi:
+    :path: "../../node_modules/@revenuecat/purchases-capacitor-ui"
 
 SPEC CHECKSUMS:
   Capacitor: 358dd1c3fdd71d969547b17e159fd8a7736cb45f
   CapacitorCordova: bf648a636f3c153f652d312ae145fb508b6ffced
   CapacitorLocalNotifications: 0811aef56ab2e5f7f9ae72f47d3473ab50c29038
   CapacitorPushNotifications: bdd621fbd562be34a41f4a7b1750efa000447d5a
+  PurchasesHybridCommon: a4837eebc889b973668af685d6c23b89a038461d
+  PurchasesHybridCommonUI: bf5566763f906429584534a117a7862537b92c0c
+  RevenueCat: 1e61140a343a77dc286f171b3ffab99ca09a4b57
+  RevenuecatPurchasesCapacitor: 2c14f8cccaa2100a8585e75bec5984a62ccae52c
+  RevenuecatPurchasesCapacitorUi: a9593c2b69256088a0b855b2b6d33ca9d5c3f8b8
+  RevenueCatUI: 625b2b2f4ee8c052d2e9939c2b906cdaecded253
 
-PODFILE CHECKSUM: b036a7121c17a695d1ff50b50dc9e600f023b1ab
+PODFILE CHECKSUM: a18c00ff7329bfde4334a99c34276233d19ef7a4
 
 COCOAPODS: 1.16.2

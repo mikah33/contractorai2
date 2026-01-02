@@ -1,0 +1,201 @@
+{
+  "appPolicies" : {
+    "eula" : "",
+    "policies" : [
+      {
+        "locale" : "en_US",
+        "policyText" : "",
+        "policyURL" : ""
+      }
+    ]
+  },
+  "identifier" : "87ABD4D5",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+
+  ],
+  "settings" : {
+    "_askToBuyEnabled" : false,
+    "_billingGracePeriodEnabled" : false,
+    "_billingIssuesEnabled" : false,
+    "_disableDialogs" : false,
+    "_failTransactionsEnabled" : false,
+    "_locale" : "en_US",
+    "_renewalBillingIssuesEnabled" : false,
+    "_storefront" : "USA",
+    "_storeKitErrors" : [
+
+    ],
+    "_timeRate" : 0
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "6EC4630C",
+      "localizations" : [
+
+      ],
+      "name" : "ContractorAI Pro",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "34.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "F060AA58",
+          "introductoryOffer" : {
+            "internalID" : "FE040BAA",
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P1W"
+          },
+          "localizations" : [
+            {
+              "description" : "Monthly subscription to ContractorAI Pro",
+              "displayName" : "ContractorAI Pro Monthly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.elevated.contractorai.starter.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Monthly",
+          "subscriptionGroupID" : "6EC4630C",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "84.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "FE1EE954",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "3-month subscription to ContractorAI Pro",
+              "displayName" : "ContractorAI Pro 3 Months",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.elevated.contractorai.basic.3months",
+          "recurringSubscriptionPeriod" : "P3M",
+          "referenceName" : "3 Months",
+          "subscriptionGroupID" : "6EC4630C",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "349.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "1AF7F7D9",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Annual subscription to ContractorAI Pro",
+              "displayName" : "ContractorAI Pro Yearly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.elevated.contractorai.basic.1year",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Annual",
+          "subscriptionGroupID" : "6EC4630C",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        }
+      ]
+    },
+    {
+      "id" : "MARKETING01",
+      "localizations" : [
+
+      ],
+      "name" : "ContractorAI Marketing",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "299.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "MKTPREM01",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Premium marketing package with website integration, lead management, and automated reviews",
+              "displayName" : "Marketing Premium",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.elevated.contractorai.marketing.premium.299",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Marketing Premium Monthly",
+          "subscriptionGroupID" : "MARKETING01",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "899.99",
+          "familyShareable" : false,
+          "groupNumber" : 2,
+          "internalID" : "MKTADS01",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Full marketing package including Meta & Google ads management",
+              "displayName" : "Marketing Ads",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.elevated.contractorai.marketing.ads.899",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Marketing Ads Monthly",
+          "subscriptionGroupID" : "MARKETING01",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}

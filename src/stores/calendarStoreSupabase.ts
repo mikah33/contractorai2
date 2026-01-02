@@ -7,28 +7,29 @@ interface CalendarState {
   events: CalendarEvent[];
   loading: boolean;
   error: string | null;
-  
+
   // Fetch operations
   fetchEvents: () => Promise<void>;
   fetchEventsByDateRange: (startDate: string, endDate: string) => Promise<void>;
-  
+
   // CRUD operations
   addEvent: (event: Partial<CalendarEvent>) => Promise<void>;
   updateEvent: (eventId: string, updates: Partial<CalendarEvent>) => Promise<void>;
   deleteEvent: (eventId: string) => Promise<void>;
-  
+
   // Sync operations
   syncProjectDates: (projectId: string, projectData: any) => Promise<void>;
   syncEstimateDates: (estimateId: string, estimateData: any) => Promise<void>;
   syncTaskDates: (taskId: string, taskData: any) => Promise<void>;
-  
+  syncNotifications: () => Promise<void>; // Sync all event notifications
+
   // Query operations
   getEventsByDate: (date: Date) => CalendarEvent[];
   getEventsByDateRange: (start: Date, end: Date) => CalendarEvent[];
   getEventsByProject: (projectId: string) => CalendarEvent[];
   getEventsByEstimate: (estimateId: string) => CalendarEvent[];
   getEventsByType: (eventType: string) => CalendarEvent[];
-  
+
   // AI and generation
   generateProjectMilestones: (projectId: string, projectData: any) => Promise<void>;
   generateAIRecommendations: (projectType: string, startDate: Date) => CalendarEvent[];
@@ -178,6 +179,19 @@ export const useCalendarStoreSupabase = create<CalendarState>((set, get) => ({
     } catch (error) {
       console.error('Error syncing task dates:', error);
       set({ error: 'Failed to sync task dates' });
+    }
+  },
+
+  syncNotifications: async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.log('No user for notification sync');
+        return;
+      }
+      await CalendarService.syncAllEventNotifications(user.id);
+    } catch (error) {
+      console.error('Error syncing notifications:', error);
     }
   },
 

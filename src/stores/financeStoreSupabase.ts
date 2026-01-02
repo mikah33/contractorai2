@@ -127,7 +127,6 @@ export interface Invoice {
   status: 'draft' | 'sent' | 'outstanding' | 'partial' | 'paid' | 'overdue';
   lineItems?: LineItem[];
   notes?: string;
-  payment_link?: string | null; // Stripe payment link
   userId?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -356,7 +355,8 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
         status: 'processed' as const,
         projectId: expense.project_id || null,
         userId: expense.user_id,
-        metadata: expense.metadata || undefined
+        metadata: expense.metadata || undefined,
+        imageUrl: expense.image_url || undefined
       })) || [];
 
       console.log('✅ Transformed receipts:', receipts);
@@ -396,7 +396,8 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
           status: receipt.status || 'pending',
           notes: receipt.notes || null,
           project_id: resolvedProjectId,
-          user_id: userId
+          user_id: userId,
+          image_url: receipt.imageUrl || null
         })
         .select()
         .single();
@@ -1162,7 +1163,6 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
         status: inv.status,
         lineItems: inv.line_items,
         notes: inv.notes,
-        payment_link: inv.payment_link,
         userId: inv.user_id,
         createdAt: inv.created_at,
         updatedAt: inv.updated_at

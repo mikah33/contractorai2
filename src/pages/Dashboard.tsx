@@ -1,360 +1,601 @@
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { BarChart, Activity, Users, DollarSign, TrendingUp, CalendarRange, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
-import ProjectSummaryCard from '../components/dashboard/ProjectSummaryCard';
-import StatCard from '../components/dashboard/StatCard';
-import RecentEstimatesTable from '../components/dashboard/RecentEstimatesTable';
-import FinanceSummaryChart from '../components/dashboard/FinanceSummaryChart';
-import ConnectionTest from '../components/ConnectionTest';
-import { useCachedProjects, useCachedEstimates } from '../hooks/useCachedData';
+import {
+  Home,
+  Users,
+  UserCheck,
+  DollarSign,
+  Briefcase,
+  ChevronRight,
+  Phone,
+  Building2,
+  Plus,
+  ArrowRight,
+  FileText
+} from 'lucide-react';
+import { useClientsStore } from '../stores/clientsStore';
 import { useFinanceStore } from '../stores/financeStoreSupabase';
-import { useCalendarStoreSupabase } from '../stores/calendarStoreSupabase';
+import useProjectStore from '../stores/projectStore';
+import useEstimateStore from '../stores/estimateStore';
+import { useData } from '../contexts/DataContext';
+import { useAuthStore } from '../stores/authStore';
+import { useOnboardingStore } from '../stores/onboardingStore';
+import { supabase } from '../lib/supabase';
+import DashboardTutorialModal from '../components/dashboard/DashboardTutorialModal';
 
-const Dashboard = () => {
-  const { t } = useTranslation();
+interface Employee {
+  id: string;
+  name: string;
+  role: string;
+  email: string;
+  phone: string;
+  hourly_rate: number;
+  status: 'active' | 'inactive';
+  created_at: string;
+}
+
+const Dashboard: React.FC = () => {
   const navigate = useNavigate();
+  const { clients, fetchClients } = useClientsStore();
+  const { financialSummary, calculateFinancialSummary, payments, receipts, fetchPayments, fetchReceipts } = useFinanceStore();
+  const { projects, fetchProjects } = useProjectStore();
+  const { estimates, fetchEstimates } = useEstimateStore();
+  const { profile } = useData();
+  const { user } = useAuthStore();
+  const { dashboardTutorialCompleted, checkDashboardTutorial, setDashboardTutorialCompleted } = useOnboardingStore();
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [loadingEmployees, setLoadingEmployees] = useState(true);
+  const [showTutorial, setShowTutorial] = useState(false);
 
-  // Use React Query cached data - instant loading!
-  const { projects } = useCachedProjects();
-  const { estimates } = useCachedEstimates();
-  const { events, fetchEvents } = useCalendarStoreSupabase(); // Use same store as Calendar page
-  const {
-    financialSummary,
-    fetchReceipts,
-    fetchPayments,
-    fetchInvoices,
-    fetchRecurringExpenses,
-    fetchBudgetItems,
-    fetchProjects: fetchFinanceProjects,
-    fetchClients: fetchFinanceClients
-  } = useFinanceStore();
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+  // Get display name from profile (company name or full name)
+  const displayName = profile?.company || profile?.full_name || 'there';
 
-  // Fetch ALL data on mount - load everything at once
+  // Check if tutorial should be shown
   useEffect(() => {
-    console.log('📊 Dashboard: Fetching all data on mount');
+    const checkTutorial = async () => {
+      if (user?.id) {
+        const completed = await checkDashboardTutorial(user.id);
+        if (!completed) {
+          setShowTutorial(true);
+        }
+      }
+    };
+    checkTutorial();
+  }, [user?.id]);
 
-    // Fetch calendar events
-    fetchEvents().then(() => {
-      console.log('📊 Dashboard: Events fetched, count:', events.length);
-    });
+  const handleTutorialComplete = async (dontShowAgain: boolean) => {
+    setShowTutorial(false);
+    if (dontShowAgain && user?.id) {
+      await setDashboardTutorialCompleted(user.id, true);
+    }
+  };
 
-    // Fetch all finance data in parallel
-    Promise.all([
-      fetchReceipts(),
-      fetchPayments(),
-      fetchInvoices(),
-      fetchRecurringExpenses(),
-      fetchBudgetItems(),
-      fetchFinanceProjects(),
-      fetchFinanceClients()
-    ]).then(() => {
-      console.log('📊 Dashboard: All finance data loaded');
-    }).catch(error => {
-      console.error('📊 Dashboard: Error loading finance data:', error);
-    });
-  }, [fetchEvents, fetchReceipts, fetchPayments, fetchInvoices, fetchRecurringExpenses, fetchBudgetItems, fetchFinanceProjects, fetchFinanceClients]);
-
-  // Debug: Log when component mounts and data state
   useEffect(() => {
-    console.log('📊 Dashboard mounted with cached data');
-    console.log('  Projects:', projects.length, '(cached)');
-    console.log('  Estimates:', estimates.length, '(cached)');
-    console.log('  Events:', events.length, '(from calendar store)');
-    console.log('  Financial Summary:', financialSummary);
-  }, [projects.length, estimates.length, events.length]);
+    fetchClients();
+    fetchProjects();
+    fetchPayments();
+    fetchReceipts();
+    fetchEmployees();
+    fetchEstimates();
+  }, []);
 
-  // No more fetchProjects/fetchEstimates needed! React Query handles it
-
-  // Debug: Log events when they change
   useEffect(() => {
-    console.log('📅 Calendar events loaded:', events.length);
-    events.forEach(e => {
-      const eventDate = e.start_date ? new Date(e.start_date) : null;
-      const isValidDate = eventDate && !isNaN(eventDate.getTime());
-      console.log(`  Event: "${e.title}" on ${e.start_date} - Valid: ${isValidDate}`);
-    });
-  }, [events]);
+    calculateFinancialSummary();
+  }, [payments, receipts]);
 
-  // Calculate dashboard statistics
-  const activeProjects = projects.filter(p => p.status === 'active').length;
-  const pendingEstimates = estimates.filter(e => e.status === 'draft' || e.status === 'sent').length;
+  const fetchEmployees = async () => {
+    try {
+      setLoadingEmployees(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-  // Get total revenue from finance store (sum of completed payments)
-  const totalRevenue = financialSummary.totalRevenue;
+      const { data, error } = await supabase
+        .from('employees')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
 
-  const newClients = new Set(projects.map(p => p.client)).size;
-
-  const handleNewProject = () => {
-    navigate('/projects');
+      if (error) throw error;
+      setEmployees(data || []);
+    } catch (error) {
+      console.error('Error fetching employees:', error);
+    } finally {
+      setLoadingEmployees(false);
+    }
   };
 
-  const handleNewEstimate = () => {
-    navigate('/estimates');
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
   };
 
-  const handleViewAllDeadlines = () => {
-    navigate('/calendar');
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   };
 
-  const handleViewAllEstimates = () => {
-    navigate('/estimates');
-  };
+  const quickActions = [
+    { id: 'clients', label: 'Clients', icon: Users, bgColor: 'bg-orange-500/20', iconColor: 'text-orange-500', href: '/clients-hub' },
+    { id: 'employees', label: 'Team', icon: UserCheck, bgColor: 'bg-orange-500/20', iconColor: 'text-orange-500', href: '/employees-hub' },
+    { id: 'finance', label: 'Finance', icon: DollarSign, bgColor: 'bg-orange-500/20', iconColor: 'text-orange-500', href: '/finance-hub' },
+    { id: 'projects', label: 'Projects', icon: Briefcase, bgColor: 'bg-orange-500/20', iconColor: 'text-orange-500', href: '/projects-hub' },
+  ];
 
-  const handleViewAllProjects = () => {
-    navigate('/projects');
+  // Get top 3 clients
+  const topClients = clients.slice(0, 3);
+  // Get top 3 employees
+  const topEmployees = employees.slice(0, 3);
+  // Get top 3 estimates
+  const topEstimates = estimates.slice(0, 3);
+  // Get active projects count
+  const activeProjects = projects.filter(p => p.status === 'in_progress' || p.status === 'active').length;
+
+  const getEstimateStatusColor = (status: string) => {
+    switch (status) {
+      case 'approved':
+        return 'bg-green-500/20 text-green-400';
+      case 'sent':
+        return 'bg-blue-500/20 text-blue-400';
+      case 'declined':
+      case 'rejected':
+        return 'bg-red-500/20 text-red-400';
+      default:
+        return 'bg-zinc-800 text-zinc-400';
+    }
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{t('dashboard.title')}</h1>
-        <div className="flex gap-1.5">
-          <button
-            onClick={handleNewProject}
-            className="px-2 py-1 text-xs font-medium text-white bg-blue-600 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            {t('common.newProject')}
-          </button>
-          <button
-            onClick={handleNewEstimate}
-            className="px-2 py-1 text-xs font-medium text-blue-600 bg-white border border-blue-600 rounded hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            {t('common.newEstimate')}
-          </button>
-        </div>
-      </div>
+    <div className="min-h-full bg-[#0F0F0F] pb-24">
+      {/* Dashboard Tutorial Modal */}
+      <DashboardTutorialModal
+        isOpen={showTutorial}
+        onComplete={handleTutorialComplete}
+      />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          title={t('dashboard.activeProjects')}
-          value={activeProjects.toString()}
-          change={`+${activeProjects}`}
-          positive={true}
-          icon={<Activity className="w-6 h-6 text-blue-600" />}
-        />
-        <StatCard
-          title={t('dashboard.pendingEstimates')}
-          value={pendingEstimates.toString()}
-          change={`+${pendingEstimates}`}
-          positive={true}
-          icon={<FileText className="w-6 h-6 text-amber-500" />}
-        />
-        <StatCard
-          title={t('common.totalRevenue')}
-          value={`$${totalRevenue.toLocaleString()}`}
-          change="+0%"
-          positive={true}
-          icon={<DollarSign className="w-6 h-6 text-green-600" />}
-        />
-        <StatCard
-          title={t('common.totalClients')}
-          value={newClients.toString()}
-          change={`+${newClients}`}
-          positive={true}
-          icon={<Users className="w-6 h-6 text-purple-600" />}
-        />
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <div className="p-6 bg-white rounded-lg shadow">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">{t('dashboard.financialOverview')}</h2>
-              <select className="px-3 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option>{t('dashboard.last30Days')}</option>
-                <option>{t('dashboard.last90Days')}</option>
-                <option>{t('dashboard.thisYear')}</option>
-              </select>
+      {/* Header - background extends into safe area, content pushed down */}
+      <div className="bg-[#1C1C1E] border-b border-orange-500/30 sticky top-0 z-10 pt-[env(safe-area-inset-top)]">
+        <div className="px-4 pb-3 pt-2">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Home className="w-5 h-5 text-orange-500" />
             </div>
-            <FinanceSummaryChart />
+            <div className="flex-1 min-w-0">
+              <h1 className="text-lg font-bold text-white">Dashboard</h1>
+              <p className="text-xs text-zinc-400 leading-tight">Welcome back,<br />{displayName}!</p>
+            </div>
           </div>
         </div>
+      </div>
 
-        <div className="lg:col-span-1">
-          <div className="p-6 bg-white rounded-lg shadow">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">{t('dashboard.calendar')}</h2>
+      <div className="px-4 py-4 space-y-4">
+        {/* Quick Preview Cards - 2x2 Grid */}
+        <div className="grid grid-cols-2 gap-3">
+          {/* Clients Card */}
+          <button
+            onClick={() => navigate('/clients-hub')}
+            className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4 text-left active:bg-[#2C2C2E] transition-colors"
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-8 h-8 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                <Users className="w-4 h-4 text-orange-500" />
+              </div>
+              <div>
+                <p className="font-semibold text-white">Clients</p>
+                <p className="text-xs text-zinc-500">{clients.length} total</p>
+              </div>
+            </div>
+            <div className="flex -space-x-2">
+              {topClients.length > 0 ? (
+                <>
+                  {topClients.map((client) => (
+                    <div key={client.id} className="w-8 h-8 bg-[#3A3A3C] rounded-full flex items-center justify-center text-white text-xs font-semibold border-2 border-[#1C1C1E]">
+                      {getInitials(client.name || 'NA')}
+                    </div>
+                  ))}
+                  {clients.length > 3 && (
+                    <div className="w-8 h-8 bg-orange-500/20 rounded-full flex items-center justify-center text-orange-500 text-xs font-semibold border-2 border-[#1C1C1E]">
+                      +{clients.length - 3}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p className="text-xs text-zinc-500">No clients yet</p>
+              )}
+            </div>
+          </button>
+
+          {/* Team Card */}
+          <button
+            onClick={() => navigate('/employees-hub')}
+            className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4 text-left active:bg-[#2C2C2E] transition-colors"
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-8 h-8 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                <UserCheck className="w-4 h-4 text-orange-500" />
+              </div>
+              <div>
+                <p className="font-semibold text-white">Team</p>
+                <p className="text-xs text-zinc-500">{employees.length} members</p>
+              </div>
+            </div>
+            <div className="flex -space-x-2">
+              {topEmployees.length > 0 ? (
+                <>
+                  {topEmployees.map((emp) => (
+                    <div key={emp.id} className="w-8 h-8 bg-[#3A3A3C] rounded-full flex items-center justify-center text-white text-xs font-semibold border-2 border-[#1C1C1E]">
+                      {getInitials(emp.name || 'NA')}
+                    </div>
+                  ))}
+                  {employees.length > 3 && (
+                    <div className="w-8 h-8 bg-orange-500/20 rounded-full flex items-center justify-center text-orange-500 text-xs font-semibold border-2 border-[#1C1C1E]">
+                      +{employees.length - 3}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p className="text-xs text-zinc-500">No team yet</p>
+              )}
+            </div>
+          </button>
+
+          {/* Finance Card */}
+          <button
+            onClick={() => navigate('/finance-hub')}
+            className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4 text-left active:bg-[#2C2C2E] transition-colors"
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-8 h-8 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                <DollarSign className="w-4 h-4 text-orange-500" />
+              </div>
+              <div>
+                <p className="font-semibold text-white">Finance</p>
+                <p className="text-xs text-zinc-500">This month</p>
+              </div>
+            </div>
+            <div className="flex gap-4">
+              <div>
+                <p className="text-xs text-zinc-500">Revenue</p>
+                <p className="text-sm font-bold text-green-400">{formatCurrency(financialSummary?.totalRevenue || 0)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-zinc-500">Profit</p>
+                <p className={`text-sm font-bold ${(financialSummary?.profit || 0) >= 0 ? 'text-orange-500' : 'text-red-400'}`}>
+                  {formatCurrency(financialSummary?.profit || 0)}
+                </p>
+              </div>
+            </div>
+          </button>
+
+          {/* Projects Card */}
+          <button
+            onClick={() => navigate('/projects-hub')}
+            className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4 text-left active:bg-[#2C2C2E] transition-colors"
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-8 h-8 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                <Briefcase className="w-4 h-4 text-orange-500" />
+              </div>
+              <div>
+                <p className="font-semibold text-white">Projects</p>
+                <p className="text-xs text-zinc-500">{projects.length} total</p>
+              </div>
+            </div>
+            <div className="flex gap-4">
+              <div>
+                <p className="text-xs text-zinc-500">Active</p>
+                <p className="text-sm font-bold text-orange-500">{activeProjects}</p>
+              </div>
+              <div>
+                <p className="text-xs text-zinc-500">Completed</p>
+                <p className="text-sm font-bold text-green-400">{projects.filter(p => p.status === 'completed').length}</p>
+              </div>
+            </div>
+          </button>
+        </div>
+
+        {/* Estimates Section */}
+        <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 overflow-hidden">
+          <div className="flex items-center justify-between p-4 border-b border-orange-500/20">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                <FileText className="w-4 h-4 text-orange-500" />
+              </div>
+              <div>
+                <h2 className="font-semibold text-white">Estimates</h2>
+                <p className="text-xs text-zinc-500">{estimates.length} total</p>
+              </div>
+            </div>
+            <button
+              onClick={() => navigate('/estimates-hub')}
+              className="flex items-center gap-1 text-sm text-orange-500 font-medium"
+            >
+              View All <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+
+          {topEstimates.length === 0 ? (
+            <div className="p-6 text-center">
+              <FileText className="w-10 h-10 text-zinc-600 mx-auto mb-2" />
+              <p className="text-zinc-400 text-sm">No estimates yet</p>
               <button
-                onClick={handleViewAllDeadlines}
-                className="text-blue-600 hover:text-blue-800 text-sm"
+                onClick={() => navigate('/estimates-hub')}
+                className="mt-3 flex items-center gap-1 text-sm text-orange-500 font-medium mx-auto"
               >
-                {t('common.viewFull')}
+                <Plus className="w-4 h-4" /> Create Estimate
               </button>
             </div>
-
-            {/* Mini Calendar */}
-            <div className="space-y-3">
-              {/* Month navigation */}
-              <div className="flex items-center justify-between">
+          ) : (
+            <div className="divide-y divide-orange-500/10">
+              {topEstimates.map((estimate) => (
                 <button
-                  onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
-                  className="p-1 hover:bg-gray-100 rounded"
+                  key={estimate.id}
+                  onClick={() => navigate('/estimates-hub')}
+                  className="w-full flex items-center gap-3 p-4 hover:bg-[#2C2C2E] active:bg-[#3A3A3C] transition-colors"
                 >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-                <span className="text-sm font-medium">
-                  {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                </span>
-                <button
-                  onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
-                  className="p-1 hover:bg-gray-100 rounded"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Calendar grid */}
-              <div className="grid grid-cols-7 gap-1">
-                {/* Day headers */}
-                {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
-                  <div key={i} className="text-center text-xs font-medium text-gray-500 py-1">
-                    {day}
+                  <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-orange-500" />
                   </div>
-                ))}
+                  <div className="flex-1 text-left min-w-0">
+                    <p className="font-medium text-white truncate">{estimate.title || 'Untitled Estimate'}</p>
+                    <div className="flex items-center gap-2 text-xs text-zinc-500">
+                      {estimate.client_name && <span className="truncate">{estimate.client_name}</span>}
+                      <span className={`px-1.5 py-0.5 rounded font-semibold ${getEstimateStatusColor(estimate.status)}`}>
+                        {estimate.status}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-sm font-bold text-white">{formatCurrency(estimate.total || 0)}</p>
+                    <p className="text-xs text-zinc-500">{new Date(estimate.created_at || '').toLocaleDateString()}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
 
-                {/* Calendar days */}
-                {(() => {
-                  const year = currentMonth.getFullYear();
-                  const month = currentMonth.getMonth();
-                  const firstDay = new Date(year, month, 1).getDay();
-                  const daysInMonth = new Date(year, month + 1, 0).getDate();
-                  const today = new Date();
-                  const days = [];
+          {estimates.length > 3 && (
+            <button
+              onClick={() => navigate('/estimates-hub')}
+              className="w-full p-3 text-center text-sm text-orange-500 font-medium bg-orange-500/10 hover:bg-orange-500/20 transition-colors"
+            >
+              See all {estimates.length} estimates <ArrowRight className="w-4 h-4 inline ml-1" />
+            </button>
+          )}
+        </div>
 
-                  // Empty cells for days before month starts
-                  for (let i = 0; i < firstDay; i++) {
-                    days.push(<div key={`empty-${i}`} className="aspect-square" />);
-                  }
-
-                  // Days of the month
-                  for (let day = 1; day <= daysInMonth; day++) {
-                    const date = new Date(year, month, day);
-                    const dateStr = date.toISOString().split('T')[0];
-                    const isToday = date.toDateString() === today.toDateString();
-                    const hasEvent = events.some(e => {
-                      if (!e.start_date) return false;
-                      try {
-                        const eventDate = new Date(e.start_date);
-                        if (isNaN(eventDate.getTime())) return false;
-                        const eventDateStr = eventDate.toISOString().split('T')[0];
-                        return eventDateStr === dateStr;
-                      } catch {
-                        return false;
-                      }
-                    });
-
-                    days.push(
-                      <div
-                        key={day}
-                        className={`aspect-square flex items-center justify-center text-xs rounded-md cursor-pointer
-                          ${isToday ? 'bg-orange-500 text-white font-semibold' : ''}
-                          ${hasEvent && !isToday ? 'bg-blue-100 text-blue-700' : ''}
-                          ${!isToday && !hasEvent ? 'hover:bg-gray-100' : ''}
-                        `}
-                        onClick={() => navigate('/calendar')}
-                      >
-                        {day}
-                      </div>
-                    );
-                  }
-
-                  return days;
-                })()}
+        {/* Clients Section */}
+        <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 overflow-hidden">
+          <div className="flex items-center justify-between p-4 border-b border-orange-500/20">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                <Users className="w-4 h-4 text-orange-500" />
               </div>
-
-              {/* Upcoming events */}
-              <div className="mt-4 pt-4 border-t">
-                <h3 className="text-xs font-semibold text-gray-700 mb-2">{t('common.upcomingEvents')}</h3>
-                <div className="space-y-2 max-h-32 overflow-y-auto">
-                  {events
-                    .filter(e => {
-                      if (!e.start_date) return false;
-                      const eventDate = new Date(e.start_date);
-                      if (isNaN(eventDate.getTime())) return false;
-                      return eventDate >= new Date();
-                    })
-                    .sort((a, b) => {
-                      const dateA = new Date(a.start_date).getTime();
-                      const dateB = new Date(b.start_date).getTime();
-                      return dateA - dateB;
-                    })
-                    .slice(0, 3)
-                    .map(event => {
-                      const eventDate = new Date(event.start_date);
-                      return (
-                        <div key={event.id} className="text-xs flex items-start space-x-2">
-                          <div className={`w-2 h-2 rounded-full mt-1 flex-shrink-0 ${
-                            event.event_type === 'meeting' ? 'bg-blue-500' :
-                            event.event_type === 'deadline' ? 'bg-red-500' :
-                            event.event_type === 'task' ? 'bg-green-500' : 'bg-gray-500'
-                          }`} />
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-gray-900 truncate">{event.title}</p>
-                            <p className="text-gray-500">
-                              {eventDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                            </p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  {events.filter(e => {
-                    if (!e.start_date) return false;
-                    const eventDate = new Date(e.start_date);
-                    return !isNaN(eventDate.getTime()) && eventDate >= new Date();
-                  }).length === 0 && (
-                    <p className="text-xs text-gray-500">{t('common.noUpcomingEvents')}</p>
-                  )}
-                </div>
+              <div>
+                <h2 className="font-semibold text-white">Clients</h2>
+                <p className="text-xs text-zinc-500">{clients.length} total</p>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="p-6 bg-white rounded-lg shadow">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">{t('dashboard.recentEstimates')}</h2>
             <button
-              onClick={handleViewAllEstimates}
-              className="text-blue-600 hover:text-blue-800"
+              onClick={() => navigate('/clients-hub')}
+              className="flex items-center gap-1 text-sm text-orange-500 font-medium"
             >
-              {t('common.viewAll')}
+              View All <ChevronRight className="w-4 h-4" />
             </button>
           </div>
-          <RecentEstimatesTable />
+
+          {topClients.length === 0 ? (
+            <div className="p-6 text-center">
+              <Users className="w-10 h-10 text-zinc-600 mx-auto mb-2" />
+              <p className="text-zinc-400 text-sm">No clients yet</p>
+              <button
+                onClick={() => navigate('/clients-hub')}
+                className="mt-3 flex items-center gap-1 text-sm text-orange-500 font-medium mx-auto"
+              >
+                <Plus className="w-4 h-4" /> Add Client
+              </button>
+            </div>
+          ) : (
+            <div className="divide-y divide-orange-500/10">
+              {topClients.map((client) => (
+                <button
+                  key={client.id}
+                  onClick={() => navigate(`/clients-hub?id=${client.id}`)}
+                  className="w-full flex items-center gap-3 p-4 hover:bg-[#2C2C2E] active:bg-[#3A3A3C] transition-colors"
+                >
+                  <div className="w-10 h-10 bg-[#3A3A3C] rounded-lg flex items-center justify-center text-white font-semibold text-sm">
+                    {getInitials(client.name || 'NA')}
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="font-medium text-white">{client.name}</p>
+                    <div className="flex items-center gap-3 text-xs text-zinc-500">
+                      {client.company && (
+                        <span className="flex items-center gap-1">
+                          <Building2 className="w-3 h-3" />
+                          {client.company}
+                        </span>
+                      )}
+                      {client.phone && (
+                        <span className="flex items-center gap-1">
+                          <Phone className="w-3 h-3" />
+                          {client.phone}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-zinc-500" />
+                </button>
+              ))}
+            </div>
+          )}
+
+          {clients.length > 3 && (
+            <button
+              onClick={() => navigate('/clients-hub')}
+              className="w-full p-3 text-center text-sm text-orange-500 font-medium bg-orange-500/10 hover:bg-orange-500/20 transition-colors"
+            >
+              See all {clients.length} clients <ArrowRight className="w-4 h-4 inline ml-1" />
+            </button>
+          )}
         </div>
 
-        <div className="p-6 bg-white rounded-lg shadow">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">{t('dashboard.projectStatus')}</h2>
-            <button
-              onClick={handleViewAllProjects}
-              className="text-blue-600 hover:text-blue-800"
-            >
-              {t('common.viewAll')}
-            </button>
-          </div>
-          <div className="space-y-4">
-            {projects.slice(0, 3).map((project) => (
-              <ProjectSummaryCard key={project.id} project={{
-                id: parseInt(project.id) || 0,
-                name: project.name,
-                client: project.client,
-                progress: project.progress,
-                status: project.status === 'active' ? 'In Progress' :
-                       project.status === 'completed' ? 'Completed' :
-                       project.status === 'on_hold' ? 'On Hold' : 'Cancelled'
-              }} />
-            ))}
-            {projects.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
-                {t('dashboard.noProjectsYet')}
+        {/* Employees Section */}
+        <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 overflow-hidden">
+          <div className="flex items-center justify-between p-4 border-b border-orange-500/20">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                <UserCheck className="w-4 h-4 text-orange-500" />
               </div>
-            )}
+              <div>
+                <h2 className="font-semibold text-white">Team</h2>
+                <p className="text-xs text-zinc-500">{employees.length} members</p>
+              </div>
+            </div>
+            <button
+              onClick={() => navigate('/employees-hub')}
+              className="flex items-center gap-1 text-sm text-orange-500 font-medium"
+            >
+              View All <ChevronRight className="w-4 h-4" />
+            </button>
           </div>
+
+          {loadingEmployees ? (
+            <div className="p-6 text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
+            </div>
+          ) : topEmployees.length === 0 ? (
+            <div className="p-6 text-center">
+              <UserCheck className="w-10 h-10 text-zinc-600 mx-auto mb-2" />
+              <p className="text-zinc-400 text-sm">No team members yet</p>
+              <button
+                onClick={() => navigate('/employees-hub')}
+                className="mt-3 flex items-center gap-1 text-sm text-orange-500 font-medium mx-auto"
+              >
+                <Plus className="w-4 h-4" /> Add Team Member
+              </button>
+            </div>
+          ) : (
+            <div className="divide-y divide-orange-500/10">
+              {topEmployees.map((employee) => (
+                <button
+                  key={employee.id}
+                  onClick={() => navigate(`/employees-hub?id=${employee.id}`)}
+                  className="w-full flex items-center gap-3 p-4 hover:bg-[#2C2C2E] active:bg-[#3A3A3C] transition-colors"
+                >
+                  <div className="w-10 h-10 bg-[#3A3A3C] rounded-lg flex items-center justify-center text-white font-semibold text-sm">
+                    {getInitials(employee.name || 'NA')}
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="font-medium text-white">{employee.name}</p>
+                    <div className="flex items-center gap-3 text-xs text-zinc-500">
+                      <span>{employee.role || 'Team Member'}</span>
+                      <span className={`px-1.5 py-0.5 rounded text-xs font-semibold ${
+                        (employee.status || 'active') === 'active'
+                          ? 'bg-orange-500/20 text-orange-500'
+                          : 'bg-zinc-800 text-zinc-400'
+                      }`}>
+                        {employee.status || 'active'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-medium text-white">${employee.hourly_rate || 0}/hr</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {employees.length > 3 && (
+            <button
+              onClick={() => navigate('/employees-hub')}
+              className="w-full p-3 text-center text-sm text-orange-500 font-medium bg-orange-500/10 hover:bg-orange-500/20 transition-colors"
+            >
+              See all {employees.length} team members <ArrowRight className="w-4 h-4 inline ml-1" />
+            </button>
+          )}
+        </div>
+
+        {/* Recent Projects */}
+        <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 overflow-hidden">
+          <div className="flex items-center justify-between p-4 border-b border-orange-500/20">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                <Briefcase className="w-4 h-4 text-orange-500" />
+              </div>
+              <div>
+                <h2 className="font-semibold text-white">Projects</h2>
+                <p className="text-xs text-zinc-500">{projects.length} total</p>
+              </div>
+            </div>
+            <button
+              onClick={() => navigate('/projects-hub')}
+              className="flex items-center gap-1 text-sm text-orange-500 font-medium"
+            >
+              View All <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+
+          {projects.length === 0 ? (
+            <div className="p-6 text-center">
+              <Briefcase className="w-10 h-10 text-zinc-600 mx-auto mb-2" />
+              <p className="text-zinc-400 text-sm">No projects yet</p>
+              <button
+                onClick={() => navigate('/projects-hub')}
+                className="mt-3 flex items-center gap-1 text-sm text-orange-500 font-medium mx-auto"
+              >
+                <Plus className="w-4 h-4" /> Add Project
+              </button>
+            </div>
+          ) : (
+            <div className="divide-y divide-orange-500/10">
+              {projects.slice(0, 3).map((project) => (
+                <button
+                  key={project.id}
+                  onClick={() => navigate(`/projects-hub?id=${project.id}`)}
+                  className="w-full flex items-center gap-3 p-4 hover:bg-[#2C2C2E] active:bg-[#3A3A3C] transition-colors"
+                >
+                  <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                    <Briefcase className="w-5 h-5 text-orange-500" />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="font-medium text-white">{project.name}</p>
+                    <div className="flex items-center gap-2 text-xs text-zinc-500">
+                      {project.client_name && <span>{project.client_name}</span>}
+                      <span className={`px-1.5 py-0.5 rounded font-semibold ${
+                        project.status === 'completed'
+                          ? 'bg-orange-500/20 text-orange-500' :
+                        project.status === 'in_progress' || project.status === 'active'
+                          ? 'bg-orange-500/10 text-orange-400' :
+                        'bg-zinc-800 text-zinc-400'
+                      }`}>
+                        {(project.status || 'pending')?.replace('_', ' ')}
+                      </span>
+                    </div>
+                  </div>
+                  {project.budget && (
+                    <p className="text-sm font-medium text-white">{formatCurrency(project.budget)}</p>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {projects.length > 3 && (
+            <button
+              onClick={() => navigate('/projects-hub')}
+              className="w-full p-3 text-center text-sm text-orange-500 font-medium bg-orange-500/10 hover:bg-orange-500/20 transition-colors"
+            >
+              See all {projects.length} projects <ArrowRight className="w-4 h-4 inline ml-1" />
+            </button>
+          )}
         </div>
       </div>
     </div>

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useFinanceStore } from '../../stores/financeStoreSupabase';
 import { FileText, DollarSign, Calendar, CheckCircle, Clock, AlertCircle, History, Trash2 } from 'lucide-react';
 import type { InvoicePayment } from '../../stores/financeStoreSupabase';
-import GeneratePaymentLinkButton from '../stripe/GeneratePaymentLinkButton';
 
 export default function InvoiceManager() {
   const { invoices, fetchInvoices, recordInvoicePayment, fetchInvoicePayments, deleteInvoice, isLoading } = useFinanceStore();
@@ -154,13 +153,6 @@ export default function InvoiceManager() {
                       >
                         Delete
                       </button>
-                      {invoice.status !== 'paid' && invoice.status !== 'draft' && (
-                        <GeneratePaymentLinkButton
-                          invoiceId={invoice.id}
-                          existingLink={invoice.payment_link}
-                          onLinkGenerated={() => fetchInvoices()}
-                        />
-                      )}
                     </div>
                   </td>
                 </tr>

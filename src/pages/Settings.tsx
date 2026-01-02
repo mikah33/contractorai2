@@ -1,21 +1,165 @@
 import { useState, useEffect } from 'react';
-import { Save, Bell, Lock, User, Loader2, Calendar, Upload, X, Globe, Code } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import {
+  Save, Bell, Lock, User, Loader2, Calendar, Upload, X, Globe, Code,
+  Trash2, AlertTriangle, CreditCard, CheckCircle, ExternalLink, XCircle,
+  Clock, RefreshCw, ChevronRight, Mail, Building2, Phone, MapPin, FileText,
+  Settings as SettingsIcon, LogOut, Eye, BookOpen, Home, ClipboardList
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { useData } from '../contexts/DataContext';
 import { useAuthStore } from '../stores/authStore';
+import { useOnboardingStore } from '../stores/onboardingStore';
 import { requestNotificationPermission, registerServiceWorker, showNotification } from '../utils/notifications';
-import StripeConnectButton from '../components/stripe/StripeConnectButton';
-import { GmailConnection } from '../components/settings/GmailConnection';
+import { BusinessEmailSetup } from '../components/settings/BusinessEmailSetup';
+
+interface StripeConnectStatus {
+  connected: boolean;
+  accountId?: string;
+  chargesEnabled?: boolean;
+  payoutsEnabled?: boolean;
+  detailsSubmitted?: boolean;
+  email?: string;
+  businessName?: string;
+}
+
+type SettingsSection = 'main' | 'profile' | 'notifications' | 'security' | 'payments' | 'language' | 'email' | 'tutorials' | 'danger';
 
 const Settings = () => {
   const { t, i18n } = useTranslation();
-  const { user } = useAuthStore();
+  const { user, signOut } = useAuthStore();
   const { profile, loading: dataLoading, refreshProfile } = useData();
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [activeSection, setActiveSection] = useState<SettingsSection>('main');
+  const [loggingOut, setLoggingOut] = useState(false);
+  const {
+    dashboardTutorialCompleted,
+    visionCamTutorialCompleted,
+    tasksTutorialCompleted,
+    estimatingTutorialCompleted,
+    projectsTutorialCompleted,
+    paymentsTutorialCompleted,
+    financeTutorialCompleted,
+    teamsTutorialCompleted,
+    emailTutorialCompleted,
+    photosTutorialCompleted,
+    marketingTutorialCompleted,
+    setDashboardTutorialCompleted,
+    setVisionCamTutorialCompleted,
+    setTasksTutorialCompleted,
+    setEstimatingTutorialCompleted,
+    setProjectsTutorialCompleted,
+    setPaymentsTutorialCompleted,
+    setFinanceTutorialCompleted,
+    setTeamsTutorialCompleted,
+    setEmailTutorialCompleted,
+    setPhotosTutorialCompleted,
+    setMarketingTutorialCompleted,
+    checkDashboardTutorial,
+    checkVisionCamTutorial,
+    checkTasksTutorial,
+    checkEstimatingTutorial,
+    checkProjectsTutorial,
+    checkPaymentsTutorial,
+    checkFinanceTutorial,
+    checkTeamsTutorial,
+    checkEmailTutorial,
+    checkPhotosTutorial,
+    checkMarketingTutorial
+  } = useOnboardingStore();
+
+  // Also keep localStorage sync for Vision Cam (backwards compatibility)
+  const [showVisionCamTutorial, setShowVisionCamTutorial] = useState(() => {
+    return !localStorage.getItem('visionCamTutorialHidden');
+  });
+  const [showDashboardTutorial, setShowDashboardTutorial] = useState(!dashboardTutorialCompleted);
+  const [showTasksTutorial, setShowTasksTutorial] = useState(!tasksTutorialCompleted);
+  const [showEstimatingTutorial, setShowEstimatingTutorial] = useState(!estimatingTutorialCompleted);
+  const [showProjectsTutorial, setShowProjectsTutorial] = useState(!projectsTutorialCompleted);
+  const [showPaymentsTutorial, setShowPaymentsTutorial] = useState(!paymentsTutorialCompleted);
+  const [showFinanceTutorial, setShowFinanceTutorial] = useState(!financeTutorialCompleted);
+  const [showTeamsTutorial, setShowTeamsTutorial] = useState(!teamsTutorialCompleted);
+  const [showEmailTutorial, setShowEmailTutorial] = useState(!emailTutorialCompleted);
+  const [showPhotosTutorial, setShowPhotosTutorial] = useState(!photosTutorialCompleted);
+  const [showMarketingTutorial, setShowMarketingTutorial] = useState(!marketingTutorialCompleted);
+
+  // Load tutorial states from Supabase
+  useEffect(() => {
+    if (user?.id) {
+      checkDashboardTutorial(user.id);
+      checkVisionCamTutorial(user.id);
+      checkTasksTutorial(user.id);
+      checkEstimatingTutorial(user.id);
+      checkProjectsTutorial(user.id);
+      checkPaymentsTutorial(user.id);
+      checkFinanceTutorial(user.id);
+      checkTeamsTutorial(user.id);
+      checkEmailTutorial(user.id);
+      checkPhotosTutorial(user.id);
+      checkMarketingTutorial(user.id);
+    }
+  }, [user?.id]);
+
+  // Sync state when Supabase values change
+  useEffect(() => {
+    setShowDashboardTutorial(!dashboardTutorialCompleted);
+  }, [dashboardTutorialCompleted]);
+
+  useEffect(() => {
+    setShowVisionCamTutorial(!visionCamTutorialCompleted);
+    // Also sync localStorage
+    if (visionCamTutorialCompleted) {
+      localStorage.setItem('visionCamTutorialHidden', 'true');
+    } else {
+      localStorage.removeItem('visionCamTutorialHidden');
+    }
+  }, [visionCamTutorialCompleted]);
+
+  useEffect(() => {
+    setShowTasksTutorial(!tasksTutorialCompleted);
+  }, [tasksTutorialCompleted]);
+
+  useEffect(() => {
+    setShowEstimatingTutorial(!estimatingTutorialCompleted);
+  }, [estimatingTutorialCompleted]);
+
+  useEffect(() => {
+    setShowProjectsTutorial(!projectsTutorialCompleted);
+  }, [projectsTutorialCompleted]);
+
+  useEffect(() => {
+    setShowPaymentsTutorial(!paymentsTutorialCompleted);
+  }, [paymentsTutorialCompleted]);
+
+  useEffect(() => {
+    setShowFinanceTutorial(!financeTutorialCompleted);
+  }, [financeTutorialCompleted]);
+
+  useEffect(() => {
+    setShowTeamsTutorial(!teamsTutorialCompleted);
+  }, [teamsTutorialCompleted]);
+
+  useEffect(() => {
+    setShowEmailTutorial(!emailTutorialCompleted);
+  }, [emailTutorialCompleted]);
+
+  useEffect(() => {
+    setShowPhotosTutorial(!photosTutorialCompleted);
+  }, [photosTutorialCompleted]);
+
+  useEffect(() => {
+    setShowMarketingTutorial(!marketingTutorialCompleted);
+  }, [marketingTutorialCompleted]);
+
+  // Stripe Connect state
+  const [stripeStatus, setStripeStatus] = useState<StripeConnectStatus>({ connected: false });
+  const [stripeLoading, setStripeLoading] = useState(false);
+  const [stripeError, setStripeError] = useState<string | null>(null);
 
   const [notifications, setNotifications] = useState({
     calendarReminders: true,
@@ -31,34 +175,178 @@ const Settings = () => {
     contractorNotificationEmail: ''
   });
 
-  // Load profile data when it becomes available
+  // Load profile data when it becomes available, with fallback to auth metadata
   useEffect(() => {
     if (profile) {
+      // Get auth metadata for fallback values
+      const metadata = user?.user_metadata || {};
+
       setLocalProfile({
-        name: profile.full_name || '',
-        phone: profile.phone || '',
-        company: profile.company || '',
+        name: profile.full_name || metadata.full_name || '',
+        phone: profile.phone || metadata.phone || '',
+        company: profile.company || metadata.company_name || '',
         address: profile.address || '',
         defaultTerms: profile.default_terms || '',
-        contractorNotificationEmail: profile.contractor_notification_email || ''
+        contractorNotificationEmail: profile.contractor_notification_email || user?.email || ''
       });
       setLogoUrl(profile.logo_url || null);
       setNotifications({
         calendarReminders: profile.calendar_reminders ?? true,
         securityAlerts: profile.security_alerts ?? true
       });
+    } else if (user) {
+      // No profile yet, use auth metadata
+      const metadata = user.user_metadata || {};
+      setLocalProfile(prev => ({
+        ...prev,
+        name: metadata.full_name || '',
+        phone: metadata.phone || '',
+        company: metadata.company_name || '',
+        contractorNotificationEmail: user.email || ''
+      }));
     }
-  }, [profile]);
+  }, [profile, user]);
+
+  // Check Stripe Connect status
+  const checkStripeStatus = async () => {
+    try {
+      setStripeLoading(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const { data, error } = await supabase.functions.invoke('stripe-connect-onboard', {
+        body: { action: 'status' }
+      });
+
+      if (error) {
+        console.error('Stripe status error:', error);
+        setStripeError(error.message || 'Failed to check Stripe status');
+        return;
+      }
+      setStripeError(null);
+      setStripeStatus(data);
+    } catch (error: any) {
+      console.error('Error checking Stripe status:', error);
+      setStripeError(error.message || 'Failed to check Stripe status');
+    } finally {
+      setStripeLoading(false);
+    }
+  };
+
+  // Check status on load and handle URL params
+  useEffect(() => {
+    checkStripeStatus();
+
+    // Handle URL params for Stripe Connect return
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('stripe_success') === 'true') {
+      checkStripeStatus();
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    if (urlParams.get('stripe_refresh') === 'true') {
+      // User needs to restart onboarding
+      handleStripeConnect();
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
+
+  // Stripe Connect functions
+  const handleStripeConnect = async () => {
+    setStripeLoading(true);
+    setStripeError(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('stripe-connect-onboard', {
+        body: { action: 'create' }
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        window.location.href = data.url;
+      }
+    } catch (error: any) {
+      console.error('Error connecting Stripe:', error);
+      setStripeError(error.message || 'Failed to connect Stripe account');
+    } finally {
+      setStripeLoading(false);
+    }
+  };
+
+  const handleStripeDashboard = async () => {
+    setStripeLoading(true);
+    setStripeError(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Please log in to access Stripe dashboard');
+      }
+
+      const { data, error } = await supabase.functions.invoke('stripe-connect-onboard', {
+        body: { action: 'dashboard' }
+      });
+
+      if (error) {
+        let errorMsg = 'Failed to open Stripe dashboard';
+        if (error.context?.body) {
+          try {
+            const body = JSON.parse(error.context.body);
+            errorMsg = body.error || errorMsg;
+          } catch (e) {}
+        } else if (error.message) {
+          errorMsg = error.message;
+        }
+        throw new Error(errorMsg);
+      }
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error('No URL returned from Stripe');
+      }
+    } catch (error: any) {
+      console.error('Error opening Stripe dashboard:', error);
+      setStripeError(error.message || 'Failed to open dashboard. Please try again.');
+    } finally {
+      setStripeLoading(false);
+    }
+  };
+
+  const handleStripeDisconnect = async () => {
+    if (!window.confirm('Are you sure you want to disconnect your Stripe account? You will no longer be able to accept payments.')) {
+      return;
+    }
+
+    setStripeLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('stripe-connect-onboard', {
+        body: { action: 'disconnect' }
+      });
+
+      if (error) throw error;
+
+      setStripeStatus({ connected: false });
+      alert('Stripe account disconnected successfully');
+    } catch (error: any) {
+      console.error('Error disconnecting Stripe:', error);
+      setStripeError(error.message || 'Failed to disconnect');
+    } finally {
+      setStripeLoading(false);
+    }
+  };
 
   const handleNotificationChange = async (key: keyof typeof notifications) => {
-    // If enabling calendar reminders, request permission
     if (key === 'calendarReminders' && !notifications.calendarReminders) {
       const hasPermission = await requestNotificationPermission();
       if (hasPermission) {
         await registerServiceWorker();
-        alert('Calendar notifications enabled! You will receive reminders 15 minutes and 1 hour before events.');
+        alert('Calendar notifications enabled!');
       } else {
-        alert('Please enable notifications in your browser settings to receive calendar reminders.');
+        alert('Please enable notifications in your browser settings.');
         return;
       }
     }
@@ -80,13 +368,11 @@ const Settings = () => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.type.startsWith('image/')) {
       alert('Please upload an image file');
       return;
     }
 
-    // Validate file size (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
       alert('Image must be less than 2MB');
       return;
@@ -101,7 +387,6 @@ const Settings = () => {
         return;
       }
 
-      // Upload to Supabase Storage
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}/logo.${fileExt}`;
 
@@ -111,14 +396,12 @@ const Settings = () => {
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('company-logos')
         .getPublicUrl(fileName);
 
       setLogoUrl(publicUrl);
 
-      // Auto-save logo URL to profile
       const { error: updateError } = await supabase
         .from('profiles')
         .upsert({
@@ -147,7 +430,6 @@ const Settings = () => {
 
       setLogoUrl(null);
 
-      // Update profile to remove logo
       const { error } = await supabase
         .from('profiles')
         .upsert({
@@ -179,7 +461,6 @@ const Settings = () => {
         return;
       }
 
-      // Save to profiles table
       const { error } = await supabase
         .from('profiles')
         .upsert({
@@ -198,7 +479,6 @@ const Settings = () => {
 
       if (error) throw error;
 
-      // Refresh global profile data
       await refreshProfile();
 
       alert('Settings saved successfully!');
@@ -232,307 +512,995 @@ const Settings = () => {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== 'DELETE') {
+      alert('Please type DELETE to confirm account deletion');
+      return;
+    }
+
+    try {
+      setDeletingAccount(true);
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        alert('Please log in to delete your account');
+        setDeletingAccount(false);
+        return;
+      }
+
+      const { error } = await supabase.functions.invoke('delete-account', {
+        body: { userId: user.id },
+      });
+
+      if (error) throw error;
+
+      await supabase.auth.signOut();
+      window.location.href = '/';
+    } catch (error: any) {
+      console.error('Error deleting account:', error);
+      alert(error?.message || 'Failed to delete account. Please contact support.');
+      setDeletingAccount(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      setLoggingOut(true);
+      await signOut();
+      window.location.href = '/auth/welcome';
+    } catch (error: any) {
+      console.error('Error logging out:', error);
+      alert(error?.message || 'Failed to log out');
+      setLoggingOut(false);
+    }
+  };
+
   if (dataLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 text-orange-600 animate-spin" />
+      <div className="flex items-center justify-center min-h-screen bg-bg-primary">
+        <Loader2 className="w-8 h-8 text-brand-600 animate-spin" />
       </div>
     );
   }
 
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-orange-600 rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50"
-        >
-          {saving ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Saving...
-            </>
-          ) : (
-            <>
-              <Save className="w-4 h-4 mr-2" />
-              Save Changes
-            </>
-          )}
-        </button>
-      </div>
+  // Main menu items
+  const menuItems = [
+    { id: 'profile' as SettingsSection, icon: User, label: 'Profile & Business', description: 'Name, company, logo, terms', bgColor: 'bg-orange-500/20', iconColor: 'text-orange-500' },
+    { id: 'notifications' as SettingsSection, icon: Bell, label: 'Notifications', description: 'Calendar reminders, alerts', bgColor: 'bg-orange-500/20', iconColor: 'text-orange-500' },
+    { id: 'payments' as SettingsSection, icon: CreditCard, label: 'Payments', description: stripeStatus.connected ? 'Stripe connected' : 'Connect Stripe', bgColor: 'bg-orange-500/20', iconColor: 'text-orange-500' },
+    { id: 'security' as SettingsSection, icon: Lock, label: 'Security', description: 'Password, authentication', bgColor: 'bg-orange-500/20', iconColor: 'text-orange-500' },
+    { id: 'language' as SettingsSection, icon: Globe, label: 'Language', description: i18n.language === 'es' ? 'Español' : 'English', bgColor: 'bg-orange-500/20', iconColor: 'text-orange-500' },
+    { id: 'email' as SettingsSection, icon: Mail, label: 'Business Email', description: 'Professional email address', bgColor: 'bg-orange-500/20', iconColor: 'text-orange-500' },
+    { id: 'tutorials' as SettingsSection, icon: BookOpen, label: 'Tutorials', description: 'Reset onboarding guides', bgColor: 'bg-orange-500/20', iconColor: 'text-orange-500' },
+    { id: 'danger' as SettingsSection, icon: Trash2, label: 'Delete Account', description: 'Permanently remove data', bgColor: 'bg-orange-500/20', iconColor: 'text-zinc-400' },
+  ];
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="bg-white shadow rounded-lg">
-          <div className="p-6">
-            <h2 className="flex items-center text-lg font-medium text-gray-900 mb-4">
-              <User className="w-5 h-5 mr-2 text-gray-500" />
-              Profile Information
-            </h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Full Name</label>
-                <input
-                  type="text"
-                  value={localProfile.name}
-                  onChange={(e) => handleProfileChange('name', e.target.value)}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm px-3 py-2 border"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Phone</label>
-                <input
-                  type="tel"
-                  value={localProfile.phone}
-                  onChange={(e) => handleProfileChange('phone', e.target.value)}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm px-3 py-2 border"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Company Name</label>
-                <input
-                  type="text"
-                  value={localProfile.company}
-                  onChange={(e) => handleProfileChange('company', e.target.value)}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm px-3 py-2 border"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Business Address</label>
-                <textarea
-                  value={localProfile.address}
-                  onChange={(e) => handleProfileChange('address', e.target.value)}
-                  rows={3}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm px-3 py-2 border"
-                />
-              </div>
+  // Render section content
+  const renderSection = () => {
+    switch (activeSection) {
+      case 'profile':
+        return (
+          <div className="space-y-4">
+            {/* Name */}
+            <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
+              <label className="block text-sm font-medium text-zinc-400 mb-1">Full Name</label>
+              <input
+                type="text"
+                value={localProfile.name}
+                onChange={(e) => handleProfileChange('name', e.target.value)}
+                className="w-full text-lg font-medium text-white border-0 p-0 focus:ring-0 bg-transparent"
+                placeholder="Your name"
+              />
+            </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Contractor Notification Email</label>
-                <input
-                  type="email"
-                  value={localProfile.contractorNotificationEmail}
-                  onChange={(e) => handleProfileChange('contractorNotificationEmail', e.target.value)}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm px-3 py-2 border"
-                  placeholder="notifications@yourcompany.com"
-                />
-                <p className="mt-2 text-xs text-gray-500">
-                  Email address to receive notifications when customers respond to estimates. This will be pre-filled when sending estimates.
-                </p>
-              </div>
+            {/* Phone */}
+            <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
+              <label className="block text-sm font-medium text-zinc-400 mb-1">Phone</label>
+              <input
+                type="tel"
+                value={localProfile.phone}
+                onChange={(e) => handleProfileChange('phone', e.target.value)}
+                className="w-full text-lg font-medium text-white border-0 p-0 focus:ring-0 bg-transparent"
+                placeholder="(555) 123-4567"
+              />
+            </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Default Terms & Conditions</label>
-                <textarea
-                  value={localProfile.defaultTerms}
-                  onChange={(e) => handleProfileChange('defaultTerms', e.target.value)}
-                  rows={6}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm px-3 py-2 border"
-                  placeholder="Enter your standard terms and conditions that will be pre-filled on all new estimates..."
-                />
-                <p className="mt-2 text-xs text-gray-500">
-                  These terms will automatically populate on new estimates. You can always edit them on individual estimates.
-                </p>
-              </div>
+            {/* Company */}
+            <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
+              <label className="block text-sm font-medium text-zinc-400 mb-1">Company Name</label>
+              <input
+                type="text"
+                value={localProfile.company}
+                onChange={(e) => handleProfileChange('company', e.target.value)}
+                className="w-full text-lg font-medium text-white border-0 p-0 focus:ring-0 bg-transparent"
+                placeholder="Your company"
+              />
+            </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Company Logo</label>
-                <div className="flex items-center space-x-4">
-                  {logoUrl ? (
-                    <div className="relative">
-                      <img
-                        src={logoUrl}
-                        alt="Company Logo"
-                        className="w-24 h-24 object-contain border-2 border-gray-300 rounded-lg p-2"
-                      />
-                      <button
-                        onClick={handleRemoveLogo}
-                        className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
-                        title="Remove logo"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
-                      <Upload className="w-8 h-8 text-gray-400" />
-                    </div>
-                  )}
-                  <div className="flex-1">
-                    <label className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500">
-                      <Upload className="w-4 h-4 mr-2" />
-                      {uploadingLogo ? 'Uploading...' : logoUrl ? 'Update Logo' : 'Upload Logo'}
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleLogoUpload}
-                        disabled={uploadingLogo}
-                        className="hidden"
-                      />
-                    </label>
-                    <p className="mt-2 text-xs text-gray-500">
-                      PNG, JPG up to 2MB. Logo will appear on estimates and in header.
-                    </p>
+            {/* Address */}
+            <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
+              <label className="block text-sm font-medium text-zinc-400 mb-1">Business Address</label>
+              <textarea
+                value={localProfile.address}
+                onChange={(e) => handleProfileChange('address', e.target.value)}
+                rows={2}
+                className="w-full text-lg font-medium text-white border-0 p-0 focus:ring-0 bg-transparent resize-none"
+                placeholder="123 Main St, City, State"
+              />
+            </div>
+
+            {/* Notification Email */}
+            <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
+              <label className="block text-sm font-medium text-zinc-400 mb-1">Notification Email</label>
+              <input
+                type="email"
+                value={localProfile.contractorNotificationEmail}
+                onChange={(e) => handleProfileChange('contractorNotificationEmail', e.target.value)}
+                className="w-full text-lg font-medium text-white border-0 p-0 focus:ring-0 bg-transparent"
+                placeholder="notifications@company.com"
+              />
+              <p className="text-xs text-zinc-500 mt-2">Receive notifications when customers respond to estimates</p>
+            </div>
+
+            {/* Logo */}
+            <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
+              <label className="block text-sm font-medium text-gray-500 mb-3">Company Logo</label>
+              <div className="flex items-center gap-4">
+                {logoUrl ? (
+                  <div className="relative">
+                    <img
+                      src={logoUrl}
+                      alt="Company Logo"
+                      className="w-20 h-20 object-contain border-2 border-gray-200 rounded-xl"
+                    />
+                    <button
+                      onClick={handleRemoveLogo}
+                      className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full shadow-lg active:scale-95"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
                   </div>
-                </div>
+                ) : (
+                  <div className="w-20 h-20 border-2 border-dashed border-zinc-600 rounded-lg flex items-center justify-center">
+                    <Upload className="w-6 h-6 text-zinc-500" />
+                  </div>
+                )}
+                <label className="flex-1 cursor-pointer">
+                  <div className="px-4 py-2.5 bg-orange-500/20 rounded-lg text-center font-medium text-orange-500 active:scale-95 transition-transform">
+                    {uploadingLogo ? 'Uploading...' : logoUrl ? 'Change' : 'Upload'}
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoUpload}
+                    disabled={uploadingLogo}
+                    className="hidden"
+                  />
+                </label>
               </div>
             </div>
-          </div>
-        </div>
 
-        <div className="space-y-6">
-          <div className="bg-white shadow rounded-lg">
-            <div className="p-6">
-              <h2 className="flex items-center text-lg font-medium text-gray-900 mb-4">
-                <Bell className="w-5 h-5 mr-2 text-gray-500" />
-                Notification Preferences
-              </h2>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-gray-900 flex items-center">
-                      <Calendar className="w-4 h-4 mr-2 text-gray-500" />
-                      Calendar Reminders
-                    </p>
-                    <p className="text-sm text-gray-500">Get notified about calendar events and deadlines</p>
-                  </div>
-                  <button
-                    onClick={() => handleNotificationChange('calendarReminders')}
-                    className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 ${
-                      notifications.calendarReminders ? 'bg-orange-600' : 'bg-gray-200'
-                    }`}
-                  >
-                    <span
-                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                        notifications.calendarReminders ? 'translate-x-5' : 'translate-x-0'
-                      }`}
-                    />
-                  </button>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-gray-900">Security Alerts</p>
-                    <p className="text-sm text-gray-500">Important security notifications</p>
-                  </div>
-                  <button
-                    onClick={() => handleNotificationChange('securityAlerts')}
-                    className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 ${
-                      notifications.securityAlerts ? 'bg-orange-600' : 'bg-gray-200'
-                    }`}
-                  >
-                    <span
-                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                        notifications.securityAlerts ? 'translate-x-5' : 'translate-x-0'
-                      }`}
-                    />
-                  </button>
-                </div>
-              </div>
+            {/* Default Terms */}
+            <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
+              <label className="block text-sm font-medium text-zinc-400 mb-1">Default Terms & Conditions</label>
+              <textarea
+                value={localProfile.defaultTerms}
+                onChange={(e) => handleProfileChange('defaultTerms', e.target.value)}
+                rows={4}
+                className="w-full text-white border-0 p-0 focus:ring-0 bg-transparent resize-none"
+                placeholder="Enter your standard terms..."
+              />
+              <p className="text-xs text-zinc-500 mt-2">Auto-fills on new estimates</p>
             </div>
-          </div>
 
-          <div className="bg-white shadow rounded-lg">
-            <div className="p-6">
-              <h2 className="flex items-center text-lg font-medium text-gray-900 mb-4">
-                <Lock className="w-5 h-5 mr-2 text-gray-500" />
-                {t('settings.security')}
-              </h2>
-              <div className="space-y-4">
+            {/* Save Button */}
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-white text-black rounded-lg font-semibold active:scale-[0.98] transition-transform disabled:opacity-50"
+            >
+              {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+              {saving ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
+        );
+
+      case 'notifications':
+        return (
+          <div className="space-y-3">
+            {/* Calendar Reminders */}
+            <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                    <Calendar className="w-5 h-5 text-orange-500" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-white">Calendar Reminders</p>
+                    <p className="text-sm text-zinc-400">Get notified about events</p>
+                  </div>
+                </div>
                 <button
-                  onClick={handleChangePassword}
-                  className="w-full flex items-center justify-between px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                  onClick={() => handleNotificationChange('calendarReminders')}
+                  className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
+                    notifications.calendarReminders ? 'bg-orange-500' : 'bg-zinc-700'
+                  }`}
                 >
-                  <div className="flex items-center">
-                    <Lock className="w-5 h-5 text-gray-500 mr-3" />
-                    <div className="text-left">
-                      <p className="font-medium text-gray-900">{t('settings.changePassword')}</p>
-                      <p className="text-sm text-gray-500">{t('settings.changePasswordDesc')}</p>
-                    </div>
-                  </div>
-                  <span className="text-gray-400">&rarr;</span>
+                  <span
+                    className={`pointer-events-none inline-block h-6 w-6 transform rounded-full shadow-lg ring-0 transition duration-200 ease-in-out mt-0.5 ${
+                      notifications.calendarReminders ? 'translate-x-5 ml-0.5 bg-white' : 'translate-x-0.5 bg-zinc-400'
+                    }`}
+                  />
                 </button>
               </div>
             </div>
+
+            {/* Security Alerts */}
+            <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                    <AlertTriangle className="w-5 h-5 text-orange-500" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-white">Security Alerts</p>
+                    <p className="text-sm text-zinc-400">Important security notifications</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleNotificationChange('securityAlerts')}
+                  className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
+                    notifications.securityAlerts ? 'bg-orange-500' : 'bg-zinc-700'
+                  }`}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-6 w-6 transform rounded-full shadow-lg ring-0 transition duration-200 ease-in-out mt-0.5 ${
+                      notifications.securityAlerts ? 'translate-x-5 ml-0.5 bg-white' : 'translate-x-0.5 bg-zinc-400'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* Save Button */}
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-white text-black rounded-lg font-semibold active:scale-[0.98] transition-transform disabled:opacity-50 mt-4"
+            >
+              {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+              {saving ? 'Saving...' : 'Save Preferences'}
+            </button>
           </div>
+        );
 
-          {/* Language Settings */}
-          <div className="bg-white shadow rounded-lg">
-            <div className="p-6">
-              <h2 className="flex items-center text-lg font-medium text-gray-900 mb-4">
-                <Globe className="w-5 h-5 mr-2 text-gray-500" />
-                {t('settings.language')}
-              </h2>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('settings.selectLanguage')}
-                  </label>
-                  <select
-                    value={i18n.language}
-                    onChange={async (e) => {
-                      const newLanguage = e.target.value;
-                      i18n.changeLanguage(newLanguage);
+      case 'payments':
+        return (
+          <div className="space-y-4">
+            {stripeError && (
+              <div className="p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-3">
+                <XCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
+                <p className="text-sm text-red-700">{stripeError}</p>
+              </div>
+            )}
 
-                      // Save to user profile
-                      if (user) {
-                        const { error } = await supabase
-                          .from('profiles')
-                          .update({ language: newLanguage })
-                          .eq('id', user.id);
+            {stripeStatus.connected ? (
+              <>
+                {/* Connected Status Card */}
+                <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-5 h-5 text-orange-500" />
+                      <span className="font-semibold text-white">Stripe Connected</span>
+                    </div>
+                    <button
+                      onClick={checkStripeStatus}
+                      disabled={stripeLoading}
+                      className="p-2 text-zinc-400 hover:bg-[#2C2C2E] rounded-lg transition-colors"
+                    >
+                      <RefreshCw className={`w-4 h-4 ${stripeLoading ? 'animate-spin' : ''}`} />
+                    </button>
+                  </div>
 
-                        if (error) {
-                          console.error('Error saving language preference:', error);
-                        } else {
-                          await refreshProfile();
-                        }
-                      }
-                    }}
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:text-sm px-3 py-2 border"
-                  >
-                    <option value="en">{t('settings.english')}</option>
-                    <option value="es">{t('settings.spanish')}</option>
-                  </select>
+                  {stripeStatus.businessName && (
+                    <p className="text-sm text-zinc-300 mb-1">Business: {stripeStatus.businessName}</p>
+                  )}
+                  {stripeStatus.email && (
+                    <p className="text-sm text-zinc-300 mb-3">Email: {stripeStatus.email}</p>
+                  )}
+
+                  <div className="flex gap-3">
+                    <span className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${
+                      stripeStatus.chargesEnabled ? 'bg-orange-500/20 text-orange-500' : 'bg-[#3A3A3C] text-zinc-300'
+                    }`}>
+                      {stripeStatus.chargesEnabled ? <CheckCircle className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
+                      {stripeStatus.chargesEnabled ? 'Charges Active' : 'Charges Pending'}
+                    </span>
+                    <span className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${
+                      stripeStatus.payoutsEnabled ? 'bg-orange-500/20 text-orange-500' : 'bg-[#3A3A3C] text-zinc-300'
+                    }`}>
+                      {stripeStatus.payoutsEnabled ? <CheckCircle className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
+                      {stripeStatus.payoutsEnabled ? 'Payouts Active' : 'Payouts Pending'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <button
+                  onClick={handleStripeDashboard}
+                  disabled={stripeLoading}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-lg font-semibold active:scale-[0.98] transition-transform disabled:opacity-50 bg-white text-black"
+                >
+                  {stripeLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <ExternalLink className="w-5 h-5" />}
+                  {stripeStatus.detailsSubmitted ? 'Open Stripe Dashboard' : 'Complete Stripe Setup'}
+                </button>
+
+                <button
+                  onClick={handleStripeDisconnect}
+                  disabled={stripeLoading}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-red-200 text-red-600 rounded-xl font-medium active:scale-[0.98] transition-transform disabled:opacity-50"
+                >
+                  <XCircle className="w-5 h-5" />
+                  Disconnect Stripe
+                </button>
+              </>
+            ) : (
+              <>
+                {/* Not Connected Info */}
+                <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-5">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                      <CreditCard className="w-6 h-6 text-orange-500" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-white">Accept Payments Online</p>
+                      <p className="text-sm text-zinc-400">Connect Stripe to get started</p>
+                    </div>
+                  </div>
+
+                  <ul className="space-y-2 mb-4">
+                    {['Accept credit card payments', 'Send payment links to customers', 'Get paid faster online', 'Track payments in one place'].map((item, i) => (
+                      <li key={i} className="flex items-center gap-2 text-sm text-zinc-300">
+                        <CheckCircle className="w-4 h-4 text-orange-500" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <button
+                  onClick={handleStripeConnect}
+                  disabled={stripeLoading}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-4 bg-white text-black rounded-lg font-semibold active:scale-[0.98] transition-transform disabled:opacity-50"
+                >
+                  {stripeLoading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Connecting...
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard className="w-5 h-5" />
+                      Connect Stripe Account
+                    </>
+                  )}
+                </button>
+              </>
+            )}
+          </div>
+        );
+
+      case 'security':
+        return (
+          <div className="space-y-3">
+            <button
+              onClick={handleChangePassword}
+              className="w-full bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4 active:scale-[0.98] transition-transform"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                  <Lock className="w-5 h-5 text-orange-500" />
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="font-semibold text-white">Change Password</p>
+                  <p className="text-sm text-zinc-400">Send a password reset email</p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-zinc-500" />
+              </div>
+            </button>
+
+            <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                  <CheckCircle className="w-5 h-5 text-orange-500" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-semibold text-white">Email Verified</p>
+                  <p className="text-sm text-zinc-400">{user?.email}</p>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        );
 
-      {/* Stripe Connect Section */}
-      <div className="mt-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Payment Settings</h2>
-        <StripeConnectButton />
-      </div>
+      case 'language':
+        return (
+          <div className="space-y-3">
+            <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 overflow-hidden">
+              {[
+                { code: 'en', label: 'English', flag: '🇺🇸' },
+                { code: 'es', label: 'Español', flag: '🇪🇸' }
+              ].map((lang) => (
+                <button
+                  key={lang.code}
+                  onClick={async () => {
+                    i18n.changeLanguage(lang.code);
+                    if (user) {
+                      await supabase
+                        .from('profiles')
+                        .update({ language: lang.code })
+                        .eq('id', user.id);
+                      await refreshProfile();
+                    }
+                  }}
+                  className={`w-full flex items-center gap-3 p-4 border-b border-orange-500/20 last:border-0 active:bg-[#2C2C2E] transition-colors ${
+                    i18n.language === lang.code ? 'bg-orange-500/10' : ''
+                  }`}
+                >
+                  <span className="text-2xl">{lang.flag}</span>
+                  <span className="flex-1 text-left font-medium text-white">{lang.label}</span>
+                  {i18n.language === lang.code && (
+                    <CheckCircle className="w-5 h-5 text-orange-500" />
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        );
 
-      {/* Gmail Integration Section */}
-      <div className="mt-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Email Integration</h2>
-        <GmailConnection />
-      </div>
+      case 'email':
+        return (
+          <div className="space-y-4">
+            <BusinessEmailSetup />
+          </div>
+        );
 
-      {/* Calculator Widgets Section */}
-      <div className="mt-6">
-        <div className="bg-gray-100 shadow rounded-lg opacity-60">
-          <div className="p-6">
-            <h2 className="flex items-center text-xl font-bold text-gray-500 mb-4">
-              <Code className="w-6 h-6 mr-2 text-gray-400" />
-              Calculator Widgets <span className="ml-2 text-sm font-normal text-gray-400">(Under Construction)</span>
-            </h2>
-            <p className="text-sm text-gray-500 mb-6">
-              Embed our pricing calculators on your website. Choose from various calculator types to help your customers get instant pricing estimates.
+      case 'tutorials':
+        return (
+          <div className="space-y-4">
+            <p className="text-sm text-zinc-400 px-1">
+              Re-enable tutorials to see the onboarding guides again when using features.
             </p>
+
+            {/* Dashboard Tutorial */}
+            <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                    <Home className="w-5 h-5 text-orange-500" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-white">Dashboard Tutorial</p>
+                    <p className="text-sm text-zinc-400">Learn about your dashboard overview</p>
+                  </div>
+                </div>
+                <button
+                  onClick={async () => {
+                    const newValue = !showDashboardTutorial;
+                    setShowDashboardTutorial(newValue);
+                    if (user?.id) {
+                      await setDashboardTutorialCompleted(user.id, !newValue);
+                    }
+                  }}
+                  className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
+                    showDashboardTutorial ? 'bg-orange-500' : 'bg-zinc-700'
+                  }`}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-6 w-6 transform rounded-full shadow-lg ring-0 transition duration-200 ease-in-out mt-0.5 ${
+                      showDashboardTutorial ? 'translate-x-5 ml-0.5 bg-white' : 'translate-x-0.5 bg-zinc-400'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* Vision Cam Tutorial */}
+            <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-lg flex items-center justify-center">
+                    <Eye className="w-5 h-5 text-purple-400" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-white">Vision Cam Tutorial</p>
+                    <p className="text-sm text-zinc-400">Learn how to use AI visualization</p>
+                  </div>
+                </div>
+                <button
+                  onClick={async () => {
+                    const newValue = !showVisionCamTutorial;
+                    setShowVisionCamTutorial(newValue);
+                    // Save to both localStorage and Supabase
+                    if (newValue) {
+                      localStorage.removeItem('visionCamTutorialHidden');
+                    } else {
+                      localStorage.setItem('visionCamTutorialHidden', 'true');
+                    }
+                    if (user?.id) {
+                      await setVisionCamTutorialCompleted(user.id, !newValue);
+                    }
+                  }}
+                  className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
+                    showVisionCamTutorial ? 'bg-orange-500' : 'bg-zinc-700'
+                  }`}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-6 w-6 transform rounded-full shadow-lg ring-0 transition duration-200 ease-in-out mt-0.5 ${
+                      showVisionCamTutorial ? 'translate-x-5 ml-0.5 bg-white' : 'translate-x-0.5 bg-zinc-400'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* Tasks Tutorial */}
+            <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                    <ClipboardList className="w-5 h-5 text-orange-500" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-white">Tasks Tutorial</p>
+                    <p className="text-sm text-zinc-400">Learn to manage tasks & calendar</p>
+                  </div>
+                </div>
+                <button
+                  onClick={async () => {
+                    const newValue = !showTasksTutorial;
+                    setShowTasksTutorial(newValue);
+                    if (user?.id) {
+                      await setTasksTutorialCompleted(user.id, !newValue);
+                    }
+                  }}
+                  className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
+                    showTasksTutorial ? 'bg-orange-500' : 'bg-zinc-700'
+                  }`}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-6 w-6 transform rounded-full shadow-lg ring-0 transition duration-200 ease-in-out mt-0.5 ${
+                      showTasksTutorial ? 'translate-x-5 ml-0.5 bg-white' : 'translate-x-0.5 bg-zinc-400'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* Estimating Tutorial */}
+            <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-orange-500" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-white">Estimating Tutorial</p>
+                    <p className="text-sm text-zinc-400">Learn to create & send estimates</p>
+                  </div>
+                </div>
+                <button
+                  onClick={async () => {
+                    const newValue = !showEstimatingTutorial;
+                    setShowEstimatingTutorial(newValue);
+                    if (user?.id) {
+                      await setEstimatingTutorialCompleted(user.id, !newValue);
+                    }
+                  }}
+                  className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
+                    showEstimatingTutorial ? 'bg-orange-500' : 'bg-zinc-700'
+                  }`}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-6 w-6 transform rounded-full shadow-lg ring-0 transition duration-200 ease-in-out mt-0.5 ${
+                      showEstimatingTutorial ? 'translate-x-5 ml-0.5 bg-white' : 'translate-x-0.5 bg-zinc-400'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* Projects Tutorial */}
+            <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                    <Building2 className="w-5 h-5 text-orange-500" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-white">Projects Tutorial</p>
+                    <p className="text-sm text-zinc-400">Learn to manage projects & teams</p>
+                  </div>
+                </div>
+                <button
+                  onClick={async () => {
+                    const newValue = !showProjectsTutorial;
+                    setShowProjectsTutorial(newValue);
+                    if (user?.id) {
+                      await setProjectsTutorialCompleted(user.id, !newValue);
+                    }
+                  }}
+                  className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
+                    showProjectsTutorial ? 'bg-orange-500' : 'bg-zinc-700'
+                  }`}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-6 w-6 transform rounded-full shadow-lg ring-0 transition duration-200 ease-in-out mt-0.5 ${
+                      showProjectsTutorial ? 'translate-x-5 ml-0.5 bg-white' : 'translate-x-0.5 bg-zinc-400'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* Finance Tutorial */}
+            <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                    <CreditCard className="w-5 h-5 text-orange-500" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-white">Finance Tutorial</p>
+                    <p className="text-sm text-zinc-400">Learn P&L, revenue & expenses</p>
+                  </div>
+                </div>
+                <button
+                  onClick={async () => {
+                    const newValue = !showFinanceTutorial;
+                    setShowFinanceTutorial(newValue);
+                    if (user?.id) {
+                      await setFinanceTutorialCompleted(user.id, !newValue);
+                    }
+                  }}
+                  className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
+                    showFinanceTutorial ? 'bg-orange-500' : 'bg-zinc-700'
+                  }`}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-6 w-6 transform rounded-full shadow-lg ring-0 transition duration-200 ease-in-out mt-0.5 ${
+                      showFinanceTutorial ? 'translate-x-5 ml-0.5 bg-white' : 'translate-x-0.5 bg-zinc-400'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* Payments Tutorial */}
+            <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-orange-500" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-white">Invoices Tutorial</p>
+                    <p className="text-sm text-zinc-400">Learn invoicing & payment links</p>
+                  </div>
+                </div>
+                <button
+                  onClick={async () => {
+                    const newValue = !showPaymentsTutorial;
+                    setShowPaymentsTutorial(newValue);
+                    if (user?.id) {
+                      await setPaymentsTutorialCompleted(user.id, !newValue);
+                    }
+                  }}
+                  className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
+                    showPaymentsTutorial ? 'bg-orange-500' : 'bg-zinc-700'
+                  }`}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-6 w-6 transform rounded-full shadow-lg ring-0 transition duration-200 ease-in-out mt-0.5 ${
+                      showPaymentsTutorial ? 'translate-x-5 ml-0.5 bg-white' : 'translate-x-0.5 bg-zinc-400'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* Teams Tutorial */}
+            <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                    <User className="w-5 h-5 text-orange-500" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-white">Teams Tutorial</p>
+                    <p className="text-sm text-zinc-400">Learn to manage employees</p>
+                  </div>
+                </div>
+                <button
+                  onClick={async () => {
+                    const newValue = !showTeamsTutorial;
+                    setShowTeamsTutorial(newValue);
+                    if (user?.id) {
+                      await setTeamsTutorialCompleted(user.id, !newValue);
+                    }
+                  }}
+                  className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
+                    showTeamsTutorial ? 'bg-orange-500' : 'bg-zinc-700'
+                  }`}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-6 w-6 transform rounded-full shadow-lg ring-0 transition duration-200 ease-in-out mt-0.5 ${
+                      showTeamsTutorial ? 'translate-x-5 ml-0.5 bg-white' : 'translate-x-0.5 bg-zinc-400'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* Email Tutorial */}
+            <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                    <Mail className="w-5 h-5 text-orange-500" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-white">Email Tutorial</p>
+                    <p className="text-sm text-zinc-400">Learn to send emails & attachments</p>
+                  </div>
+                </div>
+                <button
+                  onClick={async () => {
+                    const newValue = !showEmailTutorial;
+                    setShowEmailTutorial(newValue);
+                    if (user?.id) {
+                      await setEmailTutorialCompleted(user.id, !newValue);
+                    }
+                  }}
+                  className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
+                    showEmailTutorial ? 'bg-orange-500' : 'bg-zinc-700'
+                  }`}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-6 w-6 transform rounded-full shadow-lg ring-0 transition duration-200 ease-in-out mt-0.5 ${
+                      showEmailTutorial ? 'translate-x-5 ml-0.5 bg-white' : 'translate-x-0.5 bg-zinc-400'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* Photos Tutorial */}
+            <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                    <Eye className="w-5 h-5 text-orange-500" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-white">Photos Tutorial</p>
+                    <p className="text-sm text-zinc-400">Learn to capture & organize photos</p>
+                  </div>
+                </div>
+                <button
+                  onClick={async () => {
+                    const newValue = !showPhotosTutorial;
+                    setShowPhotosTutorial(newValue);
+                    if (user?.id) {
+                      await setPhotosTutorialCompleted(user.id, !newValue);
+                    }
+                  }}
+                  className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
+                    showPhotosTutorial ? 'bg-orange-500' : 'bg-zinc-700'
+                  }`}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-6 w-6 transform rounded-full shadow-lg ring-0 transition duration-200 ease-in-out mt-0.5 ${
+                      showPhotosTutorial ? 'translate-x-5 ml-0.5 bg-white' : 'translate-x-0.5 bg-zinc-400'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* Marketing Tutorial */}
+            <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                    <Eye className="w-5 h-5 text-orange-500" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-white">Marketing Tutorial</p>
+                    <p className="text-sm text-zinc-400">Learn about marketing services</p>
+                  </div>
+                </div>
+                <button
+                  onClick={async () => {
+                    const newValue = !showMarketingTutorial;
+                    setShowMarketingTutorial(newValue);
+                    if (user?.id) {
+                      await setMarketingTutorialCompleted(user.id, !newValue);
+                    }
+                  }}
+                  className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
+                    showMarketingTutorial ? 'bg-orange-500' : 'bg-zinc-700'
+                  }`}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-6 w-6 transform rounded-full shadow-lg ring-0 transition duration-200 ease-in-out mt-0.5 ${
+                      showMarketingTutorial ? 'translate-x-5 ml-0.5 bg-white' : 'translate-x-0.5 bg-zinc-400'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+
+            <p className="text-xs text-zinc-500 px-1">
+              When enabled, the tutorial will show the next time you visit that feature.
+            </p>
+          </div>
+        );
+
+      case 'danger':
+        return (
+          <div className="space-y-4">
+            <div className="bg-red-50 rounded-2xl border-2 border-red-200 p-4">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="w-6 h-6 text-red-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-red-800">Danger Zone</p>
+                  <p className="text-sm text-red-600 mt-1">
+                    Permanently delete your account and all data. This cannot be undone.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {!showDeleteConfirm ? (
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-red-300 text-red-600 rounded-xl font-medium active:scale-[0.98] transition-transform"
+              >
+                <Trash2 className="w-5 h-5" />
+                Delete My Account
+              </button>
+            ) : (
+              <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-zinc-400 mb-2">
+                    Type DELETE to confirm
+                  </label>
+                  <input
+                    type="text"
+                    value={deleteConfirmText}
+                    onChange={(e) => setDeleteConfirmText(e.target.value)}
+                    placeholder="DELETE"
+                    className="w-full px-4 py-3 border-2 border-red-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowDeleteConfirm(false);
+                      setDeleteConfirmText('');
+                    }}
+                    className="flex-1 px-4 py-3 bg-orange-500/20 text-orange-500 rounded-lg font-medium active:scale-[0.98] transition-transform"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDeleteAccount}
+                    disabled={deletingAccount || deleteConfirmText !== 'DELETE'}
+                    className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl font-medium disabled:opacity-50 active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
+                  >
+                    {deletingAccount ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Deleting...
+                      </>
+                    ) : (
+                      'Delete'
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="min-h-full bg-[#0F0F0F] pb-24">
+      {/* Header */}
+      <div className="bg-[#1C1C1E] border-b border-orange-500/30 px-4 pb-4 pt-[calc(env(safe-area-inset-top)+16px)] sticky top-0 z-10">
+        <div className="flex items-center gap-3">
+          {activeSection !== 'main' ? (
             <button
-              disabled
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-gray-400 bg-gray-300 cursor-not-allowed"
+              onClick={() => setActiveSection('main')}
+              className="p-2 -ml-2 text-content-secondary hover:text-content-primary active:scale-95 transition-transform"
             >
-              <Code className="w-4 h-4 mr-2" />
-              Manage Calculator Widgets
+              <ChevronRight className="w-6 h-6 rotate-180" />
             </button>
+          ) : (
+            <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+              <SettingsIcon className="w-5 h-5 text-orange-500" />
+            </div>
+          )}
+          <div>
+            <h1 className="text-xl font-bold text-content-primary">
+              {activeSection === 'main' ? 'Settings' :
+               activeSection === 'profile' ? 'Profile & Business' :
+               activeSection === 'notifications' ? 'Notifications' :
+               activeSection === 'payments' ? 'Payments' :
+               activeSection === 'security' ? 'Security' :
+               activeSection === 'language' ? 'Language' :
+               activeSection === 'email' ? 'Business Email' :
+               activeSection === 'tutorials' ? 'Tutorials' :
+               activeSection === 'danger' ? 'Delete Account' : 'Settings'}
+            </h1>
+            {activeSection === 'main' && (
+              <p className="text-sm text-content-secondary">Manage your preferences</p>
+            )}
           </div>
         </div>
+      </div>
+
+      {/* Content */}
+      <div className="px-4 py-4">
+        {activeSection === 'main' ? (
+          <div className="space-y-3">
+            {menuItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setActiveSection(item.id)}
+                className="card-interactive w-full p-4"
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`icon-container-md ${item.bgColor}`}>
+                    <item.icon className={`w-5 h-5 ${item.iconColor}`} />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="font-semibold text-content-primary">{item.label}</p>
+                    <p className="text-sm text-content-secondary">{item.description}</p>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-content-tertiary" />
+                </div>
+              </button>
+            ))}
+
+            {/* Logout Button */}
+            <button
+              onClick={handleLogout}
+              disabled={loggingOut}
+              className="card-interactive w-full p-4 mt-6"
+            >
+              <div className="flex items-center gap-3">
+                <div className="icon-container-md bg-status-red-100">
+                  <LogOut className="w-5 h-5 text-status-red-700" />
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="font-semibold text-status-red-700">
+                    {loggingOut ? 'Logging out...' : 'Log Out'}
+                  </p>
+                  <p className="text-sm text-content-secondary">{user?.email}</p>
+                </div>
+                {loggingOut && <Loader2 className="w-5 h-5 text-status-red-600 animate-spin" />}
+              </div>
+            </button>
+          </div>
+        ) : (
+          renderSection()
+        )}
       </div>
     </div>
   );

@@ -3,6 +3,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '../lib/queryClient';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../stores/authStore';
+import { notificationService } from '../services/notifications/notificationService';
+import { CalendarService } from '../services/calendarService';
 
 /**
  * Global app initialization hook with React Query caching
@@ -113,6 +115,23 @@ export const useAppInitialization = () => {
                 return data || [];
               },
             }).catch(() => {});
+
+            // Request notification permissions and sync calendar notifications
+            (async () => {
+              try {
+                console.log('🔔 Requesting notification permissions...');
+                const perms = await notificationService.requestPermissions();
+                console.log('  ✅ Notification permissions:', perms.display);
+
+                if (perms.display === 'granted') {
+                  console.log('🔔 Syncing calendar notifications...');
+                  await CalendarService.syncAllEventNotifications(user.id);
+                  console.log('  ✅ Calendar notifications synced');
+                }
+              } catch (err) {
+                console.error('  ⚠️ Notification setup error:', err);
+              }
+            })();
           }, 2000); // Start background loading after 2 seconds
         }
       } catch (error) {

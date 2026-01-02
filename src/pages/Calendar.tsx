@@ -1,11 +1,13 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import { format, startOfWeek, addDays, isSameDay, parseISO, addMonths, subMonths, isToday, startOfMonth, endOfMonth, endOfWeek } from 'date-fns';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, Download, List, Grid, Clock, Check, AlertCircle, PenTool as Tool } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, Download, List, Grid, Clock, Check, AlertCircle, PenTool as Tool, Mail, X } from 'lucide-react';
 import { useCalendarStoreSupabase } from '../stores/calendarStoreSupabase';
 import { CalendarEvent } from '../services/calendarService';
 import EventModal from '../components/calendar/EventModal';
 import NotificationBanner from '../components/calendar/NotificationBanner';
+import NotificationWebhookModal from '../components/calendar/NotificationWebhookModal';
 import { checkUpcomingEvents } from '../utils/notifications';
 import { useData } from '../contexts/DataContext';
 
@@ -13,12 +15,17 @@ type ViewType = 'month' | 'week' | 'day';
 
 const Calendar = () => {
   const { t } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<ViewType>('month');
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [showEventModal, setShowEventModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [showActionMenu, setShowActionMenu] = useState(false);
+  const [showEventPicker, setShowEventPicker] = useState(false);
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [notificationEvent, setNotificationEvent] = useState<CalendarEvent | null>(null);
   const { profile } = useData();
   const {
     events,
@@ -36,6 +43,16 @@ const Calendar = () => {
       console.log('Calendar: Events:', events);
     });
   }, [fetchEvents]);
+
+  // Check for action=notify in URL params
+  useEffect(() => {
+    const action = searchParams.get('action');
+    if (action === 'notify' && events.length > 0) {
+      setShowEventPicker(true);
+      // Clear the URL param
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, events, setSearchParams]);
 
   // Check for upcoming events and schedule notifications
   useEffect(() => {
@@ -132,7 +149,24 @@ const Calendar = () => {
 
   const handleAddEvent = () => {
     console.log('Add Event button clicked');
+    setShowActionMenu(false);
     setShowEventModal(true);
+  };
+
+  const handleSendNotification = () => {
+    setShowActionMenu(false);
+    // If there are events, show picker, otherwise show message
+    if (events.length > 0) {
+      setShowEventPicker(true);
+    } else {
+      alert('No events available. Create an event first to send notifications.');
+    }
+  };
+
+  const handleSelectEventForNotification = (event: CalendarEvent) => {
+    setNotificationEvent(event);
+    setShowEventPicker(false);
+    setShowNotificationModal(true);
   };
 
   const handleFilterClick = () => {
@@ -437,14 +471,49 @@ const Calendar = () => {
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 relative">
           <button
-            onClick={handleAddEvent}
+            onClick={() => setShowActionMenu(!showActionMenu)}
             className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 active:bg-blue-800 w-full sm:w-auto"
           >
             <Plus className="w-4 h-4 mr-2" />
-            {t('calendar.addEvent')}
+            Actions
           </button>
+
+          {/* Action Menu Dropdown */}
+          {showActionMenu && (
+            <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-200 z-50 overflow-hidden">
+              <div className="p-2 space-y-2">
+                {/* Add Event Card */}
+                <button
+                  onClick={handleAddEvent}
+                  className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-blue-50 transition-colors text-left"
+                >
+                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <CalendarIcon className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">Add Event</p>
+                    <p className="text-xs text-gray-500">Create a new calendar event</p>
+                  </div>
+                </button>
+
+                {/* Send Notification Card */}
+                <button
+                  onClick={handleSendNotification}
+                  className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-green-50 transition-colors text-left"
+                >
+                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                    <Mail className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">Send Notification</p>
+                    <p className="text-xs text-gray-500">Email employees about an event</p>
+                  </div>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -470,13 +539,13 @@ const Calendar = () => {
             </div>
 
             <div className="flex items-center gap-2">
-              <div className="flex border border-gray-300 rounded-md overflow-hidden">
+              <div className="inline-flex rounded-lg border border-gray-300 bg-gray-100 p-0.5">
                 <button
                   onClick={() => handleViewChange('month')}
-                  className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium ${
+                  className={`flex items-center justify-center w-10 h-10 sm:w-auto sm:h-auto sm:px-4 sm:py-2 text-xs sm:text-sm font-medium rounded-md transition-all ${
                     view === 'month'
-                      ? 'bg-blue-50 text-blue-600'
-                      : 'text-gray-700 hover:bg-gray-50 active:bg-gray-100'
+                      ? 'bg-white text-blue-600 shadow-sm'
+                      : 'text-gray-700 hover:text-gray-900'
                   }`}
                 >
                   <Grid className="w-4 h-4 sm:hidden" />
@@ -484,17 +553,16 @@ const Calendar = () => {
                 </button>
                 <button
                   onClick={() => handleViewChange('week')}
-                  className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium ${
+                  className={`flex items-center justify-center w-10 h-10 sm:w-auto sm:h-auto sm:px-4 sm:py-2 text-xs sm:text-sm font-medium rounded-md transition-all ${
                     view === 'week'
-                      ? 'bg-blue-50 text-blue-600'
-                      : 'text-gray-700 hover:bg-gray-50 active:bg-gray-100'
+                      ? 'bg-white text-blue-600 shadow-sm'
+                      : 'text-gray-700 hover:text-gray-900'
                   }`}
                 >
                   <List className="w-4 h-4 sm:hidden" />
                   <span className="hidden sm:inline">{t('calendar.week')}</span>
                 </button>
               </div>
-
             </div>
           </div>
 
@@ -523,6 +591,82 @@ const Calendar = () => {
         selectedDate={selectedDate || currentDate}
         event={selectedEvent}
       />
+
+      {/* Event Picker Modal */}
+      {showEventPicker && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center">
+          <div className="absolute inset-0 bg-black/80" onClick={() => setShowEventPicker(false)}></div>
+
+          <div className="relative w-full max-w-lg bg-[#1C1C1E] rounded-t-3xl max-h-[80vh] overflow-hidden animate-slide-up">
+            {/* Handle */}
+            <div className="flex justify-center pt-3 pb-2">
+              <div className="w-10 h-1 bg-[#3A3A3C] rounded-full" />
+            </div>
+
+            <div className="flex items-center justify-between px-4 pb-4 border-b border-[#3A3A3C]">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-green-500/20 rounded-xl flex items-center justify-center">
+                  <Mail className="w-5 h-5 text-green-500" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Select Event</h3>
+                  <p className="text-sm text-zinc-400">Choose an event to notify about</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowEventPicker(false)}
+                className="p-2 text-zinc-400 hover:text-white rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="max-h-96 overflow-y-auto p-4 space-y-2">
+              {events.length === 0 ? (
+                <div className="text-center py-12">
+                  <CalendarIcon className="w-12 h-12 text-zinc-600 mx-auto mb-3" />
+                  <p className="text-zinc-400">No events available</p>
+                  <p className="text-sm text-zinc-500">Create an event first</p>
+                </div>
+              ) : (
+                events.map((event) => (
+                  <button
+                    key={event.id}
+                    onClick={() => handleSelectEventForNotification(event)}
+                    className="w-full p-4 rounded-xl bg-[#2C2C2E] border border-[#3A3A3C] text-left hover:border-green-500 transition-colors"
+                  >
+                    <p className="font-semibold text-white">{event.title}</p>
+                    <p className="text-sm text-zinc-400 mt-1">
+                      {event.start_date && format(parseISO(event.start_date), 'MMM d, yyyy • h:mm a')}
+                    </p>
+                    {event.location && (
+                      <p className="text-xs text-zinc-500 mt-1">📍 {event.location}</p>
+                    )}
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Notification Webhook Modal */}
+      <NotificationWebhookModal
+        isOpen={showNotificationModal}
+        onClose={() => {
+          setShowNotificationModal(false);
+          setNotificationEvent(null);
+        }}
+        event={notificationEvent}
+      />
+
+      {/* Click outside to close action menu */}
+      {showActionMenu && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={() => setShowActionMenu(false)}
+        ></div>
+      )}
 
       <NotificationBanner />
     </div>

@@ -372,31 +372,33 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        <div className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" onClick={onClose}></div>
+        <div className="fixed inset-0 transition-opacity bg-black/70" onClick={onClose}></div>
 
-        <div className="inline-block w-full max-w-2xl my-8 overflow-hidden text-left align-middle transition-all transform bg-white rounded-lg shadow-xl">
+        <div className="inline-block w-full max-w-2xl my-8 overflow-hidden text-left align-middle transition-all transform bg-[#1C1C1E] rounded-2xl shadow-xl border border-orange-500/30">
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-orange-500/30">
             <div className="flex items-center space-x-3">
-              <Mail className="w-6 h-6 text-blue-600" />
-              <h3 className="text-lg font-medium text-gray-900">Send Estimate to Customer</h3>
+              <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                <Mail className="w-5 h-5 text-orange-500" />
+              </div>
+              <h3 className="text-lg font-semibold text-white">Send Estimate to Customer</h3>
             </div>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-500" disabled={isLoading}>
+            <button onClick={onClose} className="text-zinc-400 hover:text-white transition-colors" disabled={isLoading}>
               <X className="w-6 h-6" />
             </button>
           </div>
 
           {/* Body */}
-          <div className="px-6 py-4 space-y-4">
+          <div className="px-6 py-4 space-y-4 max-h-[60vh] overflow-y-auto">
             {/* Success Message */}
             {successMessage && (
-              <div className="bg-green-50 border border-green-200 rounded-md p-4">
+              <div className="bg-green-500/20 border border-green-500/30 rounded-lg p-4">
                 <div className="flex items-start space-x-3">
-                  <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
+                  <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-green-900">{successMessage}</p>
+                    <p className="text-sm font-medium text-green-400">{successMessage}</p>
                     {pdfUrl && (
-                      <p className="mt-1 text-xs text-green-700">
+                      <p className="mt-1 text-xs text-green-500/80">
                         PDF URL: <a href={pdfUrl} target="_blank" rel="noopener noreferrer" className="underline">{pdfUrl}</a>
                       </p>
                     )}
@@ -407,8 +409,8 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
 
             {/* Contractor Email Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <Bell className="inline w-4 h-4 mr-1 text-orange-600" />
+              <label className="block text-sm font-medium text-zinc-300 mb-2">
+                <Bell className="inline w-4 h-4 mr-1 text-orange-500" />
                 Your Email (for notifications)
               </label>
               <input
@@ -417,9 +419,9 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
                 onChange={(e) => setContractorEmail(e.target.value)}
                 placeholder="your-email@company.com"
                 disabled={isLoading}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-4 py-3 bg-[#2C2C2E] border border-orange-500/30 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
               />
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-xs text-zinc-500">
                 You'll receive notifications when the customer responds to this estimate
               </p>
             </div>
@@ -428,13 +430,13 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
             {!showAddClient ? (
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-zinc-300">
                     Select Client
                   </label>
                   <button
                     onClick={() => setShowAddClient(true)}
                     disabled={isLoading}
-                    className="text-sm text-blue-600 hover:text-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="text-sm text-orange-500 hover:text-orange-400 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     + Add New Client
                   </button>
@@ -446,7 +448,7 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
                     setSelectedClient(client || null);
                   }}
                   disabled={isLoading}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-3 bg-[#2C2C2E] border border-orange-500/30 rounded-lg text-white focus:outline-none focus:border-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <option value="">Choose a client...</option>
                   {clients.map(client => (
@@ -459,7 +461,7 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
             ) : (
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-zinc-300">
                     Add New Client
                   </label>
                   <button
@@ -471,14 +473,14 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
                       setNewClientAddress('');
                     }}
                     disabled={isLoading}
-                    className="text-sm text-gray-600 hover:text-gray-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="text-sm text-zinc-400 hover:text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Cancel
                   </button>
                 </div>
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <label className="block text-xs font-medium text-zinc-400 mb-1">
                       Client Name *
                     </label>
                     <input
@@ -487,11 +489,11 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
                       onChange={(e) => setNewClientName(e.target.value)}
                       placeholder="John Smith"
                       disabled={isLoading}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full px-4 py-3 bg-[#2C2C2E] border border-orange-500/30 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <label className="block text-xs font-medium text-zinc-400 mb-1">
                       Email *
                     </label>
                     <input
@@ -500,11 +502,11 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
                       onChange={(e) => setNewClientEmail(e.target.value)}
                       placeholder="john@example.com"
                       disabled={isLoading}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full px-4 py-3 bg-[#2C2C2E] border border-orange-500/30 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <label className="block text-xs font-medium text-zinc-400 mb-1">
                       Phone (optional)
                     </label>
                     <input
@@ -513,11 +515,11 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
                       onChange={(e) => setNewClientPhone(e.target.value)}
                       placeholder="(555) 123-4567"
                       disabled={isLoading}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full px-4 py-3 bg-[#2C2C2E] border border-orange-500/30 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <label className="block text-xs font-medium text-zinc-400 mb-1">
                       Address (optional)
                     </label>
                     <input
@@ -526,7 +528,7 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
                       onChange={(e) => setNewClientAddress(e.target.value)}
                       placeholder="123 Main St, City, State"
                       disabled={isLoading}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full px-4 py-3 bg-[#2C2C2E] border border-orange-500/30 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </div>
                 </div>
@@ -535,7 +537,7 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
 
             {/* Email Subject */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-zinc-300 mb-2">
                 Email Subject
               </label>
               <input
@@ -543,13 +545,13 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
                 value={emailSubject}
                 onChange={(e) => setEmailSubject(e.target.value)}
                 disabled={isLoading}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-4 py-3 bg-[#2C2C2E] border border-orange-500/30 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
 
             {/* Email Body */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-zinc-300 mb-2">
                 Email Message
               </label>
               <textarea
@@ -557,17 +559,17 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
                 onChange={(e) => setEmailBody(e.target.value)}
                 rows={8}
                 disabled={isLoading}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-4 py-3 bg-[#2C2C2E] border border-orange-500/30 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500 disabled:opacity-50 disabled:cursor-not-allowed resize-none"
               />
             </div>
 
             {/* Info Box */}
-            <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+            <div className="bg-orange-500/10 border border-orange-500/30 rounded-lg p-4">
               <div className="flex items-start space-x-3">
-                <FileText className="w-5 h-5 text-blue-600 mt-0.5" />
+                <FileText className="w-5 h-5 text-orange-500 mt-0.5" />
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-blue-900">What happens when you click "Send":</p>
-                  <ul className="mt-2 text-sm text-blue-700 list-disc list-inside space-y-1">
+                  <p className="text-sm font-medium text-orange-400">What happens when you click "Send":</p>
+                  <ul className="mt-2 text-sm text-zinc-400 list-disc list-inside space-y-1">
                     <li>PDF estimate will be uploaded to secure storage</li>
                     <li>Email will be sent to customer with Accept/Decline buttons</li>
                     <li>Customer can respond directly from the email</li>
@@ -579,18 +581,18 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-end px-6 py-4 space-x-3 bg-gray-50 border-t border-gray-200">
+          <div className="flex items-center justify-end px-6 py-4 space-x-3 bg-[#2C2C2E] border-t border-orange-500/30">
             <button
               onClick={onClose}
               disabled={isLoading}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-5 py-2.5 text-sm font-medium text-zinc-300 bg-transparent border border-zinc-600 rounded-lg hover:bg-zinc-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
             <button
               onClick={handleSendEstimate}
               disabled={isLoading || (!showAddClient && !selectedClient) || (showAddClient && (!newClientEmail || !newClientName))}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-5 py-2.5 text-sm font-semibold text-white bg-orange-500 rounded-lg hover:bg-orange-600 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-orange-500/30"
             >
               {isLoading ? (
                 <>

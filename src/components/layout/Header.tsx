@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { Menu, Bell, User, ChevronDown, LogOut } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { useData } from '../../contexts/DataContext';
-import { stripeProducts } from '../../stripe-config';
 
 interface HeaderProps {
   sidebarOpen: boolean;
@@ -34,15 +33,14 @@ const Header = ({ sidebarOpen, setSidebarOpen }: HeaderProps) => {
       return 'Free Plan';
     }
 
-    const product = stripeProducts.find(p => p.priceId === subscription.price_id);
-    return product?.name || 'Pro Plan';
+    return 'Pro Plan';
   };
 
   // TODO: Replace with real notifications from database
   const notifications: any[] = [];
 
   return (
-    <header className="sticky top-0 z-10 flex items-center justify-between h-16 px-4 bg-white border-b border-gray-200 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-50 flex items-center justify-between h-16 px-4 bg-white border-b border-gray-200 sm:px-6 lg:px-8">
       <div className="flex items-center">
         <button
           type="button"

@@ -194,10 +194,12 @@ export const useClientsStore = create<ClientsState>((set, get) => ({
   },
 
   updateClient: async (id, updates) => {
+    console.log('🔵 updateClient called with id:', id, 'updates:', updates);
     set({ isLoading: true, error: null });
     try {
       const userId = await getCurrentUserId();
-      
+      console.log('🔐 User ID for update:', userId);
+
       // Update client - RLS will ensure only owner can update
       const { data, error } = await supabase
         .from('clients')
@@ -208,6 +210,8 @@ export const useClientsStore = create<ClientsState>((set, get) => ({
         .eq('id', id)
         .select()
         .single();
+
+      console.log('📊 Supabase update response:', { data, error });
 
       if (error) throw error;
 
@@ -227,18 +231,21 @@ export const useClientsStore = create<ClientsState>((set, get) => ({
         updatedAt: data.updated_at
       };
 
+      console.log('✅ Client updated successfully:', updatedClient);
+
       set((state) => ({
-        clients: state.clients.map(client => 
+        clients: state.clients.map(client =>
           client.id === id ? updatedClient : client
         ),
         isLoading: false
       }));
     } catch (error) {
-      console.error('Error updating client:', error);
-      set({ 
+      console.error('❌ Error updating client:', error);
+      set({
         error: error instanceof Error ? error.message : 'Failed to update client',
-        isLoading: false 
+        isLoading: false
       });
+      throw error; // Re-throw so the caller knows it failed
     }
   },
 
