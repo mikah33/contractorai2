@@ -19,8 +19,9 @@ import AdOAuthCallback from './pages/AdOAuthCallback';
 import MetaOAuthCallback from './pages/MetaOAuthCallback';
 import GmailOAuthCallback from './pages/GmailOAuthCallback';
 import AnalyticsDashboard from './pages/AnalyticsDashboard';
-// Import SubscriptionsIOS only - Subscriptions (Stripe) loaded dynamically for non-iOS only
+// Import both subscription pages - use based on platform
 import SubscriptionsIOS from './pages/SubscriptionsIOS';
+import SubscriptionsWeb from './pages/SubscriptionsWeb';
 import ResetPassword from './pages/ResetPassword';
 import LoginPage from './pages/auth/LoginPage';
 import SignupPage from './pages/auth/SignupPage';
@@ -264,10 +265,15 @@ function App() {
   }
 
   if (hasActiveSubscription === false) {
-    // iOS uses RevenueCat (Apple IAP) - Subscriptions.tsx is excluded from iOS bundle
+    // Use platform-specific subscription page:
+    // - iOS uses RevenueCat (Apple IAP) via SubscriptionsIOS
+    // - Web/Desktop uses Stripe via SubscriptionsWeb
+    const isNativePlatform = Capacitor.isNativePlatform();
+    const SubscriptionPage = isNativePlatform ? SubscriptionsIOS : SubscriptionsWeb;
+
     return (
       <Routes>
-        <Route path="/subscriptions" element={<SubscriptionsIOS />} />
+        <Route path="/subscriptions" element={<SubscriptionPage />} />
         <Route path="*" element={<Navigate to="/subscriptions" replace />} />
       </Routes>
     );

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ContractorAI - Cross-Platform Subscription Project</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%);
+            min-height: 100vh;
+            color: #fff;
+            padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        h1 {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .subtitle { text-align: center; color: #888; margin-bottom: 30px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; }
+        .card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .card h2 {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .todo-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px;
+            margin-bottom: 8px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            border-left: 4px solid #444;
+            transition: all 0.3s;
+        }
+        .todo-item.completed { border-left-color: #00ff88; background: rgba(0,255,136,0.1); }
+        .todo-item.in_progress { border-left-color: #ffaa00; background: rgba(255,170,0,0.1); }
+        .todo-item.pending { border-left-color: #666; }
+        .status-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        .completed .status-icon { background: #00ff88; color: #000; }
+        .in_progress .status-icon { background: #ffaa00; color: #000; }
+        .pending .status-icon { background: #444; color: #888; }
+        .todo-content { flex: 1; }
+        .todo-title { font-weight: 500; margin-bottom: 4px; }
+        .todo-active { font-size: 0.85rem; color: #888; }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff88, #00d4ff);
+            border-radius: 4px;
+            transition: width 0.5s;
+        }
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 30px;
+        }
+        .stat { text-align: center; }
+        .stat-value { font-size: 2rem; font-weight: bold; }
+        .stat-label { color: #888; font-size: 0.9rem; }
+        .stat-value.completed-color { color: #00ff88; }
+        .stat-value.progress-color { color: #ffaa00; }
+        .stat-value.pending-color { color: #888; }
+        .architecture {
+            background: rgba(0,0,0,0.4);
+            border-radius: 8px;
+            padding: 15px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            white-space: pre;
+            overflow-x: auto;
+            color: #00d4ff;
+        }
+        .refresh-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .refresh-btn:hover { transform: scale(1.05); }
+        .last-update { text-align: center; color: #666; font-size: 0.8rem; margin-top: 20px; }
+        .swarm-status {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        .agent-badge {
+            padding: 6px 12px;
+            background: rgba(0,212,255,0.2);
+            border: 1px solid #00d4ff;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+        .agent-badge.active { background: rgba(0,255,136,0.2); border-color: #00ff88; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏗️ ContractorAI Cross-Platform Subscription</h1>
+        <p class="subtitle">Unified iOS (RevenueCat) + Web (Stripe) + OAuth System</p>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill" style="width: 9%"></div>
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value completed-color" id="completedCount">1</div>
+                <div class="stat-label">Completed</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value progress-color" id="progressCount">1</div>
+                <div class="stat-label">In Progress</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value pending-color" id="pendingCount">9</div>
+                <div class="stat-label">Pending</div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h2>📋 Task Progress</h2>
+                <div id="todoList">
+                    <!-- Todos will be injected here -->
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>🏛️ Architecture</h2>
+                <div class="architecture">┌─────────────────────────────────────────────┐
+│              SUPABASE PROFILES              │
+│  subscription_status | subscription_source  │
+│  stripe_customer_id  | revenuecat_user_id   │
+└─────────────────────────────────────────────┘
+            ↑                     ↑
+   RevenueCat Webhook      Stripe Webhook
+            │                     │
+     ┌──────┴──────┐      ┌───────┴───────┐
+     │   iOS App   │      │  Web/Desktop  │
+     │ (RevenueCat)│      │   (Stripe)    │
+     └─────────────┘      └───────────────┘
+
+AUTH PROVIDERS:
+  ✓ Email/Password (existing)
+  ◯ Google OAuth (NEW)
+  ◯ Apple Sign-In (NEW)</div>
+
+                <h2 style="margin-top: 20px;">🤖 Swarm Agents</h2>
+                <div class="swarm-status">
+                    <span class="agent-badge active">subscription-architect</span>
+                    <span class="agent-badge active">stripe-integrator</span>
+                    <span class="agent-badge active">auth-specialist</span>
+                </div>
+            </div>
+        </div>
+
+        <p class="last-update">Last updated: <span id="lastUpdate">-</span></p>
+    </div>
+
+    <button class="refresh-btn" onclick="location.reload()">🔄 Refresh</button>
+
+    <script>
+        // Todo data - this will be updated by Claude
+        const todos = [
+            { content: "Set up Claude Flow swarm for ContractorAI cross-platform subscription system", status: "completed", activeForm: "Setting up Claude Flow swarm" },
+            { content: "Design unified subscription architecture (RevenueCat iOS + Stripe Desktop → Supabase)", status: "completed", activeForm: "Designing unified subscription architecture" },
+            { content: "Add subscription_source column to profiles (apple/stripe/none)", status: "completed", activeForm: "Adding subscription_source column" },
+            { content: "Create RevenueCat webhook to sync iOS purchases to Supabase", status: "completed", activeForm: "Creating RevenueCat webhook" },
+            { content: "Update Stripe webhook to set subscription_source='stripe'", status: "completed", activeForm: "Updating Stripe webhook" },
+            { content: "Add Google OAuth to Supabase auth", status: "completed", activeForm: "Adding Google OAuth" },
+            { content: "Add Apple Sign-In to Supabase auth", status: "completed", activeForm: "Adding Apple Sign-In" },
+            { content: "Create subscription check hook in authStore", status: "completed", activeForm: "Creating subscription check hook" },
+            { content: "Build SubscriptionsWeb.tsx page with Stripe checkout", status: "completed", activeForm: "Building web subscriptions page" },
+            { content: "Disable RevenueCat on web platform (keep for iOS)", status: "completed", activeForm: "Disabling RevenueCat on web" },
+            { content: "Test cross-platform login and subscription sync", status: "in_progress", activeForm: "Testing cross-platform sync" }
+        ];
+
+        function renderTodos() {
+            const container = document.getElementById('todoList');
+            let html = '';
+
+            todos.forEach((todo, i) => {
+                const icon = todo.status === 'completed' ? '✓' : todo.status === 'in_progress' ? '◉' : '○';
+                html += `
+                    <div class="todo-item ${todo.status}">
+                        <div class="status-icon">${icon}</div>
+                        <div class="todo-content">
+                            <div class="todo-title">${i + 1}. ${todo.content}</div>
+                            <div class="todo-active">${todo.status === 'in_progress' ? '⚡ ' + todo.activeForm : ''}</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+
+            // Update stats
+            const completed = todos.filter(t => t.status === 'completed').length;
+            const inProgress = todos.filter(t => t.status === 'in_progress').length;
+            const pending = todos.filter(t => t.status === 'pending').length;
+
+            document.getElementById('completedCount').textContent = completed;
+            document.getElementById('progressCount').textContent = inProgress;
+            document.getElementById('pendingCount').textContent = pending;
+            document.getElementById('progressFill').style.width = `${(completed / todos.length) * 100}%`;
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleString();
+        }
+
+        renderTodos();
+
+        // Auto-refresh every 30 seconds
+        setInterval(() => location.reload(), 30000);
+    </script>
+</body>
+</html>

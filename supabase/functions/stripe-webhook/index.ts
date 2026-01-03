@@ -229,6 +229,35 @@ async function syncCustomerFromStripe(customerId: string) {
     const periodStartTimestamp = subscription.current_period_start || subscription.items.data[0]?.current_period_start;
     const periodEndTimestamp = subscription.current_period_end || subscription.items.data[0]?.current_period_end;
 
+    // Update profiles table with subscription info and source
+    if (userId) {
+      const subscriptionStatus = subscription.status === 'active' || subscription.status === 'trialing'
+        ? subscription.status
+        : subscription.status === 'past_due' ? 'past_due'
+        : subscription.status === 'canceled' ? 'canceled'
+        : 'inactive';
+
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          subscription_status: subscriptionStatus,
+          subscription_source: 'stripe',
+          subscription_plan: 'pro', // Default to pro, can be customized based on price_id
+          subscription_id: subscription.id,
+          stripe_customer_id: customerId,
+          subscription_start_date: periodStart,
+          subscription_end_date: periodEnd,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', userId);
+
+      if (profileError) {
+        console.error('Error updating profile subscription:', profileError);
+      } else {
+        console.info(`✅ Updated profile ${userId} with Stripe subscription (source: stripe)`);
+      }
+    }
+
     // Convert Unix timestamps to ISO strings for PostgreSQL
     const periodStart = periodStartTimestamp ? new Date(periodStartTimestamp * 1000).toISOString() : null;
     const periodEnd = periodEndTimestamp ? new Date(periodEndTimestamp * 1000).toISOString() : null;
