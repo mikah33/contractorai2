@@ -27,11 +27,11 @@ const SubscriptionsWeb = () => {
         if (isIOS) {
           // iOS - use native paywall
           await revenueCatService.initialize(user.id);
-          await revenueCatService.presentPaywallWithOffering('default');
+          await revenueCatService.presentPaywall();
         } else {
-          // Web - use RevenueCat Web Billing
+          // Web - use RevenueCat Web Billing with current offering
           await revenueCatWebService.initialize(user.id);
-          await revenueCatWebService.purchaseByOffering('default');
+          await revenueCatWebService.purchaseCurrentOffering();
         }
 
         // After paywall closes, go back

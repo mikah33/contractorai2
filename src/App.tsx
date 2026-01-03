@@ -71,8 +71,8 @@ import { CalculatorTabProvider } from './contexts/CalculatorTabContext';
 import { useAuthStore } from './stores/authStore';
 import { useAppInitialization } from './hooks/useAppInitialization';
 import { supabase } from './lib/supabase';
-import { useEffect } from 'react';
 import { revenueCatService } from './services/revenueCatService';
+import { revenueCatWebService } from './services/revenueCatWebService';
 
 function App() {
   const { user, initialized } = useAuthStore();
@@ -135,41 +135,18 @@ function App() {
           setHasActiveSubscription(hasSubscription);
           setCheckingSubscription(false);
         } else {
-          // Use Stripe for web and Android
-          console.log('[Subscription Check] Using Stripe for', platform);
+          // Use RevenueCat Web SDK for web and Android
+          console.log('[Subscription Check] Using RevenueCat Web for', platform);
 
-          // Get Stripe customer record
-          const { data: customer, error: customerError } = await supabase
-            .from('stripe_customers')
-            .select('customer_id')
-            .eq('user_id', user.id)
-            .single();
+          try {
+            await revenueCatWebService.initialize(user.id);
+            const hasSubscription = await revenueCatWebService.hasActiveSubscription();
 
-          console.log('[Subscription Check] Customer data:', customer);
-
-          if (customerError || !customer?.customer_id) {
-            console.log('[Subscription Check] No customer found, showing paywall');
+            console.log('[Subscription Check] RevenueCat Web subscription status:', hasSubscription);
+            setHasActiveSubscription(hasSubscription);
+          } catch (webError) {
+            console.error('[Subscription Check] RevenueCat Web error:', webError);
             setHasActiveSubscription(false);
-            setCheckingSubscription(false);
-            return;
-          }
-
-          // Get active subscription
-          const { data: subscription, error: subError} = await supabase
-            .from('stripe_subscriptions')
-            .select('*')
-            .eq('customer_id', customer.customer_id)
-            .eq('status', 'active')
-            .single();
-
-          console.log('[Subscription Check] Subscription data:', subscription);
-
-          if (subError || !subscription) {
-            console.log('[Subscription Check] No active subscription, showing paywall');
-            setHasActiveSubscription(false);
-          } else {
-            console.log('[Subscription Check] Active subscription found:', subscription.id);
-            setHasActiveSubscription(true);
           }
 
           setCheckingSubscription(false);

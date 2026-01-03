@@ -32,12 +32,15 @@ class RevenueCatWebService {
     }
 
     try {
-      console.log('[RevenueCatWeb] Initializing Web SDK...');
+      console.log('[RevenueCatWeb] Initializing Web SDK with user:', userId);
 
       this.currentUserId = userId || null;
 
-      // Configure RevenueCat for Web
-      Purchases.configure(REVENUECAT_WEB_API_KEY, userId || 'anonymous');
+      // Configure RevenueCat for Web using object syntax
+      Purchases.configure({
+        apiKey: REVENUECAT_WEB_API_KEY,
+        appUserId: userId || 'anonymous',
+      });
 
       console.log('[RevenueCatWeb] Web SDK initialized successfully');
       this.initialized = true;
@@ -53,9 +56,19 @@ class RevenueCatWebService {
   async hasActiveSubscription(): Promise<boolean> {
     try {
       const customerInfo = await Purchases.getSharedInstance().getCustomerInfo();
-      const hasEntitlement = customerInfo.entitlements.active[ENTITLEMENT_ID] !== undefined;
-      console.log('[RevenueCatWeb] Active subscription:', hasEntitlement);
-      return hasEntitlement;
+
+      // Log all active entitlements for debugging
+      console.log('[RevenueCatWeb] Active entitlements:', Object.keys(customerInfo.entitlements.active));
+
+      // Check for specific entitlement OR any active entitlement
+      const hasSpecificEntitlement = ENTITLEMENT_ID in customerInfo.entitlements.active;
+      const hasAnyEntitlement = Object.keys(customerInfo.entitlements.active).length > 0;
+
+      console.log('[RevenueCatWeb] Has specific entitlement:', hasSpecificEntitlement);
+      console.log('[RevenueCatWeb] Has any entitlement:', hasAnyEntitlement);
+
+      // Return true if user has the specific entitlement or any active subscription
+      return hasSpecificEntitlement || hasAnyEntitlement;
     } catch (error) {
       console.error('[RevenueCatWeb] Error checking subscription:', error);
       return false;
@@ -167,6 +180,56 @@ class RevenueCatWebService {
       console.log('[RevenueCatWeb] Purchase result:', result);
 
       // Sync to Supabase
+      await this.syncSubscriptionToSupabase();
+
+      return { success: true };
+    } catch (error: any) {
+      console.error('[RevenueCatWeb] Purchase error:', error);
+
+      if (error.userCancelled) {
+        return { success: false };
+      }
+
+      throw error;
+    }
+  }
+
+  /**
+   * Purchase using current/default offering (auto-detects the right one)
+   */
+  async purchaseCurrentOffering(): Promise<{ success: boolean }> {
+    try {
+      console.log('[RevenueCatWeb] Purchasing from current offering');
+
+      const offerings = await this.getOfferings();
+      console.log('[RevenueCatWeb] All offerings:', offerings?.all ? Object.keys(offerings.all) : 'none');
+
+      // Try current offering first, then first available offering
+      let offering = offerings?.current;
+
+      if (!offering && offerings?.all) {
+        const offeringKeys = Object.keys(offerings.all);
+        console.log('[RevenueCatWeb] No current offering, available offerings:', offeringKeys);
+        if (offeringKeys.length > 0) {
+          offering = offerings.all[offeringKeys[0]];
+        }
+      }
+
+      if (!offering) {
+        throw new Error('No offerings available');
+      }
+
+      console.log('[RevenueCatWeb] Using offering:', offering.identifier);
+      const packageToPurchase = offering.availablePackages[0];
+
+      if (!packageToPurchase) {
+        throw new Error('No packages available in offering');
+      }
+
+      console.log('[RevenueCatWeb] Purchasing package:', packageToPurchase.identifier);
+      const result = await Purchases.getSharedInstance().purchase({ rcPackage: packageToPurchase });
+
+      console.log('[RevenueCatWeb] Purchase result:', result);
       await this.syncSubscriptionToSupabase();
 
       return { success: true };
