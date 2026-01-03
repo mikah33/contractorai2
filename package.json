@@ -21,6 +21,7 @@
     "@fal-ai/client": "^1.7.2",
     "@revenuecat/purchases-capacitor": "^11.2.15",
     "@revenuecat/purchases-capacitor-ui": "^11.2.15",
+    "@revenuecat/purchases-js": "^1.23.0",
     "@stripe/react-stripe-js": "^5.0.0",
     "@stripe/stripe-js": "^8.0.0",
     "@supabase/supabase-js": "^2.58.0",

@@ -1,4 +1,5 @@
 import { Purchases, PurchasesOfferings, CustomerInfo, LOG_LEVEL } from '@revenuecat/purchases-capacitor';
+import { RevenueCatUI } from '@revenuecat/purchases-capacitor-ui';
 import { Capacitor } from '@capacitor/core';
 import { supabase } from '../lib/supabase';
 
@@ -494,6 +495,90 @@ class RevenueCatService {
       console.error('[RevenueCat] Error getting marketing status:', error);
       return { hasPremium: false, hasAds: false };
     }
+  }
+
+  /**
+   * Present a RevenueCat paywall by offering identifier
+   * @param offeringIdentifier - The identifier of the offering to display (e.g., 'Marketing', 'Ads Management')
+   */
+  async presentPaywall(offeringIdentifier: string): Promise<{ success: boolean; customerInfo?: CustomerInfo }> {
+    try {
+      console.log('[RevenueCat] Presenting paywall for offering:', offeringIdentifier);
+
+      const result = await RevenueCatUI.presentPaywallIfNeeded({
+        requiredEntitlementIdentifier: offeringIdentifier === 'Marketing' ? MARKETING_PREMIUM_ENTITLEMENT : MARKETING_ADS_ENTITLEMENT,
+        offering: await this.getOfferingByIdentifier(offeringIdentifier),
+      });
+
+      console.log('[RevenueCat] Paywall result:', result);
+
+      // Refresh customer info after paywall closes
+      await this.refreshCustomerInfo();
+      await this.syncSubscriptionToSupabase();
+
+      // Check if purchase was made
+      const customerInfo = await this.getCustomerInfo();
+      const entitlementId = offeringIdentifier === 'Marketing' ? MARKETING_PREMIUM_ENTITLEMENT : MARKETING_ADS_ENTITLEMENT;
+      const hasPurchased = customerInfo?.entitlements.active[entitlementId] !== undefined;
+
+      return {
+        success: hasPurchased,
+        customerInfo: customerInfo || undefined,
+      };
+    } catch (error: any) {
+      console.error('[RevenueCat] Paywall error:', error);
+      if (error.code === '1' || error.userCancelled) {
+        return { success: false };
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Present paywall directly with offering
+   */
+  async presentPaywallWithOffering(offeringIdentifier: string): Promise<{ success: boolean; customerInfo?: CustomerInfo }> {
+    try {
+      console.log('[RevenueCat] Presenting paywall with offering:', offeringIdentifier);
+
+      const offerings = await this.getOfferings();
+      if (!offerings?.all?.[offeringIdentifier]) {
+        throw new Error(`Offering ${offeringIdentifier} not found`);
+      }
+
+      const result = await RevenueCatUI.presentPaywall({
+        offering: offerings.all[offeringIdentifier],
+      });
+
+      console.log('[RevenueCat] Paywall closed, result:', result);
+
+      // Refresh customer info after paywall closes
+      await this.refreshCustomerInfo();
+      await this.syncSubscriptionToSupabase();
+
+      const customerInfo = await this.getCustomerInfo();
+      return {
+        success: true,
+        customerInfo: customerInfo || undefined,
+      };
+    } catch (error: any) {
+      console.error('[RevenueCat] Paywall error:', error);
+      if (error.code === '1' || error.userCancelled) {
+        return { success: false };
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Get offering by identifier
+   */
+  private async getOfferingByIdentifier(identifier: string) {
+    const offerings = await this.getOfferings();
+    if (offerings?.all?.[identifier]) {
+      return offerings.all[identifier];
+    }
+    return undefined;
   }
 
   /**

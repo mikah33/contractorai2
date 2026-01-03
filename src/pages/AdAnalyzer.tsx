@@ -5,6 +5,7 @@ import { useOnboardingStore } from '../stores/onboardingStore';
 import { supabase } from '../lib/supabase';
 import { Capacitor } from '@capacitor/core';
 import { revenueCatService, PRODUCT_IDS } from '../services/revenueCatService';
+import { revenueCatWebService } from '../services/revenueCatWebService';
 
 const AdAnalyzer = () => {
   const [showModal, setShowModal] = useState(false);
@@ -34,16 +35,22 @@ const AdAnalyzer = () => {
           setShowMarketingTutorial(true);
         }
 
-        // Check subscription status on iOS
-        if (isIOS) {
-          try {
+        // Check subscription status
+        try {
+          if (isIOS) {
             await revenueCatService.initialize(user.id);
             const status = await revenueCatService.getMarketingSubscriptionStatus();
             setHasPremium(status.hasPremium);
             setHasAds(status.hasAds);
-          } catch (error) {
-            console.error('[Marketing] Error checking subscription:', error);
+          } else {
+            // Web - use RevenueCat Web SDK
+            await revenueCatWebService.initialize(user.id);
+            const status = await revenueCatWebService.getMarketingSubscriptionStatus();
+            setHasPremium(status.hasPremium);
+            setHasAds(status.hasAds);
           }
+        } catch (error) {
+          console.error('[Marketing] Error checking subscription:', error);
         }
       }
     };
@@ -58,22 +65,30 @@ const AdAnalyzer = () => {
   };
 
   const handlePurchasePremium = async () => {
-    if (!isIOS) {
-      // Fallback to email for non-iOS
-      window.open('mailto:admin@elevatedsystems.info?subject=Premium%20Plan%20Interest&body=Hi,%20I%27m%20interested%20in%20the%20Premium%20Plan%20for%20ContractorAI.', '_blank');
-      return;
-    }
-
     try {
       setPurchasing('premium');
       setPurchaseError(null);
 
-      const result = await revenueCatService.purchaseProduct(PRODUCT_IDS.MARKETING_PREMIUM);
+      if (isIOS) {
+        // iOS - Present RevenueCat native paywall
+        await revenueCatService.presentPaywallWithOffering('Marketing');
+        const status = await revenueCatService.getMarketingSubscriptionStatus();
+        setHasPremium(status.hasPremium);
 
-      if (result.success) {
-        setHasPremium(true);
-        setShowModal(false);
-        alert('Thank you for subscribing to Marketing Premium! Our team will be in touch shortly to get you set up.');
+        if (status.hasPremium) {
+          setShowModal(false);
+          alert('Thank you for subscribing to Marketing Premium! Our team will be in touch shortly to get you set up.');
+        }
+      } else {
+        // Web - Use RevenueCat Web Billing
+        const result = await revenueCatWebService.purchaseByOffering('Marketing');
+        const status = await revenueCatWebService.getMarketingSubscriptionStatus();
+        setHasPremium(status.hasPremium);
+
+        if (status.hasPremium) {
+          setShowModal(false);
+          alert('Thank you for subscribing to Marketing Premium! Our team will be in touch shortly to get you set up.');
+        }
       }
     } catch (error: any) {
       console.error('[Marketing] Purchase error:', error);
@@ -84,22 +99,30 @@ const AdAnalyzer = () => {
   };
 
   const handlePurchaseAds = async () => {
-    if (!isIOS) {
-      // Fallback to email for non-iOS
-      window.open('mailto:admin@elevatedsystems.info?subject=Ads%20%26%20Lead%20Generation%20Interest&body=Hi,%20I%27m%20interested%20in%20the%20Ads%20%26%20Lead%20Generation%20plan%20for%20ContractorAI.', '_blank');
-      return;
-    }
-
     try {
       setPurchasing('ads');
       setPurchaseError(null);
 
-      const result = await revenueCatService.purchaseProduct(PRODUCT_IDS.MARKETING_ADS);
+      if (isIOS) {
+        // iOS - Present RevenueCat native paywall
+        await revenueCatService.presentPaywallWithOffering('Ads Management');
+        const status = await revenueCatService.getMarketingSubscriptionStatus();
+        setHasAds(status.hasAds);
 
-      if (result.success) {
-        setHasAds(true);
-        setShowAdsModal(false);
-        alert('Thank you for subscribing to Ads & Lead Generation! Our team will be in touch shortly to discuss your ad campaigns.');
+        if (status.hasAds) {
+          setShowAdsModal(false);
+          alert('Thank you for subscribing to Ads & Lead Generation! Our team will be in touch shortly to discuss your ad campaigns.');
+        }
+      } else {
+        // Web - Use RevenueCat Web Billing
+        const result = await revenueCatWebService.purchaseByOffering('Ads Management');
+        const status = await revenueCatWebService.getMarketingSubscriptionStatus();
+        setHasAds(status.hasAds);
+
+        if (status.hasAds) {
+          setShowAdsModal(false);
+          alert('Thank you for subscribing to Ads & Lead Generation! Our team will be in touch shortly to discuss your ad campaigns.');
+        }
       }
     } catch (error: any) {
       console.error('[Marketing] Purchase error:', error);
