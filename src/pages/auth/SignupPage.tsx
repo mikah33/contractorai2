@@ -25,16 +25,30 @@ const SignupPage = () => {
     setError('');
     setOauthLoading('google');
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: isNative
-            ? 'contractorai://auth/callback'
-            : `${window.location.origin}/auth/callback`,
-          skipBrowserRedirect: isNative,
-        },
-      });
-      if (error) setError(error.message);
+      if (isNative) {
+        // Native iOS - get OAuth URL and open in browser
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: 'contractorai://auth/callback',
+            skipBrowserRedirect: true,
+          },
+        });
+        if (error) throw error;
+        if (data?.url) {
+          const { Browser } = await import('@capacitor/browser');
+          await Browser.open({ url: data.url });
+        }
+      } else {
+        // Web - use standard OAuth redirect
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: `${window.location.origin}/auth/callback`,
+          },
+        });
+        if (error) setError(error.message);
+      }
     } catch (err: any) {
       console.error('Google sign in error:', err);
       setError(err.message || 'Failed to sign in with Google');

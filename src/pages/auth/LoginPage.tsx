@@ -21,18 +21,31 @@ const LoginPage = () => {
     setError('');
     setOauthLoading('google');
     try {
-      // Use Supabase OAuth for both web and native
-      // On iOS, this opens an in-app browser for Google sign-in
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: isNative
-            ? 'contractorai://auth/callback'  // Deep link for native
-            : `${window.location.origin}/auth/callback`,
-          skipBrowserRedirect: isNative, // Handle redirect manually on native
-        },
-      });
-      if (error) setError(error.message);
+      if (isNative) {
+        // Native iOS - get OAuth URL and open in browser
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: 'contractorai://auth/callback',
+            skipBrowserRedirect: true,
+          },
+        });
+        if (error) throw error;
+        if (data?.url) {
+          // Open the OAuth URL in the system browser
+          const { Browser } = await import('@capacitor/browser');
+          await Browser.open({ url: data.url });
+        }
+      } else {
+        // Web - use standard OAuth redirect
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: `${window.location.origin}/auth/callback`,
+          },
+        });
+        if (error) setError(error.message);
+      }
     } catch (err: any) {
       console.error('Google sign in error:', err);
       setError(err.message || 'Failed to sign in with Google');

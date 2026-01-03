@@ -27,6 +27,7 @@
 /* Begin PBXFileReference section */
 		06792B9E2EE928FF00817EFC /* client_244912967505-dca35jhgoirkgfc5sfkm2kq7eha57s5u.apps.googleusercontent.com.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "client_244912967505-dca35jhgoirkgfc5sfkm2kq7eha57s5u.apps.googleusercontent.com.plist"; sourceTree = "<group>"; };
 		0696D9782EEA2A2E0069F933 /* ContractorAI-WORKING.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = "ContractorAI-WORKING.storekit"; sourceTree = "<group>"; };
+		06D801532F099AC9005D6C95 /* App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = App.entitlements; sourceTree = "<group>"; };
 		06D96F2A2ED2090F00254DE3 /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 		06DCAB332EF241B500AC3586 /* LiDARScannerPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiDARScannerPlugin.swift; sourceTree = "<group>"; };
 		06DCAB362EF241CE00AC3586 /* App-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "App-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -90,6 +91,7 @@
 		504EC3061FED79650016851F /* App */ = {
 			isa = PBXGroup;
 			children = (
+				06D801532F099AC9005D6C95 /* App.entitlements */,
 				06DCAB372EF244A300AC3586 /* MyBridgeViewController.swift */,
 				06DCAB332EF241B500AC3586 /* LiDARScannerPlugin.swift */,
 				0696D9782EEA2A2E0069F933 /* ContractorAI-WORKING.storekit */,
@@ -377,6 +379,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -405,6 +408,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = YES;
 				CURRENT_PROJECT_VERSION = 1;
