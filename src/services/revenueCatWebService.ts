@@ -2,7 +2,7 @@ import { Purchases } from '@revenuecat/purchases-js';
 import { supabase } from '../lib/supabase';
 
 // RevenueCat Web Billing API Key
-const REVENUECAT_WEB_API_KEY = 'rcb_sb_rdfshnZAJAOOrkoWpwdHsKzIR';
+const REVENUECAT_WEB_API_KEY = 'rcb_pgcHziPmgtouiwlQxXedDkmjYzaQ';
 
 // Entitlement IDs (must match RevenueCat dashboard)
 const ENTITLEMENT_ID = 'ContractorAI Pro';
