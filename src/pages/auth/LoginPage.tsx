@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { supabase } from '../../lib/supabase';
+import { Capacitor } from '@capacitor/core';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -14,19 +15,27 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const signIn = useAuthStore((state) => state.signIn);
 
+  const isNative = Capacitor.isNativePlatform();
+
   const handleGoogleSignIn = async () => {
     setError('');
     setOauthLoading('google');
     try {
+      // Use Supabase OAuth for both web and native
+      // On iOS, this opens an in-app browser for Google sign-in
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: isNative
+            ? 'contractorai://auth/callback'  // Deep link for native
+            : `${window.location.origin}/auth/callback`,
+          skipBrowserRedirect: isNative, // Handle redirect manually on native
         },
       });
       if (error) setError(error.message);
-    } catch (err) {
-      setError('Failed to sign in with Google');
+    } catch (err: any) {
+      console.error('Google sign in error:', err);
+      setError(err.message || 'Failed to sign in with Google');
     } finally {
       setOauthLoading(null);
     }
@@ -36,15 +45,35 @@ const LoginPage = () => {
     setError('');
     setOauthLoading('apple');
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'apple',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-      if (error) setError(error.message);
-    } catch (err) {
-      setError('Failed to sign in with Apple');
+      if (isNative) {
+        // Native iOS - use Sign in with Apple native
+        const { SignInWithApple } = await import('@capacitor-community/apple-sign-in');
+        const result = await SignInWithApple.authorize({
+          clientId: 'com.elevated.contractorai',
+          redirectURI: 'https://ujhgwcurllkkeouzwvgk.supabase.co/auth/v1/callback',
+          scopes: 'email name',
+        });
+
+        // Exchange Apple ID token for Supabase session
+        const { error } = await supabase.auth.signInWithIdToken({
+          provider: 'apple',
+          token: result.response.identityToken,
+        });
+        if (error) throw error;
+        navigate('/');
+      } else {
+        // Web - use OAuth redirect
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'apple',
+          options: {
+            redirectTo: `${window.location.origin}/auth/callback`,
+          },
+        });
+        if (error) setError(error.message);
+      }
+    } catch (err: any) {
+      console.error('Apple sign in error:', err);
+      setError(err.message || 'Failed to sign in with Apple');
     } finally {
       setOauthLoading(null);
     }
