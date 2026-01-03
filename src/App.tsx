@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import OnboardingModal from './components/onboarding/OnboardingModal';
 import { useOnboardingStore } from './stores/onboardingStore';
+import { useDeepLinks } from './hooks/useDeepLinks';
 import Dashboard from './pages/Dashboard';
 import PricingCalculator from './pages/PricingCalculator';
 import CalculatorWidgets from './pages/CalculatorWidgets';
@@ -80,6 +81,9 @@ function App() {
   const [checkingSubscription, setCheckingSubscription] = useState(true);
   const { profileCompleted, checkOnboardingStatus } = useOnboardingStore();
   const [showOnboarding, setShowOnboarding] = useState(false);
+
+  // Handle deep links on iOS/Android
+  useDeepLinks();
 
   // Check subscription status when user is authenticated
   useEffect(() => {
