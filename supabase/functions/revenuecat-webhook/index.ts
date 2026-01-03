@@ -7,7 +7,7 @@ const supabase = createClient(
 );
 
 // RevenueCat webhook authorization (set in RevenueCat dashboard)
-const REVENUECAT_WEBHOOK_AUTH = Deno.env.get('REVENUECAT_WEBHOOK_AUTH');
+const REVENUECAT_WEBHOOK_SECRET = Deno.env.get('REVENUECAT_WEBHOOK_SECRET');
 
 // RevenueCat event types we care about
 type RevenueCatEventType =
@@ -63,7 +63,7 @@ Deno.serve(async (req) => {
   try {
     // Verify webhook authorization
     const authHeader = req.headers.get('Authorization');
-    if (REVENUECAT_WEBHOOK_AUTH && authHeader !== `Bearer ${REVENUECAT_WEBHOOK_AUTH}`) {
+    if (REVENUECAT_WEBHOOK_SECRET && authHeader !== `Bearer ${REVENUECAT_WEBHOOK_SECRET}`) {
       console.error('Invalid webhook authorization');
       return new Response('Unauthorized', { status: 401 });
     }
