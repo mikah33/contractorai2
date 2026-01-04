@@ -203,7 +203,14 @@ const SubscriptionsWeb = () => {
       <div className="border-b border-[#2C2C2E]">
         <div className="max-w-2xl mx-auto px-4 py-4">
           <button
-            onClick={() => navigate('/auth/welcome')}
+            onClick={() => {
+              // Sign out and go to welcome screen
+              import('../lib/supabase').then(({ supabase }) => {
+                supabase.auth.signOut().then(() => {
+                  window.location.href = '/auth/welcome';
+                });
+              });
+            }}
             className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
