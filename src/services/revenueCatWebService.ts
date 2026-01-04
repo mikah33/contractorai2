@@ -245,24 +245,42 @@ class RevenueCatWebService {
   }
 
   /**
-   * Purchase by offering identifier (e.g., 'Marketing', 'Ads Management')
+   * Purchase by offering identifier (e.g., 'Marketing', 'Ads')
+   * Searches for offering by identifier or by matching keywords
    */
   async purchaseByOffering(offeringIdentifier: string): Promise<{ success: boolean }> {
     try {
       console.log('[RevenueCatWeb] Purchasing from offering:', offeringIdentifier);
 
       const offerings = await this.getOfferings();
-      if (!offerings?.all?.[offeringIdentifier]) {
-        throw new Error(`Offering ${offeringIdentifier} not found`);
+      console.log('[RevenueCatWeb] Available offerings:', offerings?.all ? Object.keys(offerings.all) : 'none');
+
+      let offering = offerings?.all?.[offeringIdentifier];
+
+      // If not found by exact match, search by keyword
+      if (!offering && offerings?.all) {
+        const searchTerm = offeringIdentifier.toLowerCase();
+        for (const [key, value] of Object.entries(offerings.all)) {
+          if (key.toLowerCase().includes(searchTerm) || searchTerm.includes(key.toLowerCase())) {
+            console.log('[RevenueCatWeb] Found offering by keyword match:', key);
+            offering = value;
+            break;
+          }
+        }
       }
 
-      const offering = offerings.all[offeringIdentifier];
+      if (!offering) {
+        console.error('[RevenueCatWeb] Available offerings:', offerings?.all ? Object.keys(offerings.all) : 'none');
+        throw new Error(`Offering "${offeringIdentifier}" not found. Available: ${offerings?.all ? Object.keys(offerings.all).join(', ') : 'none'}`);
+      }
+
       const packageToPurchase = offering.availablePackages[0]; // Get first package
 
       if (!packageToPurchase) {
         throw new Error('No packages available in offering');
       }
 
+      console.log('[RevenueCatWeb] Purchasing package:', packageToPurchase.identifier);
       const result = await Purchases.getSharedInstance().purchase({ rcPackage: packageToPurchase });
 
       console.log('[RevenueCatWeb] Purchase result:', result);

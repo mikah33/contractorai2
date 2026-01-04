@@ -466,10 +466,8 @@ const AdAnalyzer = () => {
                         <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                         Processing...
                       </>
-                    ) : isIOS ? (
-                      'Subscribe Now - $299.99/month'
                     ) : (
-                      'Get Started - Contact Us'
+                      'Subscribe Now - $299.99/month'
                     )}
                   </button>
                 )}
@@ -477,7 +475,7 @@ const AdAnalyzer = () => {
                   <p className="text-center text-red-500 text-xs mt-2">{purchaseError}</p>
                 )}
                 <p className="text-center text-zinc-500 text-xs mt-3">
-                  {isIOS ? 'Cancel anytime. Subscription auto-renews monthly.' : 'Limited spots available each month'}
+                  Cancel anytime. Subscription auto-renews monthly.
                 </p>
               </div>
             </div>
@@ -651,10 +649,8 @@ const AdAnalyzer = () => {
                         <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                         Processing...
                       </>
-                    ) : isIOS ? (
-                      'Subscribe Now - $899.99/month'
                     ) : (
-                      'Contact Us'
+                      'Subscribe Now - $899.99/month'
                     )}
                   </button>
                 )}
@@ -662,7 +658,7 @@ const AdAnalyzer = () => {
                   <p className="text-center text-red-500 text-xs mt-2">{purchaseError}</p>
                 )}
                 <p className="text-center text-zinc-500 text-xs mt-3">
-                  {isIOS ? 'Cancel anytime. Ad spend budget separate.' : 'Limited spots available each month'}
+                  Cancel anytime. Ad spend budget separate.
                 </p>
               </div>
             </div>
