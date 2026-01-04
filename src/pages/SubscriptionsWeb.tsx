@@ -96,12 +96,12 @@ const SubscriptionsWeb = () => {
             duration = 'per year';
             pricePerMonth = `$${(priceNum / 12).toFixed(2)}/mo`;
             savings = 'Save 17%';
-            popular = true;
           } else if (identifier.includes('quarter') || identifier.includes('3month') || identifier.includes('three')) {
             title = 'Quarterly';
             duration = 'every 3 months';
             pricePerMonth = `$${(priceNum / 3).toFixed(2)}/mo`;
             savings = 'Save 8%';
+            popular = true;
           } else if (identifier.includes('monthly') || identifier.includes('month')) {
             title = 'Monthly';
             duration = 'per month';
@@ -128,10 +128,10 @@ const SubscriptionsWeb = () => {
 
         setPackages(packageOptions);
 
-        // Pre-select yearly (best value)
+        // Pre-select monthly
         if (packageOptions.length > 0) {
-          const yearly = packageOptions.find(p => p.title === 'Yearly');
-          setSelectedPackage(yearly?.identifier || packageOptions[0].identifier);
+          const monthly = packageOptions.find(p => p.title === 'Monthly');
+          setSelectedPackage(monthly?.identifier || packageOptions[0].identifier);
         }
 
         setLoading(false);
@@ -236,7 +236,7 @@ const SubscriptionsWeb = () => {
             >
               {pkg.popular && (
                 <span className="absolute -top-2.5 left-4 px-2 py-0.5 bg-orange-500 text-white text-xs font-medium rounded-full">
-                  Best Value
+                  Most Popular
                 </span>
               )}
 
