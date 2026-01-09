@@ -163,46 +163,46 @@ const Dashboard: React.FC = () => {
 
       {/* Header - background extends into safe area, content pushed down */}
       <div className="bg-[#1C1C1E] border-b border-orange-500/30 sticky top-0 z-10 pt-[env(safe-area-inset-top)]">
-        <div className="px-4 pb-3 pt-2 max-w-7xl mx-auto">
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 md:w-12 md:h-12 bg-orange-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Home className="w-5 h-5 md:w-6 md:h-6 text-orange-500" />
+        <div className="px-2 pb-2 pt-1 max-w-5xl mx-auto">
+          <div className="flex items-start gap-2">
+            <div className="w-8 h-8 bg-orange-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Home className="w-4 h-4 text-orange-500" />
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-lg md:text-2xl font-bold text-white">Dashboard</h1>
-              <p className="text-xs md:text-sm text-zinc-400 leading-tight">Welcome back, {displayName}!</p>
+              <h1 className="text-base font-bold text-white">Dashboard</h1>
+              <p className="text-xs text-zinc-400 leading-tight">Welcome back, {displayName}!</p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="px-4 py-4 space-y-4 max-w-7xl mx-auto">
+      <div className="px-2 py-2 space-y-2 max-w-5xl mx-auto">
         {/* Quick Preview Cards - Responsive Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           {/* Clients Card */}
           <button
             onClick={() => navigate('/clients-hub')}
-            className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4 md:p-6 text-left active:bg-[#2C2C2E] transition-colors"
+            className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-2 text-left active:bg-[#2C2C2E] transition-colors"
           >
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 md:w-10 md:h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                <Users className="w-4 h-4 md:w-5 md:h-5 text-orange-500" />
+            <div className="flex items-center gap-1 mb-2">
+              <div className="w-6 h-6 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                <Users className="w-3 h-3 text-orange-500" />
               </div>
               <div>
-                <p className="font-semibold text-white text-sm md:text-base">Clients</p>
-                <p className="text-xs md:text-sm text-zinc-500">{clients.length} total</p>
+                <p className="font-semibold text-white text-xs">Clients</p>
+                <p className="text-xs text-zinc-500">{clients.length} total</p>
               </div>
             </div>
-            <div className="flex -space-x-2">
+            <div className="flex -space-x-1">
               {topClients.length > 0 ? (
                 <>
                   {topClients.map((client) => (
-                    <div key={client.id} className="w-8 h-8 bg-[#3A3A3C] rounded-full flex items-center justify-center text-white text-xs font-semibold border-2 border-[#1C1C1E]">
+                    <div key={client.id} className="w-6 h-6 bg-[#3A3A3C] rounded-full flex items-center justify-center text-white text-xs font-semibold border border-[#1C1C1E]">
                       {getInitials(client.name || 'NA')}
                     </div>
                   ))}
                   {clients.length > 3 && (
-                    <div className="w-8 h-8 bg-orange-500/20 rounded-full flex items-center justify-center text-orange-500 text-xs font-semibold border-2 border-[#1C1C1E]">
+                    <div className="w-6 h-6 bg-orange-500/20 rounded-full flex items-center justify-center text-orange-500 text-xs font-semibold border border-[#1C1C1E]">
                       +{clients.length - 3}
                     </div>
                   )}
@@ -216,27 +216,27 @@ const Dashboard: React.FC = () => {
           {/* Team Card */}
           <button
             onClick={() => navigate('/employees-hub')}
-            className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4 md:p-6 text-left active:bg-[#2C2C2E] transition-colors"
+            className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-2 text-left active:bg-[#2C2C2E] transition-colors"
           >
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 md:w-10 md:h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                <UserCheck className="w-4 h-4 md:w-5 md:h-5 text-orange-500" />
+            <div className="flex items-center gap-1 mb-2">
+              <div className="w-6 h-6 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                <UserCheck className="w-3 h-3 text-orange-500" />
               </div>
               <div>
-                <p className="font-semibold text-white text-sm md:text-base">Team</p>
-                <p className="text-xs md:text-sm text-zinc-500">{employees.length} members</p>
+                <p className="font-semibold text-white text-xs">Team</p>
+                <p className="text-xs text-zinc-500">{employees.length} members</p>
               </div>
             </div>
             <div className="flex -space-x-2">
               {topEmployees.length > 0 ? (
                 <>
                   {topEmployees.map((emp) => (
-                    <div key={emp.id} className="w-8 h-8 bg-[#3A3A3C] rounded-full flex items-center justify-center text-white text-xs font-semibold border-2 border-[#1C1C1E]">
+                    <div key={emp.id} className="w-6 h-6 bg-[#3A3A3C] rounded-full flex items-center justify-center text-white text-xs font-semibold border-2 border-[#1C1C1E]">
                       {getInitials(emp.name || 'NA')}
                     </div>
                   ))}
                   {employees.length > 3 && (
-                    <div className="w-8 h-8 bg-orange-500/20 rounded-full flex items-center justify-center text-orange-500 text-xs font-semibold border-2 border-[#1C1C1E]">
+                    <div className="w-6 h-6 bg-orange-500/20 rounded-full flex items-center justify-center text-orange-500 text-xs font-semibold border-2 border-[#1C1C1E]">
                       +{employees.length - 3}
                     </div>
                   )}
@@ -250,25 +250,25 @@ const Dashboard: React.FC = () => {
           {/* Finance Card */}
           <button
             onClick={() => navigate('/finance-hub')}
-            className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4 md:p-6 text-left active:bg-[#2C2C2E] transition-colors"
+            className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-2 text-left active:bg-[#2C2C2E] transition-colors"
           >
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 md:w-10 md:h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                <DollarSign className="w-4 h-4 md:w-5 md:h-5 text-orange-500" />
+            <div className="flex items-center gap-1 mb-2">
+              <div className="w-6 h-6 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                <DollarSign className="w-3 h-3 text-orange-500" />
               </div>
               <div>
-                <p className="font-semibold text-white text-sm md:text-base">Finance</p>
-                <p className="text-xs md:text-sm text-zinc-500">This month</p>
+                <p className="font-semibold text-white text-xs">Finance</p>
+                <p className="text-xs text-zinc-500">This month</p>
               </div>
             </div>
             <div className="flex gap-4">
               <div>
-                <p className="text-xs md:text-sm text-zinc-500">Revenue</p>
-                <p className="text-sm md:text-base font-bold text-green-400">{formatCurrency(financialSummary?.totalRevenue || 0)}</p>
+                <p className="text-xs text-zinc-500">Revenue</p>
+                <p className="text-xs font-bold text-green-400">{formatCurrency(financialSummary?.totalRevenue || 0)}</p>
               </div>
               <div>
-                <p className="text-xs md:text-sm text-zinc-500">Profit</p>
-                <p className={`text-sm md:text-base font-bold ${(financialSummary?.profit || 0) >= 0 ? 'text-orange-500' : 'text-red-400'}`}>
+                <p className="text-xs text-zinc-500">Profit</p>
+                <p className={`text-xs font-bold ${(financialSummary?.profit || 0) >= 0 ? 'text-orange-500' : 'text-red-400'}`}>
                   {formatCurrency(financialSummary?.profit || 0)}
                 </p>
               </div>
@@ -278,25 +278,25 @@ const Dashboard: React.FC = () => {
           {/* Projects Card */}
           <button
             onClick={() => navigate('/projects-hub')}
-            className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4 md:p-6 text-left active:bg-[#2C2C2E] transition-colors"
+            className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-2 text-left active:bg-[#2C2C2E] transition-colors"
           >
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 md:w-10 md:h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                <Briefcase className="w-4 h-4 md:w-5 md:h-5 text-orange-500" />
+            <div className="flex items-center gap-1 mb-2">
+              <div className="w-6 h-6 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                <Briefcase className="w-3 h-3 text-orange-500" />
               </div>
               <div>
-                <p className="font-semibold text-white text-sm md:text-base">Projects</p>
-                <p className="text-xs md:text-sm text-zinc-500">{projects.length} total</p>
+                <p className="font-semibold text-white text-xs">Projects</p>
+                <p className="text-xs text-zinc-500">{projects.length} total</p>
               </div>
             </div>
             <div className="flex gap-4">
               <div>
-                <p className="text-xs md:text-sm text-zinc-500">Active</p>
-                <p className="text-sm md:text-base font-bold text-orange-500">{activeProjects}</p>
+                <p className="text-xs text-zinc-500">Active</p>
+                <p className="text-xs font-bold text-orange-500">{activeProjects}</p>
               </div>
               <div>
-                <p className="text-xs md:text-sm text-zinc-500">Completed</p>
-                <p className="text-sm md:text-base font-bold text-green-400">{projects.filter(p => p.status === 'completed').length}</p>
+                <p className="text-xs text-zinc-500">Completed</p>
+                <p className="text-xs font-bold text-green-400">{projects.filter(p => p.status === 'completed').length}</p>
               </div>
             </div>
           </button>
@@ -304,10 +304,10 @@ const Dashboard: React.FC = () => {
 
         {/* Estimates Section */}
         <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 overflow-hidden">
-          <div className="flex items-center justify-between p-4 border-b border-orange-500/20">
+          <div className="flex items-center justify-between p-2 border-b border-orange-500/20">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                <FileText className="w-4 h-4 text-orange-500" />
+              <div className="w-6 h-6 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                <FileText className="w-3 h-3 text-orange-500" />
               </div>
               <div>
                 <h2 className="font-semibold text-white">Estimates</h2>
@@ -323,8 +323,8 @@ const Dashboard: React.FC = () => {
           </div>
 
           {topEstimates.length === 0 ? (
-            <div className="p-6 text-center">
-              <FileText className="w-10 h-10 text-zinc-600 mx-auto mb-2" />
+            <div className="p-3 text-center">
+              <FileText className="w-6 h-6 text-zinc-600 mx-auto mb-2" />
               <p className="text-zinc-400 text-sm">No estimates yet</p>
               <button
                 onClick={() => navigate('/estimates-hub')}
@@ -339,10 +339,10 @@ const Dashboard: React.FC = () => {
                 <button
                   key={estimate.id}
                   onClick={() => navigate('/estimates-hub')}
-                  className="w-full flex items-center gap-3 p-4 hover:bg-[#2C2C2E] active:bg-[#3A3A3C] transition-colors"
+                  className="w-full flex items-center gap-3 p-2 hover:bg-[#2C2C2E] active:bg-[#3A3A3C] transition-colors"
                 >
-                  <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                    <FileText className="w-5 h-5 text-orange-500" />
+                  <div className="w-6 h-6 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                    <FileText className="w-3 h-3 text-orange-500" />
                   </div>
                   <div className="flex-1 text-left min-w-0">
                     <p className="font-medium text-white truncate">{estimate.title || 'Untitled Estimate'}</p>
@@ -374,10 +374,10 @@ const Dashboard: React.FC = () => {
 
         {/* Clients Section */}
         <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 overflow-hidden">
-          <div className="flex items-center justify-between p-4 border-b border-orange-500/20">
+          <div className="flex items-center justify-between p-2 border-b border-orange-500/20">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                <Users className="w-4 h-4 text-orange-500" />
+              <div className="w-6 h-6 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                <Users className="w-3 h-3 text-orange-500" />
               </div>
               <div>
                 <h2 className="font-semibold text-white">Clients</h2>
@@ -393,8 +393,8 @@ const Dashboard: React.FC = () => {
           </div>
 
           {topClients.length === 0 ? (
-            <div className="p-6 text-center">
-              <Users className="w-10 h-10 text-zinc-600 mx-auto mb-2" />
+            <div className="p-3 text-center">
+              <Users className="w-6 h-6 text-zinc-600 mx-auto mb-2" />
               <p className="text-zinc-400 text-sm">No clients yet</p>
               <button
                 onClick={() => navigate('/clients-hub')}
@@ -409,9 +409,9 @@ const Dashboard: React.FC = () => {
                 <button
                   key={client.id}
                   onClick={() => navigate(`/clients-hub?id=${client.id}`)}
-                  className="w-full flex items-center gap-3 p-4 hover:bg-[#2C2C2E] active:bg-[#3A3A3C] transition-colors"
+                  className="w-full flex items-center gap-3 p-2 hover:bg-[#2C2C2E] active:bg-[#3A3A3C] transition-colors"
                 >
-                  <div className="w-10 h-10 bg-[#3A3A3C] rounded-lg flex items-center justify-center text-white font-semibold text-sm">
+                  <div className="w-6 h-6 bg-[#3A3A3C] rounded-lg flex items-center justify-center text-white font-semibold text-xs">
                     {getInitials(client.name || 'NA')}
                   </div>
                   <div className="flex-1 text-left">
@@ -449,10 +449,10 @@ const Dashboard: React.FC = () => {
 
         {/* Employees Section */}
         <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 overflow-hidden">
-          <div className="flex items-center justify-between p-4 border-b border-orange-500/20">
+          <div className="flex items-center justify-between p-2 border-b border-orange-500/20">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                <UserCheck className="w-4 h-4 text-orange-500" />
+              <div className="w-6 h-6 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                <UserCheck className="w-3 h-3 text-orange-500" />
               </div>
               <div>
                 <h2 className="font-semibold text-white">Team</h2>
@@ -468,12 +468,12 @@ const Dashboard: React.FC = () => {
           </div>
 
           {loadingEmployees ? (
-            <div className="p-6 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
+            <div className="p-3 text-center">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-500 mx-auto"></div>
             </div>
           ) : topEmployees.length === 0 ? (
-            <div className="p-6 text-center">
-              <UserCheck className="w-10 h-10 text-zinc-600 mx-auto mb-2" />
+            <div className="p-3 text-center">
+              <UserCheck className="w-6 h-6 text-zinc-600 mx-auto mb-2" />
               <p className="text-zinc-400 text-sm">No team members yet</p>
               <button
                 onClick={() => navigate('/employees-hub')}
@@ -488,9 +488,9 @@ const Dashboard: React.FC = () => {
                 <button
                   key={employee.id}
                   onClick={() => navigate(`/employees-hub?id=${employee.id}`)}
-                  className="w-full flex items-center gap-3 p-4 hover:bg-[#2C2C2E] active:bg-[#3A3A3C] transition-colors"
+                  className="w-full flex items-center gap-3 p-2 hover:bg-[#2C2C2E] active:bg-[#3A3A3C] transition-colors"
                 >
-                  <div className="w-10 h-10 bg-[#3A3A3C] rounded-lg flex items-center justify-center text-white font-semibold text-sm">
+                  <div className="w-6 h-6 bg-[#3A3A3C] rounded-lg flex items-center justify-center text-white font-semibold text-xs">
                     {getInitials(employee.name || 'NA')}
                   </div>
                   <div className="flex-1 text-left">
@@ -526,10 +526,10 @@ const Dashboard: React.FC = () => {
 
         {/* Recent Projects */}
         <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 overflow-hidden">
-          <div className="flex items-center justify-between p-4 border-b border-orange-500/20">
+          <div className="flex items-center justify-between p-2 border-b border-orange-500/20">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                <Briefcase className="w-4 h-4 text-orange-500" />
+              <div className="w-6 h-6 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                <Briefcase className="w-3 h-3 text-orange-500" />
               </div>
               <div>
                 <h2 className="font-semibold text-white">Projects</h2>
@@ -545,8 +545,8 @@ const Dashboard: React.FC = () => {
           </div>
 
           {projects.length === 0 ? (
-            <div className="p-6 text-center">
-              <Briefcase className="w-10 h-10 text-zinc-600 mx-auto mb-2" />
+            <div className="p-3 text-center">
+              <Briefcase className="w-6 h-6 text-zinc-600 mx-auto mb-2" />
               <p className="text-zinc-400 text-sm">No projects yet</p>
               <button
                 onClick={() => navigate('/projects-hub')}
@@ -561,10 +561,10 @@ const Dashboard: React.FC = () => {
                 <button
                   key={project.id}
                   onClick={() => navigate(`/projects-hub?id=${project.id}`)}
-                  className="w-full flex items-center gap-3 p-4 hover:bg-[#2C2C2E] active:bg-[#3A3A3C] transition-colors"
+                  className="w-full flex items-center gap-3 p-2 hover:bg-[#2C2C2E] active:bg-[#3A3A3C] transition-colors"
                 >
-                  <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                    <Briefcase className="w-5 h-5 text-orange-500" />
+                  <div className="w-6 h-6 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                    <Briefcase className="w-3 h-3 text-orange-500" />
                   </div>
                   <div className="flex-1 text-left">
                     <p className="font-medium text-white">{project.name}</p>
