@@ -270,20 +270,20 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
           />
 
           {/* Modal Content */}
-          <div className="relative w-full max-w-lg md:max-w-2xl lg:max-w-3xl bg-[#1C1C1E] rounded-t-2xl md:rounded-2xl pb-safe md:pb-6 md:mx-4 animate-slide-up">
+          <div className="relative w-full max-w-md md:max-w-lg bg-[#1C1C1E] rounded-t-2xl md:rounded-2xl pb-safe md:pb-6 md:mx-4 animate-slide-up">
             {/* Handle */}
             <div className="flex justify-center pt-3 pb-2">
               <div className="w-10 h-1 bg-[#3A3A3C] rounded-full" />
             </div>
 
             {/* Header */}
-            <div className="flex items-center justify-between px-6 pb-4">
+            <div className="flex items-center justify-between px-4 md:px-6 pb-3 md:pb-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
                   <Sparkles className="w-6 h-6 text-orange-500" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-white">Contractor AI</h2>
+                  <h2 className="text-base md:text-lg font-bold text-white">Contractor AI</h2>
                   <p className="text-sm text-zinc-400">What would you like help with?</p>
                 </div>
               </div>
@@ -296,12 +296,12 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
             </div>
 
             {/* Mode Options */}
-            <div className="px-4 md:px-6 pb-4 grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+            <div className="px-4 md:px-6 pb-4 grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
               {aiModes.map((mode) => (
                 <button
                   key={mode.id}
                   onClick={() => handleModeSelect(mode.id)}
-                  className="flex flex-col items-center p-4 bg-[#2C2C2E] rounded-lg border border-orange-500/30 hover:border-orange-500/60 active:scale-[0.98] transition-all"
+                  className="flex flex-col items-center p-3 md:p-4 bg-[#2C2C2E] rounded-lg border border-orange-500/30 hover:border-orange-500/60 active:scale-[0.98] transition-all"
                 >
                   <div className="w-12 h-12 bg-orange-500/20 rounded-lg flex items-center justify-center mb-3">
                     <mode.icon className="w-7 h-7 text-orange-500" />
@@ -316,7 +316,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
             <div className="px-4 pb-2">
               <button
                 onClick={() => handleModeSelect('lidar-scan')}
-                className="w-full flex items-center gap-4 p-4 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-lg border border-cyan-500/50 hover:border-cyan-500 active:scale-[0.98] transition-all mb-2"
+                className="w-full flex items-center gap-4 p-3 md:p-4 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-lg border border-cyan-500/50 hover:border-cyan-500 active:scale-[0.98] transition-all mb-2"
               >
                 <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg flex items-center justify-center">
                   <Scan className="w-7 h-7 text-white" />
@@ -333,13 +333,13 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
             <div className="px-4 pb-2">
               <button
                 onClick={() => handleModeSelect('vision-cam')}
-                className="w-full flex items-center gap-4 p-4 bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-lg border border-purple-500/50 hover:border-purple-500 active:scale-[0.98] transition-all mb-2"
+                className="w-full flex items-center gap-4 p-3 md:p-4 bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-lg border border-purple-500/50 hover:border-purple-500 active:scale-[0.98] transition-all mb-2"
               >
                 <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg flex items-center justify-center">
                   <Eye className="w-7 h-7 text-white" />
                 </div>
                 <div className="flex-1 text-left">
-                  <span className="font-semibold text-white text-lg">Vision Cam</span>
+                  <span className="font-semibold text-white text-base md:text-lg">Vision Cam</span>
                   <p className="text-sm text-zinc-400">AI-powered project visualization</p>
                 </div>
                 <ChevronRight className="w-6 h-6 text-purple-400" />
@@ -350,13 +350,13 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
             <div className="px-4 pb-2">
               <button
                 onClick={() => handleModeSelect('photos')}
-                className="w-full flex items-center gap-4 p-4 bg-gradient-to-r from-orange-500/20 to-amber-500/20 rounded-t-lg border border-orange-500/50 border-b-0 hover:border-orange-500 active:scale-[0.98] transition-all"
+                className="w-full flex items-center gap-4 p-3 md:p-4 bg-gradient-to-r from-orange-500/20 to-amber-500/20 rounded-t-lg border border-orange-500/50 border-b-0 hover:border-orange-500 active:scale-[0.98] transition-all"
               >
                 <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center">
                   <Camera className="w-7 h-7 text-white" />
                 </div>
                 <div className="flex-1 text-left">
-                  <span className="font-semibold text-white text-lg">Photos</span>
+                  <span className="font-semibold text-white text-base md:text-lg">Photos</span>
                   <p className="text-sm text-zinc-400">Capture & organize project photos</p>
                 </div>
                 <ChevronRight className="w-6 h-6 text-orange-500" />
@@ -420,7 +420,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
                   <Mail className="w-5 h-5 text-blue-400" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-white">Email</h2>
+                  <h2 className="text-base md:text-lg font-bold text-white">Email</h2>
                   <p className="text-sm text-zinc-400">Choose what to send</p>
                 </div>
               </div>
@@ -436,7 +436,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
             <div className="p-4 pb-8 space-y-3">
               <button
                 onClick={() => handleModeSelect('send-email')}
-                className="w-full flex items-center gap-4 p-4 bg-[#2C2C2E] rounded-xl border border-blue-500/30 hover:border-blue-500 active:scale-[0.98] transition-all"
+                className="w-full flex items-center gap-4 p-3 md:p-4 bg-[#2C2C2E] rounded-xl border border-blue-500/30 hover:border-blue-500 active:scale-[0.98] transition-all"
               >
                 <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
                   <Mail className="w-6 h-6 text-white" />
@@ -450,7 +450,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
 
               <button
                 onClick={() => handleModeSelect('email-notification')}
-                className="w-full flex items-center gap-4 p-4 bg-[#2C2C2E] rounded-xl border border-blue-500/30 hover:border-blue-500 active:scale-[0.98] transition-all"
+                className="w-full flex items-center gap-4 p-3 md:p-4 bg-[#2C2C2E] rounded-xl border border-blue-500/30 hover:border-blue-500 active:scale-[0.98] transition-all"
               >
                 <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
                   <CalendarIcon className="w-6 h-6 text-white" />

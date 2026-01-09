@@ -310,7 +310,7 @@ const ClientsHub: React.FC = () => {
       <div className="px-4 py-3">
         <button
           onClick={handleAIChat}
-          className="w-full flex items-center gap-3 p-4 bg-[#1C1C1E] rounded-lg border border-orange-500/30 active:scale-[0.98] transition-transform hover:border-orange-500/50"
+          className="w-full flex items-center gap-3 p-3 md:p-4 bg-[#1C1C1E] rounded-lg border border-orange-500/30 active:scale-[0.98] transition-transform hover:border-orange-500/50"
         >
           <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
             <Sparkles className="w-5 h-5 text-orange-500" />
@@ -347,14 +347,14 @@ const ClientsHub: React.FC = () => {
                 className="bg-[#1C1C1E] rounded-2xl border border-orange-500/30 overflow-hidden active:scale-[0.99] transition-transform"
               >
                 {/* Header with avatar and status */}
-                <div className="p-4 pb-3">
-                  <div className="flex items-start gap-3">
-                    <div className="w-14 h-14 bg-orange-500/20 rounded-xl flex items-center justify-center text-orange-500 font-bold text-lg">
+                <div className="p-3 md:p-4 pb-2 md:pb-3">
+                  <div className="flex items-start gap-2 md:gap-3">
+                    <div className="w-12 h-12 md:w-14 md:h-14 bg-orange-500/20 rounded-xl flex items-center justify-center text-orange-500 font-bold text-base md:text-lg">
                       {getInitials(client.name || 'NA')}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <h3 className="font-bold text-white truncate text-lg">
+                        <h3 className="font-bold text-white truncate text-base md:text-lg">
                           {client.name || 'Unknown Client'}
                         </h3>
                         <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(client.status)}`}>
@@ -373,7 +373,7 @@ const ClientsHub: React.FC = () => {
                 </div>
 
                 {/* Contact Info */}
-                <div className="px-4 pb-3 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+                <div className="px-3 md:px-4 pb-2 md:pb-3 flex flex-wrap gap-x-3 md:gap-x-4 gap-y-1 text-sm">
                   {client.email && (
                     <div className="flex items-center gap-1.5 text-zinc-400">
                       <Mail className="w-4 h-4 text-zinc-500" />
@@ -389,7 +389,7 @@ const ClientsHub: React.FC = () => {
                 </div>
 
                 {/* Address - Always visible */}
-                <div className="px-4 pb-3">
+                <div className="px-3 md:px-4 pb-2 md:pb-3">
                   {(client.address || client.city || client.state) ? (
                     <button
                       onClick={(e) => {
@@ -434,8 +434,8 @@ const ClientsHub: React.FC = () => {
                 </div>
 
                 {/* Stats Row */}
-                <div className="px-4 py-3 bg-[#171717] border-t border-orange-500/20 flex items-center justify-between">
-                  <div className="flex items-center gap-4">
+                <div className="px-3 md:px-4 py-2 md:py-3 bg-[#171717] border-t border-orange-500/20 flex items-center justify-between">
+                  <div className="flex items-center gap-3 md:gap-4">
                     {/* Projects */}
                     <div className="flex items-center gap-1.5">
                       <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${clientProjects.length > 0 ? 'bg-purple-900/30' : 'bg-zinc-800'}`}>
@@ -515,7 +515,7 @@ const ClientsHub: React.FC = () => {
               </button>
             </div>
 
-            <div className="p-4 space-y-4">
+            <div className="p-3 md:p-4 space-y-3 md:space-y-4">
               {/* Name */}
               <div>
                 <label className="block text-sm font-medium text-zinc-400 mb-1">
@@ -525,7 +525,7 @@ const ClientsHub: React.FC = () => {
                   type="text"
                   value={newClientForm.name}
                   onChange={(e) => setNewClientForm({ ...newClientForm, name: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
+                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
                   placeholder="Client name"
                 />
               </div>
@@ -537,20 +537,20 @@ const ClientsHub: React.FC = () => {
                   type="text"
                   value={newClientForm.company}
                   onChange={(e) => setNewClientForm({ ...newClientForm, company: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
+                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
                   placeholder="Company name"
                 />
               </div>
 
               {/* Email & Phone */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2 md:gap-3">
                 <div>
                   <label className="block text-sm font-medium text-zinc-400 mb-1">Email</label>
                   <input
                     type="email"
                     value={newClientForm.email}
                     onChange={(e) => setNewClientForm({ ...newClientForm, email: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
                     placeholder="email@example.com"
                   />
                 </div>
@@ -560,7 +560,7 @@ const ClientsHub: React.FC = () => {
                     type="tel"
                     value={newClientForm.phone}
                     onChange={(e) => setNewClientForm({ ...newClientForm, phone: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
                     placeholder="(555) 123-4567"
                   />
                 </div>
@@ -573,20 +573,20 @@ const ClientsHub: React.FC = () => {
                   type="text"
                   value={newClientForm.address}
                   onChange={(e) => setNewClientForm({ ...newClientForm, address: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
+                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
                   placeholder="123 Main St"
                 />
               </div>
 
               {/* City, State, Zip */}
-              <div className="grid grid-cols-6 gap-3">
+              <div className="grid grid-cols-6 gap-2 md:gap-3">
                 <div className="col-span-3">
                   <label className="block text-sm font-medium text-zinc-400 mb-1">City</label>
                   <input
                     type="text"
                     value={newClientForm.city}
                     onChange={(e) => setNewClientForm({ ...newClientForm, city: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
                     placeholder="City"
                   />
                 </div>
@@ -596,7 +596,7 @@ const ClientsHub: React.FC = () => {
                     type="text"
                     value={newClientForm.state}
                     onChange={(e) => setNewClientForm({ ...newClientForm, state: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
                     placeholder="SC"
                     maxLength={2}
                   />
@@ -607,7 +607,7 @@ const ClientsHub: React.FC = () => {
                     type="text"
                     value={newClientForm.zip}
                     onChange={(e) => setNewClientForm({ ...newClientForm, zip: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
                     placeholder="29401"
                     maxLength={10}
                   />
@@ -642,11 +642,11 @@ const ClientsHub: React.FC = () => {
             </div>
 
             {/* Create Button */}
-            <div className="sticky bottom-0 bg-[#1C1C1E] p-4 border-t border-orange-500/30">
+            <div className="sticky bottom-0 bg-[#1C1C1E] p-3 md:p-4 border-t border-orange-500/30">
               <button
                 onClick={handleCreateClient}
                 disabled={!newClientForm.name.trim() || isCreatingClient}
-                className="w-full py-4 rounded-xl font-semibold text-white bg-orange-500 shadow-lg shadow-orange-500/20 active:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3 md:py-4 rounded-xl font-semibold text-white bg-orange-500 shadow-lg shadow-orange-500/20 active:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isCreatingClient ? 'Creating...' : 'Create Client'}
               </button>
@@ -683,7 +683,7 @@ const ClientsHub: React.FC = () => {
                   type="text"
                   value={editClientForm.name}
                   onChange={(e) => setEditClientForm({ ...editClientForm, name: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
+                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
                   placeholder="Client name"
                 />
               </div>
@@ -695,7 +695,7 @@ const ClientsHub: React.FC = () => {
                   type="text"
                   value={editClientForm.company}
                   onChange={(e) => setEditClientForm({ ...editClientForm, company: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
+                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
                   placeholder="Company name"
                 />
               </div>
@@ -708,7 +708,7 @@ const ClientsHub: React.FC = () => {
                     type="email"
                     value={editClientForm.email}
                     onChange={(e) => setEditClientForm({ ...editClientForm, email: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
                     placeholder="email@example.com"
                   />
                 </div>
@@ -718,7 +718,7 @@ const ClientsHub: React.FC = () => {
                     type="tel"
                     value={editClientForm.phone}
                     onChange={(e) => setEditClientForm({ ...editClientForm, phone: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
                     placeholder="(555) 123-4567"
                   />
                 </div>
@@ -731,20 +731,20 @@ const ClientsHub: React.FC = () => {
                   type="text"
                   value={editClientForm.address}
                   onChange={(e) => setEditClientForm({ ...editClientForm, address: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
+                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
                   placeholder="123 Main St"
                 />
               </div>
 
               {/* City, State, Zip */}
-              <div className="grid grid-cols-6 gap-3">
+              <div className="grid grid-cols-6 gap-2 md:gap-3">
                 <div className="col-span-3">
                   <label className="block text-sm font-medium text-zinc-400 mb-1">City</label>
                   <input
                     type="text"
                     value={editClientForm.city}
                     onChange={(e) => setEditClientForm({ ...editClientForm, city: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
                     placeholder="City"
                   />
                 </div>
@@ -754,7 +754,7 @@ const ClientsHub: React.FC = () => {
                     type="text"
                     value={editClientForm.state}
                     onChange={(e) => setEditClientForm({ ...editClientForm, state: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
                     placeholder="SC"
                     maxLength={2}
                   />
@@ -765,7 +765,7 @@ const ClientsHub: React.FC = () => {
                     type="text"
                     value={editClientForm.zip}
                     onChange={(e) => setEditClientForm({ ...editClientForm, zip: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
                     placeholder="29401"
                     maxLength={10}
                   />
@@ -800,11 +800,11 @@ const ClientsHub: React.FC = () => {
             </div>
 
             {/* Update Button */}
-            <div className="sticky bottom-0 bg-[#1C1C1E] p-4 border-t border-orange-500/30">
+            <div className="sticky bottom-0 bg-[#1C1C1E] p-3 md:p-4 border-t border-orange-500/30">
               <button
                 onClick={handleUpdateClient}
                 disabled={!editClientForm.name.trim() || isUpdatingClient}
-                className="w-full py-4 rounded-xl font-semibold text-white bg-orange-500 shadow-lg shadow-orange-500/20 active:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3 md:py-4 rounded-xl font-semibold text-white bg-orange-500 shadow-lg shadow-orange-500/20 active:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isUpdatingClient ? 'Saving...' : 'Save Changes'}
               </button>
@@ -862,11 +862,11 @@ const ClientsHub: React.FC = () => {
 
               {/* Client Title */}
               <div className="mt-3 flex items-center gap-3">
-                <div className="w-14 h-14 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-blue-500/20">
+                <div className="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center text-white font-bold text-base md:text-lg shadow-lg shadow-blue-500/20">
                   {getInitials(selectedClient.name || 'NA')}
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-white">{selectedClient.name || 'Unknown Client'}</h1>
+                  <h1 className="text-lg md:text-xl font-bold text-white">{selectedClient.name || 'Unknown Client'}</h1>
                   <div className="flex items-center gap-2 mt-0.5">
                     {selectedClient.company && (
                       <span className="text-sm text-zinc-400">{selectedClient.company}</span>
@@ -880,10 +880,10 @@ const ClientsHub: React.FC = () => {
             </div>
 
             {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 pb-24">
+            <div className="flex-1 overflow-y-auto px-3 md:px-4 py-3 md:py-4 space-y-3 md:space-y-4 pb-24">
 
               {/* Contact Info Card */}
-              <div className="bg-[#1C1C1E] border border-orange-500/30 rounded-2xl p-4">
+              <div className="bg-[#1C1C1E] border border-orange-500/30 rounded-2xl p-3 md:p-4">
                 <label className="text-xs text-zinc-500 mb-3 block">Contact Information</label>
                 <div className="space-y-3">
                   {selectedClient.email && (
@@ -927,7 +927,7 @@ const ClientsHub: React.FC = () => {
               </div>
 
               {/* Projects Card */}
-              <div className="bg-[#1C1C1E] border border-orange-500/30 rounded-2xl p-4">
+              <div className="bg-[#1C1C1E] border border-orange-500/30 rounded-2xl p-3 md:p-4">
                 <div className="flex items-center justify-between mb-3">
                   <label className="text-xs text-zinc-500">Projects</label>
                   <button
@@ -985,7 +985,7 @@ const ClientsHub: React.FC = () => {
               </div>
 
               {/* Revenue Summary Card */}
-              <div className="bg-[#1C1C1E] border border-orange-500/30 rounded-2xl p-4">
+              <div className="bg-[#1C1C1E] border border-orange-500/30 rounded-2xl p-3 md:p-4">
                 <label className="text-xs text-zinc-500 mb-3 block">Revenue Summary</label>
                 <div className="flex items-center gap-4">
                   <div className="flex-1 text-center p-3 bg-green-900/20 rounded-xl">
@@ -1005,7 +1005,7 @@ const ClientsHub: React.FC = () => {
 
               {/* Notes Card */}
               {selectedClient.notes && (
-                <div className="bg-[#1C1C1E] border border-orange-500/30 rounded-2xl p-4">
+                <div className="bg-[#1C1C1E] border border-orange-500/30 rounded-2xl p-3 md:p-4">
                   <label className="text-xs text-zinc-500 mb-2 block">Notes</label>
                   <p className="text-sm text-zinc-300 whitespace-pre-wrap">{selectedClient.notes}</p>
                 </div>

@@ -186,7 +186,7 @@ const EstimatesHub: React.FC = () => {
       <div className="px-4 py-3">
         <button
           onClick={handleAIChat}
-          className="w-full flex items-center gap-3 p-4 bg-[#1C1C1E] rounded-lg border border-orange-500/30 active:scale-[0.98] transition-transform hover:border-orange-500/50"
+          className="w-full flex items-center gap-3 p-3 md:p-4 bg-[#1C1C1E] rounded-lg border border-orange-500/30 active:scale-[0.98] transition-transform hover:border-orange-500/50"
         >
           <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
             <Sparkles className="w-5 h-5 text-orange-500" />
@@ -218,7 +218,7 @@ const EstimatesHub: React.FC = () => {
               onClick={() => setSelectedEstimate(estimate as Estimate)}
               className="w-full bg-[#1C1C1E] rounded-lg border border-orange-500/30 overflow-hidden text-left active:scale-[0.98] transition-transform"
             >
-              <div className="p-4">
+              <div className="p-3 md:p-4">
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-white truncate">
@@ -235,7 +235,7 @@ const EstimatesHub: React.FC = () => {
                 </div>
 
                 <div className="flex items-center justify-between mt-3">
-                  <div className="flex items-center gap-1 text-lg font-bold text-white">
+                  <div className="flex items-center gap-1 text-base md:text-lg font-bold text-white">
                     <DollarSign className="w-5 h-5 text-white" />
                     {formatCurrency(estimate.total || 0)}
                   </div>
@@ -284,7 +284,7 @@ const EstimatesHub: React.FC = () => {
           {/* Slide-up Modal */}
           <div className="absolute inset-x-0 bottom-16 top-12 bg-[#0F0F0F] rounded-t-3xl shadow-2xl flex flex-col animate-slide-up overflow-hidden">
             {/* Header */}
-            <div className="bg-[#1C1C1E] px-4 py-4 border-b border-orange-500/30 flex items-center justify-between flex-shrink-0">
+            <div className="bg-[#1C1C1E] px-3 md:px-4 py-3 md:py-4 border-b border-orange-500/30 flex items-center justify-between flex-shrink-0">
               <button
                 onClick={() => setSelectedEstimate(null)}
                 className="text-zinc-400 text-base font-medium"
@@ -305,12 +305,12 @@ const EstimatesHub: React.FC = () => {
 
             {/* Content */}
             <div className="flex-1 overflow-y-auto">
-              <div className="p-4 space-y-4">
+              <div className="p-3 md:p-4 space-y-3 md:space-y-4">
                 {/* Title & Status */}
-                <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
+                <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-3 md:p-4">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
-                      <h3 className="text-xl font-bold text-white">{selectedEstimate.title || 'Untitled Estimate'}</h3>
+                      <h3 className="text-lg md:text-xl font-bold text-white">{selectedEstimate.title || 'Untitled Estimate'}</h3>
                       {selectedEstimate.client_name && (
                         <div className="flex items-center gap-2 mt-1 text-zinc-400">
                           <User className="w-4 h-4" />
@@ -339,7 +339,7 @@ const EstimatesHub: React.FC = () => {
                 </div>
 
                 {/* Totals */}
-                <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
+                <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-3 md:p-4">
                   <h4 className="text-sm font-medium text-zinc-400 mb-3">Summary</h4>
                   <div className="space-y-2">
                     <div className="flex justify-between text-white">
@@ -352,7 +352,7 @@ const EstimatesHub: React.FC = () => {
                         <span>{formatCurrency(selectedEstimate.tax_amount || 0)}</span>
                       </div>
                     )}
-                    <div className="flex justify-between text-xl font-bold text-white pt-2 border-t border-orange-500/20">
+                    <div className="flex justify-between text-lg md:text-xl font-bold text-white pt-2 border-t border-orange-500/20">
                       <span>Total</span>
                       <span className="text-orange-500">{formatCurrency(selectedEstimate.total || 0)}</span>
                     </div>
@@ -361,7 +361,7 @@ const EstimatesHub: React.FC = () => {
 
                 {/* Line Items */}
                 {selectedEstimate.items && selectedEstimate.items.length > 0 && (
-                  <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
+                  <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-3 md:p-4">
                     <h4 className="text-sm font-medium text-zinc-400 mb-3">Line Items ({selectedEstimate.items.length})</h4>
                     <div className="space-y-3">
                       {selectedEstimate.items.map((item, index) => (
@@ -381,7 +381,7 @@ const EstimatesHub: React.FC = () => {
 
                 {/* Notes */}
                 {selectedEstimate.notes && (
-                  <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
+                  <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-3 md:p-4">
                     <h4 className="text-sm font-medium text-zinc-400 mb-2">Notes</h4>
                     <p className="text-white whitespace-pre-wrap">{selectedEstimate.notes}</p>
                   </div>
@@ -389,7 +389,7 @@ const EstimatesHub: React.FC = () => {
 
                 {/* Terms */}
                 {selectedEstimate.terms && (
-                  <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
+                  <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-3 md:p-4">
                     <h4 className="text-sm font-medium text-zinc-400 mb-2">Terms & Conditions</h4>
                     <p className="text-zinc-300 text-sm whitespace-pre-wrap">{selectedEstimate.terms}</p>
                   </div>

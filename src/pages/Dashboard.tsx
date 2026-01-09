@@ -163,34 +163,34 @@ const Dashboard: React.FC = () => {
 
       {/* Header - background extends into safe area, content pushed down */}
       <div className="bg-[#1C1C1E] border-b border-orange-500/30 sticky top-0 z-10 pt-[env(safe-area-inset-top)]">
-        <div className="px-4 pb-3 pt-2">
+        <div className="px-4 pb-3 pt-2 max-w-7xl mx-auto">
           <div className="flex items-start gap-3">
-            <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Home className="w-5 h-5 text-orange-500" />
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-orange-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Home className="w-5 h-5 md:w-6 md:h-6 text-orange-500" />
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-lg font-bold text-white">Dashboard</h1>
-              <p className="text-xs text-zinc-400 leading-tight">Welcome back,<br />{displayName}!</p>
+              <h1 className="text-lg md:text-2xl font-bold text-white">Dashboard</h1>
+              <p className="text-xs md:text-sm text-zinc-400 leading-tight">Welcome back, {displayName}!</p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="px-4 py-4 space-y-4">
-        {/* Quick Preview Cards - 2x2 Grid */}
-        <div className="grid grid-cols-2 gap-3">
+      <div className="px-4 py-4 space-y-4 max-w-7xl mx-auto">
+        {/* Quick Preview Cards - Responsive Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
           {/* Clients Card */}
           <button
             onClick={() => navigate('/clients-hub')}
-            className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4 text-left active:bg-[#2C2C2E] transition-colors"
+            className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4 md:p-6 text-left active:bg-[#2C2C2E] transition-colors"
           >
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                <Users className="w-4 h-4 text-orange-500" />
+              <div className="w-8 h-8 md:w-10 md:h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                <Users className="w-4 h-4 md:w-5 md:h-5 text-orange-500" />
               </div>
               <div>
-                <p className="font-semibold text-white">Clients</p>
-                <p className="text-xs text-zinc-500">{clients.length} total</p>
+                <p className="font-semibold text-white text-sm md:text-base">Clients</p>
+                <p className="text-xs md:text-sm text-zinc-500">{clients.length} total</p>
               </div>
             </div>
             <div className="flex -space-x-2">
@@ -216,15 +216,15 @@ const Dashboard: React.FC = () => {
           {/* Team Card */}
           <button
             onClick={() => navigate('/employees-hub')}
-            className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4 text-left active:bg-[#2C2C2E] transition-colors"
+            className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4 md:p-6 text-left active:bg-[#2C2C2E] transition-colors"
           >
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                <UserCheck className="w-4 h-4 text-orange-500" />
+              <div className="w-8 h-8 md:w-10 md:h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                <UserCheck className="w-4 h-4 md:w-5 md:h-5 text-orange-500" />
               </div>
               <div>
-                <p className="font-semibold text-white">Team</p>
-                <p className="text-xs text-zinc-500">{employees.length} members</p>
+                <p className="font-semibold text-white text-sm md:text-base">Team</p>
+                <p className="text-xs md:text-sm text-zinc-500">{employees.length} members</p>
               </div>
             </div>
             <div className="flex -space-x-2">
@@ -250,25 +250,25 @@ const Dashboard: React.FC = () => {
           {/* Finance Card */}
           <button
             onClick={() => navigate('/finance-hub')}
-            className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4 text-left active:bg-[#2C2C2E] transition-colors"
+            className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4 md:p-6 text-left active:bg-[#2C2C2E] transition-colors"
           >
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                <DollarSign className="w-4 h-4 text-orange-500" />
+              <div className="w-8 h-8 md:w-10 md:h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                <DollarSign className="w-4 h-4 md:w-5 md:h-5 text-orange-500" />
               </div>
               <div>
-                <p className="font-semibold text-white">Finance</p>
-                <p className="text-xs text-zinc-500">This month</p>
+                <p className="font-semibold text-white text-sm md:text-base">Finance</p>
+                <p className="text-xs md:text-sm text-zinc-500">This month</p>
               </div>
             </div>
             <div className="flex gap-4">
               <div>
-                <p className="text-xs text-zinc-500">Revenue</p>
-                <p className="text-sm font-bold text-green-400">{formatCurrency(financialSummary?.totalRevenue || 0)}</p>
+                <p className="text-xs md:text-sm text-zinc-500">Revenue</p>
+                <p className="text-sm md:text-base font-bold text-green-400">{formatCurrency(financialSummary?.totalRevenue || 0)}</p>
               </div>
               <div>
-                <p className="text-xs text-zinc-500">Profit</p>
-                <p className={`text-sm font-bold ${(financialSummary?.profit || 0) >= 0 ? 'text-orange-500' : 'text-red-400'}`}>
+                <p className="text-xs md:text-sm text-zinc-500">Profit</p>
+                <p className={`text-sm md:text-base font-bold ${(financialSummary?.profit || 0) >= 0 ? 'text-orange-500' : 'text-red-400'}`}>
                   {formatCurrency(financialSummary?.profit || 0)}
                 </p>
               </div>
@@ -278,25 +278,25 @@ const Dashboard: React.FC = () => {
           {/* Projects Card */}
           <button
             onClick={() => navigate('/projects-hub')}
-            className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4 text-left active:bg-[#2C2C2E] transition-colors"
+            className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4 md:p-6 text-left active:bg-[#2C2C2E] transition-colors"
           >
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                <Briefcase className="w-4 h-4 text-orange-500" />
+              <div className="w-8 h-8 md:w-10 md:h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                <Briefcase className="w-4 h-4 md:w-5 md:h-5 text-orange-500" />
               </div>
               <div>
-                <p className="font-semibold text-white">Projects</p>
-                <p className="text-xs text-zinc-500">{projects.length} total</p>
+                <p className="font-semibold text-white text-sm md:text-base">Projects</p>
+                <p className="text-xs md:text-sm text-zinc-500">{projects.length} total</p>
               </div>
             </div>
             <div className="flex gap-4">
               <div>
-                <p className="text-xs text-zinc-500">Active</p>
-                <p className="text-sm font-bold text-orange-500">{activeProjects}</p>
+                <p className="text-xs md:text-sm text-zinc-500">Active</p>
+                <p className="text-sm md:text-base font-bold text-orange-500">{activeProjects}</p>
               </div>
               <div>
-                <p className="text-xs text-zinc-500">Completed</p>
-                <p className="text-sm font-bold text-green-400">{projects.filter(p => p.status === 'completed').length}</p>
+                <p className="text-xs md:text-sm text-zinc-500">Completed</p>
+                <p className="text-sm md:text-base font-bold text-green-400">{projects.filter(p => p.status === 'completed').length}</p>
               </div>
             </div>
           </button>
