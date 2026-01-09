@@ -154,6 +154,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="min-h-full bg-[#0F0F0F] pb-24">
+
       {/* Dashboard Tutorial Modal */}
       <DashboardTutorialModal
         isOpen={showTutorial}

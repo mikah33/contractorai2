@@ -73,6 +73,7 @@ import { useAppInitialization } from './hooks/useAppInitialization';
 import { supabase } from './lib/supabase';
 import { revenueCatService } from './services/revenueCatService';
 import { revenueCatWebService } from './services/revenueCatWebService';
+import { subscriptionService } from './services/subscriptionService';
 
 function App() {
   const { user, initialized } = useAuthStore();
@@ -135,17 +136,20 @@ function App() {
           setHasActiveSubscription(hasSubscription);
           setCheckingSubscription(false);
         } else {
-          // Use RevenueCat Web SDK for web and Android
-          console.log('[Subscription Check] Using RevenueCat Web for', platform);
+          // Use unified subscription service for web and Android (checks database for iOS + web subscriptions)
+          console.log('[Subscription Check] Using unified subscription service for', platform);
 
           try {
-            await revenueCatWebService.initialize(user.id);
-            const hasSubscription = await revenueCatWebService.hasActiveSubscription();
+            // Initialize subscription service (handles both iOS and web data)
+            await subscriptionService.initialize(user.id);
 
-            console.log('[Subscription Check] RevenueCat Web subscription status:', hasSubscription);
+            // Check for ANY active subscription (iOS from database OR web from RevenueCat)
+            const hasSubscription = await subscriptionService.refreshSubscription();
+
+            console.log('[Subscription Check] Unified subscription status:', hasSubscription);
             setHasActiveSubscription(hasSubscription);
           } catch (webError) {
-            console.error('[Subscription Check] RevenueCat Web error:', webError);
+            console.error('[Subscription Check] Unified subscription service error:', webError);
             setHasActiveSubscription(false);
           }
 

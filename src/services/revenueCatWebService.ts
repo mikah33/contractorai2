@@ -312,6 +312,13 @@ class RevenueCatWebService {
       const entitlement = customerInfo.entitlements.active[ENTITLEMENT_ID];
       const isActive = entitlement !== undefined;
 
+      // Only sync to database if there's an active web subscription
+      // This prevents overwriting iOS subscription data with empty values
+      if (!isActive) {
+        console.log('[RevenueCatWeb] No active web subscription, skipping database sync to preserve iOS data');
+        return;
+      }
+
       const { error } = await supabase
         .from('user_subscriptions')
         .upsert({
@@ -325,13 +332,13 @@ class RevenueCatWebService {
           platform: 'web',
           updated_at: new Date().toISOString(),
         }, {
-          onConflict: 'user_id'
+          onConflict: 'user_id,platform'
         });
 
       if (error) {
         console.error('[RevenueCatWeb] Sync error:', error);
       } else {
-        console.log('[RevenueCatWeb] Synced to Supabase');
+        console.log('[RevenueCatWeb] Synced active web subscription to Supabase');
       }
     } catch (error) {
       console.error('[RevenueCatWeb] Sync error:', error);

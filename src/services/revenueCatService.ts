@@ -625,7 +625,7 @@ class RevenueCatService {
           platform: 'ios',
           updated_at: new Date().toISOString(),
         }, {
-          onConflict: 'user_id'
+          onConflict: 'user_id,platform'
         });
 
       if (error) {

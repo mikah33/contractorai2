@@ -1,6 +1,17 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
 import { User, Session } from '@supabase/supabase-js';
+import { subscriptionService } from '../services/subscriptionService';
+
+// TypeScript declaration for Google reCAPTCHA
+declare global {
+  interface Window {
+    grecaptcha: {
+      ready: (callback: () => void) => void;
+      execute: (siteKey: string, options: { action: string }) => Promise<string>;
+    };
+  }
+}
 
 interface Profile {
   id: string;
@@ -35,6 +46,36 @@ interface AuthState {
 // Track if initialization has been called
 let initializationPromise: Promise<void> | null = null;
 
+// Helper function to get reCAPTCHA v3 token
+const getCaptchaToken = async (action: string = 'signup'): Promise<string | null> => {
+  return new Promise((resolve) => {
+    const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
+
+    if (!siteKey || siteKey === 'YOUR_RECAPTCHA_V3_SITE_KEY_HERE') {
+      console.warn('reCAPTCHA site key not configured');
+      resolve(null);
+      return;
+    }
+
+    if (typeof window !== 'undefined' && window.grecaptcha) {
+      window.grecaptcha.ready(() => {
+        window.grecaptcha.execute(siteKey, { action })
+          .then((token: string) => {
+            console.log('reCAPTCHA token generated for action:', action);
+            resolve(token);
+          })
+          .catch((error) => {
+            console.error('reCAPTCHA error:', error);
+            resolve(null);
+          });
+      });
+    } else {
+      console.warn('reCAPTCHA not loaded');
+      resolve(null);
+    }
+  });
+};
+
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   profile: null,
@@ -45,9 +86,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signIn: async (email: string, password: string) => {
     set({ loading: true });
     try {
+      // Get reCAPTCHA token
+      const captchaToken = await getCaptchaToken('signin');
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
+        options: captchaToken ? {
+          captchaToken
+        } : undefined,
       });
 
       if (error) {
@@ -56,12 +103,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
 
       if (data.user) {
-        set({ 
-          user: data.user, 
+        set({
+          user: data.user,
           session: data.session,
-          loading: false 
+          loading: false
         });
-        
+
+        // Initialize subscription service for cross-platform sync
+        await subscriptionService.initialize(data.user.id);
+
         // Fetch user profile after successful login
         await get().fetchProfile();
       }
@@ -81,11 +131,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       console.log('[AuthStore] Signing up:', email);
 
+      // Get reCAPTCHA token
+      const captchaToken = await getCaptchaToken('signup');
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/callback`,
+          captchaToken,
           data: {
             full_name: metadata?.fullName,
             company_name: metadata?.companyName,
@@ -128,6 +182,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             session: data.session,
             loading: false
           });
+
+          // Initialize subscription service for cross-platform sync
+          await subscriptionService.initialize(data.user.id);
         } else {
           console.log('[AuthStore] Email confirmation required');
           // Email needs confirmation, don't set user yet
@@ -267,6 +324,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                 initialized: true
               });
 
+              // Initialize subscription service for cross-platform sync
+              subscriptionService.initialize(session.user.id).catch(err =>
+                console.error('Failed to initialize subscription service:', err)
+              );
+
               // Fetch profile on sign in (in background)
               if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
                 get().fetchProfile().catch(err =>
@@ -305,6 +367,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
               session,
               initialized: true
             });
+
+            // Initialize subscription service for cross-platform sync
+            subscriptionService.initialize(session.user.id).catch(err =>
+              console.error('Failed to initialize subscription service:', err)
+            );
 
             // Fetch user profile in background
             get().fetchProfile().catch(err =>
