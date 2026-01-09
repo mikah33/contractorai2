@@ -46,95 +46,16 @@ const SubscriptionsWeb = () => {
           return;
         }
 
-        // Web - load offerings and show selection UI
+        // Web - go directly to RevenueCat checkout (skip custom UI)
         await revenueCatWebService.initialize(user.id);
-        const offerings = await revenueCatWebService.getOfferings();
-
-        console.log('[SubscriptionsWeb] Offerings:', offerings);
-
-        if (!offerings?.current && !offerings?.all) {
-          throw new Error('No subscription options available');
+        const result = await revenueCatWebService.purchaseCurrentOffering();
+        if (result.success) {
+          navigate('/');
+        } else {
+          // If user cancelled, go back to previous screen
+          navigate(-1);
         }
-
-        // Get packages from current offering or first available
-        const offering = offerings.current || Object.values(offerings.all || {})[0];
-
-        if (!offering?.availablePackages?.length) {
-          throw new Error('No packages available');
-        }
-
-        // Transform packages into display format
-        const packageOptions: PackageOption[] = [];
-
-        for (const pkg of offering.availablePackages) {
-          const product = pkg.webBillingProduct || pkg.rcBillingProduct;
-          if (!product) continue;
-
-          // Skip marketing packages - only show base subscriptions
-          const id = product.identifier || pkg.identifier || '';
-          if (id.includes('marketing') || id.includes('ads')) continue;
-
-          let title = 'Subscription';
-          let duration = '';
-          let pricePerMonth = '';
-          let savings = '';
-          let popular = false;
-
-          const price = product.currentPrice?.amountMicros
-            ? `$${(product.currentPrice.amountMicros / 1000000).toFixed(2)}`
-            : product.priceString || '$34.99';
-
-          const priceNum = product.currentPrice?.amountMicros
-            ? product.currentPrice.amountMicros / 1000000
-            : parseFloat(price.replace('$', ''));
-
-          // Determine package type by identifier or duration
-          const identifier = pkg.identifier?.toLowerCase() || id.toLowerCase();
-
-          if (identifier.includes('yearly') || identifier.includes('annual') || identifier.includes('year')) {
-            title = 'Yearly';
-            duration = 'per year';
-            pricePerMonth = `$${(priceNum / 12).toFixed(2)}/mo`;
-            savings = 'Save 17%';
-          } else if (identifier.includes('quarter') || identifier.includes('3month') || identifier.includes('three')) {
-            title = 'Quarterly';
-            duration = 'every 3 months';
-            pricePerMonth = `$${(priceNum / 3).toFixed(2)}/mo`;
-            savings = 'Save 8%';
-            popular = true;
-          } else if (identifier.includes('monthly') || identifier.includes('month')) {
-            title = 'Monthly';
-            duration = 'per month';
-            pricePerMonth = `${price}/mo`;
-          }
-
-          packageOptions.push({
-            identifier: pkg.identifier,
-            title,
-            price,
-            pricePerMonth,
-            duration,
-            savings,
-            popular,
-            rcPackage: pkg,
-          });
-        }
-
-        // Sort: Yearly first, then Quarterly, then Monthly
-        packageOptions.sort((a, b) => {
-          const order = { 'Yearly': 0, 'Quarterly': 1, 'Monthly': 2 };
-          return (order[a.title as keyof typeof order] ?? 3) - (order[b.title as keyof typeof order] ?? 3);
-        });
-
-        setPackages(packageOptions);
-
-        // Pre-select monthly
-        if (packageOptions.length > 0) {
-          const monthly = packageOptions.find(p => p.title === 'Monthly');
-          setSelectedPackage(monthly?.identifier || packageOptions[0].identifier);
-        }
-
-        setLoading(false);
+        return;
       } catch (err: any) {
         console.error('[SubscriptionsWeb] Error:', err);
         setError(err.message || 'Failed to load subscription options');
