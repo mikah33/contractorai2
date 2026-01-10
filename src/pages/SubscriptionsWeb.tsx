@@ -41,7 +41,7 @@ const SubscriptionsWeb = () => {
         if (isIOS) {
           // iOS - use native paywall directly
           await revenueCatService.initialize(user.id);
-          await revenueCatService.presentPaywall();
+          await revenueCatService.presentPaywall('ContractorAI Pro');
           navigate(-1);
           return;
         }
