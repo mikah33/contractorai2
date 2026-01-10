@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { User, Building2, Phone, MapPin, FileText, Save, Loader2, CheckCircle } from 'lucide-react';
+import { Phone, MapPin, FileText, Save, Loader2, CheckCircle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../stores/authStore';
 import { useOnboardingStore } from '../../stores/onboardingStore';
@@ -18,9 +18,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComplete })
   const [step, setStep] = useState(1);
 
   const [profile, setProfile] = useState({
-    name: '',
     phone: '',
-    company: '',
     address: '',
     defaultTerms: ''
   });
@@ -31,8 +29,6 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComplete })
       const metadata = user.user_metadata || {};
       setProfile(prev => ({
         ...prev,
-        name: metadata.full_name || prev.name,
-        company: metadata.company_name || prev.company,
         phone: metadata.phone || prev.phone
       }));
     }
@@ -45,23 +41,13 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComplete })
   const handleSave = async () => {
     if (!user) return;
 
-    // Validate required fields
-    if (!profile.name.trim()) {
-      alert('Please enter your name');
-      return;
-    }
-    if (!profile.company.trim()) {
-      alert('Please enter your company name');
-      return;
-    }
+    // No required fields validation needed
 
     try {
       setSaving(true);
 
       console.log('[Onboarding] Saving profile data:', {
         id: user.id,
-        full_name: profile.name,
-        company: profile.company,
         phone: profile.phone
       });
 
@@ -71,9 +57,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComplete })
         .upsert({
           id: user.id,
           email: user.email,
-          full_name: profile.name,
           phone: profile.phone,
-          company: profile.company,
           address: profile.address,
           default_terms: profile.defaultTerms,
           updated_at: new Date().toISOString()
@@ -125,36 +109,6 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComplete })
           <>
             {/* Form */}
             <div className="p-6 space-y-4 overflow-y-auto max-h-[60vh]">
-              {/* Name */}
-              <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-zinc-400 mb-2">
-                  <User className="w-4 h-4" />
-                  Full Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={profile.name}
-                  onChange={(e) => handleChange('name', e.target.value)}
-                  className="w-full px-4 py-3 bg-[#2C2C2E] border border-orange-500/30 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-                  placeholder="John Smith"
-                />
-              </div>
-
-              {/* Company */}
-              <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-zinc-400 mb-2">
-                  <Building2 className="w-4 h-4" />
-                  Company Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={profile.company}
-                  onChange={(e) => handleChange('company', e.target.value)}
-                  className="w-full px-4 py-3 bg-[#2C2C2E] border border-orange-500/30 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-                  placeholder="Smith Contracting LLC"
-                />
-              </div>
-
               {/* Phone */}
               <div>
                 <label className="flex items-center gap-2 text-sm font-medium text-zinc-400 mb-2">
