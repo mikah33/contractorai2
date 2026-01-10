@@ -38,7 +38,10 @@ const SubscriptionsIOS: React.FC = () => {
         return;
       }
 
-      setLoading(false);
+      // Skip custom UI - go directly to RevenueCat paywall
+      console.log('[SubscriptionsIOS] No subscription, presenting RevenueCat paywall immediately...');
+      await showPaywall();
+      return;
     } catch (error: any) {
       console.error('[SubscriptionsIOS] Initialization error:', error);
       setError(error.message || 'Failed to initialize subscription system');
