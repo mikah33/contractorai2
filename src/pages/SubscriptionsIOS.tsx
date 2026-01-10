@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { revenueCatService } from '../services/revenueCatService';
@@ -11,10 +11,22 @@ const SubscriptionsIOS: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showingPaywall, setShowingPaywall] = useState(false);
+  const [isPaywallPresenting, setIsPaywallPresenting] = useState(false);
+  const hasInitialized = useRef(false);
+  const initializationPromise = useRef<Promise<void> | null>(null);
 
   useEffect(() => {
-    initializeRevenueCat();
-  }, [user]);
+    if (user?.id) {
+      initializeRevenueCat();
+    }
+
+    // Cleanup function to reset flags if component unmounts
+    return () => {
+      hasInitialized.current = false;
+      initializationPromise.current = null;
+      setIsPaywallPresenting(false);
+    };
+  }, [user?.id]); // Only depend on user ID, not entire user object
 
   const initializeRevenueCat = async () => {
     try {
@@ -24,24 +36,45 @@ const SubscriptionsIOS: React.FC = () => {
         return;
       }
 
-      console.log('[SubscriptionsIOS] Initializing RevenueCat with user:', user?.id);
-      // Pass user ID to maintain consistent RevenueCat identity
-      await revenueCatService.initialize(user?.id);
-
-      console.log('[SubscriptionsIOS] Checking subscription status...');
-      const hasSubscription = await revenueCatService.hasActiveSubscription();
-
-      if (hasSubscription) {
-        console.log('[SubscriptionsIOS] User has active subscription, redirecting...');
-        // User already has subscription, reload to grant access
-        window.location.reload();
+      // Prevent duplicate initialization - check if already initialized or in progress
+      if (hasInitialized.current || initializationPromise.current) {
+        console.log('[SubscriptionsIOS] Already initialized or in progress, skipping...');
+        if (initializationPromise.current) {
+          await initializationPromise.current; // Wait for existing initialization
+        }
         return;
       }
 
-      // Skip custom UI - go directly to RevenueCat paywall
-      console.log('[SubscriptionsIOS] No subscription, presenting RevenueCat paywall immediately...');
-      await showPaywall();
-      return;
+      // Prevent duplicate initialization
+      if (isPaywallPresenting) {
+        console.log('[SubscriptionsIOS] Already presenting paywall, skipping initialization...');
+        return;
+      }
+
+      console.log('[SubscriptionsIOS] Initializing RevenueCat with user:', user?.id);
+      hasInitialized.current = true;
+
+      // Create and store the initialization promise
+      initializationPromise.current = (async () => {
+        // Pass user ID to maintain consistent RevenueCat identity
+        await revenueCatService.initialize(user?.id);
+
+        console.log('[SubscriptionsIOS] Checking subscription status...');
+        const hasSubscription = await revenueCatService.hasActiveSubscription();
+
+        if (hasSubscription) {
+          console.log('[SubscriptionsIOS] User has active subscription, redirecting...');
+          // User already has subscription, reload to grant access
+          window.location.reload();
+          return;
+        }
+
+        // Skip custom UI - go directly to RevenueCat paywall
+        console.log('[SubscriptionsIOS] No subscription, presenting RevenueCat paywall immediately...');
+        await showPaywall();
+      })();
+
+      await initializationPromise.current;
     } catch (error: any) {
       console.error('[SubscriptionsIOS] Initialization error:', error);
       setError(error.message || 'Failed to initialize subscription system');
@@ -51,6 +84,13 @@ const SubscriptionsIOS: React.FC = () => {
 
   const showPaywall = async () => {
     try {
+      // Prevent multiple simultaneous paywall presentations
+      if (isPaywallPresenting) {
+        console.log('[SubscriptionsIOS] Paywall already presenting, skipping...');
+        return;
+      }
+
+      setIsPaywallPresenting(true);
       setShowingPaywall(true);
       console.log('[SubscriptionsIOS] Presenting paywall...');
 
@@ -72,12 +112,14 @@ const SubscriptionsIOS: React.FC = () => {
         // Add small delay to ensure RevenueCat sync completes
         await new Promise(resolve => setTimeout(resolve, 500));
         window.location.reload();
-        return; // Exit early to prevent setShowingPaywall(false)
+        return; // Exit early to prevent state reset
       }
 
+      setIsPaywallPresenting(false);
       setShowingPaywall(false);
     } catch (error: any) {
       console.error('[SubscriptionsIOS] Paywall error:', error);
+      setIsPaywallPresenting(false);
       setShowingPaywall(false);
 
       if (error.code !== '1' && !error.userCancelled) {
@@ -193,10 +235,10 @@ const SubscriptionsIOS: React.FC = () => {
         <div className="space-y-4">
           <button
             onClick={showPaywall}
-            disabled={showingPaywall}
+            disabled={showingPaywall || isPaywallPresenting}
             className="w-full py-4 px-6 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-lg transition-colors flex items-center justify-center"
           >
-            {showingPaywall ? (
+            {showingPaywall || isPaywallPresenting ? (
               <>
                 <Loader2 className="animate-spin h-6 w-6 mr-2" />
                 Loading...
@@ -208,7 +250,7 @@ const SubscriptionsIOS: React.FC = () => {
 
           <button
             onClick={handleRestorePurchases}
-            disabled={loading || showingPaywall}
+            disabled={loading || showingPaywall || isPaywallPresenting}
             className="w-full py-3 px-6 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed font-semibold transition-colors"
           >
             Restore Previous Purchases
