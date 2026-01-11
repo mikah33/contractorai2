@@ -14,10 +14,9 @@ import {
   Trash2,
   History,
   Plus,
-  Camera,
-  Image
+  Camera
 } from 'lucide-react';
-import { MODE_WELCOME_MESSAGES, detectMode, ContractorMode } from '../../lib/ai/contractor-config';
+import { MODE_WELCOME_MESSAGES, ContractorMode } from '../../lib/ai/contractor-config';
 import { useAuthStore } from '../../stores/authStore';
 import ChatMessageContent from './ChatMessageContent';
 import { contractorChatHistoryManager, ContractorChatSession } from '../../lib/ai/contractorChatHistory';
