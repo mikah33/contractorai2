@@ -5,12 +5,7 @@ import {
   Briefcase,
   UserPlus,
   Calendar as CalendarIcon,
-  ChevronRight,
-  Plus,
-  FileText,
-  Clock,
-  TrendingUp,
-  Users
+  ChevronRight
 } from 'lucide-react';
 
 const JobsHub: React.FC = () => {
@@ -55,29 +50,6 @@ const JobsHub: React.FC = () => {
     }
   ];
 
-  const quickActions = [
-    {
-      title: 'New Estimate',
-      description: 'Create a quick estimate',
-      action: () => navigate('/estimates-hub'),
-      icon: Calculator,
-      color: 'orange'
-    },
-    {
-      title: 'Add Client',
-      description: 'Add new client',
-      action: () => navigate('/clients-hub'),
-      icon: UserPlus,
-      color: 'blue'
-    },
-    {
-      title: 'Schedule Job',
-      description: 'Add calendar event',
-      action: () => navigate('/calendar'),
-      icon: CalendarIcon,
-      color: 'green'
-    }
-  ];
 
   const getColorClasses = (color: string) => {
     switch (color) {
@@ -144,33 +116,7 @@ const JobsHub: React.FC = () => {
         </div>
       </div>
 
-      <div className="px-6 py-6 space-y-8">
-        {/* Quick Actions */}
-        <div>
-          <h2 className="text-lg font-bold text-white mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-1 gap-3">
-            {quickActions.map((action) => {
-              const colors = getColorClasses(action.color);
-              return (
-                <button
-                  key={action.title}
-                  onClick={action.action}
-                  className={`flex items-center gap-4 p-4 ${colors.bg} rounded-lg border ${colors.border} ${colors.hoverBorder} active:scale-[0.98] transition-all`}
-                >
-                  <div className={`w-10 h-10 ${colors.iconBg} rounded-lg flex items-center justify-center`}>
-                    <action.icon className={`w-5 h-5 ${colors.iconText}`} />
-                  </div>
-                  <div className="flex-1 text-left">
-                    <h3 className="font-semibold text-white">{action.title}</h3>
-                    <p className="text-sm text-zinc-400">{action.description}</p>
-                  </div>
-                  <ChevronRight className="w-5 h-5 text-zinc-500" />
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
+      <div className="px-6 py-6">
         {/* Job Modules */}
         <div>
           <h2 className="text-lg font-bold text-white mb-4">Job Management</h2>
@@ -195,68 +141,6 @@ const JobsHub: React.FC = () => {
                 </button>
               );
             })}
-          </div>
-        </div>
-
-        {/* Recent Activity Preview */}
-        <div>
-          <h2 className="text-lg font-bold text-white mb-4">Recent Activity</h2>
-          <div className="bg-[#1C1C1E] rounded-xl p-6 border border-zinc-800">
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                  <FileText className="w-4 h-4 text-orange-500" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-white text-sm font-medium">Recent estimate created</p>
-                  <p className="text-zinc-500 text-xs">2 hours ago</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center">
-                  <CalendarIcon className="w-4 h-4 text-green-500" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-white text-sm font-medium">Job scheduled for tomorrow</p>
-                  <p className="text-zinc-500 text-xs">1 day ago</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                  <Users className="w-4 h-4 text-blue-500" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-white text-sm font-medium">New client added</p>
-                  <p className="text-zinc-500 text-xs">3 days ago</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Stats Cards */}
-        <div>
-          <h2 className="text-lg font-bold text-white mb-4">Overview</h2>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-[#1C1C1E] rounded-xl p-4 border border-zinc-800">
-              <div className="flex items-center gap-3 mb-2">
-                <TrendingUp className="w-5 h-5 text-green-500" />
-                <span className="text-sm font-medium text-zinc-400">This Month</span>
-              </div>
-              <p className="text-2xl font-bold text-white">12</p>
-              <p className="text-xs text-zinc-500">Active Projects</p>
-            </div>
-
-            <div className="bg-[#1C1C1E] rounded-xl p-4 border border-zinc-800">
-              <div className="flex items-center gap-3 mb-2">
-                <Clock className="w-5 h-5 text-orange-500" />
-                <span className="text-sm font-medium text-zinc-400">Pending</span>
-              </div>
-              <p className="text-2xl font-bold text-white">8</p>
-              <p className="text-xs text-zinc-500">Estimates</p>
-            </div>
           </div>
         </div>
       </div>
