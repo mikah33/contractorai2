@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import { Menu, Bell, User, ChevronDown, LogOut } from 'lucide-react';
+import { Menu, Bell, User, ChevronDown, LogOut, Settings } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { useData } from '../../contexts/DataContext';
 
@@ -58,6 +58,15 @@ const Header = ({ sidebarOpen, setSidebarOpen }: HeaderProps) => {
             {getSubscriptionPlanName()}
           </span>
         </div>
+
+        {/* Settings Icon - Small */}
+        <button
+          onClick={() => navigate('/settings')}
+          className="p-2 text-gray-500 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-orange-500"
+          title="Settings"
+        >
+          <Settings className="w-5 h-5" />
+        </button>
 
         <div className="relative">
           <button
