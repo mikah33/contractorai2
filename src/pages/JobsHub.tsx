@@ -16,6 +16,7 @@ import {
 import useEstimateStore from '../stores/estimateStore';
 import useProjectStore from '../stores/projectStore';
 import useClientsStore from '../stores/clientsStore';
+import { useCalendarStoreSupabase } from '../stores/calendarStoreSupabase';
 
 const JobsHub: React.FC = () => {
   const navigate = useNavigate();
@@ -24,13 +25,15 @@ const JobsHub: React.FC = () => {
   const { estimates, fetchEstimates, isLoading: estimatesLoading } = useEstimateStore();
   const { projects, fetchProjects, loading: projectsLoading } = useProjectStore();
   const { clients, fetchClients, loading: clientsLoading } = useClientsStore();
+  const { events, fetchEvents, loading: calendarLoading } = useCalendarStoreSupabase();
 
   // Fetch data on component mount
   useEffect(() => {
     fetchEstimates();
     fetchProjects();
     fetchClients();
-  }, [fetchEstimates, fetchProjects, fetchClients]);
+    fetchEvents();
+  }, [fetchEstimates, fetchProjects, fetchClients, fetchEvents]);
 
   // Calculate dashboard stats
   const getEstimateStats = () => {
@@ -61,16 +64,32 @@ const JobsHub: React.FC = () => {
   };
 
   const getTaskStats = () => {
-    // Mock calendar/task data for now - replace with actual calendar store when available
-    const upcoming = 3;
-    const overdue = 1;
-    const completed = 12;
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    // Upcoming: pending/in_progress events with start_date in the future
+    const upcoming = events.filter(event => {
+      const eventDate = new Date(event.start_date);
+      return (event.status === 'pending' || event.status === 'in_progress') &&
+             eventDate >= todayStart;
+    }).length;
+
+    // Overdue: pending/in_progress events with start_date in the past
+    const overdue = events.filter(event => {
+      const eventDate = new Date(event.start_date);
+      return (event.status === 'pending' || event.status === 'in_progress') &&
+             eventDate < todayStart;
+    }).length;
+
+    // Completed: events with completed status
+    const completed = events.filter(event => event.status === 'completed').length;
+
     return { upcoming, overdue, completed };
   };
 
   // Render preview stats for each module
   const renderModulePreview = (moduleId: string) => {
-    const isLoading = estimatesLoading || projectsLoading || clientsLoading;
+    const isLoading = estimatesLoading || projectsLoading || clientsLoading || calendarLoading;
 
     if (isLoading) {
       return (
