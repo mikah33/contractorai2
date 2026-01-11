@@ -13,12 +13,15 @@ import {
   ChevronRight,
   Trash2,
   History,
-  Plus
+  Plus,
+  Camera,
+  Image
 } from 'lucide-react';
 import { MODE_WELCOME_MESSAGES, detectMode, ContractorMode } from '../../lib/ai/contractor-config';
 import { useAuthStore } from '../../stores/authStore';
 import ChatMessageContent from './ChatMessageContent';
 import { contractorChatHistoryManager, ContractorChatSession } from '../../lib/ai/contractorChatHistory';
+import { supabase } from '../../lib/supabase';
 
 interface EstimateLineItem {
   id: string;
@@ -95,8 +98,14 @@ const AIChatPopup: React.FC<AIChatPopupProps> = ({ isOpen, onClose, mode, onEsti
   const [showEstimatePanel, setShowEstimatePanel] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [chatHistory, setChatHistory] = useState<ContractorChatSession[]>([]);
+
+  // Photo upload state for finance mode
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [attachedImage, setAttachedImage] = useState<{ url: string; file: File } | null>(null);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const config = modeConfig[mode];
   const totalEstimate = currentEstimate.reduce((sum, item) => sum + item.totalPrice, 0);
@@ -314,6 +323,171 @@ const AIChatPopup: React.FC<AIChatPopupProps> = ({ isOpen, onClose, mode, onEsti
       e.preventDefault();
       handleSendMessage();
     }
+  };
+
+  // Photo upload handlers for finance mode
+  const handleCameraCapture = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingPhoto(true);
+    try {
+      // Create preview URL
+      const url = URL.createObjectURL(file);
+      setAttachedImage({ url, file });
+
+      // Upload to Supabase storage
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `receipt_${Date.now()}.${fileExt}`;
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('receipt-images')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('receipt-images')
+        .getPublicUrl(uploadData.path);
+
+      // Process with OCR
+      await processReceiptOCR(file, publicUrl);
+
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      alert('Failed to upload photo. Please try again.');
+      setAttachedImage(null);
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
+  const processReceiptOCR = async (file: File, imageUrl: string) => {
+    try {
+      const n8nWebhookUrl = 'https://contractorai.app.n8n.cloud/webhook/d718a3b9-fd46-4ce2-b885-f2a18ad4d98a';
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const webhookResponse = await fetch(n8nWebhookUrl, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (webhookResponse.ok) {
+        const responseText = await webhookResponse.text();
+        if (responseText) {
+          // Send OCR results automatically to AI chat
+          const ocrMessage: Message = {
+            id: Date.now().toString(),
+            role: 'user',
+            content: `I uploaded a receipt image. Here's what OCR extracted: ${responseText}. Please help me process this expense and extract the key details like vendor, amount, date, and category.`,
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, ocrMessage]);
+
+          // Trigger AI response
+          sendMessageToAI(ocrMessage.content, imageUrl);
+        }
+      }
+    } catch (error) {
+      console.error('OCR processing failed:', error);
+      // Still send the image to AI even if OCR fails
+      const imageMessage: Message = {
+        id: Date.now().toString(),
+        role: 'user',
+        content: `I uploaded a receipt image. Can you help me extract the vendor, amount, date, and category from this receipt?`,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, imageMessage]);
+      sendMessageToAI(imageMessage.content, imageUrl);
+    }
+  };
+
+  const sendMessageToAI = async (content: string, imageUrl?: string) => {
+    setIsLoading(true);
+    try {
+      const authToken = session?.access_token;
+      if (!authToken) throw new Error('Please log in to continue.');
+
+      const contextualPrompt = mode === 'finance' && imageUrl
+        ? `${content}\n\nImage URL: ${imageUrl}\n\nContext: I need help processing this receipt/expense. Please extract key details like vendor, amount, date, and suggest an expense category.`
+        : content;
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/contractor-chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({
+          message: contextualPrompt,
+          mode: mode,
+          sessionId: sessionId,
+          context: initialContext,
+          projectContext: projectContext
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get AI response');
+      }
+
+      const data = await response.json();
+
+      const aiMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: data.response || 'I apologize, but I encountered an error processing your request.',
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, aiMessage]);
+
+      // Save to history
+      await contractorChatHistoryManager.saveMessage(sessionId, {
+        role: 'user',
+        content: content,
+        timestamp: new Date().toISOString(),
+        mode: mode
+      });
+
+      await contractorChatHistoryManager.saveMessage(sessionId, {
+        role: 'assistant',
+        content: aiMessage.content,
+        timestamp: new Date().toISOString(),
+        mode: mode
+      });
+
+    } catch (error) {
+      console.error('Error:', error);
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: 'I apologize, but I encountered an error. Please try again.',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const removeAttachedImage = () => {
+    if (attachedImage?.url) {
+      URL.revokeObjectURL(attachedImage.url);
+    }
+    setAttachedImage(null);
   };
 
   const handleRemoveEstimateItem = (itemId: string) => {
@@ -569,6 +743,30 @@ const AIChatPopup: React.FC<AIChatPopupProps> = ({ isOpen, onClose, mode, onEsti
               </div>
             )}
 
+            {/* Image Preview for Finance Mode */}
+            {attachedImage && mode === 'finance' && (
+              <div className="p-3 border-t border-white/10 bg-[#1A1A1A]">
+                <div className="relative">
+                  <img
+                    src={attachedImage.url}
+                    alt="Uploaded receipt"
+                    className="w-full max-w-xs mx-auto h-32 object-cover rounded-lg border border-zinc-700"
+                  />
+                  <button
+                    onClick={removeAttachedImage}
+                    className="absolute top-1 right-1 p-1 bg-red-500 hover:bg-red-600 text-white rounded-full"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                  {uploadingPhoto && (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg">
+                      <Loader2 className="w-6 h-6 text-white animate-spin" />
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Input */}
             <div className="p-3 border-t border-white/10 bg-[#1A1A1A]">
               <div className="flex gap-2">
@@ -582,6 +780,23 @@ const AIChatPopup: React.FC<AIChatPopupProps> = ({ isOpen, onClose, mode, onEsti
                   className="flex-1 px-4 py-3 text-base bg-[#141414] border border-white/10 rounded-full text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   disabled={isLoading}
                 />
+
+                {/* Camera button for Finance mode */}
+                {mode === 'finance' && (
+                  <button
+                    onClick={handleCameraCapture}
+                    disabled={isLoading || uploadingPhoto}
+                    className="px-4 py-3 bg-[#2C2C2E] hover:bg-[#3C3C3E] text-white rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    title="Upload receipt photo"
+                  >
+                    {uploadingPhoto ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <Camera className="w-5 h-5" />
+                    )}
+                  </button>
+                )}
+
                 <button
                   onClick={handleSendMessage}
                   disabled={!input.trim() || isLoading}
@@ -590,6 +805,16 @@ const AIChatPopup: React.FC<AIChatPopupProps> = ({ isOpen, onClose, mode, onEsti
                   <Send className="w-5 h-5" />
                 </button>
               </div>
+
+              {/* Hidden file input for camera/photo selection */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={handleFileChange}
+                className="hidden"
+              />
             </div>
           </>
         )}
