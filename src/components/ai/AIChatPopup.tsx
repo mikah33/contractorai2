@@ -326,14 +326,56 @@ const AIChatPopup: React.FC<AIChatPopupProps> = ({ isOpen, onClose, mode, onEsti
 
   // Photo upload handlers for finance mode
   const handleCameraCapture = () => {
+    console.log('[Camera Debug] Camera button clicked');
+    console.log('[Camera Debug] Mode:', mode);
+    console.log('[Camera Debug] FileInputRef:', fileInputRef.current);
+
     if (fileInputRef.current) {
-      fileInputRef.current.click();
+      console.log('[Camera Debug] Triggering file input click');
+
+      // Clear the input first to ensure change event fires
+      fileInputRef.current.value = '';
+
+      // Use setTimeout to ensure DOM is ready
+      setTimeout(() => {
+        if (fileInputRef.current) {
+          fileInputRef.current.click();
+        }
+      }, 0);
+    } else {
+      console.error('[Camera Debug] File input ref is null');
+
+      // Fallback - create and trigger file input programmatically
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.capture = 'environment';
+      input.style.display = 'none';
+
+      input.onchange = (e: Event) => {
+        const target = e.target as HTMLInputElement;
+        if (target.files?.[0]) {
+          handleFileChange({ target } as React.ChangeEvent<HTMLInputElement>);
+        }
+        document.body.removeChild(input);
+      };
+
+      document.body.appendChild(input);
+      input.click();
     }
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('[Camera Debug] File input changed');
+    console.log('[Camera Debug] Files:', e.target.files);
+
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      console.log('[Camera Debug] No file selected');
+      return;
+    }
+
+    console.log('[Camera Debug] File selected:', file.name, file.type, file.size);
 
     setUploadingPhoto(true);
     try {
@@ -368,6 +410,10 @@ const AIChatPopup: React.FC<AIChatPopupProps> = ({ isOpen, onClose, mode, onEsti
       setAttachedImage(null);
     } finally {
       setUploadingPhoto(false);
+      // Reset the file input so it can be used again
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -783,7 +829,10 @@ const AIChatPopup: React.FC<AIChatPopupProps> = ({ isOpen, onClose, mode, onEsti
                 {/* Camera button for Finance mode */}
                 {mode === 'finance' && (
                   <button
-                    onClick={handleCameraCapture}
+                    onClick={() => {
+                      console.log('[Camera Debug] Button onClick fired');
+                      handleCameraCapture();
+                    }}
                     disabled={isLoading || uploadingPhoto}
                     className="px-4 py-3 bg-[#2C2C2E] hover:bg-[#3C3C3E] text-white rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                     title="Upload receipt photo"
@@ -795,6 +844,7 @@ const AIChatPopup: React.FC<AIChatPopupProps> = ({ isOpen, onClose, mode, onEsti
                     )}
                   </button>
                 )}
+                {mode === 'finance' && console.log('[Camera Debug] Camera button is being rendered for finance mode')}
 
                 <button
                   onClick={handleSendMessage}
@@ -812,7 +862,7 @@ const AIChatPopup: React.FC<AIChatPopupProps> = ({ isOpen, onClose, mode, onEsti
                 accept="image/*"
                 capture="environment"
                 onChange={handleFileChange}
-                className="hidden"
+                style={{ display: 'none' }}
               />
             </div>
           </>
