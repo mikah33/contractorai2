@@ -41,10 +41,10 @@ const JobsHub: React.FC = () => {
     },
     {
       id: 'calendar',
-      title: 'Calendar',
+      title: 'Tasks & Calendar',
       description: 'Schedule appointments & jobs',
       icon: CalendarIcon,
-      href: '/calendar',
+      href: '/todo-hub',
       color: 'green',
       stats: 'Time management'
     }
