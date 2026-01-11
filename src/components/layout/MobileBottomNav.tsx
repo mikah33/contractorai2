@@ -133,8 +133,8 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
     { name: 'Home', icon: Home, href: '/' },
     { name: 'Jobs', icon: Briefcase, href: '/jobs-hub' },
     { name: 'AI', icon: Plus, href: '#', isCenter: true },
-    { name: 'Marketing', icon: BarChart3, href: '/ad-analyzer' },
     { name: 'Finance', icon: DollarSign, href: '/finance-hub' },
+    { name: 'Marketing', icon: BarChart3, href: '/ad-analyzer' },
   ];
 
   const aiModes = [
