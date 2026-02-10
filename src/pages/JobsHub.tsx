@@ -11,15 +11,19 @@ import {
   CheckCircle,
   AlertCircle,
   TrendingUp,
-  Users
+  Users,
+  Settings
 } from 'lucide-react';
 import useEstimateStore from '../stores/estimateStore';
 import useProjectStore from '../stores/projectStore';
 import useClientsStore from '../stores/clientsStore';
 import { useCalendarStoreSupabase } from '../stores/calendarStoreSupabase';
+import { useTheme, getThemeClasses } from '../contexts/ThemeContext';
 
 const JobsHub: React.FC = () => {
   const navigate = useNavigate();
+  const { theme } = useTheme();
+  const themeClasses = getThemeClasses(theme);
 
   // Data stores
   const { estimates, fetchEstimates, isLoading: estimatesLoading } = useEstimateStore();
@@ -270,24 +274,34 @@ const JobsHub: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0F0F0F] pb-[calc(120px+env(safe-area-inset-bottom))]">
+    <div className={`min-h-full ${themeClasses.bg.primary} pb-24`}>
       {/* Header */}
-      <div className="bg-[#1C1C1E] border-b border-orange-500/30 px-6 py-8">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-orange-500/20 rounded-lg flex items-center justify-center">
-            <Briefcase className="w-7 h-7 text-orange-500" />
+      <div className={`${themeClasses.bg.secondary} border-b ${themeClasses.border.primary} px-4 pb-4 pt-[calc(env(safe-area-inset-top)+24px)] sticky top-0 z-10`} style={{ paddingTop: 'calc(env(safe-area-inset-top) + 24px)' }}>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex-1">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                <Briefcase className="w-5 h-5 text-orange-500" />
+              </div>
+              <div>
+                <h1 className={`text-xl font-bold ${themeClasses.text.primary}`}>Jobs</h1>
+                <p className={`text-sm ${themeClasses.text.secondary}`}>Manage your projects & clients</p>
+              </div>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold text-white">Jobs</h1>
-            <p className="text-zinc-400 text-sm">Manage your projects & clients</p>
-          </div>
+          <button
+            onClick={() => navigate('/settings')}
+            className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center hover:bg-orange-500/30 transition-colors border border-orange-500/40"
+          >
+            <Settings className="w-5 h-5 text-orange-500" />
+          </button>
         </div>
       </div>
 
-      <div className="px-6 py-6">
+      <div className="px-4 py-4">
         {/* Job Modules */}
         <div>
-          <h2 className="text-lg font-bold text-white mb-4">Job Management</h2>
+          <h2 className={`text-lg font-bold ${themeClasses.text.primary} mb-4`}>Job Management</h2>
           <div className="grid grid-cols-1 gap-4">
             {jobModules.map((module) => {
               const colors = getColorClasses(module.color);
@@ -303,16 +317,16 @@ const JobsHub: React.FC = () => {
                       <module.icon className={`w-7 h-7 ${colors.iconText}`} />
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-bold text-white text-lg">{module.title}</h3>
-                      <p className="text-zinc-400 text-sm">{module.description}</p>
+                      <h3 className={`font-bold ${themeClasses.text.primary} text-lg`}>{module.title}</h3>
+                      <p className={`${themeClasses.text.secondary} text-sm`}>{module.description}</p>
                     </div>
-                    <ChevronRight className="w-6 h-6 text-zinc-500" />
+                    <ChevronRight className={`w-6 h-6 ${themeClasses.text.muted}`} />
                   </div>
 
                   {/* Dashboard Preview */}
-                  <div className="border-t border-white/10 pt-4">
+                  <div className={`border-t ${theme === 'light' ? 'border-gray-200' : 'border-white/10'} pt-4`}>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-zinc-300">Quick Overview</span>
+                      <span className={`text-sm font-medium ${themeClasses.text.secondary}`}>Quick Overview</span>
                       <span className={`text-xs font-medium ${colors.accent}`}>Live Data</span>
                     </div>
                     {renderModulePreview(module.id)}

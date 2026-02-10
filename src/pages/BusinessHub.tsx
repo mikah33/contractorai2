@@ -14,12 +14,16 @@ import {
   Building2,
   Calendar,
   Plus,
-  ArrowRight
+  ArrowRight,
+  Settings
 } from 'lucide-react';
 import { useClientsStore } from '../stores/clientsStore';
 import { useFinanceStore } from '../stores/financeStoreSupabase';
 import useProjectStore from '../stores/projectStore';
+import AIChatPopup from '../components/ai/AIChatPopup';
+import FloatingAIChatButton from '../components/ai/FloatingAIChatButton';
 import { supabase } from '../lib/supabase';
+import { useTheme, getThemeClasses } from '../contexts/ThemeContext';
 
 interface Employee {
   id: string;
@@ -34,11 +38,14 @@ interface Employee {
 
 const BusinessHub: React.FC = () => {
   const navigate = useNavigate();
+  const { theme } = useTheme();
+  const themeClasses = getThemeClasses(theme);
   const { clients, fetchClients } = useClientsStore();
   const { financialSummary, calculateFinancialSummary, payments, receipts, fetchPayments, fetchReceipts } = useFinanceStore();
   const { projects, fetchProjects } = useProjectStore();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loadingEmployees, setLoadingEmployees] = useState(true);
+  const [showAIChat, setShowAIChat] = useState(false);
 
   useEffect(() => {
     fetchClients();
@@ -71,6 +78,10 @@ const BusinessHub: React.FC = () => {
     } finally {
       setLoadingEmployees(false);
     }
+  };
+
+  const handleAIChat = () => {
+    setShowAIChat(true);
   };
 
   const formatCurrency = (amount: number) => {
@@ -106,48 +117,56 @@ const BusinessHub: React.FC = () => {
   const activeProjects = projects.filter(p => p.status === 'in_progress' || p.status === 'active').length;
 
   return (
-    <div className="min-h-full bg-gray-50 pb-24">
+    <div className={`min-h-full ${themeClasses.bg.primary} pb-24`}>
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-4 sticky top-0 z-10">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center">
-            <ClipboardList className="w-5 h-5 text-white" />
+      <div className={`${themeClasses.bg.secondary} ${themeClasses.border.primary} border-b px-4 py-4 sticky top-0 z-10`}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center">
+              <ClipboardList className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h1 className={`text-xl font-bold ${themeClasses.text.primary}`}>Business Hub</h1>
+              <p className={`text-sm ${themeClasses.text.secondary}`}>Manage your business</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-xl font-bold text-gray-900">Business Hub</h1>
-            <p className="text-sm text-gray-500">Manage your business</p>
-          </div>
+          <button
+            onClick={() => navigate('/settings')}
+            className={`w-10 h-10 ${themeClasses.bg.tertiary} rounded-lg flex items-center justify-center ${themeClasses.hover.bg} transition-colors`}
+          >
+            <Settings className={`w-5 h-5 ${themeClasses.text.secondary}`} />
+          </button>
         </div>
       </div>
 
       <div className="px-4 py-4 space-y-4">
         {/* Quick Stats */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="bg-white rounded-2xl border border-gray-200 p-4">
+          <div className={`${themeClasses.bg.card} rounded-2xl border ${themeClasses.border.secondary} p-4`}>
             <div className="flex items-center gap-2 mb-2">
               <TrendingUp className="w-4 h-4 text-green-500" />
-              <span className="text-sm text-gray-500">Revenue</span>
+              <span className={`text-sm ${themeClasses.text.secondary}`}>Revenue</span>
             </div>
-            <p className="text-xl font-bold text-gray-900">{formatCurrency(financialSummary?.totalRevenue || 0)}</p>
+            <p className={`text-xl font-bold ${themeClasses.text.primary}`}>{formatCurrency(financialSummary?.totalRevenue || 0)}</p>
           </div>
-          <div className="bg-white rounded-2xl border border-gray-200 p-4">
+          <div className={`${themeClasses.bg.card} rounded-2xl border ${themeClasses.border.secondary} p-4`}>
             <div className="flex items-center gap-2 mb-2">
               <TrendingDown className="w-4 h-4 text-red-500" />
-              <span className="text-sm text-gray-500">Expenses</span>
+              <span className={`text-sm ${themeClasses.text.secondary}`}>Expenses</span>
             </div>
-            <p className="text-xl font-bold text-gray-900">{formatCurrency(financialSummary?.totalExpenses || 0)}</p>
+            <p className={`text-xl font-bold ${themeClasses.text.primary}`}>{formatCurrency(financialSummary?.totalExpenses || 0)}</p>
           </div>
-          <div className="bg-white rounded-2xl border border-gray-200 p-4">
+          <div className={`${themeClasses.bg.card} rounded-2xl border ${themeClasses.border.secondary} p-4`}>
             <div className="flex items-center gap-2 mb-2">
               <Briefcase className="w-4 h-4 text-orange-500" />
-              <span className="text-sm text-gray-500">Active Projects</span>
+              <span className={`text-sm ${themeClasses.text.secondary}`}>Active Projects</span>
             </div>
-            <p className="text-xl font-bold text-gray-900">{activeProjects}</p>
+            <p className={`text-xl font-bold ${themeClasses.text.primary}`}>{activeProjects}</p>
           </div>
-          <div className="bg-white rounded-2xl border border-gray-200 p-4">
+          <div className={`${themeClasses.bg.card} rounded-2xl border ${themeClasses.border.secondary} p-4`}>
             <div className="flex items-center gap-2 mb-2">
               <DollarSign className="w-4 h-4 text-green-500" />
-              <span className="text-sm text-gray-500">Net Profit</span>
+              <span className={`text-sm ${themeClasses.text.secondary}`}>Net Profit</span>
             </div>
             <p className={`text-xl font-bold ${(financialSummary?.profit || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
               {formatCurrency(financialSummary?.profit || 0)}
@@ -394,6 +413,19 @@ const BusinessHub: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* AI Chat Popup */}
+      <AIChatPopup
+        isOpen={showAIChat}
+        onClose={() => setShowAIChat(false)}
+        mode="general"
+      />
+
+      {/* Enhanced AI Chat Button */}
+      <FloatingAIChatButton
+        onClick={handleAIChat}
+        mode="general"
+      />
     </div>
   );
 };

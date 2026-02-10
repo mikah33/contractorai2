@@ -3,7 +3,7 @@ import {
   Save, Bell, Lock, User, Loader2, Calendar, Upload, X, Globe, Code,
   Trash2, AlertTriangle, CreditCard, CheckCircle, ExternalLink, XCircle,
   Clock, RefreshCw, ChevronRight, Mail, Building2, Phone, MapPin, FileText,
-  Settings as SettingsIcon, LogOut, Eye, BookOpen, Home, ClipboardList
+  Settings as SettingsIcon, LogOut, Eye, BookOpen, Home, ClipboardList, Moon
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
@@ -12,6 +12,9 @@ import { useAuthStore } from '../stores/authStore';
 import { useOnboardingStore } from '../stores/onboardingStore';
 import { requestNotificationPermission, registerServiceWorker, showNotification } from '../utils/notifications';
 import { BusinessEmailSetup } from '../components/settings/BusinessEmailSetup';
+import EmailPreferences from '../components/settings/EmailPreferences';
+import { useTheme, getThemeClasses } from '../contexts/ThemeContext';
+import ThemeToggle from '../components/common/ThemeToggle';
 
 interface StripeConnectStatus {
   connected: boolean;
@@ -23,12 +26,14 @@ interface StripeConnectStatus {
   businessName?: string;
 }
 
-type SettingsSection = 'main' | 'profile' | 'notifications' | 'security' | 'payments' | 'language' | 'email' | 'tutorials' | 'danger';
+type SettingsSection = 'main' | 'profile' | 'notifications' | 'security' | 'payments' | 'language' | 'email' | 'tutorials' | 'theme' | 'danger';
 
 const Settings = () => {
   const { t, i18n } = useTranslation();
   const { user, signOut } = useAuthStore();
   const { profile, loading: dataLoading, refreshProfile } = useData();
+  const { theme } = useTheme();
+  const themeClasses = getThemeClasses(theme);
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
@@ -567,12 +572,13 @@ const Settings = () => {
   const menuItems = [
     { id: 'profile' as SettingsSection, icon: User, label: 'Profile & Business', description: 'Name, company, logo, terms', bgColor: 'bg-orange-500/20', iconColor: 'text-orange-500' },
     { id: 'notifications' as SettingsSection, icon: Bell, label: 'Notifications', description: 'Calendar reminders, alerts', bgColor: 'bg-orange-500/20', iconColor: 'text-orange-500' },
+    { id: 'theme' as SettingsSection, icon: Moon, label: 'Appearance', description: theme === 'light' ? 'Light mode' : 'Dark mode', bgColor: 'bg-orange-500/20', iconColor: 'text-orange-500' },
     { id: 'payments' as SettingsSection, icon: CreditCard, label: 'Payments', description: stripeStatus.connected ? 'Stripe connected' : 'Connect Stripe', bgColor: 'bg-orange-500/20', iconColor: 'text-orange-500' },
     { id: 'security' as SettingsSection, icon: Lock, label: 'Security', description: 'Password, authentication', bgColor: 'bg-orange-500/20', iconColor: 'text-orange-500' },
     { id: 'language' as SettingsSection, icon: Globe, label: 'Language', description: i18n.language === 'es' ? 'Español' : 'English', bgColor: 'bg-orange-500/20', iconColor: 'text-orange-500' },
     { id: 'email' as SettingsSection, icon: Mail, label: 'Business Email', description: 'Professional email address', bgColor: 'bg-orange-500/20', iconColor: 'text-orange-500' },
     { id: 'tutorials' as SettingsSection, icon: BookOpen, label: 'Tutorials', description: 'Reset onboarding guides', bgColor: 'bg-orange-500/20', iconColor: 'text-orange-500' },
-    { id: 'danger' as SettingsSection, icon: Trash2, label: 'Delete Account', description: 'Permanently remove data', bgColor: 'bg-orange-500/20', iconColor: 'text-zinc-400' },
+    { id: 'danger' as SettingsSection, icon: Trash2, label: 'Delete Account', description: 'Permanently remove data', bgColor: 'bg-orange-500/20', iconColor: 'text-red-500' },
   ];
 
   // Render section content
@@ -582,69 +588,69 @@ const Settings = () => {
         return (
           <div className="space-y-4">
             {/* Name */}
-            <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
-              <label className="block text-sm font-medium text-zinc-400 mb-1">Full Name</label>
+            <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
+              <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Full Name</label>
               <input
                 type="text"
                 value={localProfile.name}
                 onChange={(e) => handleProfileChange('name', e.target.value)}
-                className="w-full text-lg font-medium text-white border-0 p-0 focus:ring-0 bg-transparent"
+                className={`w-full text-lg font-medium ${themeClasses.text.primary} border-0 p-0 focus:ring-0 bg-transparent`}
                 placeholder="Your name"
               />
             </div>
 
             {/* Phone */}
-            <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
-              <label className="block text-sm font-medium text-zinc-400 mb-1">Phone</label>
+            <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
+              <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Phone</label>
               <input
                 type="tel"
                 value={localProfile.phone}
                 onChange={(e) => handleProfileChange('phone', e.target.value)}
-                className="w-full text-lg font-medium text-white border-0 p-0 focus:ring-0 bg-transparent"
+                className={`w-full text-lg font-medium ${themeClasses.text.primary} border-0 p-0 focus:ring-0 bg-transparent`}
                 placeholder="(555) 123-4567"
               />
             </div>
 
             {/* Company */}
-            <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
-              <label className="block text-sm font-medium text-zinc-400 mb-1">Company Name</label>
+            <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
+              <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Company Name</label>
               <input
                 type="text"
                 value={localProfile.company}
                 onChange={(e) => handleProfileChange('company', e.target.value)}
-                className="w-full text-lg font-medium text-white border-0 p-0 focus:ring-0 bg-transparent"
+                className={`w-full text-lg font-medium ${themeClasses.text.primary} border-0 p-0 focus:ring-0 bg-transparent`}
                 placeholder="Your company"
               />
             </div>
 
             {/* Address */}
-            <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
-              <label className="block text-sm font-medium text-zinc-400 mb-1">Business Address</label>
+            <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
+              <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Business Address</label>
               <textarea
                 value={localProfile.address}
                 onChange={(e) => handleProfileChange('address', e.target.value)}
                 rows={2}
-                className="w-full text-lg font-medium text-white border-0 p-0 focus:ring-0 bg-transparent resize-none"
+                className={`w-full text-lg font-medium ${themeClasses.text.primary} border-0 p-0 focus:ring-0 bg-transparent resize-none`}
                 placeholder="123 Main St, City, State"
               />
             </div>
 
             {/* Notification Email */}
-            <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
-              <label className="block text-sm font-medium text-zinc-400 mb-1">Notification Email</label>
+            <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
+              <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Notification Email</label>
               <input
                 type="email"
                 value={localProfile.contractorNotificationEmail}
                 onChange={(e) => handleProfileChange('contractorNotificationEmail', e.target.value)}
-                className="w-full text-lg font-medium text-white border-0 p-0 focus:ring-0 bg-transparent"
+                className={`w-full text-lg font-medium ${themeClasses.text.primary} border-0 p-0 focus:ring-0 bg-transparent`}
                 placeholder="notifications@company.com"
               />
-              <p className="text-xs text-zinc-500 mt-2">Receive notifications when customers respond to estimates</p>
+              <p className={`text-xs ${themeClasses.text.muted} mt-2`}>Receive notifications when customers respond to estimates</p>
             </div>
 
             {/* Logo */}
-            <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
-              <label className="block text-sm font-medium text-gray-500 mb-3">Company Logo</label>
+            <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
+              <label className={`block text-sm font-medium ${themeClasses.text.muted} mb-3`}>Company Logo</label>
               <div className="flex items-center gap-4">
                 {logoUrl ? (
                   <div className="relative">
@@ -662,7 +668,7 @@ const Settings = () => {
                   </div>
                 ) : (
                   <div className="w-20 h-20 border-2 border-dashed border-zinc-600 rounded-lg flex items-center justify-center">
-                    <Upload className="w-6 h-6 text-zinc-500" />
+                    <Upload className={`w-6 h-6 ${themeClasses.text.muted}`} />
                   </div>
                 )}
                 <label className="flex-1 cursor-pointer">
@@ -681,23 +687,23 @@ const Settings = () => {
             </div>
 
             {/* Default Terms */}
-            <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
-              <label className="block text-sm font-medium text-zinc-400 mb-1">Default Terms & Conditions</label>
+            <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
+              <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Default Terms & Conditions</label>
               <textarea
                 value={localProfile.defaultTerms}
                 onChange={(e) => handleProfileChange('defaultTerms', e.target.value)}
                 rows={4}
-                className="w-full text-white border-0 p-0 focus:ring-0 bg-transparent resize-none"
+                className={`w-full ${themeClasses.text.primary} border-0 p-0 focus:ring-0 bg-transparent resize-none`}
                 placeholder="Enter your standard terms..."
               />
-              <p className="text-xs text-zinc-500 mt-2">Auto-fills on new estimates</p>
+              <p className={`text-xs ${themeClasses.text.muted} mt-2`}>Auto-fills on new estimates</p>
             </div>
 
             {/* Save Button */}
             <button
               onClick={handleSave}
               disabled={saving}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-white text-black rounded-lg font-semibold active:scale-[0.98] transition-transform disabled:opacity-50"
+              className={`w-full flex items-center justify-center gap-2 px-4 py-3.5 ${themeClasses.button.primary} rounded-lg font-semibold ${themeClasses.button.primaryHover} active:scale-[0.98] transition-all disabled:opacity-50`}
             >
               {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
               {saving ? 'Saving...' : 'Save Changes'}
@@ -709,15 +715,15 @@ const Settings = () => {
         return (
           <div className="space-y-3">
             {/* Calendar Reminders */}
-            <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
+            <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
                     <Calendar className="w-5 h-5 text-orange-500" />
                   </div>
                   <div>
-                    <p className="font-semibold text-white">Calendar Reminders</p>
-                    <p className="text-sm text-zinc-400">Get notified about events</p>
+                    <p className={`font-semibold ${themeClasses.text.primary}`}>Calendar Reminders</p>
+                    <p className={`text-sm ${themeClasses.text.secondary}`}>Get notified about events</p>
                   </div>
                 </div>
                 <button
@@ -736,15 +742,15 @@ const Settings = () => {
             </div>
 
             {/* Security Alerts */}
-            <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
+            <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
                     <AlertTriangle className="w-5 h-5 text-orange-500" />
                   </div>
                   <div>
-                    <p className="font-semibold text-white">Security Alerts</p>
-                    <p className="text-sm text-zinc-400">Important security notifications</p>
+                    <p className={`font-semibold ${themeClasses.text.primary}`}>Security Alerts</p>
+                    <p className={`text-sm ${themeClasses.text.secondary}`}>Important security notifications</p>
                   </div>
                 </div>
                 <button
@@ -766,7 +772,7 @@ const Settings = () => {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-white text-black rounded-lg font-semibold active:scale-[0.98] transition-transform disabled:opacity-50 mt-4"
+              className={`w-full flex items-center justify-center gap-2 px-4 py-3.5 ${themeClasses.button.primary} rounded-lg font-semibold ${themeClasses.button.primaryHover} active:scale-[0.98] transition-all disabled:opacity-50 mt-4`}
             >
               {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
               {saving ? 'Saving...' : 'Save Preferences'}
@@ -787,37 +793,37 @@ const Settings = () => {
             {stripeStatus.connected ? (
               <>
                 {/* Connected Status Card */}
-                <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
+                <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <CheckCircle className="w-5 h-5 text-orange-500" />
-                      <span className="font-semibold text-white">Stripe Connected</span>
+                      <span className={`font-semibold ${themeClasses.text.primary}`}>Stripe Connected</span>
                     </div>
                     <button
                       onClick={checkStripeStatus}
                       disabled={stripeLoading}
-                      className="p-2 text-zinc-400 hover:bg-[#2C2C2E] rounded-lg transition-colors"
+                      className={`p-2 ${themeClasses.text.secondary} ${themeClasses.button.secondaryHover} rounded-lg transition-colors`}
                     >
                       <RefreshCw className={`w-4 h-4 ${stripeLoading ? 'animate-spin' : ''}`} />
                     </button>
                   </div>
 
                   {stripeStatus.businessName && (
-                    <p className="text-sm text-zinc-300 mb-1">Business: {stripeStatus.businessName}</p>
+                    <p className={`text-sm ${themeClasses.text.secondary} mb-1`}>Business: {stripeStatus.businessName}</p>
                   )}
                   {stripeStatus.email && (
-                    <p className="text-sm text-zinc-300 mb-3">Email: {stripeStatus.email}</p>
+                    <p className={`text-sm ${themeClasses.text.secondary} mb-3`}>Email: {stripeStatus.email}</p>
                   )}
 
                   <div className="flex gap-3">
                     <span className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${
-                      stripeStatus.chargesEnabled ? 'bg-orange-500/20 text-orange-500' : 'bg-[#3A3A3C] text-zinc-300'
+                      stripeStatus.chargesEnabled ? 'bg-orange-500/20 text-orange-500' : `${themeClasses.bg.secondary} ${themeClasses.text.secondary}`
                     }`}>
                       {stripeStatus.chargesEnabled ? <CheckCircle className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
                       {stripeStatus.chargesEnabled ? 'Charges Active' : 'Charges Pending'}
                     </span>
                     <span className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${
-                      stripeStatus.payoutsEnabled ? 'bg-orange-500/20 text-orange-500' : 'bg-[#3A3A3C] text-zinc-300'
+                      stripeStatus.payoutsEnabled ? 'bg-orange-500/20 text-orange-500' : `${themeClasses.bg.secondary} ${themeClasses.text.secondary}`
                     }`}>
                       {stripeStatus.payoutsEnabled ? <CheckCircle className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
                       {stripeStatus.payoutsEnabled ? 'Payouts Active' : 'Payouts Pending'}
@@ -829,7 +835,7 @@ const Settings = () => {
                 <button
                   onClick={handleStripeDashboard}
                   disabled={stripeLoading}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-lg font-semibold active:scale-[0.98] transition-transform disabled:opacity-50 bg-white text-black"
+                  className={`w-full flex items-center justify-center gap-2 px-4 py-3.5 ${themeClasses.button.primary} rounded-lg font-semibold ${themeClasses.button.primaryHover} active:scale-[0.98] transition-all disabled:opacity-50`}
                 >
                   {stripeLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <ExternalLink className="w-5 h-5" />}
                   {stripeStatus.detailsSubmitted ? 'Open Stripe Dashboard' : 'Complete Stripe Setup'}
@@ -847,20 +853,20 @@ const Settings = () => {
             ) : (
               <>
                 {/* Not Connected Info */}
-                <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-5">
+                <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-5`}>
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-12 h-12 bg-orange-500/20 rounded-lg flex items-center justify-center">
                       <CreditCard className="w-6 h-6 text-orange-500" />
                     </div>
                     <div>
-                      <p className="font-semibold text-white">Accept Payments Online</p>
-                      <p className="text-sm text-zinc-400">Connect Stripe to get started</p>
+                      <p className={`font-semibold ${themeClasses.text.primary}`}>Accept Payments Online</p>
+                      <p className={`text-sm ${themeClasses.text.secondary}`}>Connect Stripe to get started</p>
                     </div>
                   </div>
 
                   <ul className="space-y-2 mb-4">
                     {['Accept credit card payments', 'Send payment links to customers', 'Get paid faster online', 'Track payments in one place'].map((item, i) => (
-                      <li key={i} className="flex items-center gap-2 text-sm text-zinc-300">
+                      <li key={i} className={`flex items-center gap-2 text-sm ${themeClasses.text.secondary}`}>
                         <CheckCircle className="w-4 h-4 text-orange-500" />
                         {item}
                       </li>
@@ -871,7 +877,7 @@ const Settings = () => {
                 <button
                   onClick={handleStripeConnect}
                   disabled={stripeLoading}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-4 bg-white text-black rounded-lg font-semibold active:scale-[0.98] transition-transform disabled:opacity-50"
+                  className={`w-full flex items-center justify-center gap-2 px-4 py-4 ${themeClasses.button.primary} rounded-lg font-semibold ${themeClasses.button.primaryHover} active:scale-[0.98] transition-all disabled:opacity-50`}
                 >
                   {stripeLoading ? (
                     <>
@@ -895,28 +901,28 @@ const Settings = () => {
           <div className="space-y-3">
             <button
               onClick={handleChangePassword}
-              className="w-full bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4 active:scale-[0.98] transition-transform"
+              className={`w-full ${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4 active:scale-[0.98] transition-transform`}
             >
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
                   <Lock className="w-5 h-5 text-orange-500" />
                 </div>
                 <div className="flex-1 text-left">
-                  <p className="font-semibold text-white">Change Password</p>
-                  <p className="text-sm text-zinc-400">Send a password reset email</p>
+                  <p className={`font-semibold ${themeClasses.text.primary}`}>Change Password</p>
+                  <p className={`text-sm ${themeClasses.text.secondary}`}>Send a password reset email</p>
                 </div>
-                <ChevronRight className="w-5 h-5 text-zinc-500" />
+                <ChevronRight className={`w-5 h-5 ${themeClasses.text.muted}`} />
               </div>
             </button>
 
-            <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
+            <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
                   <CheckCircle className="w-5 h-5 text-orange-500" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-semibold text-white">Email Verified</p>
-                  <p className="text-sm text-zinc-400">{user?.email}</p>
+                  <p className={`font-semibold ${themeClasses.text.primary}`}>Email Verified</p>
+                  <p className={`text-sm ${themeClasses.text.secondary}`}>{user?.email}</p>
                 </div>
               </div>
             </div>
@@ -926,7 +932,7 @@ const Settings = () => {
       case 'language':
         return (
           <div className="space-y-3">
-            <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 overflow-hidden">
+            <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} overflow-hidden`}>
               {[
                 { code: 'en', label: 'English', flag: '🇺🇸' },
                 { code: 'es', label: 'Español', flag: '🇪🇸' }
@@ -943,12 +949,12 @@ const Settings = () => {
                       await refreshProfile();
                     }
                   }}
-                  className={`w-full flex items-center gap-3 p-4 border-b border-orange-500/20 last:border-0 active:bg-[#2C2C2E] transition-colors ${
+                  className={`w-full flex items-center gap-3 p-4 border-b ${themeClasses.border.secondary} last:border-0 ${themeClasses.button.secondaryHover} transition-colors ${
                     i18n.language === lang.code ? 'bg-orange-500/10' : ''
                   }`}
                 >
                   <span className="text-2xl">{lang.flag}</span>
-                  <span className="flex-1 text-left font-medium text-white">{lang.label}</span>
+                  <span className={`flex-1 text-left font-medium ${themeClasses.text.primary}`}>{lang.label}</span>
                   {i18n.language === lang.code && (
                     <CheckCircle className="w-5 h-5 text-orange-500" />
                   )}
@@ -958,9 +964,53 @@ const Settings = () => {
           </div>
         );
 
-      case 'email':
+      case 'theme':
         return (
           <div className="space-y-4">
+            {/* Theme Description */}
+            <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                  <Moon className="w-5 h-5 text-orange-500" />
+                </div>
+                <div>
+                  <h3 className={`font-semibold ${themeClasses.text.primary}`}>App Appearance</h3>
+                  <p className={`text-sm ${themeClasses.text.secondary}`}>Choose between light and dark mode</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Theme Toggle */}
+            <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className={`font-medium ${themeClasses.text.primary} mb-1`}>Theme Mode</h4>
+                  <p className={`text-sm ${themeClasses.text.secondary}`}>
+                    Currently using {theme === 'light' ? 'light' : 'dark'} mode
+                  </p>
+                </div>
+                <ThemeToggle size="lg" showLabel />
+              </div>
+            </div>
+
+            {/* Theme Info */}
+            <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
+              <div className={`text-sm ${themeClasses.text.secondary}`}>
+                <p className="mb-2">
+                  <strong className={themeClasses.text.primary}>Light Mode:</strong> Clean, bright interface perfect for daytime use
+                </p>
+                <p>
+                  <strong className={themeClasses.text.primary}>Dark Mode:</strong> Easy on the eyes for low-light environments
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'email':
+        return (
+          <div className="space-y-6">
+            <EmailPreferences />
             <BusinessEmailSetup />
           </div>
         );
@@ -968,20 +1018,20 @@ const Settings = () => {
       case 'tutorials':
         return (
           <div className="space-y-4">
-            <p className="text-sm text-zinc-400 px-1">
+            <p className={`text-sm ${themeClasses.text.secondary} px-1`}>
               Re-enable tutorials to see the onboarding guides again when using features.
             </p>
 
             {/* Dashboard Tutorial */}
-            <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
+            <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
                     <Home className="w-5 h-5 text-orange-500" />
                   </div>
                   <div>
-                    <p className="font-semibold text-white">Dashboard Tutorial</p>
-                    <p className="text-sm text-zinc-400">Learn about your dashboard overview</p>
+                    <p className={`font-semibold ${themeClasses.text.primary}`}>Dashboard Tutorial</p>
+                    <p className={`text-sm ${themeClasses.text.secondary}`}>Learn about your dashboard overview</p>
                   </div>
                 </div>
                 <button
@@ -1006,15 +1056,15 @@ const Settings = () => {
             </div>
 
             {/* Vision Cam Tutorial */}
-            <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
+            <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-lg flex items-center justify-center">
                     <Eye className="w-5 h-5 text-purple-400" />
                   </div>
                   <div>
-                    <p className="font-semibold text-white">Vision Cam Tutorial</p>
-                    <p className="text-sm text-zinc-400">Learn how to use AI visualization</p>
+                    <p className={`font-semibold ${themeClasses.text.primary}`}>Vision Cam Tutorial</p>
+                    <p className={`text-sm ${themeClasses.text.secondary}`}>Learn how to use AI visualization</p>
                   </div>
                 </div>
                 <button
@@ -1045,15 +1095,15 @@ const Settings = () => {
             </div>
 
             {/* Tasks Tutorial */}
-            <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
+            <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
                     <ClipboardList className="w-5 h-5 text-orange-500" />
                   </div>
                   <div>
-                    <p className="font-semibold text-white">Tasks Tutorial</p>
-                    <p className="text-sm text-zinc-400">Learn to manage tasks & calendar</p>
+                    <p className={`font-semibold ${themeClasses.text.primary}`}>Tasks Tutorial</p>
+                    <p className={`text-sm ${themeClasses.text.secondary}`}>Learn to manage tasks & calendar</p>
                   </div>
                 </div>
                 <button
@@ -1078,15 +1128,15 @@ const Settings = () => {
             </div>
 
             {/* Estimating Tutorial */}
-            <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
+            <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
                     <FileText className="w-5 h-5 text-orange-500" />
                   </div>
                   <div>
-                    <p className="font-semibold text-white">Estimating Tutorial</p>
-                    <p className="text-sm text-zinc-400">Learn to create & send estimates</p>
+                    <p className={`font-semibold ${themeClasses.text.primary}`}>Estimating Tutorial</p>
+                    <p className={`text-sm ${themeClasses.text.secondary}`}>Learn to create & send estimates</p>
                   </div>
                 </div>
                 <button
@@ -1111,15 +1161,15 @@ const Settings = () => {
             </div>
 
             {/* Projects Tutorial */}
-            <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
+            <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
                     <Building2 className="w-5 h-5 text-orange-500" />
                   </div>
                   <div>
-                    <p className="font-semibold text-white">Projects Tutorial</p>
-                    <p className="text-sm text-zinc-400">Learn to manage projects & teams</p>
+                    <p className={`font-semibold ${themeClasses.text.primary}`}>Projects Tutorial</p>
+                    <p className={`text-sm ${themeClasses.text.secondary}`}>Learn to manage projects & teams</p>
                   </div>
                 </div>
                 <button
@@ -1144,15 +1194,15 @@ const Settings = () => {
             </div>
 
             {/* Finance Tutorial */}
-            <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
+            <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
                     <CreditCard className="w-5 h-5 text-orange-500" />
                   </div>
                   <div>
-                    <p className="font-semibold text-white">Finance Tutorial</p>
-                    <p className="text-sm text-zinc-400">Learn P&L, revenue & expenses</p>
+                    <p className={`font-semibold ${themeClasses.text.primary}`}>Finance Tutorial</p>
+                    <p className={`text-sm ${themeClasses.text.secondary}`}>Learn P&L, revenue & expenses</p>
                   </div>
                 </div>
                 <button
@@ -1177,15 +1227,15 @@ const Settings = () => {
             </div>
 
             {/* Payments Tutorial */}
-            <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
+            <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
                     <FileText className="w-5 h-5 text-orange-500" />
                   </div>
                   <div>
-                    <p className="font-semibold text-white">Invoices Tutorial</p>
-                    <p className="text-sm text-zinc-400">Learn invoicing & payment links</p>
+                    <p className={`font-semibold ${themeClasses.text.primary}`}>Invoices Tutorial</p>
+                    <p className={`text-sm ${themeClasses.text.secondary}`}>Learn invoicing & payment links</p>
                   </div>
                 </div>
                 <button
@@ -1210,15 +1260,15 @@ const Settings = () => {
             </div>
 
             {/* Teams Tutorial */}
-            <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
+            <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
                     <User className="w-5 h-5 text-orange-500" />
                   </div>
                   <div>
-                    <p className="font-semibold text-white">Teams Tutorial</p>
-                    <p className="text-sm text-zinc-400">Learn to manage employees</p>
+                    <p className={`font-semibold ${themeClasses.text.primary}`}>Teams Tutorial</p>
+                    <p className={`text-sm ${themeClasses.text.secondary}`}>Learn to manage employees</p>
                   </div>
                 </div>
                 <button
@@ -1243,15 +1293,15 @@ const Settings = () => {
             </div>
 
             {/* Email Tutorial */}
-            <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
+            <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
                     <Mail className="w-5 h-5 text-orange-500" />
                   </div>
                   <div>
-                    <p className="font-semibold text-white">Email Tutorial</p>
-                    <p className="text-sm text-zinc-400">Learn to send emails & attachments</p>
+                    <p className={`font-semibold ${themeClasses.text.primary}`}>Email Tutorial</p>
+                    <p className={`text-sm ${themeClasses.text.secondary}`}>Learn to send emails & attachments</p>
                   </div>
                 </div>
                 <button
@@ -1276,15 +1326,15 @@ const Settings = () => {
             </div>
 
             {/* Photos Tutorial */}
-            <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
+            <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
                     <Eye className="w-5 h-5 text-orange-500" />
                   </div>
                   <div>
-                    <p className="font-semibold text-white">Photos Tutorial</p>
-                    <p className="text-sm text-zinc-400">Learn to capture & organize photos</p>
+                    <p className={`font-semibold ${themeClasses.text.primary}`}>Photos Tutorial</p>
+                    <p className={`text-sm ${themeClasses.text.secondary}`}>Learn to capture & organize photos</p>
                   </div>
                 </div>
                 <button
@@ -1309,15 +1359,15 @@ const Settings = () => {
             </div>
 
             {/* Marketing Tutorial */}
-            <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
+            <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
                     <Eye className="w-5 h-5 text-orange-500" />
                   </div>
                   <div>
-                    <p className="font-semibold text-white">Marketing Tutorial</p>
-                    <p className="text-sm text-zinc-400">Learn about marketing services</p>
+                    <p className={`font-semibold ${themeClasses.text.primary}`}>Marketing Tutorial</p>
+                    <p className={`text-sm ${themeClasses.text.secondary}`}>Learn about marketing services</p>
                   </div>
                 </div>
                 <button
@@ -1341,7 +1391,7 @@ const Settings = () => {
               </div>
             </div>
 
-            <p className="text-xs text-zinc-500 px-1">
+            <p className={`text-xs ${themeClasses.text.muted} px-1`}>
               When enabled, the tutorial will show the next time you visit that feature.
             </p>
           </div>
@@ -1371,9 +1421,9 @@ const Settings = () => {
                 Delete My Account
               </button>
             ) : (
-              <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4 space-y-4">
+              <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4 space-y-4`}>
                 <div>
-                  <label className="block text-sm font-medium text-zinc-400 mb-2">
+                  <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-2`}>
                     Type DELETE to confirm
                   </label>
                   <input
@@ -1420,14 +1470,14 @@ const Settings = () => {
   };
 
   return (
-    <div className="min-h-full bg-[#0F0F0F] pb-24">
+    <div className={`min-h-full ${themeClasses.bg.primary} pb-24`}>
       {/* Header */}
-      <div className="bg-[#1C1C1E] border-b border-orange-500/30 px-4 pb-4 pt-[calc(env(safe-area-inset-top)+16px)] sticky top-0 z-10">
+      <div className={`${themeClasses.bg.secondary} ${themeClasses.border.primary} border-b px-4 pb-4 pt-[calc(env(safe-area-inset-top)+16px)] sticky top-0 z-10`}>
         <div className="flex items-center gap-3">
           {activeSection !== 'main' ? (
             <button
               onClick={() => setActiveSection('main')}
-              className="p-2 -ml-2 text-content-secondary hover:text-content-primary active:scale-95 transition-transform"
+              className={`p-2 -ml-2 ${themeClasses.text.secondary} ${themeClasses.hover.text} active:scale-95 transition-transform`}
             >
               <ChevronRight className="w-6 h-6 rotate-180" />
             </button>
@@ -1437,10 +1487,11 @@ const Settings = () => {
             </div>
           )}
           <div>
-            <h1 className="text-xl font-bold text-content-primary">
+            <h1 className={`text-xl font-bold ${themeClasses.text.primary}`}>
               {activeSection === 'main' ? 'Settings' :
                activeSection === 'profile' ? 'Profile & Business' :
                activeSection === 'notifications' ? 'Notifications' :
+               activeSection === 'theme' ? 'Appearance' :
                activeSection === 'payments' ? 'Payments' :
                activeSection === 'security' ? 'Security' :
                activeSection === 'language' ? 'Language' :
@@ -1449,7 +1500,7 @@ const Settings = () => {
                activeSection === 'danger' ? 'Delete Account' : 'Settings'}
             </h1>
             {activeSection === 'main' && (
-              <p className="text-sm text-content-secondary">Manage your preferences</p>
+              <p className={`text-sm ${themeClasses.text.secondary}`}>Manage your preferences</p>
             )}
           </div>
         </div>
@@ -1470,10 +1521,10 @@ const Settings = () => {
                     <item.icon className={`w-5 h-5 ${item.iconColor}`} />
                   </div>
                   <div className="flex-1 text-left">
-                    <p className="font-semibold text-content-primary">{item.label}</p>
-                    <p className="text-sm text-content-secondary">{item.description}</p>
+                    <p className={`font-semibold ${themeClasses.text.primary}`}>{item.label}</p>
+                    <p className={`text-sm ${themeClasses.text.secondary}`}>{item.description}</p>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-content-tertiary" />
+                  <ChevronRight className={`w-5 h-5 ${themeClasses.text.muted}`} />
                 </div>
               </button>
             ))}
@@ -1492,7 +1543,7 @@ const Settings = () => {
                   <p className="font-semibold text-status-red-700">
                     {loggingOut ? 'Logging out...' : 'Log Out'}
                   </p>
-                  <p className="text-sm text-content-secondary">{user?.email}</p>
+                  <p className={`text-sm ${themeClasses.text.secondary}`}>{user?.email}</p>
                 </div>
                 {loggingOut && <Loader2 className="w-5 h-5 text-status-red-600 animate-spin" />}
               </div>

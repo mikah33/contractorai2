@@ -78,6 +78,78 @@ serve(async (req) => {
       throw new Error('Missing required fields')
     }
 
+    // Check if client has Gmail connected for customer email sending
+    let shouldUseCustomerGmail = false
+    if (clientId) {
+      console.log('🔍 Checking client Gmail connection status...')
+
+      const { data: client, error: clientError } = await supabaseClient
+        .from('clients')
+        .select('email_sending_enabled, gmail_email, name')
+        .eq('id', clientId)
+        .single()
+
+      if (!clientError && client?.email_sending_enabled && client?.gmail_email) {
+        shouldUseCustomerGmail = true
+        console.log(`✅ Client ${client.name} has Gmail connected (${client.gmail_email}) - routing to customer Gmail`)
+      } else {
+        console.log('📧 Client does not have Gmail connected - using n8n webhook fallback')
+      }
+    } else {
+      console.log('📧 No client ID provided - using n8n webhook')
+    }
+
+    // Route to appropriate email sending method
+    if (shouldUseCustomerGmail) {
+      // Route to customer Gmail function
+      console.log('📧 Routing to customer Gmail function...')
+
+      const customerGmailPayload = {
+        clientId,
+        customerName,
+        customerEmail,
+        subject,
+        body,
+        pdfUrl,
+        estimateId,
+        contractorEmail,
+        totalAmount: requestData.totalAmount || '0.00',
+        contractorUserId: user.id
+      }
+
+      const customerGmailResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-customer-gmail`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': authHeader,
+        },
+        body: JSON.stringify(customerGmailPayload)
+      })
+
+      if (!customerGmailResponse.ok) {
+        const errorData = await customerGmailResponse.json()
+        console.error('❌ Customer Gmail function failed:', errorData)
+        throw new Error(`Customer Gmail sending failed: ${errorData.error || 'Unknown error'}`)
+      }
+
+      const customerGmailResult = await customerGmailResponse.json()
+      console.log('✅ Customer Gmail function completed successfully:', customerGmailResult)
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: customerGmailResult.message,
+          method: 'customer_gmail',
+          gmail_message_id: customerGmailResult.gmail_message_id
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      )
+    }
+
+    // Fallback: Use n8n webhook (existing logic)
     console.log('📧 Sending estimate email to n8n webhook:', {
       customerEmail,
       estimateId,
@@ -124,7 +196,20 @@ serve(async (req) => {
       console.log('✅ Created estimate_email_responses record:', emailResponse?.id)
     }
 
-    // Step 2: Forward to n8n webhook
+    // Step 2: Generate unsubscribe URL for customer
+    let unsubscribeUrl = '';
+    try {
+      const { data: urlData } = await supabaseClient.rpc('get_unsubscribe_url', {
+        p_email: customerEmail,
+        p_base_url: 'https://contractorai.app'
+      });
+      unsubscribeUrl = urlData || 'https://contractorai.app/unsubscribe';
+    } catch (urlError) {
+      console.warn('⚠️ Failed to generate unsubscribe URL:', urlError);
+      unsubscribeUrl = 'https://contractorai.app/unsubscribe';
+    }
+
+    // Step 3: Forward to n8n webhook
     let webhookData = null
     try {
       console.log('🌐 Making fetch request to webhook...')
@@ -137,6 +222,18 @@ serve(async (req) => {
         pdfUrl,
         estimateId,
         clientId,
+        // Add unsubscribe compliance information
+        unsubscribeUrl,
+        emailType: 'estimate',
+        complianceInfo: {
+          canUnsubscribe: true,
+          unsubscribeTypes: ['all', 'estimates'],
+          businessName: 'ContractorAI',
+          estimateSpecific: {
+            unsubscribeFromEstimatesUrl: unsubscribeUrl + '?type=estimates',
+            unsubscribeFromAllUrl: unsubscribeUrl + '?type=all'
+          }
+        }
       }
 
       console.log('📤 Webhook payload:', JSON.stringify(webhookPayload, null, 2))
@@ -180,7 +277,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        message: 'Email sent successfully',
+        message: 'Email sent successfully via contractor email (n8n)',
+        method: 'n8n_webhook',
         webhookResponse: webhookData,
       }),
       {

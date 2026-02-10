@@ -17,16 +17,21 @@ import {
   Pencil,
   Building2,
   DollarSign,
-  FileText
+  FileText,
+  Settings
 } from 'lucide-react';
 import { useClientsStore } from '../stores/clientsStore';
 import useProjectStore from '../stores/projectStore';
 import AIChatPopup from '../components/ai/AIChatPopup';
+import FloatingAIChatButton from '../components/ai/FloatingAIChatButton';
 import AddChoiceModal from '../components/common/AddChoiceModal';
+import { useTheme, getThemeClasses } from '../contexts/ThemeContext';
 
 const ClientsHub: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { theme } = useTheme();
+  const themeClasses = getThemeClasses(theme);
   const { clients, fetchClients, loading, deleteClient, addClient, updateClient } = useClientsStore();
   const { projects, fetchProjects } = useProjectStore();
   const [showAddChoice, setShowAddChoice] = useState(false);
@@ -112,10 +117,14 @@ const ClientsHub: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'bg-green-500/20 text-green-400';
-      case 'inactive': return 'bg-zinc-800 text-zinc-400';
-      case 'prospect': return 'bg-blue-500/20 text-blue-400';
-      default: return 'bg-zinc-800 text-zinc-400';
+      case 'active':
+        return theme === 'light' ? 'bg-green-100 text-green-700' : 'bg-green-500/20 text-green-400';
+      case 'inactive':
+        return theme === 'light' ? 'bg-gray-200 text-gray-600' : 'bg-zinc-800 text-zinc-400';
+      case 'prospect':
+        return theme === 'light' ? 'bg-blue-100 text-blue-700' : 'bg-blue-500/20 text-blue-400';
+      default:
+        return theme === 'light' ? 'bg-gray-200 text-gray-600' : 'bg-zinc-800 text-zinc-400';
     }
   };
 
@@ -271,37 +280,45 @@ const ClientsHub: React.FC = () => {
   };
 
   return (
-    <div className="min-h-full bg-[#0F0F0F] pb-24">
+    <div className={`min-h-full ${themeClasses.bg.primary} pb-24`}>
       {/* Header */}
-      <div className="bg-[#1C1C1E] border-b border-orange-500/30 px-4 pb-4 pt-[calc(env(safe-area-inset-top)+16px)] sticky top-0 z-10">
+      <div className={`${themeClasses.bg.secondary} ${themeClasses.border.primary} border-b px-4 pb-4 pt-[calc(env(safe-area-inset-top)+16px)] sticky top-0 z-10`}>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
               <Users className="w-5 h-5 text-orange-500" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white">Clients</h1>
-              <p className="text-sm text-zinc-400">{clients.length} total</p>
+              <h1 className={`text-xl font-bold ${themeClasses.text.primary}`}>Clients</h1>
+              <p className={`text-sm ${themeClasses.text.secondary}`}>{clients.length} total</p>
             </div>
           </div>
-          <button
-            onClick={() => setShowAddChoice(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white text-black rounded-md font-medium hover:bg-zinc-200 active:scale-95 transition-all"
-          >
-            <Plus className="w-5 h-5" />
-            <span>Add</span>
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate('/settings')}
+              className={`w-10 h-10 ${themeClasses.bg.tertiary} rounded-lg flex items-center justify-center ${themeClasses.hover.bg} transition-colors`}
+            >
+              <Settings className={`w-5 h-5 ${themeClasses.text.secondary}`} />
+            </button>
+            <button
+              onClick={() => setShowAddChoice(true)}
+              className={`flex items-center gap-2 px-4 py-2.5 ${themeClasses.button.primary} rounded-md font-medium ${themeClasses.button.primaryHover} active:scale-95 transition-all`}
+            >
+              <Plus className="w-5 h-5" />
+              <span>Add</span>
+            </button>
+          </div>
         </div>
 
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
+          <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 ${themeClasses.text.muted}`} />
           <input
             type="text"
             placeholder="Search clients..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-[#262626] rounded-lg border border-[#3A3A3C] text-white placeholder-zinc-500 focus:ring-2 focus:ring-zinc-500 focus:bg-[#2C2C2E] transition-all"
+            className={`w-full pl-10 pr-4 py-2.5 ${themeClasses.bg.tertiary} rounded-lg border ${themeClasses.border.secondary} ${themeClasses.text.primary} placeholder-zinc-500 focus:ring-2 focus:ring-zinc-500 ${themeClasses.focus.bg} transition-all`}
           />
         </div>
       </div>
@@ -310,16 +327,16 @@ const ClientsHub: React.FC = () => {
       <div className="px-4 py-3">
         <button
           onClick={handleAIChat}
-          className="w-full flex items-center gap-3 p-3 md:p-4 bg-[#1C1C1E] rounded-lg border border-orange-500/30 active:scale-[0.98] transition-transform hover:border-orange-500/50"
+          className={`w-full flex items-center gap-3 p-3 md:p-4 ${themeClasses.bg.secondary} rounded-lg border border-orange-500/30 active:scale-[0.98] transition-transform hover:border-orange-500/50`}
         >
           <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
             <Sparkles className="w-5 h-5 text-orange-500" />
           </div>
           <div className="flex-1 text-left">
-            <p className="font-semibold text-white">AI CRM Assistant</p>
-            <p className="text-sm text-zinc-400">Manage contacts, draft emails, track relationships</p>
+            <p className={`font-semibold ${themeClasses.text.primary}`}>AI CRM Assistant</p>
+            <p className={`text-sm ${themeClasses.text.secondary}`}>Manage contacts, draft emails, track relationships</p>
           </div>
-          <ChevronRight className="w-5 h-5 text-zinc-500" />
+          <ChevronRight className={`w-5 h-5 ${themeClasses.text.muted}`} />
         </button>
       </div>
 
@@ -327,13 +344,13 @@ const ClientsHub: React.FC = () => {
       <div className="px-4 space-y-3">
         {loading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+            <div className={`animate-spin rounded-full h-8 w-8 border-b-2 ${theme === 'light' ? 'border-gray-800' : 'border-white'}`}></div>
           </div>
         ) : filteredClients.length === 0 ? (
           <div className="text-center py-12">
-            <Users className="w-12 h-12 text-zinc-600 mx-auto mb-3" />
-            <p className="text-zinc-400 font-medium">No clients yet</p>
-            <p className="text-sm text-zinc-500 mt-1">Tap + to add your first client</p>
+            <Users className={`w-12 h-12 ${themeClasses.text.muted} mx-auto mb-3`} />
+            <p className={`${themeClasses.text.secondary} font-medium`}>No clients yet</p>
+            <p className={`text-sm ${themeClasses.text.muted} mt-1`}>Tap + to add your first client</p>
           </div>
         ) : (
           filteredClients.map((client) => {
@@ -344,7 +361,7 @@ const ClientsHub: React.FC = () => {
               <div
                 key={client.id}
                 onClick={() => setSelectedClient(client)}
-                className="bg-[#1C1C1E] rounded-2xl border border-orange-500/30 overflow-hidden active:scale-[0.99] transition-transform"
+                className={`${themeClasses.bg.secondary} rounded-2xl border border-orange-500/30 overflow-hidden active:scale-[0.99] transition-transform`}
               >
                 {/* Header with avatar and status */}
                 <div className="p-3 md:p-4 pb-2 md:pb-3">
@@ -354,7 +371,7 @@ const ClientsHub: React.FC = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <h3 className="font-bold text-white truncate text-base md:text-lg">
+                        <h3 className={`font-bold ${themeClasses.text.primary} truncate text-base md:text-lg`}>
                           {client.name || 'Unknown Client'}
                         </h3>
                         <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(client.status)}`}>
@@ -362,27 +379,27 @@ const ClientsHub: React.FC = () => {
                         </span>
                       </div>
                       {client.company && (
-                        <div className="flex items-center gap-1 text-sm text-zinc-400 mt-0.5">
+                        <div className={`flex items-center gap-1 text-sm ${themeClasses.text.secondary} mt-0.5`}>
                           <Building2 className="w-3.5 h-3.5" />
                           <span className="truncate">{client.company}</span>
                         </div>
                       )}
                     </div>
-                    <ChevronRight className="w-5 h-5 text-zinc-500 flex-shrink-0" />
+                    <ChevronRight className={`w-5 h-5 ${themeClasses.text.muted} flex-shrink-0`} />
                   </div>
                 </div>
 
                 {/* Contact Info */}
                 <div className="px-3 md:px-4 pb-2 md:pb-3 flex flex-wrap gap-x-3 md:gap-x-4 gap-y-1 text-sm">
                   {client.email && (
-                    <div className="flex items-center gap-1.5 text-zinc-400">
-                      <Mail className="w-4 h-4 text-zinc-500" />
+                    <div className={`flex items-center gap-1.5 ${themeClasses.text.secondary}`}>
+                      <Mail className={`w-4 h-4 ${themeClasses.text.muted}`} />
                       <span className="truncate max-w-[180px]">{client.email}</span>
                     </div>
                   )}
                   {client.phone && (
-                    <div className="flex items-center gap-1.5 text-zinc-400">
-                      <Phone className="w-4 h-4 text-zinc-500" />
+                    <div className={`flex items-center gap-1.5 ${themeClasses.text.secondary}`}>
+                      <Phone className={`w-4 h-4 ${themeClasses.text.muted}`} />
                       <span>{client.phone}</span>
                     </div>
                   )}
@@ -434,7 +451,7 @@ const ClientsHub: React.FC = () => {
                 </div>
 
                 {/* Stats Row */}
-                <div className="px-3 md:px-4 py-2 md:py-3 bg-[#171717] border-t border-orange-500/20 flex items-center justify-between">
+                <div className={`px-3 md:px-4 py-2 md:py-3 ${theme === 'light' ? 'bg-gray-50' : 'bg-[#171717]'} border-t border-orange-500/20 flex items-center justify-between`}>
                   <div className="flex items-center gap-3 md:gap-4">
                     {/* Projects */}
                     <div className="flex items-center gap-1.5">
@@ -1021,6 +1038,12 @@ const ClientsHub: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Enhanced AI Chat Button */}
+      <FloatingAIChatButton
+        onClick={handleAIChat}
+        mode="clients"
+      />
     </div>
   );
 };

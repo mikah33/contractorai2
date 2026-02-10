@@ -16,7 +16,8 @@ import {
   Bell,
   BellOff,
   Pencil,
-  Trash2
+  Trash2,
+  Settings
 } from 'lucide-react';
 import { format, startOfWeek, addDays, isSameDay, parseISO, isToday, isTomorrow, isPast, addMonths, subMonths, startOfMonth, endOfMonth, endOfWeek } from 'date-fns';
 import { useCalendarStoreSupabase } from '../stores/calendarStoreSupabase';
@@ -24,7 +25,10 @@ import useProjectStore from '../stores/projectStore';
 import { useOnboardingStore } from '../stores/onboardingStore';
 import { supabase } from '../lib/supabase';
 import { notificationService } from '../services/notifications/notificationService';
+import AIChatPopup from '../components/ai/AIChatPopup';
+import FloatingAIChatButton from '../components/ai/FloatingAIChatButton';
 import TasksTutorialModal from '../components/tasks/TasksTutorialModal';
+import { useTheme, getThemeClasses } from '../contexts/ThemeContext';
 
 interface Task {
   id: string;
@@ -38,12 +42,15 @@ interface Task {
 
 const TodoHub: React.FC = () => {
   const navigate = useNavigate();
+  const { theme } = useTheme();
+  const themeClasses = getThemeClasses(theme);
   const { events, fetchEvents } = useCalendarStoreSupabase();
   const { projects, fetchProjects, addProject } = useProjectStore();
   const { tasksTutorialCompleted, checkTasksTutorial, setTasksTutorialCompleted } = useOnboardingStore();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [showAIChat, setShowAIChat] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -97,6 +104,10 @@ const TodoHub: React.FC = () => {
     if (dontShowAgain && userId) {
       await setTasksTutorialCompleted(userId, true);
     }
+  };
+
+  const handleAIChat = () => {
+    setShowAIChat(true);
   };
 
   const fetchTasks = async () => {
@@ -413,7 +424,7 @@ const TodoHub: React.FC = () => {
   ).length;
 
   return (
-    <div className="min-h-full bg-[#0F0F0F] pb-24">
+    <div className={`min-h-full ${themeClasses.bg.primary} pb-24`}>
       {/* Tasks Tutorial Modal */}
       <TasksTutorialModal
         isOpen={showTutorial}
@@ -421,21 +432,28 @@ const TodoHub: React.FC = () => {
       />
 
       {/* Header */}
-      <div className="bg-[#1C1C1E] border-b border-orange-500/30 px-4 pb-4 pt-[calc(env(safe-area-inset-top)+16px)] sticky top-0 z-10">
+      <div className={`${themeClasses.bg.secondary} ${themeClasses.border.primary} border-b px-4 pb-4 pt-[calc(env(safe-area-inset-top)+16px)] sticky top-0 z-10`}>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
               <ClipboardList className="w-5 h-5 text-orange-500" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white">Tasks & Calendar</h1>
-              <p className="text-sm text-zinc-400">{format(new Date(), 'EEEE, MMM d')}</p>
+              <h1 className={`text-xl font-bold ${themeClasses.text.primary}`}>Tasks & Calendar</h1>
+              <p className={`text-sm ${themeClasses.text.secondary}`}>{format(new Date(), 'EEEE, MMM d')}</p>
             </div>
           </div>
-          <button
-            onClick={() => setShowAddTask(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white text-black rounded-md font-medium hover:bg-zinc-200 active:scale-95 transition-all"
-          >
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate('/settings')}
+              className={`w-10 h-10 ${themeClasses.bg.tertiary} rounded-lg flex items-center justify-center ${themeClasses.hover.bg} transition-colors`}
+            >
+              <Settings className={`w-5 h-5 ${themeClasses.text.secondary}`} />
+            </button>
+            <button
+              onClick={() => setShowAddTask(true)}
+              className={`flex items-center gap-2 px-4 py-2.5 ${themeClasses.button.primary} rounded-md font-medium ${themeClasses.button.primaryHover} active:scale-95 transition-all`}
+            >
             <Plus className="w-5 h-5" />
             <span>Add</span>
           </button>
@@ -446,7 +464,7 @@ const TodoHub: React.FC = () => {
           <button
             onClick={() => { setFilter('all'); setSelectedDate(null); }}
             className={`flex-shrink-0 px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
-              filter === 'all' && !selectedDate ? 'bg-orange-500/20 text-orange-500' : 'bg-[#262626] text-zinc-400'
+              filter === 'all' && !selectedDate ? 'bg-orange-500/20 text-orange-500' : `${themeClasses.bg.tertiary} ${themeClasses.text.secondary}`
             }`}
           >
             All ({tasks.length})
@@ -454,7 +472,7 @@ const TodoHub: React.FC = () => {
           <button
             onClick={() => { setFilter('today'); setSelectedDate(null); }}
             className={`flex-shrink-0 px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
-              filter === 'today' && !selectedDate ? 'bg-orange-500/20 text-orange-500' : 'bg-[#262626] text-zinc-400'
+              filter === 'today' && !selectedDate ? 'bg-orange-500/20 text-orange-500' : `${themeClasses.bg.tertiary} ${themeClasses.text.secondary}`
             }`}
           >
             Today ({tasks.filter(t => t.due_date && isToday(parseISO(t.due_date))).length})
@@ -463,7 +481,7 @@ const TodoHub: React.FC = () => {
             <button
               onClick={() => { setFilter('overdue'); setSelectedDate(null); }}
               className={`flex-shrink-0 px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
-                filter === 'overdue' && !selectedDate ? 'bg-orange-500/20 text-orange-500' : 'bg-zinc-800 text-zinc-400'
+                filter === 'overdue' && !selectedDate ? 'bg-orange-500/20 text-orange-500' : `${themeClasses.bg.tertiary} ${themeClasses.text.secondary}`
               }`}
             >
               Overdue ({overdueCount})
@@ -1004,6 +1022,20 @@ const TodoHub: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* AI Chat Popup */}
+      <AIChatPopup
+        isOpen={showAIChat}
+        onClose={() => setShowAIChat(false)}
+        mode="general"
+      />
+
+      {/* Enhanced AI Chat Button */}
+      <FloatingAIChatButton
+        onClick={handleAIChat}
+        mode="general"
+      />
+      </div>
     </div>
   );
 };

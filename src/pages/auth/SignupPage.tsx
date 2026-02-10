@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Mail, Lock, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, ArrowRight, ArrowLeft } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { supabase } from '../../lib/supabase';
 import { Capacitor } from '@capacitor/core';
+import { useTheme, getThemeClasses } from '../../contexts/ThemeContext';
 
 const SignupPage = () => {
   const [email, setEmail] = useState('');
@@ -14,6 +15,9 @@ const SignupPage = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const signUp = useAuthStore((state) => state.signUp);
+
+  const { theme } = useTheme();
+  const themeClasses = getThemeClasses(theme);
 
   const isNative = Capacitor.isNativePlatform();
 
@@ -121,11 +125,25 @@ const SignupPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0F0F0F] flex flex-col justify-center px-4 sm:px-6 lg:px-8 py-8">
+    <div className={`min-h-screen ${themeClasses.bg.primary} flex flex-col justify-center px-4 sm:px-6 lg:px-8 py-8`}>
+      {/* Back button */}
+      <div className="absolute top-12 left-4 md:top-16 md:left-6">
+        <button
+          onClick={() => {
+            console.log('Back button clicked');
+            navigate(-1);
+          }}
+          className={`flex items-center gap-2 px-3 py-2 rounded-lg ${themeClasses.text.secondary} ${themeClasses.hover.text} transition-colors`}
+        >
+          <ArrowLeft className="h-5 w-5" />
+          <span className="text-sm font-medium">Back</span>
+        </button>
+      </div>
+
       <div className="sm:mx-auto w-full sm:max-w-md">
         {/* Logo */}
         <div className="flex justify-center mb-6">
-          <div className="bg-[#1C1C1E] rounded-lg p-3 border border-[#2C2C2E]">
+          <div className={`${themeClasses.bg.secondary} rounded-lg p-3 border ${themeClasses.border.secondary}`}>
             <img
               src="/logo.png"
               alt="ContractorAI Logo"
@@ -135,31 +153,31 @@ const SignupPage = () => {
         </div>
 
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-semibold text-white mb-2">
+          <h1 className={`text-2xl font-semibold ${themeClasses.text.primary} mb-2`}>
             Create account
           </h1>
-          <p className="text-zinc-500 text-sm">
+          <p className={`${themeClasses.text.muted} text-sm`}>
             Get started with ContractorAI
           </p>
         </div>
       </div>
 
       <div className="sm:mx-auto w-full sm:max-w-md">
-        <div className="bg-[#1C1C1E] py-8 px-6 rounded-lg border border-[#2C2C2E]">
+        <div className={`${themeClasses.bg.secondary} py-8 px-6 rounded-lg border ${themeClasses.border.secondary}`}>
           <form className="space-y-4" onSubmit={handleSubmit}>
             {error && (
-              <div className="border border-[#3A3A3C] text-zinc-400 px-4 py-3 rounded-md text-sm">
+              <div className={`border ${themeClasses.border.secondary} ${themeClasses.text.secondary} px-4 py-3 rounded-md text-sm`}>
                 {error}
               </div>
             )}
 
             <div>
-              <label htmlFor="email" className="block text-sm text-zinc-400 mb-2">
+              <label htmlFor="email" className={`block text-sm ${themeClasses.text.secondary} mb-2`}>
                 Email
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-zinc-600" />
+                  <Mail className={`h-5 w-5 ${themeClasses.text.muted}`} />
                 </div>
                 <input
                   id="email"
@@ -169,19 +187,19 @@ const SignupPage = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-[#0F0F0F] border border-[#2C2C2E] rounded-md text-white placeholder-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors"
+                  className={`w-full pl-10 pr-4 py-3 ${themeClasses.bg.input} border ${themeClasses.border.input} rounded-md ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-500' : 'placeholder-zinc-600'} focus:outline-none ${themeClasses.focus.border} transition-colors`}
                   placeholder="you@example.com"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm text-zinc-400 mb-2">
+              <label htmlFor="password" className={`block text-sm ${themeClasses.text.secondary} mb-2`}>
                 Password
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-zinc-600" />
+                  <Lock className={`h-5 w-5 ${themeClasses.text.muted}`} />
                 </div>
                 <input
                   id="password"
@@ -191,14 +209,14 @@ const SignupPage = () => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-12 py-3 bg-[#0F0F0F] border border-[#2C2C2E] rounded-md text-white placeholder-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors"
+                  className={`w-full pl-10 pr-12 py-3 ${themeClasses.bg.input} border ${themeClasses.border.input} rounded-md ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-500' : 'placeholder-zinc-600'} focus:outline-none ${themeClasses.focus.border} transition-colors`}
                   placeholder="Create password"
                 />
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="text-zinc-600 hover:text-zinc-400 transition-colors"
+                    className={`${themeClasses.text.muted} ${themeClasses.hover.text} transition-colors`}
                   >
                     {showPassword ? (
                       <EyeOff className="h-5 w-5" />
@@ -214,10 +232,10 @@ const SignupPage = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center items-center py-3 px-4 rounded-md text-sm font-medium text-black bg-white hover:bg-zinc-200 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors mt-6"
+              className={`w-full flex justify-center items-center py-3 px-4 rounded-md text-sm font-medium ${themeClasses.button.primary} ${themeClasses.button.primaryHover} focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors mt-6`}
             >
               {loading ? (
-                <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                <div className={`w-5 h-5 border-2 ${theme === 'light' ? 'border-black border-t-transparent' : 'border-black border-t-transparent'} rounded-full animate-spin`}></div>
               ) : (
                 <>
                   Create account
@@ -228,10 +246,10 @@ const SignupPage = () => {
 
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-[#2C2C2E]"></div>
+                <div className={`w-full border-t ${themeClasses.border.secondary}`}></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-[#1C1C1E] text-zinc-500">or continue with</span>
+                <span className={`px-4 ${themeClasses.bg.secondary} ${themeClasses.text.muted}`}>or continue with</span>
               </div>
             </div>
 
@@ -240,10 +258,10 @@ const SignupPage = () => {
                 type="button"
                 onClick={handleGoogleSignIn}
                 disabled={oauthLoading !== null}
-                className="flex items-center justify-center gap-2 py-3 px-4 bg-[#0F0F0F] border border-[#2C2C2E] rounded-md text-white hover:bg-[#1C1C1E] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className={`flex items-center justify-center gap-2 py-3 px-4 ${themeClasses.bg.input} border ${themeClasses.border.secondary} rounded-md ${themeClasses.text.primary} ${themeClasses.hover.bg} focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors`}
               >
                 {oauthLoading === 'google' ? (
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <div className={`w-5 h-5 border-2 ${theme === 'light' ? 'border-black border-t-transparent' : 'border-white border-t-transparent'} rounded-full animate-spin`}></div>
                 ) : (
                   <>
                     <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -261,10 +279,10 @@ const SignupPage = () => {
                 type="button"
                 onClick={handleAppleSignIn}
                 disabled={oauthLoading !== null}
-                className="flex items-center justify-center gap-2 py-3 px-4 bg-[#0F0F0F] border border-[#2C2C2E] rounded-md text-white hover:bg-[#1C1C1E] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className={`flex items-center justify-center gap-2 py-3 px-4 ${themeClasses.bg.input} border ${themeClasses.border.secondary} rounded-md ${themeClasses.text.primary} ${themeClasses.hover.bg} focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors`}
               >
                 {oauthLoading === 'apple' ? (
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <div className={`w-5 h-5 border-2 ${theme === 'light' ? 'border-black border-t-transparent' : 'border-white border-t-transparent'} rounded-full animate-spin`}></div>
                 ) : (
                   <>
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -277,11 +295,11 @@ const SignupPage = () => {
             </div>
 
             <div className="text-center pt-4">
-              <p className="text-zinc-500 text-sm">
+              <p className={`${themeClasses.text.muted} text-sm`}>
                 Already have an account?{' '}
                 <Link
                   to="/auth/login"
-                  className="text-white hover:text-zinc-300 transition-colors"
+                  className={`${themeClasses.text.primary} ${themeClasses.hover.text} transition-colors`}
                 >
                   Sign in
                 </Link>
@@ -289,14 +307,14 @@ const SignupPage = () => {
             </div>
           </form>
 
-          <div className="mt-6 pt-6 border-t border-[#2C2C2E]">
-            <p className="text-center text-xs text-zinc-600">
+          <div className={`mt-6 pt-6 border-t ${themeClasses.border.secondary}`}>
+            <p className={`text-center text-xs ${themeClasses.text.muted}`}>
               By signing up, you agree to our{' '}
-              <Link to="/legal/terms" className="hover:text-zinc-400">
+              <Link to="/legal/terms" className={`${themeClasses.hover.text}`}>
                 Terms
               </Link>
               {' '}and{' '}
-              <Link to="/legal/privacy" className="hover:text-zinc-400">
+              <Link to="/legal/privacy" className={`${themeClasses.hover.text}`}>
                 Privacy Policy
               </Link>
             </p>

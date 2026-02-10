@@ -18,11 +18,14 @@ import { estimateService } from '../services/estimateService';
 import { estimateResponseService } from '../services/estimateResponseService';
 import { useData } from '../contexts/DataContext';
 import { usePricing } from '../contexts/PricingContext';
+import { useTheme, getThemeClasses } from '../contexts/ThemeContext';
 
 const EstimateGenerator = () => {
   const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
+  const { theme } = useTheme();
+  const themeClasses = getThemeClasses(theme);
   const { profile } = useData();
   const { getPendingCalculatorImport, clearPendingCalculatorImport } = usePricing();
   const [activeTab, setActiveTab] = useState<'editor' | 'preview'>('editor');
@@ -922,27 +925,42 @@ const EstimateGenerator = () => {
   }, [recentEstimates, searchQuery]);
 
   return (
-    <div className="min-h-screen pb-20 space-y-4 sm:space-y-6 max-w-full overflow-x-hidden px-2 sm:px-4" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 16px)' }}>
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mt-4">
-        <div>
-          <div className="flex items-center space-x-3">
-            {currentEstimate && (
-              <button
-                onClick={handleBack}
-                className="p-2 text-gray-300 hover:text-white hover:bg-white/10 rounded-md transition-colors"
-                title="Back to Estimates List"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-            )}
-            <div>
-              <h1 className="text-2xl font-bold text-white">{t('estimates.title')}</h1>
-              <p className="mt-1 text-sm text-gray-400">
-                {t('estimates.subtitle')}
-              </p>
+    <div className={`min-h-full ${themeClasses.bg.primary} pb-24`}>
+      {/* Header */}
+      <div className={`${themeClasses.bg.secondary} border-b ${themeClasses.border.primary} px-4 pb-4 pt-[calc(env(safe-area-inset-top)+16px)] sticky top-0 z-10`}>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex-1">
+            <div className="flex items-center gap-3">
+              {currentEstimate && (
+                <button
+                  onClick={handleBack}
+                  className={`p-2 ${themeClasses.text.secondary} hover:${themeClasses.text.primary} hover:bg-orange-500/10 rounded-md transition-colors`}
+                  title="Back to Estimates List"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
+              )}
+              <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                <FileText className="w-5 h-5 text-orange-500" />
+              </div>
+              <div>
+                <h1 className={`text-xl font-bold ${themeClasses.text.primary}`}>{t('estimates.title')}</h1>
+                <p className={`text-sm ${themeClasses.text.secondary}`}>{t('estimates.subtitle')}</p>
+              </div>
             </div>
           </div>
+          <button
+            onClick={() => navigate('/settings')}
+            className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center hover:bg-orange-500/30 transition-colors border border-orange-500/40"
+          >
+            <Settings className="w-5 h-5 text-orange-500" />
+          </button>
         </div>
+      </div>
+
+      <div className="px-4 py-4 space-y-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div></div>
         
         {currentEstimate ? (
           <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
@@ -1223,6 +1241,7 @@ const EstimateGenerator = () => {
           notes: currentEstimate.notes
         } : undefined}
       />
+      </div>
     </div>
   );
 };

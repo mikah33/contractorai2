@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Mail, Lock, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, ArrowRight, ArrowLeft } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { supabase } from '../../lib/supabase';
 import { Capacitor } from '@capacitor/core';
+import { useTheme, getThemeClasses } from '../../contexts/ThemeContext';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -14,6 +15,9 @@ const LoginPage = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const signIn = useAuthStore((state) => state.signIn);
+
+  const { theme } = useTheme();
+  const themeClasses = getThemeClasses(theme);
 
   const isNative = Capacitor.isNativePlatform();
 
@@ -120,11 +124,25 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0F0F0F] flex flex-col justify-center px-4 sm:px-6 lg:px-8">
+    <div className={`min-h-screen ${themeClasses.bg.primary} flex flex-col justify-center px-4 sm:px-6 lg:px-8`}>
+      {/* Back button */}
+      <div className="absolute top-12 left-4 md:top-16 md:left-6">
+        <button
+          onClick={() => {
+            console.log('Back button clicked');
+            navigate(-1);
+          }}
+          className={`flex items-center gap-2 px-3 py-2 rounded-lg ${themeClasses.text.secondary} ${themeClasses.hover.text} transition-colors`}
+        >
+          <ArrowLeft className="h-5 w-5" />
+          <span className="text-sm font-medium">Back</span>
+        </button>
+      </div>
+
       <div className="sm:mx-auto w-full sm:max-w-sm md:max-w-md">
         {/* Logo */}
         <div className="flex justify-center mb-6">
-          <div className="bg-[#1C1C1E] rounded-lg p-2 md:p-3 border border-[#2C2C2E]">
+          <div className={`${themeClasses.bg.secondary} rounded-lg p-2 md:p-3 border ${themeClasses.border.secondary}`}>
             <img
               src="/logo.png"
               alt="ContractorAI Logo"
@@ -134,31 +152,31 @@ const LoginPage = () => {
         </div>
 
         <div className="text-center mb-6">
-          <h1 className="text-xl md:text-2xl font-semibold text-white mb-2">
+          <h1 className={`text-xl md:text-2xl font-semibold ${themeClasses.text.primary} mb-2`}>
             Welcome back
           </h1>
-          <p className="text-zinc-500 text-sm">
+          <p className={`${themeClasses.text.muted} text-sm`}>
             Sign in to your account
           </p>
         </div>
       </div>
 
       <div className="sm:mx-auto w-full sm:max-w-sm md:max-w-md">
-        <div className="bg-[#1C1C1E] py-6 px-4 md:py-7 md:px-6 rounded-lg border border-[#2C2C2E]">
+        <div className={`${themeClasses.bg.secondary} py-6 px-4 md:py-7 md:px-6 rounded-lg border ${themeClasses.border.secondary}`}>
           <form className="space-y-4" onSubmit={handleSubmit}>
             {error && (
-              <div className="border border-[#3A3A3C] text-zinc-400 px-3 py-2 rounded-md text-sm">
+              <div className={`border ${themeClasses.border.secondary} ${themeClasses.text.secondary} px-3 py-2 rounded-md text-sm`}>
                 {error}
               </div>
             )}
 
             <div>
-              <label htmlFor="email" className="block text-sm text-zinc-400 mb-1.5">
+              <label htmlFor="email" className={`block text-sm ${themeClasses.text.secondary} mb-1.5`}>
                 Email
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-4 w-4 text-zinc-600" />
+                  <Mail className={`h-4 w-4 ${themeClasses.text.muted}`} />
                 </div>
                 <input
                   id="email"
@@ -168,19 +186,19 @@ const LoginPage = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2.5 bg-[#0F0F0F] border border-[#2C2C2E] rounded-md text-white placeholder-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors"
+                  className={`w-full pl-9 pr-4 py-2.5 ${themeClasses.bg.input} border ${themeClasses.border.input} rounded-md ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-500' : 'placeholder-zinc-600'} focus:outline-none ${themeClasses.focus.border} transition-colors`}
                   placeholder="you@example.com"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm text-zinc-400 mb-1.5">
+              <label htmlFor="password" className={`block text-sm ${themeClasses.text.secondary} mb-1.5`}>
                 Password
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-4 w-4 text-zinc-600" />
+                  <Lock className={`h-4 w-4 ${themeClasses.text.muted}`} />
                 </div>
                 <input
                   id="password"
@@ -190,14 +208,14 @@ const LoginPage = () => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-9 pr-11 py-2.5 bg-[#0F0F0F] border border-[#2C2C2E] rounded-md text-white placeholder-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors"
+                  className={`w-full pl-9 pr-11 py-2.5 ${themeClasses.bg.input} border ${themeClasses.border.input} rounded-md ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-500' : 'placeholder-zinc-600'} focus:outline-none ${themeClasses.focus.border} transition-colors`}
                   placeholder="Enter password"
                 />
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="text-zinc-600 hover:text-zinc-400 transition-colors"
+                    className={`${themeClasses.text.muted} ${themeClasses.hover.text} transition-colors`}
                   >
                     {showPassword ? (
                       <EyeOff className="h-4 w-4" />
@@ -212,10 +230,10 @@ const LoginPage = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center items-center py-2.5 px-4 rounded-md text-sm font-medium text-black bg-white hover:bg-zinc-200 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className={`w-full flex justify-center items-center py-2.5 px-4 rounded-md text-sm font-medium ${themeClasses.button.primary} ${themeClasses.button.primaryHover} focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors`}
             >
               {loading ? (
-                <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                <div className={`w-4 h-4 border-2 ${theme === 'light' ? 'border-black border-t-transparent' : 'border-black border-t-transparent'} rounded-full animate-spin`}></div>
               ) : (
                 <>
                   Sign in
@@ -226,10 +244,10 @@ const LoginPage = () => {
 
             <div className="relative my-5">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-[#2C2C2E]"></div>
+                <div className={`w-full border-t ${themeClasses.border.secondary}`}></div>
               </div>
               <div className="relative flex justify-center text-xs">
-                <span className="px-3 bg-[#1C1C1E] text-zinc-500">or continue with</span>
+                <span className={`px-3 ${themeClasses.bg.secondary} ${themeClasses.text.muted}`}>or continue with</span>
               </div>
             </div>
 
@@ -238,10 +256,10 @@ const LoginPage = () => {
                 type="button"
                 onClick={handleGoogleSignIn}
                 disabled={oauthLoading !== null}
-                className="flex items-center justify-center gap-2 py-2.5 px-3 bg-[#0F0F0F] border border-[#2C2C2E] rounded-md text-white hover:bg-[#1C1C1E] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
+                className={`flex items-center justify-center gap-2 py-2.5 px-3 ${themeClasses.bg.input} border ${themeClasses.border.secondary} rounded-md ${themeClasses.text.primary} ${themeClasses.hover.bg} focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm`}
               >
                 {oauthLoading === 'google' ? (
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <div className={`w-4 h-4 border-2 ${theme === 'light' ? 'border-black border-t-transparent' : 'border-white border-t-transparent'} rounded-full animate-spin`}></div>
                 ) : (
                   <>
                     <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -259,10 +277,10 @@ const LoginPage = () => {
                 type="button"
                 onClick={handleAppleSignIn}
                 disabled={oauthLoading !== null}
-                className="flex items-center justify-center gap-2 py-2.5 px-3 bg-[#0F0F0F] border border-[#2C2C2E] rounded-md text-white hover:bg-[#1C1C1E] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
+                className={`flex items-center justify-center gap-2 py-2.5 px-3 ${themeClasses.bg.input} border ${themeClasses.border.secondary} rounded-md ${themeClasses.text.primary} ${themeClasses.hover.bg} focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm`}
               >
                 {oauthLoading === 'apple' ? (
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <div className={`w-4 h-4 border-2 ${theme === 'light' ? 'border-black border-t-transparent' : 'border-white border-t-transparent'} rounded-full animate-spin`}></div>
                 ) : (
                   <>
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -275,11 +293,11 @@ const LoginPage = () => {
             </div>
 
             <div className="text-center pt-3">
-              <p className="text-zinc-500 text-xs">
+              <p className={`${themeClasses.text.muted} text-xs`}>
                 Don't have an account?{' '}
                 <Link
                   to="/auth/signup"
-                  className="text-white hover:text-zinc-300 transition-colors"
+                  className={`${themeClasses.text.primary} ${themeClasses.hover.text} transition-colors`}
                 >
                   Sign up
                 </Link>
@@ -287,13 +305,13 @@ const LoginPage = () => {
             </div>
           </form>
 
-          <div className="mt-4 pt-4 border-t border-[#2C2C2E]">
-            <div className="flex items-center justify-center gap-3 text-xs text-zinc-600">
-              <Link to="/legal/terms" className="hover:text-zinc-400 transition-colors">
+          <div className={`mt-4 pt-4 border-t ${themeClasses.border.secondary}`}>
+            <div className={`flex items-center justify-center gap-3 text-xs ${themeClasses.text.muted}`}>
+              <Link to="/legal/terms" className={`${themeClasses.hover.text} transition-colors`}>
                 Terms
               </Link>
               <span>•</span>
-              <Link to="/legal/privacy" className="hover:text-zinc-400 transition-colors">
+              <Link to="/legal/privacy" className={`${themeClasses.hover.text} transition-colors`}>
                 Privacy
               </Link>
             </div>

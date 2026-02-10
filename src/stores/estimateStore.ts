@@ -56,6 +56,8 @@ interface EstimateStore {
   updateEstimate: (id: string, updates: Partial<Estimate>) => Promise<void>;
   deleteEstimate: (id: string) => Promise<void>;
   createFromCalculator: (calculatorData: any) => Promise<Estimate | null>;
+  updateLocalEstimate: (id: string, updates: Partial<Estimate>) => void;
+  loading: boolean; // Alias for isLoading to match existing usage
 }
 
 const useEstimateStore = create<EstimateStore>((set, get) => ({
@@ -63,6 +65,11 @@ const useEstimateStore = create<EstimateStore>((set, get) => ({
   isLoading: false,
   error: null,
   hasLoadedOnce: false,
+
+  // Computed property for backward compatibility
+  get loading() {
+    return get().isLoading;
+  },
 
   fetchEstimates: async (force = false) => {
     // **FIRST: Check React Query cache**
@@ -339,6 +346,25 @@ const useEstimateStore = create<EstimateStore>((set, get) => ({
       set({ error: (error as Error).message });
       return null;
     }
+  },
+
+  // Real-time update method for use by subscription hooks
+  updateLocalEstimate: (id, updates) => {
+    set((state) => {
+      const existingIndex = state.estimates.findIndex(e => e.id === id);
+
+      if (existingIndex >= 0) {
+        // Update existing estimate
+        const newEstimates = state.estimates.map((estimate) =>
+          estimate.id === id ? { ...estimate, ...updates } : estimate
+        );
+        return { estimates: newEstimates };
+      } else {
+        // If estimate not found locally, we could add it, but probably should fetch fresh
+        console.log('Estimate not found in local state, consider fetching fresh estimates');
+        return state;
+      }
+    });
   }
 }));
 

@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Plus, Search, Filter, MoreVertical, Calendar, Users, CheckCircle, Clock, AlertCircle,
   MessageSquare, Upload, Camera, FileText, ChevronDown, ChevronUp, Trash2, Edit,
   Paperclip, Send, User, Sparkles, BarChart2, ArrowRight, Tag, Flag, Zap, DollarSign, X,
-  Phone, Mail, Briefcase, StickyNote, UserPlus, ArrowLeft
+  Phone, Mail, Briefcase, StickyNote, UserPlus, ArrowLeft, Settings
 } from 'lucide-react';
+import { useTheme, getThemeClasses } from '../contexts/ThemeContext';
 import TaskList from '../components/projects/TaskList';
 import TeamMemberSelector from '../components/projects/TeamMemberSelector';
 import ProjectProgressGallery from '../components/projects/ProjectProgressGallery';
@@ -55,6 +56,9 @@ interface Comment {
 
 const ProjectManager: React.FC = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { theme } = useTheme();
+  const themeClasses = getThemeClasses(theme);
   const location = useLocation();
   const {
     projects,
@@ -323,21 +327,36 @@ const ProjectManager: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={`min-h-full ${themeClasses.bg.primary} pb-24`}>
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">{t('projects.title')}</h1>
-            <p className="text-gray-600">{t('projects.subtitle')}</p>
+      <div className={`${themeClasses.bg.secondary} border-b ${themeClasses.border.primary} px-4 pb-4 pt-[calc(env(safe-area-inset-top)+16px)] sticky top-0 z-10`}>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex-1">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                <Briefcase className="w-5 h-5 text-orange-500" />
+              </div>
+              <div>
+                <h1 className={`text-xl font-bold ${themeClasses.text.primary}`}>{t('projects.title')}</h1>
+                <p className={`text-sm ${themeClasses.text.secondary}`}>{t('projects.subtitle')}</p>
+              </div>
+            </div>
           </div>
-          <button
-            onClick={() => setShowProjectModal(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            {t('projects.newProject')}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate('/settings')}
+              className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center hover:bg-orange-500/30 transition-colors border border-orange-500/40"
+            >
+              <Settings className="w-5 h-5 text-orange-500" />
+            </button>
+            <button
+              onClick={() => setShowProjectModal(true)}
+              className={`flex items-center gap-2 px-4 py-2.5 ${themeClasses.button.primary} rounded-md font-medium ${themeClasses.button.primaryHover} active:scale-95 transition-all`}
+            >
+              <Plus className="w-5 h-5" />
+              <span>{t('projects.newProject')}</span>
+            </button>
+          </div>
         </div>
 
         {/* Search and Filters */}

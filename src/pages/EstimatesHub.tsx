@@ -15,14 +15,22 @@ import {
   Calendar,
   User,
   Trash2,
-  Send
+  Send,
+  Settings,
+  Mail
 } from 'lucide-react';
 import useEstimateStore from '../stores/estimateStore';
 import { useOnboardingStore } from '../stores/onboardingStore';
 import { supabase } from '../lib/supabase';
 import AIChatPopup from '../components/ai/AIChatPopup';
+import FloatingAIChatButton from '../components/ai/FloatingAIChatButton';
 import AddChoiceModal from '../components/common/AddChoiceModal';
 import EstimatingTutorialModal from '../components/estimates/EstimatingTutorialModal';
+import SendEstimateModal from '../components/estimates/SendEstimateModal';
+import EstimateRealtimeTest from '../components/estimates/EstimateRealtimeTest';
+import { useTheme, getThemeClasses } from '../contexts/ThemeContext';
+import { useData } from '../contexts/DataContext';
+import useEstimateRealtime from '../hooks/useEstimateRealtime';
 
 interface Estimate {
   id: string;
@@ -51,6 +59,9 @@ interface Estimate {
 
 const EstimatesHub: React.FC = () => {
   const navigate = useNavigate();
+  const { theme } = useTheme();
+  const themeClasses = getThemeClasses(theme);
+  const { profile } = useData();
   const { estimates, fetchEstimates, loading, deleteEstimate, updateEstimate } = useEstimateStore();
   const { estimatingTutorialCompleted, checkEstimatingTutorial, setEstimatingTutorialCompleted } = useOnboardingStore();
   const [showAddChoice, setShowAddChoice] = useState(false);
@@ -60,6 +71,11 @@ const EstimatesHub: React.FC = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [selectedEstimate, setSelectedEstimate] = useState<Estimate | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showSendEmail, setShowSendEmail] = useState(false);
+  const [showRealtimeTest, setShowRealtimeTest] = useState(false);
+
+  // Set up real-time subscription for estimate updates
+  useEstimateRealtime(userId);
 
   useEffect(() => {
     fetchEstimates();
@@ -90,14 +106,15 @@ const EstimatesHub: React.FC = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'approved':
-        return 'bg-green-500/20 text-green-400';
+        return theme === 'light' ? 'bg-green-100 text-green-700' : 'bg-green-500/20 text-green-400';
       case 'sent':
-        return 'bg-blue-500/20 text-blue-400';
+        return theme === 'light' ? 'bg-blue-100 text-blue-700' : 'bg-blue-500/20 text-blue-400';
       case 'declined':
-        return 'bg-red-500/20 text-red-400';
+      case 'rejected':
+        return theme === 'light' ? 'bg-red-100 text-red-700' : 'bg-red-500/20 text-red-400';
       case 'draft':
       default:
-        return 'bg-zinc-800 text-zinc-400';
+        return theme === 'light' ? 'bg-gray-100 text-gray-600' : 'bg-zinc-800 text-zinc-400';
     }
   };
 
@@ -108,6 +125,7 @@ const EstimatesHub: React.FC = () => {
       case 'sent':
         return <Clock className="w-4 h-4" />;
       case 'declined':
+      case 'rejected':
         return <XCircle className="w-4 h-4" />;
       default:
         return <FileText className="w-4 h-4" />;
@@ -141,7 +159,7 @@ const EstimatesHub: React.FC = () => {
   };
 
   return (
-    <div className="min-h-full bg-[#0F0F0F] pb-24">
+    <div className={`min-h-full ${themeClasses.bg.primary} pb-24`}>
       {/* Estimating Tutorial Modal */}
       <EstimatingTutorialModal
         isOpen={showTutorial}
@@ -149,35 +167,50 @@ const EstimatesHub: React.FC = () => {
       />
 
       {/* Header */}
-      <div className="bg-[#1C1C1E] border-b border-orange-500/30 px-4 pb-4 pt-[calc(env(safe-area-inset-top)+16px)] sticky top-0 z-10">
+      <div className={`${themeClasses.bg.secondary} ${themeClasses.border.primary} border-b px-4 pb-4 pt-[calc(env(safe-area-inset-top)+16px)] sticky top-0 z-10`}>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
               <FileText className="w-5 h-5 text-orange-500" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white">Estimates</h1>
-              <p className="text-sm text-zinc-400">{estimates.length} total</p>
+              <h1 className={`text-xl font-bold ${themeClasses.text.primary}`}>Estimates</h1>
+              <p className={`text-sm ${themeClasses.text.secondary}`}>{estimates.length} total</p>
             </div>
           </div>
-          <button
-            onClick={() => setShowAddChoice(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white text-black rounded-md font-medium hover:bg-zinc-200 active:scale-95 transition-all"
-          >
-            <Plus className="w-5 h-5" />
-            <span>Add</span>
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowRealtimeTest(true)}
+              className={`w-10 h-10 ${themeClasses.bg.tertiary} rounded-lg flex items-center justify-center ${themeClasses.hover.bg} transition-colors`}
+              title="Test Real-time Features"
+            >
+              <Clock className={`w-5 h-5 ${themeClasses.text.secondary}`} />
+            </button>
+            <button
+              onClick={() => navigate('/settings')}
+              className={`w-10 h-10 ${themeClasses.bg.tertiary} rounded-lg flex items-center justify-center ${themeClasses.hover.bg} transition-colors`}
+            >
+              <Settings className={`w-5 h-5 ${themeClasses.text.secondary}`} />
+            </button>
+            <button
+              onClick={() => setShowAddChoice(true)}
+              className={`flex items-center gap-2 px-4 py-2.5 ${themeClasses.button.primary} rounded-md font-medium ${themeClasses.button.primaryHover} active:scale-95 transition-all`}
+            >
+              <Plus className="w-5 h-5" />
+              <span>Add</span>
+            </button>
+          </div>
         </div>
 
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
+          <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 ${themeClasses.text.muted}`} />
           <input
             type="text"
             placeholder="Search estimates..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-[#262626] rounded-lg border border-[#3A3A3C] text-white placeholder-zinc-500 focus:ring-2 focus:ring-zinc-500 focus:bg-[#2C2C2E] transition-all"
+            className={`w-full pl-10 pr-4 py-2.5 ${themeClasses.bg.input} rounded-lg border ${themeClasses.border.input} ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} ${themeClasses.focus.ring} ${themeClasses.focus.border} outline-none transition-all`}
           />
         </div>
       </div>
@@ -186,16 +219,16 @@ const EstimatesHub: React.FC = () => {
       <div className="px-4 py-3">
         <button
           onClick={handleAIChat}
-          className="w-full flex items-center gap-3 p-3 md:p-4 bg-[#1C1C1E] rounded-lg border border-orange-500/30 active:scale-[0.98] transition-transform hover:border-orange-500/50"
+          className={`w-full flex items-center gap-3 p-3 md:p-4 ${themeClasses.bg.card} rounded-lg border border-orange-500/30 active:scale-[0.98] transition-transform hover:border-orange-500/50`}
         >
           <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
             <Sparkles className="w-5 h-5 text-orange-500" />
           </div>
           <div className="flex-1 text-left">
-            <p className="font-semibold text-white">AI Estimating Assistant</p>
-            <p className="text-sm text-zinc-400">Create estimates through conversation</p>
+            <p className={`font-semibold ${themeClasses.text.primary}`}>AI Estimating Assistant</p>
+            <p className={`text-sm ${themeClasses.text.secondary}`}>Create estimates through conversation</p>
           </div>
-          <ChevronRight className="w-5 h-5 text-zinc-500" />
+          <ChevronRight className={`w-5 h-5 ${themeClasses.text.muted}`} />
         </button>
       </div>
 
@@ -203,29 +236,29 @@ const EstimatesHub: React.FC = () => {
       <div className="px-4 space-y-3">
         {loading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+            <div className={`animate-spin rounded-full h-8 w-8 border-b-2 ${theme === 'light' ? 'border-gray-600' : 'border-white'}`}></div>
           </div>
         ) : filteredEstimates.length === 0 ? (
           <div className="text-center py-12">
-            <FileText className="w-12 h-12 text-zinc-600 mx-auto mb-3" />
-            <p className="text-zinc-400 font-medium">No estimates yet</p>
-            <p className="text-sm text-zinc-500 mt-1">Tap + to create your first estimate</p>
+            <FileText className={`w-12 h-12 ${theme === 'light' ? 'text-gray-400' : 'text-zinc-600'} mx-auto mb-3`} />
+            <p className={`${themeClasses.text.secondary} font-medium`}>No estimates yet</p>
+            <p className={`text-sm ${themeClasses.text.muted} mt-1`}>Tap + to create your first estimate</p>
           </div>
         ) : (
-          filteredEstimates.map((estimate) => (
-            <button
-              key={estimate.id}
-              onClick={() => setSelectedEstimate(estimate as Estimate)}
-              className="w-full bg-[#1C1C1E] rounded-lg border border-orange-500/30 overflow-hidden text-left active:scale-[0.98] transition-transform"
-            >
+          filteredEstimates.map((estimate, index) => (
+            <div key={estimate.id} className={index < filteredEstimates.length - 1 ? `border-b ${themeClasses.border.primary} pb-3 mb-3` : ''}>
+              <button
+                onClick={() => setSelectedEstimate(estimate as Estimate)}
+                className={`w-full ${themeClasses.bg.card} rounded-lg border border-orange-500/30 overflow-hidden text-left active:scale-[0.98] transition-transform`}
+              >
               <div className="p-3 md:p-4">
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-white truncate">
+                    <h3 className={`font-semibold ${themeClasses.text.primary} truncate`}>
                       {estimate.title || 'Untitled Estimate'}
                     </h3>
                     {estimate.client_name && (
-                      <p className="text-sm text-zinc-400 truncate">{estimate.client_name}</p>
+                      <p className={`text-sm ${themeClasses.text.secondary} truncate`}>{estimate.client_name}</p>
                     )}
                   </div>
                   <span className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(estimate.status)}`}>
@@ -235,19 +268,20 @@ const EstimatesHub: React.FC = () => {
                 </div>
 
                 <div className="flex items-center justify-between mt-3">
-                  <div className="flex items-center gap-1 text-base md:text-lg font-bold text-white">
-                    <DollarSign className="w-5 h-5 text-white" />
+                  <div className={`flex items-center gap-1 text-base md:text-lg font-bold ${themeClasses.text.primary}`}>
+                    <DollarSign className={`w-5 h-5 ${themeClasses.text.primary}`} />
                     {formatCurrency(estimate.total || 0)}
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-zinc-500">
+                    <span className={`text-xs ${themeClasses.text.muted}`}>
                       {new Date(estimate.created_at || '').toLocaleDateString()}
                     </span>
-                    <ChevronRight className="w-5 h-5 text-zinc-500" />
+                    <ChevronRight className={`w-5 h-5 ${themeClasses.text.muted}`} />
                   </div>
                 </div>
               </div>
-            </button>
+              </button>
+            </div>
           ))
         )}
       </div>
@@ -282,16 +316,16 @@ const EstimatesHub: React.FC = () => {
           />
 
           {/* Slide-up Modal */}
-          <div className="absolute inset-x-0 bottom-16 top-12 bg-[#0F0F0F] rounded-t-3xl shadow-2xl flex flex-col animate-slide-up overflow-hidden">
+          <div className={`absolute inset-x-0 bottom-16 top-12 ${themeClasses.bg.primary} rounded-t-3xl shadow-2xl flex flex-col animate-slide-up overflow-hidden`}>
             {/* Header */}
-            <div className="bg-[#1C1C1E] px-3 md:px-4 py-3 md:py-4 border-b border-orange-500/30 flex items-center justify-between flex-shrink-0">
+            <div className={`${themeClasses.bg.secondary} px-3 md:px-4 py-3 md:py-4 border-b border-orange-500/30 flex items-center justify-between flex-shrink-0`}>
               <button
                 onClick={() => setSelectedEstimate(null)}
-                className="text-zinc-400 text-base font-medium"
+                className={`${themeClasses.text.secondary} text-base font-medium`}
               >
                 Close
               </button>
-              <h2 className="text-lg font-semibold text-white">Estimate Details</h2>
+              <h2 className={`text-lg font-semibold ${themeClasses.text.primary}`}>Estimate Details</h2>
               <button
                 onClick={() => {
                   handleEditEstimate(selectedEstimate.id);
@@ -307,12 +341,12 @@ const EstimatesHub: React.FC = () => {
             <div className="flex-1 overflow-y-auto">
               <div className="p-3 md:p-4 space-y-3 md:space-y-4">
                 {/* Title & Status */}
-                <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-3 md:p-4">
+                <div className={`${themeClasses.bg.secondary} rounded-lg border border-orange-500/30 p-3 md:p-4`}>
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
-                      <h3 className="text-lg md:text-xl font-bold text-white">{selectedEstimate.title || 'Untitled Estimate'}</h3>
+                      <h3 className={`text-lg md:text-xl font-bold ${themeClasses.text.primary}`}>{selectedEstimate.title || 'Untitled Estimate'}</h3>
                       {selectedEstimate.client_name && (
-                        <div className="flex items-center gap-2 mt-1 text-zinc-400">
+                        <div className={`flex items-center gap-2 mt-1 ${themeClasses.text.secondary}`}>
                           <User className="w-4 h-4" />
                           <span>{selectedEstimate.client_name}</span>
                         </div>
@@ -324,7 +358,7 @@ const EstimatesHub: React.FC = () => {
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-4 text-sm text-zinc-400">
+                  <div className={`flex items-center gap-4 text-sm ${themeClasses.text.secondary}`}>
                     <div className="flex items-center gap-1">
                       <Calendar className="w-4 h-4" />
                       <span>Created: {new Date(selectedEstimate.created_at || '').toLocaleDateString()}</span>
@@ -339,20 +373,20 @@ const EstimatesHub: React.FC = () => {
                 </div>
 
                 {/* Totals */}
-                <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-3 md:p-4">
-                  <h4 className="text-sm font-medium text-zinc-400 mb-3">Summary</h4>
+                <div className={`${themeClasses.bg.secondary} rounded-lg border border-orange-500/30 p-3 md:p-4`}>
+                  <h4 className={`text-sm font-medium ${themeClasses.text.muted} mb-3`}>Summary</h4>
                   <div className="space-y-2">
-                    <div className="flex justify-between text-white">
+                    <div className={`flex justify-between ${themeClasses.text.primary}`}>
                       <span>Subtotal</span>
                       <span>{formatCurrency(selectedEstimate.subtotal || selectedEstimate.total || 0)}</span>
                     </div>
                     {selectedEstimate.tax_rate && selectedEstimate.tax_rate > 0 && (
-                      <div className="flex justify-between text-zinc-400">
+                      <div className={`flex justify-between ${themeClasses.text.secondary}`}>
                         <span>Tax ({selectedEstimate.tax_rate}%)</span>
                         <span>{formatCurrency(selectedEstimate.tax_amount || 0)}</span>
                       </div>
                     )}
-                    <div className="flex justify-between text-lg md:text-xl font-bold text-white pt-2 border-t border-orange-500/20">
+                    <div className={`flex justify-between text-lg md:text-xl font-bold ${themeClasses.text.primary} pt-2 border-t border-orange-500/20`}>
                       <span>Total</span>
                       <span className="text-orange-500">{formatCurrency(selectedEstimate.total || 0)}</span>
                     </div>
@@ -361,18 +395,18 @@ const EstimatesHub: React.FC = () => {
 
                 {/* Line Items */}
                 {selectedEstimate.items && selectedEstimate.items.length > 0 && (
-                  <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-3 md:p-4">
-                    <h4 className="text-sm font-medium text-zinc-400 mb-3">Line Items ({selectedEstimate.items.length})</h4>
+                  <div className={`${themeClasses.bg.secondary} rounded-lg border border-orange-500/30 p-3 md:p-4`}>
+                    <h4 className={`text-sm font-medium ${themeClasses.text.muted} mb-3`}>Line Items ({selectedEstimate.items.length})</h4>
                     <div className="space-y-3">
                       {selectedEstimate.items.map((item, index) => (
                         <div key={item.id || index} className="flex justify-between items-start py-2 border-b border-orange-500/10 last:border-0">
                           <div className="flex-1">
-                            <p className="text-white font-medium">{item.description}</p>
-                            <p className="text-sm text-zinc-500">
+                            <p className={`${themeClasses.text.primary} font-medium`}>{item.description}</p>
+                            <p className={`text-sm ${themeClasses.text.muted}`}>
                               {item.quantity} {item.unit} × {formatCurrency(item.unitPrice)}
                             </p>
                           </div>
-                          <p className="text-white font-medium">{formatCurrency(item.totalPrice)}</p>
+                          <p className={`${themeClasses.text.primary} font-medium`}>{formatCurrency(item.totalPrice)}</p>
                         </div>
                       ))}
                     </div>
@@ -381,22 +415,33 @@ const EstimatesHub: React.FC = () => {
 
                 {/* Notes */}
                 {selectedEstimate.notes && (
-                  <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-3 md:p-4">
-                    <h4 className="text-sm font-medium text-zinc-400 mb-2">Notes</h4>
-                    <p className="text-white whitespace-pre-wrap">{selectedEstimate.notes}</p>
+                  <div className={`${themeClasses.bg.secondary} rounded-lg border border-orange-500/30 p-3 md:p-4`}>
+                    <h4 className={`text-sm font-medium ${themeClasses.text.muted} mb-2`}>Notes</h4>
+                    <p className={`${themeClasses.text.primary} whitespace-pre-wrap`}>{selectedEstimate.notes}</p>
                   </div>
                 )}
 
                 {/* Terms */}
                 {selectedEstimate.terms && (
-                  <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-3 md:p-4">
-                    <h4 className="text-sm font-medium text-zinc-400 mb-2">Terms & Conditions</h4>
-                    <p className="text-zinc-300 text-sm whitespace-pre-wrap">{selectedEstimate.terms}</p>
+                  <div className={`${themeClasses.bg.secondary} rounded-lg border border-orange-500/30 p-3 md:p-4`}>
+                    <h4 className={`text-sm font-medium ${themeClasses.text.muted} mb-2`}>Terms & Conditions</h4>
+                    <p className={`${themeClasses.text.secondary} text-sm whitespace-pre-wrap`}>{selectedEstimate.terms}</p>
                   </div>
                 )}
 
                 {/* Actions */}
                 <div className="space-y-3 pt-2">
+                  {/* Send to Customer Button */}
+                  <button
+                    onClick={() => {
+                      setShowSendEmail(true);
+                    }}
+                    className="w-full flex items-center justify-center gap-2 p-4 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600 transition-colors"
+                  >
+                    <Mail className="w-5 h-5" />
+                    Send to Customer
+                  </button>
+
                   {selectedEstimate.status === 'draft' && (
                     <button
                       onClick={async () => {
@@ -404,7 +449,7 @@ const EstimatesHub: React.FC = () => {
                         setSelectedEstimate({ ...selectedEstimate, status: 'sent' });
                         fetchEstimates();
                       }}
-                      className="w-full flex items-center justify-center gap-2 p-4 bg-orange-500 text-white rounded-xl font-semibold"
+                      className="w-full flex items-center justify-center gap-2 p-4 bg-blue-500 text-white rounded-xl font-semibold"
                     >
                       <Send className="w-5 h-5" />
                       Mark as Sent
@@ -430,7 +475,7 @@ const EstimatesHub: React.FC = () => {
                       handleEditEstimate(selectedEstimate.id);
                       setSelectedEstimate(null);
                     }}
-                    className="w-full flex items-center justify-center gap-2 p-4 bg-[#2C2C2E] text-white rounded-xl font-semibold"
+                    className={`w-full flex items-center justify-center gap-2 p-4 ${themeClasses.bg.tertiary} ${themeClasses.text.primary} rounded-xl font-semibold`}
                   >
                     <Edit2 className="w-5 h-5" />
                     Edit Estimate
@@ -451,13 +496,13 @@ const EstimatesHub: React.FC = () => {
           {/* Delete Confirmation */}
           {showDeleteConfirm && (
             <div className="absolute inset-0 z-60 flex items-center justify-center bg-black/70">
-              <div className="bg-[#1C1C1E] rounded-xl p-6 mx-4 max-w-sm w-full">
-                <h3 className="text-lg font-bold text-white mb-2">Delete Estimate?</h3>
-                <p className="text-zinc-400 mb-6">This action cannot be undone.</p>
+              <div className={`${themeClasses.bg.secondary} rounded-xl p-6 mx-4 max-w-sm w-full`}>
+                <h3 className={`text-lg font-bold ${themeClasses.text.primary} mb-2`}>Delete Estimate?</h3>
+                <p className={`${themeClasses.text.secondary} mb-6`}>This action cannot be undone.</p>
                 <div className="flex gap-3">
                   <button
                     onClick={() => setShowDeleteConfirm(false)}
-                    className="flex-1 p-3 bg-[#2C2C2E] text-white rounded-xl font-medium"
+                    className={`flex-1 p-3 ${themeClasses.bg.tertiary} ${themeClasses.text.primary} rounded-xl font-medium`}
                   >
                     Cancel
                   </button>
@@ -478,6 +523,33 @@ const EstimatesHub: React.FC = () => {
           )}
         </div>
       )}
+
+      {/* Send Estimate Modal */}
+      {showSendEmail && selectedEstimate && (
+        <SendEstimateModal
+          isOpen={showSendEmail}
+          onClose={() => setShowSendEmail(false)}
+          estimate={selectedEstimate}
+          companyInfo={{
+            name: profile?.company_name || profile?.full_name || 'Your Company',
+            email: profile?.email || '',
+            phone: profile?.phone || '',
+            address: profile?.business_address || ''
+          }}
+        />
+      )}
+
+      {/* Real-time Test Modal */}
+      <EstimateRealtimeTest
+        isOpen={showRealtimeTest}
+        onClose={() => setShowRealtimeTest(false)}
+      />
+
+      {/* Enhanced AI Chat Button */}
+      <FloatingAIChatButton
+        onClick={handleAIChat}
+        mode="estimates"
+      />
     </div>
   );
 };

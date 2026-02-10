@@ -28,6 +28,7 @@ import {
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../stores/authStore';
 import { CalendarEvent } from '../../services/calendarService';
+import { useTheme, getThemeClasses } from '../../contexts/ThemeContext';
 import NotificationWebhookModal from '../calendar/NotificationWebhookModal';
 import PhotoUploadModal from '../photos/PhotoUploadModal';
 import VisionCamModal from '../vision/VisionCamModal';
@@ -46,6 +47,8 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const { theme } = useTheme();
+  const themeClasses = getThemeClasses(theme);
   const [showAIModal, setShowAIModal] = useState(false);
   const [showEventPicker, setShowEventPicker] = useState(false);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
@@ -227,8 +230,8 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
   return (
     <>
       {/* Bottom Navigation Bar - Sits above the AI search bar */}
-      <nav className={`fixed bottom-[calc(52px+env(safe-area-inset-bottom))] left-0 right-0 bg-[#1C1C1E] border-t border-orange-500/30 z-[100] ${className} ${showAIModal || showEventPicker || showNotificationModal || showPhotoModal || showVisionCamModal || showLiDARScanner || showChatHistory || showSendEmailModal || showEmailOptions || location.pathname === '/ai-team' ? 'hidden' : ''}`}>
-        <div className="flex items-center justify-around h-16 bg-[#1C1C1E]">
+      <nav className={`fixed bottom-[calc(52px+env(safe-area-inset-bottom))] left-0 right-0 ${themeClasses.bg.secondary} border-t ${themeClasses.border.primary} z-[100] ${className} ${showAIModal || showEventPicker || showNotificationModal || showPhotoModal || showVisionCamModal || showLiDARScanner || showChatHistory || showSendEmailModal || showEmailOptions || location.pathname === '/ai-team' ? 'hidden' : ''}`}>
+        <div className={`flex items-center justify-around h-16 ${themeClasses.bg.secondary}`}>
           {navItems.map((item) => {
             const isActive = location.pathname === item.href;
 
@@ -270,10 +273,10 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
           />
 
           {/* Modal Content */}
-          <div className="relative w-full max-w-md md:max-w-lg bg-[#1C1C1E] rounded-t-2xl md:rounded-2xl pb-safe md:pb-6 md:mx-4 animate-slide-up">
+          <div className={`relative w-full max-w-md md:max-w-lg ${themeClasses.bg.modal} rounded-t-2xl md:rounded-2xl pb-safe md:pb-6 md:mx-4 animate-slide-up`}>
             {/* Handle */}
             <div className="flex justify-center pt-3 pb-2">
-              <div className="w-10 h-1 bg-[#3A3A3C] rounded-full" />
+              <div className={`w-10 h-1 ${themeClasses.bg.tertiary} rounded-full`} />
             </div>
 
             {/* Header */}
@@ -283,8 +286,8 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
                   <Sparkles className="w-6 h-6 text-orange-500" />
                 </div>
                 <div>
-                  <h2 className="text-base md:text-lg font-bold text-white">Contractor AI</h2>
-                  <p className="text-sm text-zinc-400">What would you like help with?</p>
+                  <h2 className={`text-base md:text-lg font-bold ${themeClasses.text.primary}`}>Contractor AI</h2>
+                  <p className={`text-sm ${themeClasses.text.secondary}`}>What would you like help with?</p>
                 </div>
               </div>
               <button
@@ -301,13 +304,13 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
                 <button
                   key={mode.id}
                   onClick={() => handleModeSelect(mode.id)}
-                  className="flex flex-col items-center p-3 md:p-4 bg-[#2C2C2E] rounded-lg border border-orange-500/30 hover:border-orange-500/60 active:scale-[0.98] transition-all"
+                  className={`flex flex-col items-center p-3 md:p-4 ${theme === 'light' ? 'bg-white' : 'bg-[#1C1C1E]'} rounded-lg border border-orange-500/30 hover:border-orange-500/60 active:scale-[0.98] transition-all`}
                 >
                   <div className="w-12 h-12 bg-orange-500/20 rounded-lg flex items-center justify-center mb-3">
                     <mode.icon className="w-7 h-7 text-orange-500" />
                   </div>
-                  <span className="font-semibold text-white">{mode.name}</span>
-                  <span className="text-xs text-zinc-400 text-center mt-1">{mode.description}</span>
+                  <span className={`font-semibold ${themeClasses.text.primary}`}>{mode.name}</span>
+                  <span className={`text-xs ${themeClasses.text.secondary} text-center mt-1`}>{mode.description}</span>
                 </button>
               ))}
             </div>
@@ -316,14 +319,14 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
             <div className="px-4 pb-2">
               <button
                 onClick={() => handleModeSelect('lidar-scan')}
-                className="w-full flex items-center gap-4 p-3 md:p-4 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-lg border border-cyan-500/50 hover:border-cyan-500 active:scale-[0.98] transition-all mb-2"
+                className={`w-full flex items-center gap-4 p-3 md:p-4 ${theme === 'light' ? 'bg-white' : 'bg-[#1C1C1E]'} rounded-lg border border-cyan-500/50 hover:border-cyan-500 active:scale-[0.98] transition-all mb-2`}
               >
                 <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg flex items-center justify-center">
                   <Scan className="w-7 h-7 text-white" />
                 </div>
                 <div className="flex-1 text-left">
-                  <span className="font-semibold text-white text-lg">Plan Creation</span>
-                  <p className="text-sm text-zinc-400">Scan rooms or draw floor plans</p>
+                  <span className={`font-semibold ${themeClasses.text.primary} text-lg`}>Plan Creation</span>
+                  <p className={`text-sm ${themeClasses.text.secondary}`}>Scan rooms or draw floor plans</p>
                 </div>
                 <ChevronRight className="w-6 h-6 text-cyan-400" />
               </button>
@@ -333,14 +336,14 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
             <div className="px-4 pb-2">
               <button
                 onClick={() => handleModeSelect('vision-cam')}
-                className="w-full flex items-center gap-4 p-3 md:p-4 bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-lg border border-purple-500/50 hover:border-purple-500 active:scale-[0.98] transition-all mb-2"
+                className={`w-full flex items-center gap-4 p-3 md:p-4 ${theme === 'light' ? 'bg-white' : 'bg-[#1C1C1E]'} rounded-lg border border-purple-500/50 hover:border-purple-500 active:scale-[0.98] transition-all mb-2`}
               >
                 <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg flex items-center justify-center">
                   <Eye className="w-7 h-7 text-white" />
                 </div>
                 <div className="flex-1 text-left">
-                  <span className="font-semibold text-white text-base md:text-lg">Vision Cam</span>
-                  <p className="text-sm text-zinc-400">AI-powered project visualization</p>
+                  <span className={`font-semibold ${themeClasses.text.primary} text-base md:text-lg`}>Vision Cam</span>
+                  <p className={`text-sm ${themeClasses.text.secondary}`}>AI-powered project visualization</p>
                 </div>
                 <ChevronRight className="w-6 h-6 text-purple-400" />
               </button>
@@ -350,14 +353,14 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
             <div className="px-4 pb-2">
               <button
                 onClick={() => handleModeSelect('photos')}
-                className="w-full flex items-center gap-4 p-3 md:p-4 bg-gradient-to-r from-orange-500/20 to-amber-500/20 rounded-t-lg border border-orange-500/50 border-b-0 hover:border-orange-500 active:scale-[0.98] transition-all"
+                className={`w-full flex items-center gap-4 p-3 md:p-4 ${theme === 'light' ? 'bg-white' : 'bg-[#1C1C1E]'} rounded-t-lg border border-orange-500/50 border-b-0 hover:border-orange-500 active:scale-[0.98] transition-all`}
               >
                 <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center">
                   <Camera className="w-7 h-7 text-white" />
                 </div>
                 <div className="flex-1 text-left">
-                  <span className="font-semibold text-white text-base md:text-lg">Photos</span>
-                  <p className="text-sm text-zinc-400">Capture & organize project photos</p>
+                  <span className={`font-semibold ${themeClasses.text.primary} text-base md:text-lg`}>Photos</span>
+                  <p className={`text-sm ${themeClasses.text.secondary}`}>Capture & organize project photos</p>
                 </div>
                 <ChevronRight className="w-6 h-6 text-orange-500" />
               </button>
@@ -367,13 +370,13 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
                   setShowAIModal(false);
                   navigate('/photos-gallery');
                 }}
-                className="w-full flex items-center gap-3 px-4 py-2.5 bg-[#2C2C2E] rounded-b-lg border border-orange-500/30 hover:border-orange-500/50 active:scale-[0.98] transition-all"
+                className={`w-full flex items-center gap-3 px-4 py-2.5 ${theme === 'light' ? 'bg-white' : 'bg-[#1C1C1E]'} rounded-b-lg border border-orange-500/30 hover:border-orange-500/50 active:scale-[0.98] transition-all`}
               >
                 <div className="w-8 h-8 bg-orange-500/20 rounded-md flex items-center justify-center">
                   <Camera className="w-4 h-4 text-orange-400" />
                 </div>
-                <span className="text-sm font-medium text-zinc-300">Gallery</span>
-                <ChevronRight className="w-4 h-4 text-zinc-500 ml-auto" />
+                <span className={`text-sm font-medium ${themeClasses.text.primary}`}>Gallery</span>
+                <ChevronRight className={`w-4 h-4 ${themeClasses.text.secondary} ml-auto`} />
               </button>
             </div>
 
@@ -384,13 +387,13 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
                   setShowAIModal(false);
                   setShowChatHistory(true);
                 }}
-                className="w-full flex items-center gap-3 px-4 py-2.5 bg-[#2C2C2E] rounded-lg border border-zinc-700 hover:border-zinc-500 active:scale-[0.98] transition-all"
+                className={`w-full flex items-center gap-3 px-4 py-2.5 ${theme === 'light' ? 'bg-white' : 'bg-[#1C1C1E]'} rounded-lg border ${themeClasses.border.primary} ${themeClasses.hover.bg} active:scale-[0.98] transition-all`}
               >
-                <div className="w-8 h-8 bg-zinc-700 rounded-md flex items-center justify-center">
-                  <History className="w-4 h-4 text-zinc-300" />
+                <div className={`w-8 h-8 ${themeClasses.bg.tertiary} rounded-md flex items-center justify-center`}>
+                  <History className={`w-4 h-4 ${themeClasses.text.secondary}`} />
                 </div>
-                <span className="text-sm font-medium text-zinc-300">Chat History</span>
-                <ChevronRight className="w-4 h-4 text-zinc-500 ml-auto" />
+                <span className={`text-sm font-medium ${themeClasses.text.primary}`}>Chat History</span>
+                <ChevronRight className={`w-4 h-4 ${themeClasses.text.secondary} ml-auto`} />
               </button>
             </div>
           </div>
@@ -407,26 +410,26 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
           />
 
           {/* Modal */}
-          <div className="relative w-full max-w-lg md:max-w-xl bg-[#1C1C1E] rounded-t-2xl md:rounded-2xl md:mx-4 overflow-hidden animate-slide-up">
+          <div className={`relative w-full max-w-lg md:max-w-xl ${themeClasses.bg.modal} rounded-t-2xl md:rounded-2xl md:mx-4 overflow-hidden animate-slide-up`}>
             {/* Handle */}
             <div className="flex justify-center pt-3 pb-2">
-              <div className="w-10 h-1 bg-[#3A3A3C] rounded-full" />
+              <div className={`w-10 h-1 ${themeClasses.bg.tertiary} rounded-full`} />
             </div>
 
             {/* Header */}
-            <div className="flex items-center justify-between px-4 pb-4 border-b border-blue-500/30">
+            <div className={`flex items-center justify-between px-4 pb-4 border-b border-blue-500/30`}>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
                   <Mail className="w-5 h-5 text-blue-400" />
                 </div>
                 <div>
-                  <h2 className="text-base md:text-lg font-bold text-white">Email</h2>
-                  <p className="text-sm text-zinc-400">Choose what to send</p>
+                  <h2 className={`text-base md:text-lg font-bold ${themeClasses.text.primary}`}>Email</h2>
+                  <p className={`text-sm ${themeClasses.text.secondary}`}>Choose what to send</p>
                 </div>
               </div>
               <button
                 onClick={() => setShowEmailOptions(false)}
-                className="p-2 text-zinc-400 hover:text-white rounded-lg"
+                className={`p-2 ${themeClasses.text.secondary} ${themeClasses.hover.text} rounded-lg`}
               >
                 <X className="w-6 h-6" />
               </button>
@@ -436,28 +439,28 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
             <div className="p-4 pb-8 space-y-3">
               <button
                 onClick={() => handleModeSelect('send-email')}
-                className="w-full flex items-center gap-4 p-3 md:p-4 bg-[#2C2C2E] rounded-xl border border-blue-500/30 hover:border-blue-500 active:scale-[0.98] transition-all"
+                className={`w-full flex items-center gap-4 p-3 md:p-4 ${themeClasses.bg.card} rounded-xl border border-blue-500/30 hover:border-blue-500 active:scale-[0.98] transition-all`}
               >
                 <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
                   <Mail className="w-6 h-6 text-white" />
                 </div>
                 <div className="flex-1 text-left">
-                  <h3 className="font-semibold text-white">Send Email</h3>
-                  <p className="text-sm text-zinc-400">Compose a new email to clients or team</p>
+                  <h3 className={`font-semibold ${themeClasses.text.primary}`}>Send Email</h3>
+                  <p className={`text-sm ${themeClasses.text.secondary}`}>Compose a new email to clients or team</p>
                 </div>
                 <ChevronRight className="w-5 h-5 text-blue-400" />
               </button>
 
               <button
                 onClick={() => handleModeSelect('email-notification')}
-                className="w-full flex items-center gap-4 p-3 md:p-4 bg-[#2C2C2E] rounded-xl border border-blue-500/30 hover:border-blue-500 active:scale-[0.98] transition-all"
+                className={`w-full flex items-center gap-4 p-3 md:p-4 ${themeClasses.bg.card} rounded-xl border border-blue-500/30 hover:border-blue-500 active:scale-[0.98] transition-all`}
               >
                 <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
                   <CalendarIcon className="w-6 h-6 text-white" />
                 </div>
                 <div className="flex-1 text-left">
-                  <h3 className="font-semibold text-white">Email About Event</h3>
-                  <p className="text-sm text-zinc-400">Notify about a calendar event</p>
+                  <h3 className={`font-semibold ${themeClasses.text.primary}`}>Email About Event</h3>
+                  <p className={`text-sm ${themeClasses.text.secondary}`}>Notify about a calendar event</p>
                 </div>
                 <ChevronRight className="w-5 h-5 text-blue-400" />
               </button>

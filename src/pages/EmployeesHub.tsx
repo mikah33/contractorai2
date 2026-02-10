@@ -14,12 +14,16 @@ import {
   Pencil,
   DollarSign,
   Clock,
-  Calendar
+  Calendar,
+  Settings
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import useProjectStore from '../stores/projectStore';
 import { useOnboardingStore } from '../stores/onboardingStore';
+import AIChatPopup from '../components/ai/AIChatPopup';
+import FloatingAIChatButton from '../components/ai/FloatingAIChatButton';
 import TeamsTutorialModal from '../components/employees/TeamsTutorialModal';
+import { useTheme, getThemeClasses } from '../contexts/ThemeContext';
 
 interface Employee {
   id: string;
@@ -37,6 +41,8 @@ interface Employee {
 const EmployeesHub: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { theme } = useTheme();
+  const themeClasses = getThemeClasses(theme);
   const { projects, fetchProjects } = useProjectStore();
   const { teamsTutorialCompleted, checkTeamsTutorial, setTeamsTutorialCompleted } = useOnboardingStore();
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -49,6 +55,7 @@ const EmployeesHub: React.FC = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [showAIChat, setShowAIChat] = useState(false);
 
   const [editForm, setEditForm] = useState({
     id: '',
@@ -220,6 +227,10 @@ const EmployeesHub: React.FC = () => {
     setShowManualForm(true);
   };
 
+  const handleAIChat = () => {
+    setShowAIChat(true);
+  };
+
   const handleCreateEmployee = async () => {
     if (isCreating) return;
     if (!newForm.name.trim()) return;
@@ -316,37 +327,47 @@ const EmployeesHub: React.FC = () => {
   };
 
   return (
-    <div className="min-h-full bg-[#0F0F0F] pb-24">
+    <div className={`min-h-full ${themeClasses.bg.primary} pb-24`}>
       {/* Header */}
-      <div className="bg-[#1C1C1E] border-b border-orange-500/30 px-4 pb-4 pt-[calc(env(safe-area-inset-top)+16px)] sticky top-0 z-10">
+      <div className={`${themeClasses.bg.secondary} border-b ${themeClasses.border.secondary} px-4 pb-4 pt-[calc(env(safe-area-inset-top)+16px)] sticky top-0 z-10`}>
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-              <UserCheck className="w-5 h-5 text-orange-500" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-white">Team</h1>
-              <p className="text-sm text-zinc-400">{employees.length} members</p>
+          <div className="flex-1">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                <UserCheck className="w-5 h-5 text-orange-500" />
+              </div>
+              <div>
+                <h1 className={`text-xl font-bold ${themeClasses.text.primary}`}>Team</h1>
+                <p className={`text-sm ${themeClasses.text.secondary}`}>{employees.length} members</p>
+              </div>
             </div>
           </div>
-          <button
-            onClick={handleManual}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white text-black rounded-md font-medium hover:bg-zinc-200 active:scale-95 transition-all"
-          >
-            <Plus className="w-5 h-5" />
-            <span>Add</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate('/settings')}
+              className={`w-10 h-10 ${themeClasses.bg.tertiary} rounded-lg flex items-center justify-center ${themeClasses.hover.bg} transition-colors`}
+            >
+              <Settings className={`w-5 h-5 ${themeClasses.text.secondary}`} />
+            </button>
+            <button
+              onClick={handleManual}
+              className={`flex items-center gap-2 px-4 py-2.5 ${themeClasses.button.primary} rounded-md font-medium ${themeClasses.button.primaryHover} active:scale-95 transition-all`}
+            >
+              <Plus className="w-5 h-5" />
+              <span>Add</span>
+            </button>
+          </div>
         </div>
 
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
+          <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 ${themeClasses.text.muted}`} />
           <input
             type="text"
             placeholder="Search team members..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-[#262626] rounded-lg border border-[#3A3A3C] text-white placeholder-zinc-500 focus:ring-2 focus:ring-zinc-500 focus:bg-[#2C2C2E] transition-all"
+            className={`w-full pl-10 pr-4 py-2.5 ${themeClasses.bg.tertiary} rounded-lg border ${themeClasses.border.primary} ${themeClasses.text.primary} ${themeClasses.text.placeholder} focus:ring-2 focus:ring-orange-500 ${themeClasses.focus.bg} transition-all`}
           />
         </div>
       </div>
@@ -355,13 +376,13 @@ const EmployeesHub: React.FC = () => {
       <div className="px-4 py-4 space-y-3">
         {loading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+            <div className={`animate-spin rounded-full h-8 w-8 border-b-2 ${theme === 'light' ? 'border-gray-900' : 'border-white'}`}></div>
           </div>
         ) : filteredEmployees.length === 0 ? (
           <div className="text-center py-12">
-            <UserCheck className="w-12 h-12 text-zinc-600 mx-auto mb-3" />
-            <p className="text-zinc-400 font-medium">No team members yet</p>
-            <p className="text-sm text-zinc-500 mt-1">Tap + to add your first team member</p>
+            <UserCheck className={`w-12 h-12 ${themeClasses.text.muted} mx-auto mb-3`} />
+            <p className={`${themeClasses.text.secondary} font-medium`}>No team members yet</p>
+            <p className={`text-sm ${themeClasses.text.muted} mt-1`}>Tap + to add your first team member</p>
           </div>
         ) : (
           filteredEmployees.map((employee) => {
@@ -371,7 +392,7 @@ const EmployeesHub: React.FC = () => {
               <div
                 key={employee.id}
                 onClick={() => setSelectedEmployee(employee)}
-                className="bg-[#1C1C1E] rounded-2xl border border-orange-500/30 overflow-hidden active:scale-[0.99] transition-transform"
+                className={`${themeClasses.bg.card} rounded-2xl border ${themeClasses.border.secondary} overflow-hidden active:scale-[0.99] transition-transform`}
               >
                 {/* Header with avatar and status */}
                 <div className="p-4 pb-3">
@@ -381,7 +402,7 @@ const EmployeesHub: React.FC = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <h3 className="font-bold text-white truncate text-lg">
+                        <h3 className={`font-bold ${themeClasses.text.primary} truncate text-lg`}>
                           {employee.name || 'Unknown'}
                         </h3>
                         <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(employee.status || 'active')}`}>
@@ -389,34 +410,34 @@ const EmployeesHub: React.FC = () => {
                         </span>
                       </div>
                       {employee.job_title && (
-                        <div className="flex items-center gap-1 text-sm text-zinc-400 mt-0.5">
+                        <div className={`flex items-center gap-1 text-sm ${themeClasses.text.secondary} mt-0.5`}>
                           <Briefcase className="w-3.5 h-3.5" />
                           <span className="truncate">{employee.job_title}</span>
                         </div>
                       )}
                     </div>
-                    <ChevronRight className="w-5 h-5 text-zinc-500 flex-shrink-0" />
+                    <ChevronRight className={`w-5 h-5 ${themeClasses.text.muted} flex-shrink-0`} />
                   </div>
                 </div>
 
                 {/* Contact Info */}
                 <div className="px-4 pb-3 flex flex-wrap gap-x-4 gap-y-1 text-sm">
                   {employee.email && (
-                    <div className="flex items-center gap-1.5 text-zinc-400">
-                      <Mail className="w-4 h-4 text-zinc-500" />
+                    <div className={`flex items-center gap-1.5 ${themeClasses.text.secondary}`}>
+                      <Mail className={`w-4 h-4 ${themeClasses.text.muted}`} />
                       <span className="truncate max-w-[180px]">{employee.email}</span>
                     </div>
                   )}
                   {employee.phone && (
-                    <div className="flex items-center gap-1.5 text-zinc-400">
-                      <Phone className="w-4 h-4 text-zinc-500" />
+                    <div className={`flex items-center gap-1.5 ${themeClasses.text.secondary}`}>
+                      <Phone className={`w-4 h-4 ${themeClasses.text.muted}`} />
                       <span>{employee.phone}</span>
                     </div>
                   )}
                 </div>
 
                 {/* Stats Row */}
-                <div className="px-4 py-3 bg-[#171717] border-t border-orange-500/20 flex items-center justify-between">
+                <div className={`px-4 py-3 ${themeClasses.bg.tertiary} border-t ${themeClasses.border.primary} flex items-center justify-between`}>
                   <div className="flex items-center gap-4">
                     {/* Hourly Rate */}
                     <div className="flex items-center gap-1.5">
@@ -424,30 +445,30 @@ const EmployeesHub: React.FC = () => {
                         <DollarSign className="w-4 h-4 text-green-400" />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-white">
+                        <p className={`text-sm font-semibold ${themeClasses.text.primary}`}>
                           ${employee.hourly_rate || 0}/hr
                         </p>
-                        <p className="text-xs text-zinc-500">Rate</p>
+                        <p className={`text-xs ${themeClasses.text.muted}`}>Rate</p>
                       </div>
                     </div>
 
                     {/* Projects */}
                     <div className="flex items-center gap-1.5">
-                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${employeeProjects.length > 0 ? 'bg-purple-900/30' : 'bg-zinc-800'}`}>
-                        <Briefcase className={`w-4 h-4 ${employeeProjects.length > 0 ? 'text-purple-400' : 'text-zinc-500'}`} />
+                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${employeeProjects.length > 0 ? 'bg-purple-900/30' : theme === 'light' ? 'bg-gray-200' : 'bg-zinc-800'}`}>
+                        <Briefcase className={`w-4 h-4 ${employeeProjects.length > 0 ? 'text-purple-400' : themeClasses.text.muted.includes('text-zinc-500') ? 'text-zinc-500' : 'text-gray-500'}`} />
                       </div>
                       <div>
-                        <p className={`text-sm font-semibold ${employeeProjects.length > 0 ? 'text-white' : 'text-zinc-500'}`}>
+                        <p className={`text-sm font-semibold ${employeeProjects.length > 0 ? themeClasses.text.primary : themeClasses.text.muted}`}>
                           {employeeProjects.length}
                         </p>
-                        <p className="text-xs text-zinc-500">Projects</p>
+                        <p className={`text-xs ${themeClasses.text.muted}`}>Projects</p>
                       </div>
                     </div>
                   </div>
 
                   {/* Date Added */}
                   {formatDate(employee.created_at) && (
-                    <div className="flex items-center gap-1 text-xs text-zinc-500">
+                    <div className={`flex items-center gap-1 text-xs ${themeClasses.text.muted}`}>
                       <Calendar className="w-3.5 h-3.5" />
                       <span>{formatDate(employee.created_at)}</span>
                     </div>
@@ -466,19 +487,19 @@ const EmployeesHub: React.FC = () => {
             className="absolute inset-0 bg-black/70"
             onClick={() => setShowManualForm(false)}
           />
-          <div className="relative bg-[#1C1C1E] rounded-t-3xl w-full max-h-[90vh] overflow-y-auto animate-slide-up">
-            <div className="sticky top-0 bg-[#1C1C1E] px-4 py-4 border-b border-orange-500/30 flex items-center justify-between z-10">
+          <div className={`relative ${themeClasses.bg.secondary} rounded-t-3xl w-full max-h-[90vh] overflow-y-auto animate-slide-up`}>
+            <div className={`sticky top-0 ${themeClasses.bg.secondary} px-4 py-4 border-b ${themeClasses.border.secondary} flex items-center justify-between z-10`}>
               <button
                 onClick={() => setShowManualForm(false)}
-                className="text-zinc-400 text-base font-medium active:text-zinc-300"
+                className={`${themeClasses.text.secondary} text-base font-medium active:opacity-70`}
               >
                 Cancel
               </button>
-              <h2 className="text-lg font-semibold text-white">New Team Member</h2>
+              <h2 className={`text-lg font-semibold ${themeClasses.text.primary}`}>New Team Member</h2>
               <button
                 onClick={handleCreateEmployee}
                 disabled={!newForm.name.trim() || isCreating}
-                className="text-orange-500 text-base font-semibold active:text-orange-400 disabled:text-zinc-600 disabled:cursor-not-allowed"
+                className={`text-orange-500 text-base font-semibold active:text-orange-400 disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 {isCreating ? 'Saving...' : 'Save'}
               </button>
@@ -487,26 +508,26 @@ const EmployeesHub: React.FC = () => {
             <div className="p-4 space-y-4">
               {/* Name */}
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1">
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>
                   Name <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="text"
                   value={newForm.name}
                   onChange={(e) => setNewForm({ ...newForm, name: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} ${themeClasses.text.placeholder} focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none`}
                   placeholder="Full name"
                 />
               </div>
 
               {/* Role */}
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1">Job Title</label>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Job Title</label>
                 <input
                   type="text"
                   value={newForm.job_title}
                   onChange={(e) => setNewForm({ ...newForm, job_title: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} ${themeClasses.text.placeholder} focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none`}
                   placeholder="e.g., Foreman, Carpenter, Electrician"
                 />
               </div>
@@ -514,22 +535,22 @@ const EmployeesHub: React.FC = () => {
               {/* Email & Phone */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-1">Email</label>
+                  <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Email</label>
                   <input
                     type="email"
                     value={newForm.email}
                     onChange={(e) => setNewForm({ ...newForm, email: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
+                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} ${themeClasses.text.placeholder} focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none`}
                     placeholder="email@example.com"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-1">Phone</label>
+                  <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Phone</label>
                   <input
                     type="tel"
                     value={newForm.phone}
                     onChange={(e) => setNewForm({ ...newForm, phone: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
+                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} ${themeClasses.text.placeholder} focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none`}
                     placeholder="(555) 123-4567"
                   />
                 </div>
@@ -538,14 +559,14 @@ const EmployeesHub: React.FC = () => {
               {/* Hourly Rate & Status */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-1">Hourly Rate</label>
+                  <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Hourly Rate</label>
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500">$</span>
+                    <span className={`absolute left-4 top-1/2 -translate-y-1/2 ${themeClasses.text.muted}`}>$</span>
                     <input
                       type="number"
                       value={newForm.hourly_rate}
                       onChange={(e) => setNewForm({ ...newForm, hourly_rate: parseFloat(e.target.value) || 0 })}
-                      className="w-full pl-8 pr-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
+                      className={`w-full pl-8 pr-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} ${themeClasses.text.placeholder} focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none`}
                       placeholder="25"
                       min="0"
                       step="0.50"
@@ -553,11 +574,11 @@ const EmployeesHub: React.FC = () => {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-1">Status</label>
+                  <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Status</label>
                   <select
                     value={newForm.status}
                     onChange={(e) => setNewForm({ ...newForm, status: e.target.value as 'active' | 'inactive' })}
-                    className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
+                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none`}
                   >
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
@@ -567,12 +588,12 @@ const EmployeesHub: React.FC = () => {
 
               {/* Notes */}
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1">Notes</label>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Notes</label>
                 <textarea
                   value={newForm.notes}
                   onChange={(e) => setNewForm({ ...newForm, notes: e.target.value })}
                   rows={3}
-                  className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none resize-none"
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} ${themeClasses.text.placeholder} focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none resize-none`}
                   placeholder="Additional notes..."
                 />
               </div>
@@ -588,19 +609,19 @@ const EmployeesHub: React.FC = () => {
             className="absolute inset-0 bg-black/70"
             onClick={() => setShowEditForm(false)}
           />
-          <div className="relative bg-[#1C1C1E] rounded-t-3xl w-full max-h-[90vh] overflow-y-auto animate-slide-up">
-            <div className="sticky top-0 bg-[#1C1C1E] px-4 py-4 border-b border-orange-500/30 flex items-center justify-between z-10">
+          <div className={`relative ${themeClasses.bg.secondary} rounded-t-3xl w-full max-h-[90vh] overflow-y-auto animate-slide-up`}>
+            <div className={`sticky top-0 ${themeClasses.bg.secondary} px-4 py-4 border-b ${themeClasses.border.secondary} flex items-center justify-between z-10`}>
               <button
                 onClick={() => setShowEditForm(false)}
-                className="text-zinc-400 text-base font-medium active:text-zinc-300"
+                className={`${themeClasses.text.secondary} text-base font-medium active:opacity-70`}
               >
                 Cancel
               </button>
-              <h2 className="text-lg font-semibold text-white">Edit Team Member</h2>
+              <h2 className={`text-lg font-semibold ${themeClasses.text.primary}`}>Edit Team Member</h2>
               <button
                 onClick={handleUpdateEmployee}
                 disabled={!editForm.name.trim() || isUpdating}
-                className="text-orange-500 text-base font-semibold active:text-orange-400 disabled:text-zinc-600 disabled:cursor-not-allowed"
+                className={`text-orange-500 text-base font-semibold active:text-orange-400 disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 {isUpdating ? 'Saving...' : 'Save'}
               </button>
@@ -609,26 +630,26 @@ const EmployeesHub: React.FC = () => {
             <div className="p-4 space-y-4">
               {/* Name */}
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1">
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>
                   Name <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="text"
                   value={editForm.name}
                   onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} ${themeClasses.text.placeholder} focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none`}
                   placeholder="Full name"
                 />
               </div>
 
               {/* Role */}
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1">Job Title</label>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Job Title</label>
                 <input
                   type="text"
                   value={editForm.job_title}
                   onChange={(e) => setEditForm({ ...editForm, job_title: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} ${themeClasses.text.placeholder} focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none`}
                   placeholder="e.g., Foreman, Carpenter, Electrician"
                 />
               </div>
@@ -636,22 +657,22 @@ const EmployeesHub: React.FC = () => {
               {/* Email & Phone */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-1">Email</label>
+                  <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Email</label>
                   <input
                     type="email"
                     value={editForm.email}
                     onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
+                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} ${themeClasses.text.placeholder} focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none`}
                     placeholder="email@example.com"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-1">Phone</label>
+                  <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Phone</label>
                   <input
                     type="tel"
                     value={editForm.phone}
                     onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
+                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} ${themeClasses.text.placeholder} focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none`}
                     placeholder="(555) 123-4567"
                   />
                 </div>
@@ -660,14 +681,14 @@ const EmployeesHub: React.FC = () => {
               {/* Hourly Rate & Status */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-1">Hourly Rate</label>
+                  <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Hourly Rate</label>
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500">$</span>
+                    <span className={`absolute left-4 top-1/2 -translate-y-1/2 ${themeClasses.text.muted}`}>$</span>
                     <input
                       type="number"
                       value={editForm.hourly_rate}
                       onChange={(e) => setEditForm({ ...editForm, hourly_rate: parseFloat(e.target.value) || 0 })}
-                      className="w-full pl-8 pr-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
+                      className={`w-full pl-8 pr-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} ${themeClasses.text.placeholder} focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none`}
                       placeholder="25"
                       min="0"
                       step="0.50"
@@ -675,11 +696,11 @@ const EmployeesHub: React.FC = () => {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-1">Status</label>
+                  <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Status</label>
                   <select
                     value={editForm.status}
                     onChange={(e) => setEditForm({ ...editForm, status: e.target.value as 'active' | 'inactive' })}
-                    className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
+                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none`}
                   >
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
@@ -689,12 +710,12 @@ const EmployeesHub: React.FC = () => {
 
               {/* Notes */}
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1">Notes</label>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Notes</label>
                 <textarea
                   value={editForm.notes}
                   onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
                   rows={3}
-                  className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none resize-none"
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} ${themeClasses.text.placeholder} focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none resize-none`}
                   placeholder="Additional notes..."
                 />
               </div>
@@ -713,13 +734,13 @@ const EmployeesHub: React.FC = () => {
           />
 
           {/* Slide-up Modal */}
-          <div className="absolute inset-x-0 bottom-0 top-12 bg-[#0F0F0F] rounded-t-3xl shadow-2xl flex flex-col animate-slide-up overflow-hidden">
+          <div className={`absolute inset-x-0 bottom-0 top-12 ${themeClasses.bg.primary} rounded-t-3xl shadow-2xl flex flex-col animate-slide-up overflow-hidden`}>
             {/* Header */}
-            <div className="bg-[#1C1C1E] px-4 py-4 border-b border-orange-500/30 flex-shrink-0">
+            <div className={`${themeClasses.bg.secondary} px-4 py-4 border-b ${themeClasses.border.secondary} flex-shrink-0`}>
               <div className="flex items-center justify-between">
                 <button
                   onClick={() => setSelectedEmployee(null)}
-                  className="flex items-center gap-2 text-zinc-400 active:text-white"
+                  className={`flex items-center gap-2 ${themeClasses.text.secondary} active:opacity-70`}
                 >
                   <ArrowLeft className="w-5 h-5" />
                   <span className="text-sm font-medium">Back</span>
@@ -750,10 +771,10 @@ const EmployeesHub: React.FC = () => {
                   {getInitials(selectedEmployee.name || 'NA')}
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-white">{selectedEmployee.name || 'Unknown'}</h1>
+                  <h1 className={`text-xl font-bold ${themeClasses.text.primary}`}>{selectedEmployee.name || 'Unknown'}</h1>
                   <div className="flex items-center gap-2 mt-0.5">
                     {selectedEmployee.job_title && (
-                      <span className="text-sm text-zinc-400">{selectedEmployee.job_title}</span>
+                      <span className={`text-sm ${themeClasses.text.secondary}`}>{selectedEmployee.job_title}</span>
                     )}
                     <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(selectedEmployee.status || 'active')}`}>
                       {(selectedEmployee.status || 'active').charAt(0).toUpperCase() + (selectedEmployee.status || 'active').slice(1)}
@@ -767,27 +788,27 @@ const EmployeesHub: React.FC = () => {
             <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 pb-24">
 
               {/* Contact Info Card */}
-              <div className="bg-[#1C1C1E] border border-orange-500/30 rounded-2xl p-4">
-                <label className="text-xs text-zinc-500 mb-3 block">Contact Information</label>
+              <div className={`${themeClasses.bg.card} border ${themeClasses.border.secondary} rounded-2xl p-4`}>
+                <label className={`text-xs ${themeClasses.text.muted} mb-3 block`}>Contact Information</label>
                 <div className="space-y-3">
                   {selectedEmployee.email && (
-                    <a href={`mailto:${selectedEmployee.email}`} className="flex items-center gap-3 text-zinc-300 active:text-purple-400">
+                    <a href={`mailto:${selectedEmployee.email}`} className={`flex items-center gap-3 ${themeClasses.text.secondary} active:text-purple-400`}>
                       <div className="w-10 h-10 bg-purple-900/30 rounded-xl flex items-center justify-center">
                         <Mail className="w-5 h-5 text-purple-400" />
                       </div>
                       <div>
-                        <p className="text-xs text-zinc-500">Email</p>
+                        <p className={`text-xs ${themeClasses.text.muted}`}>Email</p>
                         <p className="font-medium">{selectedEmployee.email}</p>
                       </div>
                     </a>
                   )}
                   {selectedEmployee.phone && (
-                    <a href={`tel:${selectedEmployee.phone}`} className="flex items-center gap-3 text-zinc-300 active:text-green-400">
+                    <a href={`tel:${selectedEmployee.phone}`} className={`flex items-center gap-3 ${themeClasses.text.secondary} active:text-green-400`}>
                       <div className="w-10 h-10 bg-green-900/30 rounded-xl flex items-center justify-center">
                         <Phone className="w-5 h-5 text-green-400" />
                       </div>
                       <div>
-                        <p className="text-xs text-zinc-500">Phone</p>
+                        <p className={`text-xs ${themeClasses.text.muted}`}>Phone</p>
                         <p className="font-medium">{selectedEmployee.phone}</p>
                       </div>
                     </a>
@@ -796,28 +817,28 @@ const EmployeesHub: React.FC = () => {
               </div>
 
               {/* Pay Info Card */}
-              <div className="bg-[#1C1C1E] border border-orange-500/30 rounded-2xl p-4">
-                <label className="text-xs text-zinc-500 mb-3 block">Compensation</label>
+              <div className={`${themeClasses.bg.card} border ${themeClasses.border.secondary} rounded-2xl p-4`}>
+                <label className={`text-xs ${themeClasses.text.muted} mb-3 block`}>Compensation</label>
                 <div className="flex items-center gap-4">
                   <div className="flex-1 text-center p-3 bg-green-900/20 rounded-xl">
                     <p className="text-2xl font-bold text-green-400">
                       ${selectedEmployee.hourly_rate || 0}
                     </p>
-                    <p className="text-xs text-zinc-500 mt-1">Hourly Rate</p>
+                    <p className={`text-xs ${themeClasses.text.muted} mt-1`}>Hourly Rate</p>
                   </div>
                   <div className="flex-1 text-center p-3 bg-purple-900/20 rounded-xl">
                     <p className="text-2xl font-bold text-purple-400">
                       {getEmployeeProjects(selectedEmployee.name).length}
                     </p>
-                    <p className="text-xs text-zinc-500 mt-1">Active Projects</p>
+                    <p className={`text-xs ${themeClasses.text.muted} mt-1`}>Active Projects</p>
                   </div>
                 </div>
               </div>
 
               {/* Projects Card */}
-              <div className="bg-[#1C1C1E] border border-orange-500/30 rounded-2xl p-4">
+              <div className={`${themeClasses.bg.card} border ${themeClasses.border.secondary} rounded-2xl p-4`}>
                 <div className="flex items-center justify-between mb-3">
-                  <label className="text-xs text-zinc-500">Assigned Projects</label>
+                  <label className={`text-xs ${themeClasses.text.muted}`}>Assigned Projects</label>
                   <button
                     onClick={() => {
                       setSelectedEmployee(null);
@@ -833,8 +854,8 @@ const EmployeesHub: React.FC = () => {
                   if (empProjects.length === 0) {
                     return (
                       <div className="text-center py-6">
-                        <Briefcase className="w-8 h-8 text-zinc-600 mx-auto mb-2" />
-                        <p className="text-sm text-zinc-500">No projects assigned</p>
+                        <Briefcase className={`w-8 h-8 ${themeClasses.text.muted} mx-auto mb-2`} />
+                        <p className={`text-sm ${themeClasses.text.muted}`}>No projects assigned</p>
                       </div>
                     );
                   }
@@ -847,19 +868,19 @@ const EmployeesHub: React.FC = () => {
                             setSelectedEmployee(null);
                             navigate('/projects-hub');
                           }}
-                          className="flex items-center gap-3 p-3 bg-[#262626] rounded-xl active:bg-[#2C2C2E]"
+                          className={`flex items-center gap-3 p-3 ${themeClasses.bg.tertiary} rounded-xl ${themeClasses.hover.bg}`}
                         >
                           <div className="w-10 h-10 bg-purple-900/30 rounded-xl flex items-center justify-center">
                             <Briefcase className="w-5 h-5 text-purple-400" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium text-white truncate">{project.name}</p>
-                            <p className="text-xs text-zinc-500">
+                            <p className={`font-medium ${themeClasses.text.primary} truncate`}>{project.name}</p>
+                            <p className={`text-xs ${themeClasses.text.muted}`}>
                               {project.status === 'active' || project.status === 'in_progress' ? 'Active' : project.status === 'completed' ? 'Completed' : 'On Hold'}
                               {project.budget ? ` • ${formatCurrency(project.budget)}` : ''}
                             </p>
                           </div>
-                          <ChevronRight className="w-4 h-4 text-zinc-500" />
+                          <ChevronRight className={`w-4 h-4 ${themeClasses.text.muted}`} />
                         </div>
                       ))}
                     </div>
@@ -869,15 +890,15 @@ const EmployeesHub: React.FC = () => {
 
               {/* Notes Card */}
               {selectedEmployee.notes && (
-                <div className="bg-[#1C1C1E] border border-orange-500/30 rounded-2xl p-4">
-                  <label className="text-xs text-zinc-500 mb-2 block">Notes</label>
-                  <p className="text-sm text-zinc-300 whitespace-pre-wrap">{selectedEmployee.notes}</p>
+                <div className={`${themeClasses.bg.card} border ${themeClasses.border.secondary} rounded-2xl p-4`}>
+                  <label className={`text-xs ${themeClasses.text.muted} mb-2 block`}>Notes</label>
+                  <p className={`text-sm ${themeClasses.text.secondary} whitespace-pre-wrap`}>{selectedEmployee.notes}</p>
                 </div>
               )}
 
               {/* Member Since */}
               {formatDate(selectedEmployee.created_at) && (
-                <div className="text-center text-xs text-zinc-500 pt-2">
+                <div className={`text-center text-xs ${themeClasses.text.muted} pt-2`}>
                   Team member since {formatDate(selectedEmployee.created_at)}
                 </div>
               )}
@@ -895,6 +916,19 @@ const EmployeesHub: React.FC = () => {
             setTeamsTutorialCompleted(tutorialUserId, true);
           }
         }}
+      />
+
+      {/* AI Chat Popup */}
+      <AIChatPopup
+        isOpen={showAIChat}
+        onClose={() => setShowAIChat(false)}
+        mode="general"
+      />
+
+      {/* Enhanced AI Chat Button */}
+      <FloatingAIChatButton
+        onClick={handleAIChat}
+        mode="general"
       />
     </div>
   );

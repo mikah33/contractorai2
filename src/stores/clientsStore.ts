@@ -16,6 +16,13 @@ export interface Client {
   status: 'active' | 'inactive' | 'prospect';
   createdAt: string;
   updatedAt: string;
+  // Gmail OAuth fields
+  gmail_access_token?: string;
+  gmail_refresh_token?: string;
+  gmail_token_expiry?: string;
+  gmail_email?: string;
+  email_sending_enabled?: boolean;
+  email_auth_method?: string;
 }
 
 interface ClientsState {
@@ -111,7 +118,13 @@ export const useClientsStore = create<ClientsState>((set, get) => ({
           notes: client.notes || '',
           status: client.status || 'active',
           createdAt: client.created_at,
-          updatedAt: client.updated_at
+          updatedAt: client.updated_at,
+          gmail_access_token: client.gmail_access_token,
+          gmail_refresh_token: client.gmail_refresh_token,
+          gmail_token_expiry: client.gmail_token_expiry,
+          gmail_email: client.gmail_email,
+          email_sending_enabled: client.email_sending_enabled || false,
+          email_auth_method: client.email_auth_method || 'none'
         })) || [],
         isLoading: false,
         hasLoadedOnce: true
@@ -173,7 +186,13 @@ export const useClientsStore = create<ClientsState>((set, get) => ({
         notes: data.notes || '',
         status: data.status || 'active',
         createdAt: data.created_at,
-        updatedAt: data.updated_at
+        updatedAt: data.updated_at,
+        gmail_access_token: data.gmail_access_token,
+        gmail_refresh_token: data.gmail_refresh_token,
+        gmail_token_expiry: data.gmail_token_expiry,
+        gmail_email: data.gmail_email,
+        email_sending_enabled: data.email_sending_enabled || false,
+        email_auth_method: data.email_auth_method || 'none'
       };
 
       set((state) => ({
@@ -228,7 +247,13 @@ export const useClientsStore = create<ClientsState>((set, get) => ({
         notes: data.notes || '',
         status: data.status || 'active',
         createdAt: data.created_at,
-        updatedAt: data.updated_at
+        updatedAt: data.updated_at,
+        gmail_access_token: data.gmail_access_token,
+        gmail_refresh_token: data.gmail_refresh_token,
+        gmail_token_expiry: data.gmail_token_expiry,
+        gmail_email: data.gmail_email,
+        email_sending_enabled: data.email_sending_enabled || false,
+        email_auth_method: data.email_auth_method || 'none'
       };
 
       console.log('✅ Client updated successfully:', updatedClient);

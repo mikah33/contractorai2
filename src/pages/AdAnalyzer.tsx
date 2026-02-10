@@ -4,10 +4,13 @@ import { MarketingTutorialModal } from '../components/marketing/MarketingTutoria
 import { useOnboardingStore } from '../stores/onboardingStore';
 import { supabase } from '../lib/supabase';
 import { Capacitor } from '@capacitor/core';
+import { useTheme, getThemeClasses } from '../contexts/ThemeContext';
 import { revenueCatService, PRODUCT_IDS } from '../services/revenueCatService';
 import { revenueCatWebService } from '../services/revenueCatWebService';
 
 const AdAnalyzer = () => {
+  const { theme } = useTheme();
+  const themeClasses = getThemeClasses(theme);
   const [showModal, setShowModal] = useState(false);
   const [showAdsModal, setShowAdsModal] = useState(false);
   const [showMarketingTutorial, setShowMarketingTutorial] = useState(false);
@@ -188,7 +191,7 @@ const AdAnalyzer = () => {
   };
 
   return (
-    <div className="min-h-full bg-[#0F0F0F] pb-24">
+    <div className={`min-h-full ${themeClasses.bg.primary} pb-24`}>
       {/* Marketing Tutorial Modal */}
       <MarketingTutorialModal
         isOpen={showMarketingTutorial}
@@ -197,15 +200,15 @@ const AdAnalyzer = () => {
       />
 
       {/* Header - matches app theme */}
-      <div className="bg-[#1C1C1E] border-b border-orange-500/30 sticky top-0 z-10 pt-[env(safe-area-inset-top)]">
+      <div className={`${themeClasses.bg.secondary} border-b border-orange-500/30 sticky top-0 z-10 pt-[env(safe-area-inset-top)]`}>
         <div className="px-4 pb-3 pt-2">
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
               <BarChart3 className="w-5 h-5 text-orange-500" />
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-lg font-bold text-white">Marketing</h1>
-              <p className="text-xs text-zinc-400 leading-tight">Grow your business with premium services</p>
+              <h1 className={`text-lg font-bold ${themeClasses.text.primary}`}>Marketing</h1>
+              <p className={`text-xs ${themeClasses.text.secondary} leading-tight`}>Grow your business with premium services</p>
             </div>
           </div>
         </div>
@@ -216,7 +219,7 @@ const AdAnalyzer = () => {
         {/* Premium Plan Card */}
         <button
           onClick={() => setShowModal(true)}
-          className={`w-full bg-[#1C1C1E] border rounded-lg p-4 text-left active:scale-[0.98] transition-transform ${
+          className={`w-full ${themeClasses.bg.secondary} border rounded-lg p-4 text-left active:scale-[0.98] transition-transform ${
             hasPremium ? 'border-green-500/50' : 'border-orange-500/30'
           }`}
         >
@@ -238,13 +241,13 @@ const AdAnalyzer = () => {
             )}
           </div>
 
-          <h3 className="text-lg font-bold text-white mb-1">Website + Marketing Package</h3>
-          <p className="text-zinc-400 text-sm mb-3">FREE professional website, text marketing, automated reviews & more</p>
+          <h3 className={`text-lg font-bold ${themeClasses.text.primary} mb-1`}>Website + Marketing Package</h3>
+          <p className={`${themeClasses.text.secondary} text-sm mb-3`}>FREE professional website, text marketing, automated reviews & more</p>
 
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-2xl font-bold text-white">$299.99</span>
-              <span className="text-zinc-400 text-sm">/month</span>
+              <span className={`text-2xl font-bold ${themeClasses.text.primary}`}>$299.99</span>
+              <span className={`${themeClasses.text.secondary} text-sm`}>/month</span>
             </div>
             <div className={`flex items-center text-sm font-medium ${hasPremium ? 'text-green-500' : 'text-orange-500'}`}>
               {hasPremium ? 'Manage Subscription' : 'View Details'}
@@ -256,7 +259,7 @@ const AdAnalyzer = () => {
         {/* Ads & Lead Generation Card */}
         <button
           onClick={() => setShowAdsModal(true)}
-          className={`w-full bg-[#1C1C1E] border rounded-lg p-4 text-left active:scale-[0.98] transition-transform ${
+          className={`w-full ${themeClasses.bg.secondary} border rounded-lg p-4 text-left active:scale-[0.98] transition-transform ${
             hasAds ? 'border-green-500/50' : 'border-orange-500/30'
           }`}
         >
@@ -278,13 +281,13 @@ const AdAnalyzer = () => {
             )}
           </div>
 
-          <h3 className="text-lg font-bold text-white mb-1">Ads & Lead Generation</h3>
-          <p className="text-zinc-400 text-sm mb-3">We run your Meta & Google ads and generate qualified leads for you</p>
+          <h3 className={`text-lg font-bold ${themeClasses.text.primary} mb-1`}>Ads & Lead Generation</h3>
+          <p className={`${themeClasses.text.secondary} text-sm mb-3`}>We run your Meta & Google ads and generate qualified leads for you</p>
 
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-2xl font-bold text-white">$899.99</span>
-              <span className="text-zinc-400 text-sm">/month</span>
+              <span className={`text-2xl font-bold ${themeClasses.text.primary}`}>$899.99</span>
+              <span className={`${themeClasses.text.secondary} text-sm`}>/month</span>
             </div>
             <div className={`flex items-center text-sm font-medium ${hasAds ? 'text-green-500' : 'text-orange-500'}`}>
               {hasAds ? 'Manage Subscription' : 'View Details'}
@@ -298,46 +301,46 @@ const AdAnalyzer = () => {
       {showModal && (
         <div className="fixed inset-0 z-[200] flex items-end justify-center bg-black/80" onClick={() => setShowModal(false)}>
           <div
-            className="w-full max-h-[90vh] bg-[#1C1C1E] rounded-t-2xl overflow-hidden"
+            className={`w-full max-h-[90vh] ${themeClasses.bg.secondary} rounded-t-2xl overflow-hidden`}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="sticky top-0 bg-[#1C1C1E] border-b border-orange-500/30 px-4 py-4 flex items-center justify-between">
+            <div className={`sticky top-0 ${themeClasses.bg.secondary} border-b border-orange-500/30 px-4 py-4 flex items-center justify-between`}>
               <div>
                 <span className="text-orange-500 text-xs font-semibold">PREMIUM PLAN</span>
-                <h2 className="text-lg font-bold text-white">Website + Marketing</h2>
+                <h2 className={`text-lg font-bold ${themeClasses.text.primary}`}>Website + Marketing</h2>
               </div>
               <button
                 onClick={() => setShowModal(false)}
-                className="w-10 h-10 bg-[#2C2C2E] rounded-full flex items-center justify-center"
+                className={`w-10 h-10 ${themeClasses.bg.tertiary} rounded-full flex items-center justify-center`}
               >
-                <X className="w-5 h-5 text-zinc-400" />
+                <X className={`w-5 h-5 ${themeClasses.text.secondary}`} />
               </button>
             </div>
 
             {/* Modal Content */}
             <div className="overflow-y-auto max-h-[calc(90vh-80px)] px-4 py-4 space-y-3">
               {/* Pricing */}
-              <div className="bg-[#2C2C2E] border border-orange-500/30 rounded-lg p-4 text-center">
-                <p className="text-zinc-400 text-sm mb-1">Starting at</p>
+              <div className={`${themeClasses.bg.tertiary} border border-orange-500/30 rounded-lg p-4 text-center`}>
+                <p className={`${themeClasses.text.secondary} text-sm mb-1`}>Starting at</p>
                 <div className="flex items-center justify-center gap-1 mb-1">
-                  <span className="text-3xl font-bold text-white">$299.99</span>
-                  <span className="text-zinc-400">/month</span>
+                  <span className={`text-3xl font-bold ${themeClasses.text.primary}`}>$299.99</span>
+                  <span className={`${themeClasses.text.secondary}`}>/month</span>
                 </div>
                 <p className="text-orange-500 text-sm font-medium">Includes FREE professional website</p>
               </div>
 
-              <h3 className="text-base font-semibold text-white pt-2">What You Get</h3>
+              <h3 className={`text-base font-semibold ${themeClasses.text.primary} pt-2`}>What You Get</h3>
 
               {/* Feature 1 - Website */}
-              <div className="bg-[#2C2C2E] rounded-lg p-4">
+              <div className={`${themeClasses.bg.tertiary} rounded-lg p-4`}>
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
                     <Globe className="w-5 h-5 text-orange-500" />
                   </div>
                   <div className="flex-1">
-                    <h4 className="font-semibold text-white text-sm">FREE Professional Website That Ranks</h4>
-                    <p className="text-zinc-400 text-xs mt-1">Custom website optimized for Google with local SEO</p>
+                    <h4 className={`font-semibold ${themeClasses.text.primary} text-sm`}>FREE Professional Website That Ranks</h4>
+                    <p className={`${themeClasses.text.secondary} text-xs mt-1`}>Custom website optimized for Google with local SEO</p>
                     <button
                       onClick={handleViewExample}
                       className="inline-flex items-center text-orange-500 text-xs font-medium mt-2"
@@ -349,73 +352,73 @@ const AdAnalyzer = () => {
               </div>
 
               {/* Feature 2 - Lead Integration */}
-              <div className="bg-[#2C2C2E] rounded-lg p-4">
+              <div className={`${themeClasses.bg.tertiary} rounded-lg p-4`}>
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
                     <Users className="w-5 h-5 text-orange-500" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-white text-sm">Leads Sync to ContractorAI</h4>
-                    <p className="text-zinc-400 text-xs mt-1">Website leads automatically appear in your Clients tab</p>
+                    <h4 className={`font-semibold ${themeClasses.text.primary} text-sm`}>Leads Sync to ContractorAI</h4>
+                    <p className={`${themeClasses.text.secondary} text-xs mt-1`}>Website leads automatically appear in your Clients tab</p>
                   </div>
                 </div>
               </div>
 
               {/* Feature 3 - Text Back */}
-              <div className="bg-[#2C2C2E] rounded-lg p-4">
+              <div className={`${themeClasses.bg.tertiary} rounded-lg p-4`}>
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
                     <MessageSquare className="w-5 h-5 text-orange-500" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-white text-sm">Instant Text-Back System</h4>
-                    <p className="text-zinc-400 text-xs mt-1">Missed calls get automatic text responses</p>
+                    <h4 className={`font-semibold ${themeClasses.text.primary} text-sm`}>Instant Text-Back System</h4>
+                    <p className={`${themeClasses.text.secondary} text-xs mt-1`}>Missed calls get automatic text responses</p>
                   </div>
                 </div>
               </div>
 
               {/* Feature 4 - Reviews */}
-              <div className="bg-[#2C2C2E] rounded-lg p-4">
+              <div className={`${themeClasses.bg.tertiary} rounded-lg p-4`}>
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
                     <Star className="w-5 h-5 text-orange-500" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-white text-sm">5-Star Reviews on Autopilot</h4>
-                    <p className="text-zinc-400 text-xs mt-1">Automated review requests after every job</p>
+                    <h4 className={`font-semibold ${themeClasses.text.primary} text-sm`}>5-Star Reviews on Autopilot</h4>
+                    <p className={`${themeClasses.text.secondary} text-xs mt-1`}>Automated review requests after every job</p>
                   </div>
                 </div>
               </div>
 
               {/* Feature 5 - Remarketing */}
-              <div className="bg-[#2C2C2E] rounded-lg p-4">
+              <div className={`${themeClasses.bg.tertiary} rounded-lg p-4`}>
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
                     <Target className="w-5 h-5 text-orange-500" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-white text-sm">1 Year Text Remarketing</h4>
-                    <p className="text-zinc-400 text-xs mt-1">$1,200 value - Re-engage past customers automatically</p>
+                    <h4 className={`font-semibold ${themeClasses.text.primary} text-sm`}>1 Year Text Remarketing</h4>
+                    <p className={`${themeClasses.text.secondary} text-xs mt-1`}>$1,200 value - Re-engage past customers automatically</p>
                   </div>
                 </div>
               </div>
 
               {/* Feature 6 - Weekly SEO */}
-              <div className="bg-[#2C2C2E] rounded-lg p-4">
+              <div className={`${themeClasses.bg.tertiary} rounded-lg p-4`}>
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
                     <TrendingUp className="w-5 h-5 text-orange-500" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-white text-sm">Weekly SEO Updates</h4>
-                    <p className="text-zinc-400 text-xs mt-1">We continuously optimize your site to rank higher</p>
+                    <h4 className={`font-semibold ${themeClasses.text.primary} text-sm`}>Weekly SEO Updates</h4>
+                    <p className={`${themeClasses.text.secondary} text-xs mt-1`}>We continuously optimize your site to rank higher</p>
                   </div>
                 </div>
               </div>
 
               {/* Everything Included */}
-              <div className="bg-[#2C2C2E] rounded-lg p-4 border border-orange-500/30">
-                <h4 className="font-semibold text-white text-sm mb-3 flex items-center gap-2">
+              <div className={`${themeClasses.bg.tertiary} rounded-lg p-4 border border-orange-500/30`}>
+                <h4 className={`font-semibold ${themeClasses.text.primary} text-sm mb-3 flex items-center gap-2`}>
                   <Zap className="w-4 h-4 text-orange-500" />
                   Everything Included
                 </h4>
@@ -433,7 +436,7 @@ const AdAnalyzer = () => {
                   ].map((item, index) => (
                     <div key={index} className="flex items-center gap-2">
                       <CheckCircle className="w-4 h-4 text-orange-500 flex-shrink-0" />
-                      <span className="text-zinc-300 text-xs">{item}</span>
+                      <span className={`${themeClasses.text.primary} text-xs`}>{item}</span>
                     </div>
                   ))}
                 </div>
@@ -449,7 +452,7 @@ const AdAnalyzer = () => {
                     </div>
                     <button
                       onClick={() => setShowContactModal('premium')}
-                      className="w-full mt-3 py-3 bg-[#2C2C2E] border border-orange-500/50 text-orange-500 font-semibold rounded-lg text-sm active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
+                      className={`w-full mt-3 py-3 ${themeClasses.bg.tertiary} border border-orange-500/50 text-orange-500 font-semibold rounded-lg text-sm active:scale-[0.98] transition-transform flex items-center justify-center gap-2`}
                     >
                       <Send className="w-4 h-4" />
                       Contact Us
@@ -459,7 +462,7 @@ const AdAnalyzer = () => {
                   <button
                     onClick={handlePurchasePremium}
                     disabled={purchasing === 'premium'}
-                    className="w-full py-4 bg-orange-500 text-white font-bold rounded-lg text-lg active:scale-[0.98] transition-transform disabled:opacity-50 flex items-center justify-center"
+                    className={`w-full py-4 bg-orange-500 ${themeClasses.text.primary} font-bold rounded-lg text-lg active:scale-[0.98] transition-transform disabled:opacity-50 flex items-center justify-center`}
                   >
                     {purchasing === 'premium' ? (
                       <>
@@ -474,7 +477,7 @@ const AdAnalyzer = () => {
                 {purchaseError && purchasing === null && (
                   <p className="text-center text-red-500 text-xs mt-2">{purchaseError}</p>
                 )}
-                <p className="text-center text-zinc-500 text-xs mt-3">
+                <p className={`text-center ${themeClasses.text.secondary} text-xs mt-3`}>
                   Cancel anytime. Subscription auto-renews monthly.
                 </p>
               </div>
@@ -487,118 +490,118 @@ const AdAnalyzer = () => {
       {showAdsModal && (
         <div className="fixed inset-0 z-[200] flex items-end justify-center bg-black/80" onClick={() => setShowAdsModal(false)}>
           <div
-            className="w-full max-h-[90vh] bg-[#1C1C1E] rounded-t-2xl overflow-hidden"
+            className={`w-full max-h-[90vh] ${themeClasses.bg.secondary} rounded-t-2xl overflow-hidden`}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="sticky top-0 bg-[#1C1C1E] border-b border-orange-500/30 px-4 py-4 flex items-center justify-between">
+            <div className={`sticky top-0 ${themeClasses.bg.secondary} border-b border-orange-500/30 px-4 py-4 flex items-center justify-between`}>
               <div>
                 <span className="text-orange-500 text-xs font-semibold">LEAD GENERATION</span>
-                <h2 className="text-lg font-bold text-white">Ads & Lead Generation</h2>
+                <h2 className={`text-lg font-bold ${themeClasses.text.primary}`}>Ads & Lead Generation</h2>
               </div>
               <button
                 onClick={() => setShowAdsModal(false)}
-                className="w-10 h-10 bg-[#2C2C2E] rounded-full flex items-center justify-center"
+                className={`w-10 h-10 ${themeClasses.bg.tertiary} rounded-full flex items-center justify-center`}
               >
-                <X className="w-5 h-5 text-zinc-400" />
+                <X className={`w-5 h-5 ${themeClasses.text.secondary}`} />
               </button>
             </div>
 
             {/* Modal Content */}
             <div className="overflow-y-auto max-h-[calc(90vh-80px)] px-4 py-4 space-y-3">
               {/* Pricing */}
-              <div className="bg-[#2C2C2E] border border-orange-500/30 rounded-lg p-4 text-center">
-                <p className="text-zinc-400 text-sm mb-1">Starting at</p>
+              <div className={`${themeClasses.bg.tertiary} border border-orange-500/30 rounded-lg p-4 text-center`}>
+                <p className={`${themeClasses.text.secondary} text-sm mb-1`}>Starting at</p>
                 <div className="flex items-center justify-center gap-1 mb-1">
-                  <span className="text-3xl font-bold text-white">$899.99</span>
-                  <span className="text-zinc-400">/month</span>
+                  <span className={`text-3xl font-bold ${themeClasses.text.primary}`}>$899.99</span>
+                  <span className={`${themeClasses.text.secondary}`}>/month</span>
                 </div>
                 <p className="text-orange-500 text-sm font-medium">+ Ad spend (you control your budget)</p>
               </div>
 
-              <h3 className="text-base font-semibold text-white pt-2">What You Get</h3>
+              <h3 className={`text-base font-semibold ${themeClasses.text.primary} pt-2`}>What You Get</h3>
 
               {/* Feature 1 - Meta Ads */}
-              <div className="bg-[#2C2C2E] rounded-lg p-4">
+              <div className={`${themeClasses.bg.tertiary} rounded-lg p-4`}>
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
                     <Target className="w-5 h-5 text-orange-500" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-white text-sm">Meta Ads Management</h4>
-                    <p className="text-zinc-400 text-xs mt-1">Full Facebook & Instagram ad campaigns targeting your ideal customers</p>
+                    <h4 className={`font-semibold ${themeClasses.text.primary} text-sm`}>Meta Ads Management</h4>
+                    <p className={`${themeClasses.text.secondary} text-xs mt-1`}>Full Facebook & Instagram ad campaigns targeting your ideal customers</p>
                   </div>
                 </div>
               </div>
 
               {/* Feature 2 - Google Ads */}
-              <div className="bg-[#2C2C2E] rounded-lg p-4">
+              <div className={`${themeClasses.bg.tertiary} rounded-lg p-4`}>
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
                     <MousePointer className="w-5 h-5 text-orange-500" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-white text-sm">Google Ads Management</h4>
-                    <p className="text-zinc-400 text-xs mt-1">Search & display ads to capture high-intent local customers</p>
+                    <h4 className={`font-semibold ${themeClasses.text.primary} text-sm`}>Google Ads Management</h4>
+                    <p className={`${themeClasses.text.secondary} text-xs mt-1`}>Search & display ads to capture high-intent local customers</p>
                   </div>
                 </div>
               </div>
 
               {/* Feature 3 - Ad Creatives */}
-              <div className="bg-[#2C2C2E] rounded-lg p-4">
+              <div className={`${themeClasses.bg.tertiary} rounded-lg p-4`}>
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
                     <Rocket className="w-5 h-5 text-orange-500" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-white text-sm">Ad Creatives Included</h4>
-                    <p className="text-zinc-400 text-xs mt-1">We create professional images & videos using content you provide or our available assets</p>
+                    <h4 className={`font-semibold ${themeClasses.text.primary} text-sm`}>Ad Creatives Included</h4>
+                    <p className={`${themeClasses.text.secondary} text-xs mt-1`}>We create professional images & videos using content you provide or our available assets</p>
                   </div>
                 </div>
               </div>
 
               {/* Feature 4 - Weekly Reports */}
-              <div className="bg-[#2C2C2E] rounded-lg p-4">
+              <div className={`${themeClasses.bg.tertiary} rounded-lg p-4`}>
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
                     <BarChart3 className="w-5 h-5 text-orange-500" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-white text-sm">Weekly Analytics Reports</h4>
-                    <p className="text-zinc-400 text-xs mt-1">Detailed performance reports showing leads, clicks, and ROI</p>
+                    <h4 className={`font-semibold ${themeClasses.text.primary} text-sm`}>Weekly Analytics Reports</h4>
+                    <p className={`${themeClasses.text.secondary} text-xs mt-1`}>Detailed performance reports showing leads, clicks, and ROI</p>
                   </div>
                 </div>
               </div>
 
               {/* Feature 5 - Lead Generation */}
-              <div className="bg-[#2C2C2E] rounded-lg p-4">
+              <div className={`${themeClasses.bg.tertiary} rounded-lg p-4`}>
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
                     <Users className="w-5 h-5 text-orange-500" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-white text-sm">Qualified Lead Generation</h4>
-                    <p className="text-zinc-400 text-xs mt-1">We generate real leads for your contracting business</p>
+                    <h4 className={`font-semibold ${themeClasses.text.primary} text-sm`}>Qualified Lead Generation</h4>
+                    <p className={`${themeClasses.text.secondary} text-xs mt-1`}>We generate real leads for your contracting business</p>
                   </div>
                 </div>
               </div>
 
               {/* Feature 6 - Budget Optimization */}
-              <div className="bg-[#2C2C2E] rounded-lg p-4">
+              <div className={`${themeClasses.bg.tertiary} rounded-lg p-4`}>
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
                     <DollarSign className="w-5 h-5 text-orange-500" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-white text-sm">Budget Optimization</h4>
-                    <p className="text-zinc-400 text-xs mt-1">We maximize your ad spend to get you the best cost per lead</p>
+                    <h4 className={`font-semibold ${themeClasses.text.primary} text-sm`}>Budget Optimization</h4>
+                    <p className={`${themeClasses.text.secondary} text-xs mt-1`}>We maximize your ad spend to get you the best cost per lead</p>
                   </div>
                 </div>
               </div>
 
               {/* Everything Included */}
-              <div className="bg-[#2C2C2E] rounded-lg p-4 border border-orange-500/30">
-                <h4 className="font-semibold text-white text-sm mb-3 flex items-center gap-2">
+              <div className={`${themeClasses.bg.tertiary} rounded-lg p-4 border border-orange-500/30`}>
+                <h4 className={`font-semibold ${themeClasses.text.primary} text-sm mb-3 flex items-center gap-2`}>
                   <Zap className="w-4 h-4 text-orange-500" />
                   Everything Included
                 </h4>
@@ -616,7 +619,7 @@ const AdAnalyzer = () => {
                   ].map((item, index) => (
                     <div key={index} className="flex items-center gap-2">
                       <CheckCircle className="w-4 h-4 text-orange-500 flex-shrink-0" />
-                      <span className="text-zinc-300 text-xs">{item}</span>
+                      <span className={`${themeClasses.text.primary} text-xs`}>{item}</span>
                     </div>
                   ))}
                 </div>
@@ -632,7 +635,7 @@ const AdAnalyzer = () => {
                     </div>
                     <button
                       onClick={() => setShowContactModal('ads')}
-                      className="w-full mt-3 py-3 bg-[#2C2C2E] border border-orange-500/50 text-orange-500 font-semibold rounded-lg text-sm active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
+                      className={`w-full mt-3 py-3 ${themeClasses.bg.tertiary} border border-orange-500/50 text-orange-500 font-semibold rounded-lg text-sm active:scale-[0.98] transition-transform flex items-center justify-center gap-2`}
                     >
                       <Send className="w-4 h-4" />
                       Contact Us
@@ -642,7 +645,7 @@ const AdAnalyzer = () => {
                   <button
                     onClick={handlePurchaseAds}
                     disabled={purchasing === 'ads'}
-                    className="w-full py-4 bg-orange-500 text-white font-bold rounded-lg text-lg active:scale-[0.98] transition-transform disabled:opacity-50 flex items-center justify-center"
+                    className={`w-full py-4 bg-orange-500 ${themeClasses.text.primary} font-bold rounded-lg text-lg active:scale-[0.98] transition-transform disabled:opacity-50 flex items-center justify-center`}
                   >
                     {purchasing === 'ads' ? (
                       <>
@@ -657,7 +660,7 @@ const AdAnalyzer = () => {
                 {purchaseError && purchasing === null && (
                   <p className="text-center text-red-500 text-xs mt-2">{purchaseError}</p>
                 )}
-                <p className="text-center text-zinc-500 text-xs mt-3">
+                <p className={`text-center ${themeClasses.text.secondary} text-xs mt-3`}>
                   Cancel anytime. Ad spend budget separate.
                 </p>
               </div>
@@ -670,22 +673,22 @@ const AdAnalyzer = () => {
       {showContactModal && (
         <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/80 px-4" onClick={() => setShowContactModal(null)}>
           <div
-            className="w-full max-w-md bg-[#1C1C1E] rounded-2xl overflow-hidden"
+            className={`w-full max-w-md ${themeClasses.bg.secondary} rounded-2xl overflow-hidden`}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="bg-[#1C1C1E] border-b border-orange-500/30 px-4 py-4 flex items-center justify-between">
+            <div className={`${themeClasses.bg.secondary} border-b border-orange-500/30 px-4 py-4 flex items-center justify-between`}>
               <div>
                 <span className="text-orange-500 text-xs font-semibold">
                   {showContactModal === 'premium' ? 'WEBSITE + MARKETING' : 'ADS & LEAD GENERATION'}
                 </span>
-                <h2 className="text-lg font-bold text-white">Contact Us</h2>
+                <h2 className={`text-lg font-bold ${themeClasses.text.primary}`}>Contact Us</h2>
               </div>
               <button
                 onClick={() => setShowContactModal(null)}
-                className="w-10 h-10 bg-[#2C2C2E] rounded-full flex items-center justify-center"
+                className={`w-10 h-10 ${themeClasses.bg.tertiary} rounded-full flex items-center justify-center`}
               >
-                <X className="w-5 h-5 text-zinc-400" />
+                <X className={`w-5 h-5 ${themeClasses.text.secondary}`} />
               </button>
             </div>
 
@@ -694,24 +697,24 @@ const AdAnalyzer = () => {
               {noteSent ? (
                 <div className="text-center py-8">
                   <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-3" />
-                  <h3 className="text-lg font-bold text-white mb-1">Message Sent!</h3>
-                  <p className="text-zinc-400 text-sm">We'll get back to you shortly.</p>
+                  <h3 className={`text-lg font-bold ${themeClasses.text.primary} mb-1`}>Message Sent!</h3>
+                  <p className={`${themeClasses.text.secondary} text-sm`}>We'll get back to you shortly.</p>
                 </div>
               ) : (
                 <>
-                  <p className="text-zinc-400 text-sm mb-4">
+                  <p className={`${themeClasses.text.secondary} text-sm mb-4`}>
                     Have a question or need assistance with your subscription? Leave us a note and we'll get back to you.
                   </p>
                   <textarea
                     value={contactNote}
                     onChange={(e) => setContactNote(e.target.value)}
                     placeholder="Type your message here..."
-                    className="w-full h-32 bg-[#2C2C2E] border border-zinc-700 rounded-lg p-3 text-white placeholder-zinc-500 text-sm resize-none focus:outline-none focus:border-orange-500"
+                    className={`w-full h-32 ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} rounded-lg p-3 ${themeClasses.text.primary} placeholder-zinc-500 text-sm resize-none focus:outline-none focus:border-orange-500`}
                   />
                   <button
                     onClick={handleSendContactNote}
                     disabled={sendingNote || !contactNote.trim()}
-                    className="w-full mt-4 py-3 bg-orange-500 text-white font-semibold rounded-lg active:scale-[0.98] transition-transform disabled:opacity-50 flex items-center justify-center gap-2"
+                    className={`w-full mt-4 py-3 bg-orange-500 ${themeClasses.text.primary} font-semibold rounded-lg active:scale-[0.98] transition-transform disabled:opacity-50 flex items-center justify-center gap-2`}
                   >
                     {sendingNote ? (
                       <>

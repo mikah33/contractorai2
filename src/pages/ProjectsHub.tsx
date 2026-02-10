@@ -18,15 +18,18 @@ import {
   Camera,
   FileText,
   X,
-  Pencil
+  Pencil,
+  Settings
 } from 'lucide-react';
 import useProjectStore from '../stores/projectStore';
 import { useEmployeesStore } from '../stores/employeesStore';
 import usePhotosStore from '../stores/photosStore';
 import { useOnboardingStore } from '../stores/onboardingStore';
 import AIChatPopup from '../components/ai/AIChatPopup';
+import FloatingAIChatButton from '../components/ai/FloatingAIChatButton';
 import AddChoiceModal from '../components/common/AddChoiceModal';
 import PhotoGallery from '../components/photos/PhotoGallery';
+import { useTheme, getThemeClasses } from '../contexts/ThemeContext';
 import ProjectsTutorialModal from '../components/projects/ProjectsTutorialModal';
 import { estimateService } from '../services/estimateService';
 import { supabase } from '../lib/supabase';
@@ -35,6 +38,8 @@ const ProjectsHub: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { theme } = useTheme();
+  const themeClasses = getThemeClasses(theme);
   const {
     projects,
     fetchProjects,
@@ -213,16 +218,16 @@ const ProjectsHub: React.FC = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed':
-        return 'bg-green-500/20 text-green-400';
+        return theme === 'light' ? 'bg-green-100 text-green-700' : 'bg-green-500/20 text-green-400';
       case 'in_progress':
-        return 'bg-blue-500/20 text-blue-400';
+        return theme === 'light' ? 'bg-blue-100 text-blue-700' : 'bg-blue-500/20 text-blue-400';
       case 'on_hold':
-        return 'bg-yellow-500/20 text-yellow-400';
+        return theme === 'light' ? 'bg-yellow-100 text-yellow-700' : 'bg-yellow-500/20 text-yellow-400';
       case 'cancelled':
-        return 'bg-red-500/20 text-red-400';
+        return theme === 'light' ? 'bg-red-100 text-red-700' : 'bg-red-500/20 text-red-400';
       case 'not_started':
       default:
-        return 'bg-zinc-800 text-zinc-400';
+        return theme === 'light' ? 'bg-gray-100 text-gray-600' : 'bg-zinc-800 text-zinc-400';
     }
   };
 
@@ -410,7 +415,7 @@ const ProjectsHub: React.FC = () => {
   };
 
   return (
-    <div className="min-h-full bg-[#0F0F0F] pb-24">
+    <div className={`min-h-full ${themeClasses.bg.primary} pb-24`}>
       {/* Projects Tutorial Modal */}
       <ProjectsTutorialModal
         isOpen={showTutorial}
@@ -418,35 +423,43 @@ const ProjectsHub: React.FC = () => {
       />
 
       {/* Header */}
-      <div className="bg-[#1C1C1E] border-b border-orange-500/30 px-4 pb-4 pt-[calc(env(safe-area-inset-top)+16px)] sticky top-0 z-10">
+      <div className={`${themeClasses.bg.secondary} ${themeClasses.border.primary} border-b px-4 pb-4 pt-[calc(env(safe-area-inset-top)+16px)] sticky top-0 z-10`}>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
               <Briefcase className="w-5 h-5 text-orange-500" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white">Projects</h1>
-              <p className="text-sm text-zinc-400">{projects.length} total</p>
+              <h1 className={`text-xl font-bold ${themeClasses.text.primary}`}>Projects</h1>
+              <p className={`text-sm ${themeClasses.text.secondary}`}>{projects.length} total</p>
             </div>
           </div>
-          <button
-            onClick={() => setShowAddChoice(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white text-black rounded-md font-medium hover:bg-zinc-200 active:scale-95 transition-all"
-          >
-            <Plus className="w-5 h-5" />
-            <span>Add</span>
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate('/settings')}
+              className={`w-10 h-10 ${themeClasses.bg.tertiary} rounded-lg flex items-center justify-center ${themeClasses.hover.bg} transition-colors`}
+            >
+              <Settings className={`w-5 h-5 ${themeClasses.text.secondary}`} />
+            </button>
+            <button
+              onClick={() => setShowAddChoice(true)}
+              className={`flex items-center gap-2 px-4 py-2.5 ${themeClasses.button.primary} rounded-md font-medium ${themeClasses.button.primaryHover} active:scale-95 transition-all`}
+            >
+              <Plus className="w-5 h-5" />
+              <span>Add</span>
+            </button>
+          </div>
         </div>
 
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
+          <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 ${themeClasses.text.muted}`} />
           <input
             type="text"
             placeholder="Search projects..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-[#262626] rounded-lg border border-[#3A3A3C] text-white placeholder-zinc-500 focus:ring-2 focus:ring-zinc-500 focus:bg-[#2C2C2E] transition-all"
+            className={`w-full pl-10 pr-4 py-2.5 ${themeClasses.bg.input} rounded-lg border ${themeClasses.border.input} ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} ${themeClasses.focus.ring} ${themeClasses.focus.border} outline-none transition-all`}
           />
         </div>
       </div>
@@ -455,16 +468,16 @@ const ProjectsHub: React.FC = () => {
       <div className="px-4 py-3">
         <button
           onClick={handleAIChat}
-          className="w-full flex items-center gap-3 p-4 bg-[#1C1C1E] rounded-lg border border-orange-500/30 active:scale-[0.98] transition-transform hover:border-orange-500/50"
+          className={`w-full flex items-center gap-3 p-4 ${themeClasses.bg.card} rounded-lg border border-orange-500/30 active:scale-[0.98] transition-transform hover:border-orange-500/50`}
         >
           <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
             <Sparkles className="w-5 h-5 text-orange-500" />
           </div>
           <div className="flex-1 text-left">
-            <p className="font-semibold text-white">AI Project Manager</p>
-            <p className="text-sm text-zinc-400">Check availability, assign teams, manage schedules</p>
+            <p className={`font-semibold ${themeClasses.text.primary}`}>AI Project Manager</p>
+            <p className={`text-sm ${themeClasses.text.secondary}`}>Check availability, assign teams, manage schedules</p>
           </div>
-          <ChevronRight className="w-5 h-5 text-zinc-500" />
+          <ChevronRight className={`w-5 h-5 ${themeClasses.text.muted}`} />
         </button>
       </div>
 
@@ -472,30 +485,30 @@ const ProjectsHub: React.FC = () => {
       <div className="px-4 space-y-3">
         {loading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+            <div className={`animate-spin rounded-full h-8 w-8 border-b-2 ${theme === 'light' ? 'border-gray-600' : 'border-white'}`}></div>
           </div>
         ) : filteredProjects.length === 0 ? (
           <div className="text-center py-12">
-            <Briefcase className="w-12 h-12 text-zinc-600 mx-auto mb-3" />
-            <p className="text-zinc-400 font-medium">No projects yet</p>
-            <p className="text-sm text-zinc-500 mt-1">Tap + to create your first project</p>
+            <Briefcase className={`w-12 h-12 ${theme === 'light' ? 'text-gray-400' : 'text-zinc-600'} mx-auto mb-3`} />
+            <p className={`${themeClasses.text.secondary} font-medium`}>No projects yet</p>
+            <p className={`text-sm ${themeClasses.text.muted} mt-1`}>Tap + to create your first project</p>
           </div>
         ) : (
           filteredProjects.map((project) => (
             <button
               key={project.id}
               onClick={() => handleProjectClick(project.id)}
-              className="w-full text-left bg-[#1C1C1E] rounded-lg border border-orange-500/30 overflow-hidden active:scale-[0.98] transition-transform"
+              className={`w-full text-left ${themeClasses.bg.card} rounded-lg border border-orange-500/30 overflow-hidden active:scale-[0.98] transition-transform`}
             >
               <div className="p-4">
                 {/* Header: Name + Status */}
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-white text-base">
+                    <h3 className={`font-semibold ${themeClasses.text.primary} text-base`}>
                       {project.name || 'Untitled Project'}
                     </h3>
                     {project.client_name && (
-                      <p className="text-sm text-zinc-400">{project.client_name}</p>
+                      <p className={`text-sm ${themeClasses.text.secondary}`}>{project.client_name}</p>
                     )}
                   </div>
                   <span className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium flex-shrink-0 ${getStatusColor(project.status)}`}>
@@ -506,7 +519,7 @@ const ProjectsHub: React.FC = () => {
 
                 {/* Description preview */}
                 {project.description && (
-                  <p className="text-sm text-zinc-400 line-clamp-2 mb-3">
+                  <p className={`text-sm ${themeClasses.text.secondary} line-clamp-2 mb-3`}>
                     {project.description}
                   </p>
                 )}
@@ -515,10 +528,10 @@ const ProjectsHub: React.FC = () => {
                 {typeof project.progress === 'number' && (
                   <div className="mb-3">
                     <div className="flex items-center justify-between text-xs mb-1">
-                      <span className="text-zinc-500">Progress</span>
-                      <span className="font-medium text-zinc-300">{project.progress}%</span>
+                      <span className={themeClasses.text.muted}>Progress</span>
+                      <span className={`font-medium ${theme === 'light' ? 'text-gray-700' : 'text-zinc-300'}`}>{project.progress}%</span>
                     </div>
-                    <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
+                    <div className={`h-2 ${theme === 'light' ? 'bg-gray-200' : 'bg-zinc-800'} rounded-full overflow-hidden`}>
                       <div
                         className="h-full bg-orange-500 rounded-full transition-all"
                         style={{ width: `${project.progress}%` }}
@@ -528,7 +541,7 @@ const ProjectsHub: React.FC = () => {
                 )}
 
                 {/* Info row */}
-                <div className="flex items-center gap-3 text-xs text-zinc-500 flex-wrap">
+                <div className={`flex items-center gap-3 text-xs ${themeClasses.text.muted} flex-wrap`}>
                   {project.start_date && (
                     <div className="flex items-center gap-1">
                       <Calendar className="w-3.5 h-3.5" />
@@ -548,7 +561,7 @@ const ProjectsHub: React.FC = () => {
                     </div>
                   )}
                   <div className="flex-1" />
-                  <ChevronRight className="w-4 h-4 text-zinc-500" />
+                  <ChevronRight className={`w-4 h-4 ${themeClasses.text.muted}`} />
                 </div>
               </div>
             </button>
@@ -1308,22 +1321,22 @@ const ProjectsHub: React.FC = () => {
       {showManualForm && (
         <div className="fixed inset-0 z-[200] flex items-end justify-center modal-open">
           <div
-            className="absolute inset-0 bg-black/70"
+            className={`absolute inset-0 ${theme === 'light' ? 'bg-black/50' : 'bg-black/70'}`}
             onClick={() => setShowManualForm(false)}
           />
-          <div className="relative bg-[#1C1C1E] rounded-t-3xl w-full max-h-[90vh] overflow-y-auto animate-slide-up pb-safe">
-            <div className="sticky top-0 bg-[#1C1C1E] px-4 py-4 border-b border-orange-500/30 flex items-center justify-between z-10">
+          <div className={`relative ${themeClasses.bg.modal} rounded-t-3xl w-full max-h-[90vh] overflow-y-auto animate-slide-up pb-safe`}>
+            <div className={`sticky top-0 ${themeClasses.bg.modal} px-4 py-4 border-b border-orange-500/30 flex items-center justify-between z-10`}>
               <button
                 onClick={() => setShowManualForm(false)}
-                className="text-zinc-400 text-base font-medium active:text-zinc-300"
+                className={`${themeClasses.text.secondary} text-base font-medium ${themeClasses.hover.text}`}
               >
                 Cancel
               </button>
-              <h2 className="text-lg font-semibold text-white">New Project</h2>
+              <h2 className={`text-lg font-semibold ${themeClasses.text.primary}`}>New Project</h2>
               <button
                 onClick={handleCreateProject}
                 disabled={!newProjectForm.name.trim() || isCreatingProject}
-                className="text-orange-500 text-base font-semibold active:text-orange-400 disabled:text-zinc-600 disabled:cursor-not-allowed"
+                className={`text-orange-500 text-base font-semibold active:text-orange-400 disabled:${themeClasses.text.muted} disabled:cursor-not-allowed`}
               >
                 {isCreatingProject ? 'Saving...' : 'Save'}
               </button>
@@ -1331,51 +1344,51 @@ const ProjectsHub: React.FC = () => {
             <div className="p-4 space-y-4">
               {/* Project Name */}
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1">Project Name <span className="text-red-400">*</span></label>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Project Name <span className="text-red-400">*</span></label>
                 <input
                   type="text"
                   value={newProjectForm.name}
                   onChange={(e) => setNewProjectForm({ ...newProjectForm, name: e.target.value })}
                   placeholder="e.g., Kitchen Renovation"
-                  className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} ${themeClasses.focus.border} focus:ring-2 focus:ring-orange-500/20 outline-none`}
                 />
               </div>
 
               {/* Client Name */}
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1">Client Name</label>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Client Name</label>
                 <input
                   type="text"
                   value={newProjectForm.client}
                   onChange={(e) => setNewProjectForm({ ...newProjectForm, client: e.target.value })}
                   placeholder="e.g., John Smith"
-                  className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} ${themeClasses.focus.border} focus:ring-2 focus:ring-orange-500/20 outline-none`}
                 />
               </div>
 
               {/* Description */}
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1">Description</label>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Description</label>
                 <textarea
                   value={newProjectForm.description}
                   onChange={(e) => setNewProjectForm({ ...newProjectForm, description: e.target.value })}
                   placeholder="Brief description of the project..."
                   rows={3}
-                  className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none resize-none"
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} ${themeClasses.focus.border} focus:ring-2 focus:ring-orange-500/20 outline-none resize-none`}
                 />
               </div>
 
               {/* Budget */}
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1">Budget</label>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Budget</label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500">$</span>
+                  <span className={`absolute left-4 top-1/2 -translate-y-1/2 ${themeClasses.text.muted}`}>$</span>
                   <input
                     type="number"
                     value={newProjectForm.budget}
                     onChange={(e) => setNewProjectForm({ ...newProjectForm, budget: e.target.value })}
                     placeholder="0"
-                    className="w-full pl-8 pr-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
+                    className={`w-full pl-8 pr-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} ${themeClasses.focus.border} focus:ring-2 focus:ring-orange-500/20 outline-none`}
                   />
                 </div>
               </div>
@@ -1383,32 +1396,32 @@ const ProjectsHub: React.FC = () => {
               {/* Start Date & End Date */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-1">Start Date</label>
+                  <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Start Date</label>
                   <input
                     type="date"
                     value={newProjectForm.startDate}
                     onChange={(e) => setNewProjectForm({ ...newProjectForm, startDate: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
+                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${themeClasses.focus.border} focus:ring-2 focus:ring-orange-500/20 outline-none`}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-1">End Date</label>
+                  <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>End Date</label>
                   <input
                     type="date"
                     value={newProjectForm.endDate}
                     onChange={(e) => setNewProjectForm({ ...newProjectForm, endDate: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
+                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${themeClasses.focus.border} focus:ring-2 focus:ring-orange-500/20 outline-none`}
                   />
                 </div>
               </div>
 
               {/* Priority */}
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1">Priority</label>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Priority</label>
                 <select
                   value={newProjectForm.priority}
                   onChange={(e) => setNewProjectForm({ ...newProjectForm, priority: e.target.value as 'low' | 'medium' | 'high' })}
-                  className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${themeClasses.focus.border} focus:ring-2 focus:ring-orange-500/20 outline-none`}
                 >
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
@@ -1418,11 +1431,11 @@ const ProjectsHub: React.FC = () => {
 
               {/* Status */}
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1">Status</label>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Status</label>
                 <select
                   value={newProjectForm.status}
                   onChange={(e) => setNewProjectForm({ ...newProjectForm, status: e.target.value as 'active' | 'completed' | 'on-hold' })}
-                  className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${themeClasses.focus.border} focus:ring-2 focus:ring-orange-500/20 outline-none`}
                 >
                   <option value="active">Active</option>
                   <option value="on-hold">On Hold</option>
@@ -1586,6 +1599,12 @@ const ProjectsHub: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Enhanced AI Chat Button */}
+      <FloatingAIChatButton
+        onClick={handleAIChat}
+        mode="projects"
+      />
     </div>
   );
 };

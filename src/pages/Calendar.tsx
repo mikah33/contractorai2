@@ -1,8 +1,9 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { format, startOfWeek, addDays, isSameDay, parseISO, addMonths, subMonths, isToday, startOfMonth, endOfMonth, endOfWeek } from 'date-fns';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, Download, List, Grid, Clock, Check, AlertCircle, PenTool as Tool, Mail, X } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, Download, List, Grid, Clock, Check, AlertCircle, PenTool as Tool, Mail, X, Settings } from 'lucide-react';
+import { useTheme, getThemeClasses } from '../contexts/ThemeContext';
 import { useCalendarStoreSupabase } from '../stores/calendarStoreSupabase';
 import { CalendarEvent } from '../services/calendarService';
 import EventModal from '../components/calendar/EventModal';
@@ -15,6 +16,9 @@ type ViewType = 'month' | 'week' | 'day';
 
 const Calendar = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { theme } = useTheme();
+  const themeClasses = getThemeClasses(theme);
   const [searchParams, setSearchParams] = useSearchParams();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<ViewType>('month');
@@ -462,14 +466,32 @@ const Calendar = () => {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6 px-4 sm:px-6 lg:px-0">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{t('calendar.title')}</h1>
-          <p className="mt-1 text-sm text-gray-600">
-            {t('calendar.subtitle')}
-          </p>
+    <div className={`min-h-full ${themeClasses.bg.primary} pb-24`}>
+      {/* Header */}
+      <div className={`${themeClasses.bg.secondary} border-b ${themeClasses.border.primary} px-4 pb-4 pt-[calc(env(safe-area-inset-top)+16px)] sticky top-0 z-10`}>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex-1">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                <CalendarIcon className="w-5 h-5 text-orange-500" />
+              </div>
+              <div>
+                <h1 className={`text-xl font-bold ${themeClasses.text.primary}`}>{t('calendar.title')}</h1>
+                <p className={`text-sm ${themeClasses.text.secondary}`}>{t('calendar.subtitle')}</p>
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={() => navigate('/settings')}
+            className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center hover:bg-orange-500/30 transition-colors border border-orange-500/40"
+          >
+            <Settings className="w-5 h-5 text-orange-500" />
+          </button>
         </div>
+      </div>
+
+      <div className="px-4 py-4 space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 
         <div className="flex flex-col sm:flex-row gap-2 relative">
           <button
@@ -669,6 +691,7 @@ const Calendar = () => {
       )}
 
       <NotificationBanner />
+      </div>
     </div>
   );
 };

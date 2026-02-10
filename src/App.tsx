@@ -31,6 +31,7 @@ import AuthCallback from './pages/auth/AuthCallback';
 import WelcomePage from './pages/auth/WelcomePage';
 import TermsOfService from './pages/legal/TermsOfService';
 import PrivacyPolicy from './pages/legal/PrivacyPolicy';
+import UnsubscribePage from './pages/UnsubscribePage';
 import { Capacitor } from '@capacitor/core';
 import ConfigureDeckCalculator from './pages/ConfigureDeckCalculator';
 import ConfigureRoofingCalculator from './pages/ConfigureRoofingCalculator';
@@ -69,6 +70,7 @@ import { PricingProvider } from './contexts/PricingContext';
 import { ProjectProvider } from './contexts/ProjectContext';
 import { DataProvider } from './contexts/DataContext';
 import { CalculatorTabProvider } from './contexts/CalculatorTabContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { useAuthStore } from './stores/authStore';
 import { useAppInitialization } from './hooks/useAppInitialization';
 import { supabase } from './lib/supabase';
@@ -225,16 +227,19 @@ function App() {
   // Handle authentication routes
   if (!user) {
     return (
-      <Routes>
-        <Route path="/auth/welcome" element={<WelcomePage />} />
-        <Route path="/auth/login" element={<LoginPage />} />
-        <Route path="/auth/signup" element={<SignupPage />} />
-        <Route path="/auth/confirm-email" element={<EmailConfirmation />} />
-        <Route path="/auth/callback" element={<AuthCallback />} />
-        <Route path="/legal/terms" element={<TermsOfService />} />
-        <Route path="/legal/privacy" element={<PrivacyPolicy />} />
-        <Route path="*" element={<Navigate to="/auth/welcome" replace />} />
-      </Routes>
+      <ThemeProvider>
+        <Routes>
+          <Route path="/auth/welcome" element={<WelcomePage />} />
+          <Route path="/auth/login" element={<LoginPage />} />
+          <Route path="/auth/signup" element={<SignupPage />} />
+          <Route path="/auth/confirm-email" element={<EmailConfirmation />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/unsubscribe" element={<UnsubscribePage />} />
+          <Route path="/legal/terms" element={<TermsOfService />} />
+          <Route path="/legal/privacy" element={<PrivacyPolicy />} />
+          <Route path="*" element={<Navigate to="/auth/welcome" replace />} />
+        </Routes>
+      </ThemeProvider>
     );
   }
 
@@ -258,16 +263,20 @@ function App() {
     const SubscriptionPage = isNativePlatform ? SubscriptionsIOS : SubscriptionsWeb;
 
     return (
-      <Routes>
-        <Route path="/subscriptions" element={<SubscriptionPage />} />
-        <Route path="*" element={<Navigate to="/subscriptions" replace />} />
-      </Routes>
+      <ThemeProvider>
+        <Routes>
+          <Route path="/subscriptions" element={<SubscriptionPage />} />
+          <Route path="/unsubscribe" element={<UnsubscribePage />} />
+          <Route path="*" element={<Navigate to="/subscriptions" replace />} />
+        </Routes>
+      </ThemeProvider>
     );
   }
 
   // Show main app when user is logged in and has active subscription
   return (
-    <DataProvider>
+    <ThemeProvider>
+      <DataProvider>
       <CalculatorTabProvider>
         <PricingProvider>
           <ProjectProvider>
@@ -348,7 +357,8 @@ function App() {
           </ProjectProvider>
         </PricingProvider>
       </CalculatorTabProvider>
-    </DataProvider>
+      </DataProvider>
+    </ThemeProvider>
   );
 }
 
