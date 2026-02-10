@@ -11,8 +11,6 @@ import {
   Calendar,
   CheckCircle2,
   Clock,
-  Play,
-  Youtube,
   TrendingUp,
   Target,
   ChevronLeft,
@@ -475,73 +473,6 @@ const Dashboard: React.FC = () => {
               <div className="text-center p-2 bg-zinc-800/50 rounded-lg">
                 <p className="text-xs text-zinc-400">Collections</p>
                 <p className="text-sm font-bold text-blue-400">{formatCurrency(18750)}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* YouTube Channel Section */}
-        <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} overflow-hidden`}>
-          <div className={`flex items-center justify-between p-2 border-b ${themeClasses.border.primary}`}>
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-red-500/20 rounded-lg flex items-center justify-center">
-                <Youtube className="w-3 h-3 text-red-500" />
-              </div>
-              <div>
-                <h2 className={`font-semibold ${themeClasses.text.primary}`}>ContractorAI Channel</h2>
-                <p className="text-xs text-zinc-500">Latest tutorials & tips</p>
-              </div>
-            </div>
-            <button
-              onClick={() => window.open('https://youtube.com/@contractorai', '_blank')}
-              className="flex items-center gap-1 text-sm text-red-500 font-medium"
-            >
-              Subscribe <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-
-          <div className="p-3">
-            {/* YouTube Video Embed */}
-            <div className="aspect-video bg-zinc-900 rounded-lg overflow-hidden border border-zinc-700 relative">
-              <iframe
-                width="100%"
-                height="100%"
-                src="https://www.youtube.com/embed/dQw4w9WgXcQ?controls=1&modestbranding=1&rel=0"
-                title="ContractorAI Tutorial"
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                className="absolute inset-0 w-full h-full"
-              ></iframe>
-            </div>
-
-            {/* Video Info */}
-            <div className="mt-3 space-y-2">
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 bg-red-500/20 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Play className="w-4 h-4 text-red-500" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className={`font-semibold text-sm ${themeClasses.text.primary} leading-tight`}>
-                    How to Maximize Your Contracting Business Revenue
-                  </h3>
-                  <p className={`text-xs ${themeClasses.text.muted} mt-1`}>
-                    Learn proven strategies to increase your contracting business revenue by 30% or more.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between pt-2 border-t border-zinc-700">
-                <div className="flex items-center gap-3">
-                  <span className="text-xs text-zinc-400">12K views</span>
-                  <span className="text-xs text-zinc-400">3 days ago</span>
-                </div>
-                <button
-                  onClick={() => window.open('https://youtube.com/@contractorai', '_blank')}
-                  className="px-3 py-1 text-xs bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors"
-                >
-                  View Channel
-                </button>
               </div>
             </div>
           </div>
