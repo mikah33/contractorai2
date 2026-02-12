@@ -110,17 +110,17 @@ const JobsHub: React.FC = () => {
         const estimateStats = getEstimateStats();
         return (
           <div className="mt-3 flex flex-wrap gap-3">
-            <div className="flex items-center gap-1.5 bg-orange-500/10 px-2.5 py-1 rounded-lg">
-              <Clock className="w-3.5 h-3.5 text-orange-400" />
-              <span className="text-xs font-medium text-orange-300">{estimateStats.pending} Pending</span>
+            <div className="flex items-center gap-1.5 bg-orange-100 border border-orange-300 px-2.5 py-1 rounded-lg">
+              <Clock className="w-3.5 h-3.5 text-orange-600" />
+              <span className="text-xs font-medium text-orange-700">{estimateStats.pending} Pending</span>
             </div>
-            <div className="flex items-center gap-1.5 bg-green-500/10 px-2.5 py-1 rounded-lg">
-              <CheckCircle className="w-3.5 h-3.5 text-green-400" />
-              <span className="text-xs font-medium text-green-300">{estimateStats.approved} Approved</span>
+            <div className="flex items-center gap-1.5 bg-orange-100 border border-orange-300 px-2.5 py-1 rounded-lg">
+              <CheckCircle className="w-3.5 h-3.5 text-orange-600" />
+              <span className="text-xs font-medium text-orange-700">{estimateStats.approved} Approved</span>
             </div>
-            <div className="flex items-center gap-1.5 bg-blue-500/10 px-2.5 py-1 rounded-lg">
-              <DollarSign className="w-3.5 h-3.5 text-blue-400" />
-              <span className="text-xs font-medium text-blue-300">${estimateStats.totalValue.toLocaleString()}</span>
+            <div className="flex items-center gap-1.5 bg-orange-100 border border-orange-300 px-2.5 py-1 rounded-lg">
+              <DollarSign className="w-3.5 h-3.5 text-orange-600" />
+              <span className="text-xs font-medium text-orange-700">${estimateStats.totalValue.toLocaleString()}</span>
             </div>
           </div>
         );
@@ -129,17 +129,17 @@ const JobsHub: React.FC = () => {
         const projectStats = getProjectStats();
         return (
           <div className="mt-3 flex flex-wrap gap-3">
-            <div className="flex items-center gap-1.5 bg-purple-500/10 px-2.5 py-1 rounded-lg">
-              <Briefcase className="w-3.5 h-3.5 text-purple-400" />
-              <span className="text-xs font-medium text-purple-300">{projectStats.active} Active</span>
+            <div className="flex items-center gap-1.5 bg-orange-100 border border-orange-300 px-2.5 py-1 rounded-lg">
+              <Briefcase className="w-3.5 h-3.5 text-orange-600" />
+              <span className="text-xs font-medium text-orange-700">{projectStats.active} Active</span>
             </div>
-            <div className="flex items-center gap-1.5 bg-green-500/10 px-2.5 py-1 rounded-lg">
-              <CheckCircle className="w-3.5 h-3.5 text-green-400" />
-              <span className="text-xs font-medium text-green-300">{projectStats.completed} Done</span>
+            <div className="flex items-center gap-1.5 bg-orange-100 border border-orange-300 px-2.5 py-1 rounded-lg">
+              <CheckCircle className="w-3.5 h-3.5 text-orange-600" />
+              <span className="text-xs font-medium text-orange-700">{projectStats.completed} Done</span>
             </div>
-            <div className="flex items-center gap-1.5 bg-blue-500/10 px-2.5 py-1 rounded-lg">
-              <TrendingUp className="w-3.5 h-3.5 text-blue-400" />
-              <span className="text-xs font-medium text-blue-300">{projectStats.avgProgress}% Avg</span>
+            <div className="flex items-center gap-1.5 bg-orange-100 border border-orange-300 px-2.5 py-1 rounded-lg">
+              <TrendingUp className="w-3.5 h-3.5 text-orange-600" />
+              <span className="text-xs font-medium text-orange-700">{projectStats.avgProgress}% Avg</span>
             </div>
           </div>
         );
@@ -148,13 +148,13 @@ const JobsHub: React.FC = () => {
         const clientStats = getClientStats();
         return (
           <div className="mt-3 flex flex-wrap gap-3">
-            <div className="flex items-center gap-1.5 bg-blue-500/10 px-2.5 py-1 rounded-lg">
-              <Users className="w-3.5 h-3.5 text-blue-400" />
-              <span className="text-xs font-medium text-blue-300">{clientStats.total} Total</span>
+            <div className="flex items-center gap-1.5 bg-orange-100 border border-orange-300 px-2.5 py-1 rounded-lg">
+              <Users className="w-3.5 h-3.5 text-orange-600" />
+              <span className="text-xs font-medium text-orange-700">{clientStats.total} Total</span>
             </div>
-            <div className="flex items-center gap-1.5 bg-green-500/10 px-2.5 py-1 rounded-lg">
-              <UserPlus className="w-3.5 h-3.5 text-green-400" />
-              <span className="text-xs font-medium text-green-300">{clientStats.recent} This Week</span>
+            <div className="flex items-center gap-1.5 bg-orange-100 border border-orange-300 px-2.5 py-1 rounded-lg">
+              <UserPlus className="w-3.5 h-3.5 text-orange-600" />
+              <span className="text-xs font-medium text-orange-700">{clientStats.recent} This Week</span>
             </div>
           </div>
         );
@@ -163,17 +163,17 @@ const JobsHub: React.FC = () => {
         const taskStats = getTaskStats();
         return (
           <div className="mt-3 flex flex-wrap gap-3">
-            <div className="flex items-center gap-1.5 bg-green-500/10 px-2.5 py-1 rounded-lg">
-              <CalendarIcon className="w-3.5 h-3.5 text-green-400" />
-              <span className="text-xs font-medium text-green-300">{taskStats.upcoming} Upcoming</span>
+            <div className="flex items-center gap-1.5 bg-orange-100 border border-orange-300 px-2.5 py-1 rounded-lg">
+              <CalendarIcon className="w-3.5 h-3.5 text-orange-600" />
+              <span className="text-xs font-medium text-orange-700">{taskStats.upcoming} Upcoming</span>
             </div>
-            <div className="flex items-center gap-1.5 bg-red-500/10 px-2.5 py-1 rounded-lg">
-              <AlertCircle className="w-3.5 h-3.5 text-red-400" />
-              <span className="text-xs font-medium text-red-300">{taskStats.overdue} Overdue</span>
+            <div className="flex items-center gap-1.5 bg-red-100 border border-red-300 px-2.5 py-1 rounded-lg">
+              <AlertCircle className="w-3.5 h-3.5 text-red-600" />
+              <span className="text-xs font-medium text-red-700">{taskStats.overdue} Overdue</span>
             </div>
-            <div className="flex items-center gap-1.5 bg-gray-500/10 px-2.5 py-1 rounded-lg">
-              <CheckCircle className="w-3.5 h-3.5 text-gray-400" />
-              <span className="text-xs font-medium text-gray-300">{taskStats.completed} Done</span>
+            <div className="flex items-center gap-1.5 bg-orange-100 border border-orange-300 px-2.5 py-1 rounded-lg">
+              <CheckCircle className="w-3.5 h-3.5 text-orange-600" />
+              <span className="text-xs font-medium text-orange-700">{taskStats.completed} Done</span>
             </div>
           </div>
         );
@@ -199,7 +199,7 @@ const JobsHub: React.FC = () => {
       description: 'Track active projects & schedules',
       icon: Briefcase,
       href: '/projects-hub',
-      color: 'purple',
+      color: 'orange',
       stats: 'Project management'
     },
     {
@@ -208,7 +208,7 @@ const JobsHub: React.FC = () => {
       description: 'Manage client relationships',
       icon: UserPlus,
       href: '/clients-hub',
-      color: 'blue',
+      color: 'orange',
       stats: 'CRM & contacts'
     },
     {
@@ -217,60 +217,22 @@ const JobsHub: React.FC = () => {
       description: 'Schedule appointments & jobs',
       icon: CalendarIcon,
       href: '/todo-hub',
-      color: 'green',
+      color: 'orange',
       stats: 'Time management'
     }
   ];
 
 
   const getColorClasses = (color: string) => {
-    switch (color) {
-      case 'orange':
-        return {
-          bg: 'bg-orange-500/20',
-          border: 'border-orange-500/30',
-          hoverBorder: 'hover:border-orange-500/60',
-          iconBg: 'bg-orange-500',
-          iconText: 'text-white',
-          accent: 'text-orange-500'
-        };
-      case 'purple':
-        return {
-          bg: 'bg-purple-500/20',
-          border: 'border-purple-500/30',
-          hoverBorder: 'hover:border-purple-500/60',
-          iconBg: 'bg-purple-500',
-          iconText: 'text-white',
-          accent: 'text-purple-500'
-        };
-      case 'blue':
-        return {
-          bg: 'bg-blue-500/20',
-          border: 'border-blue-500/30',
-          hoverBorder: 'hover:border-blue-500/60',
-          iconBg: 'bg-blue-500',
-          iconText: 'text-white',
-          accent: 'text-blue-500'
-        };
-      case 'green':
-        return {
-          bg: 'bg-green-500/20',
-          border: 'border-green-500/30',
-          hoverBorder: 'hover:border-green-500/60',
-          iconBg: 'bg-green-500',
-          iconText: 'text-white',
-          accent: 'text-green-500'
-        };
-      default:
-        return {
-          bg: 'bg-gray-500/20',
-          border: 'border-gray-500/30',
-          hoverBorder: 'hover:border-gray-500/60',
-          iconBg: 'bg-gray-500',
-          iconText: 'text-white',
-          accent: 'text-gray-500'
-        };
-    }
+    // Always use orange theme
+    return {
+      bg: 'bg-white',
+      border: 'border-orange-400',
+      hoverBorder: 'hover:border-orange-500',
+      iconBg: 'bg-orange-500',
+      iconText: 'text-white',
+      accent: 'text-orange-600'
+    };
   };
 
   return (
@@ -309,7 +271,7 @@ const JobsHub: React.FC = () => {
                 <button
                   key={module.id}
                   onClick={() => navigate(module.href)}
-                  className={`flex flex-col p-6 ${colors.bg} rounded-xl border ${colors.border} ${colors.hoverBorder} active:scale-[0.98] transition-all text-left`}
+                  className={`flex flex-col p-6 ${colors.bg} rounded-xl border-2 ${colors.border} ${colors.hoverBorder} active:scale-[0.98] transition-all text-left shadow-sm`}
                 >
                   {/* Header with icon, title and navigation */}
                   <div className="flex items-center gap-4 mb-4">
@@ -317,16 +279,16 @@ const JobsHub: React.FC = () => {
                       <module.icon className={`w-7 h-7 ${colors.iconText}`} />
                     </div>
                     <div className="flex-1">
-                      <h3 className={`font-bold ${themeClasses.text.primary} text-lg`}>{module.title}</h3>
-                      <p className={`${themeClasses.text.secondary} text-sm`}>{module.description}</p>
+                      <h3 className="font-bold text-black text-lg">{module.title}</h3>
+                      <p className="text-zinc-600 text-sm">{module.description}</p>
                     </div>
-                    <ChevronRight className={`w-6 h-6 ${themeClasses.text.muted}`} />
+                    <ChevronRight className="w-6 h-6 text-orange-500" />
                   </div>
 
                   {/* Dashboard Preview */}
-                  <div className={`border-t ${theme === 'light' ? 'border-gray-200' : 'border-white/10'} pt-4`}>
+                  <div className="border-t border-orange-200 pt-4">
                     <div className="flex items-center justify-between mb-2">
-                      <span className={`text-sm font-medium ${themeClasses.text.secondary}`}>Quick Overview</span>
+                      <span className="text-sm font-medium text-zinc-700">Quick Overview</span>
                       <span className={`text-xs font-medium ${colors.accent}`}>Live Data</span>
                     </div>
                     {renderModulePreview(module.id)}

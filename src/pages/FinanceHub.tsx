@@ -978,22 +978,29 @@ const FinanceHub: React.FC = () => {
                 <p className="text-sm text-zinc-500 mt-1">Add payments you've received</p>
               </div>
             ) : (
-              (payments || []).map((payment) => (
-                <div key={payment.id} className={`${themeClasses.bg.secondary} rounded-xl border border-orange-500/30 p-4`}>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-green-900/30 rounded-xl flex items-center justify-center">
-                        <ArrowUpRight className="w-5 h-5 text-green-400" />
+              (payments || []).map((payment) => {
+                // Look up project name using projectId, or use clientId if it's a readable name
+                const project = projects.find(p => p.id === payment.projectId);
+                const displayName = project?.name || project?.clientName ||
+                  (payment.clientId && !payment.clientId.includes('-') ? payment.clientId : 'Payment');
+
+                return (
+                  <div key={payment.id} className={`${themeClasses.bg.secondary} rounded-xl border border-orange-500/30 p-4`}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-green-900/30 rounded-xl flex items-center justify-center">
+                          <ArrowUpRight className="w-5 h-5 text-green-400" />
+                        </div>
+                        <div>
+                          <p className={`font-semibold ${themeClasses.text.primary}`}>{displayName}</p>
+                          <p className="text-sm text-zinc-500">{new Date(payment.date).toLocaleDateString()}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className={`font-semibold ${themeClasses.text.primary}`}>{payment.clientId || 'Payment'}</p>
-                        <p className="text-sm text-zinc-500">{new Date(payment.date).toLocaleDateString()}</p>
-                      </div>
+                      <span className="font-bold text-green-400">+{formatCurrency(payment.amount)}</span>
                     </div>
-                    <span className="font-bold text-green-400">+{formatCurrency(payment.amount)}</span>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         )}
@@ -1007,8 +1014,8 @@ const FinanceHub: React.FC = () => {
                 onClick={() => setExpenseSubTab('upload')}
                 className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                   expenseSubTab === 'upload'
-                    ? 'bg-orange-500 ${themeClasses.text.primary}'
-                    : '${themeClasses.text.secondary} hover:${themeClasses.text.primary}'
+                    ? 'bg-orange-500 text-black'
+                    : 'text-zinc-600 hover:text-black'
                 }`}
               >
                 <Receipt className="w-4 h-4" />
@@ -1018,8 +1025,8 @@ const FinanceHub: React.FC = () => {
                 onClick={() => setExpenseSubTab('recurring')}
                 className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                   expenseSubTab === 'recurring'
-                    ? 'bg-orange-500 ${themeClasses.text.primary}'
-                    : '${themeClasses.text.secondary} hover:${themeClasses.text.primary}'
+                    ? 'bg-orange-500 text-black'
+                    : 'text-zinc-600 hover:text-black'
                 }`}
               >
                 <RefreshCw className="w-4 h-4" />
@@ -1029,8 +1036,8 @@ const FinanceHub: React.FC = () => {
                 onClick={() => setExpenseSubTab('manual')}
                 className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                   expenseSubTab === 'manual'
-                    ? 'bg-orange-500 ${themeClasses.text.primary}'
-                    : '${themeClasses.text.secondary} hover:${themeClasses.text.primary}'
+                    ? 'bg-orange-500 text-black'
+                    : 'text-zinc-600 hover:text-black'
                 }`}
               >
                 <Edit2 className="w-4 h-4" />

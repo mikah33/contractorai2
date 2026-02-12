@@ -118,13 +118,13 @@ const ClientsHub: React.FC = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
-        return theme === 'light' ? 'bg-green-100 text-green-700' : 'bg-green-500/20 text-green-400';
+        return 'bg-orange-100 text-orange-700 border border-orange-300';
       case 'inactive':
-        return theme === 'light' ? 'bg-gray-200 text-gray-600' : 'bg-zinc-800 text-zinc-400';
+        return 'bg-zinc-100 text-zinc-600 border border-zinc-300';
       case 'prospect':
-        return theme === 'light' ? 'bg-blue-100 text-blue-700' : 'bg-blue-500/20 text-blue-400';
+        return 'bg-amber-100 text-amber-700 border border-amber-300';
       default:
-        return theme === 'light' ? 'bg-gray-200 text-gray-600' : 'bg-zinc-800 text-zinc-400';
+        return 'bg-zinc-100 text-zinc-600 border border-zinc-300';
     }
   };
 
@@ -361,7 +361,7 @@ const ClientsHub: React.FC = () => {
               <div
                 key={client.id}
                 onClick={() => setSelectedClient(client)}
-                className={`${themeClasses.bg.secondary} rounded-2xl border border-orange-500/30 overflow-hidden active:scale-[0.99] transition-transform`}
+                className="bg-white rounded-2xl border-2 border-orange-400 overflow-hidden active:scale-[0.99] transition-transform shadow-sm"
               >
                 {/* Header with avatar and status */}
                 <div className="p-3 md:p-4 pb-2 md:pb-3">
@@ -371,7 +371,7 @@ const ClientsHub: React.FC = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <h3 className={`font-bold ${themeClasses.text.primary} truncate text-base md:text-lg`}>
+                        <h3 className="font-bold text-black truncate text-base md:text-lg">
                           {client.name || 'Unknown Client'}
                         </h3>
                         <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(client.status)}`}>
@@ -379,27 +379,27 @@ const ClientsHub: React.FC = () => {
                         </span>
                       </div>
                       {client.company && (
-                        <div className={`flex items-center gap-1 text-sm ${themeClasses.text.secondary} mt-0.5`}>
+                        <div className="flex items-center gap-1 text-sm text-zinc-600 mt-0.5">
                           <Building2 className="w-3.5 h-3.5" />
                           <span className="truncate">{client.company}</span>
                         </div>
                       )}
                     </div>
-                    <ChevronRight className={`w-5 h-5 ${themeClasses.text.muted} flex-shrink-0`} />
+                    <ChevronRight className="w-5 h-5 text-orange-500 flex-shrink-0" />
                   </div>
                 </div>
 
                 {/* Contact Info */}
                 <div className="px-3 md:px-4 pb-2 md:pb-3 flex flex-wrap gap-x-3 md:gap-x-4 gap-y-1 text-sm">
                   {client.email && (
-                    <div className={`flex items-center gap-1.5 ${themeClasses.text.secondary}`}>
-                      <Mail className={`w-4 h-4 ${themeClasses.text.muted}`} />
+                    <div className="flex items-center gap-1.5 text-zinc-700">
+                      <Mail className="w-4 h-4 text-zinc-500" />
                       <span className="truncate max-w-[180px]">{client.email}</span>
                     </div>
                   )}
                   {client.phone && (
-                    <div className={`flex items-center gap-1.5 ${themeClasses.text.secondary}`}>
-                      <Phone className={`w-4 h-4 ${themeClasses.text.muted}`} />
+                    <div className="flex items-center gap-1.5 text-zinc-700">
+                      <Phone className="w-4 h-4 text-zinc-500" />
                       <span>{client.phone}</span>
                     </div>
                   )}
@@ -416,10 +416,10 @@ const ClientsHub: React.FC = () => {
                         const encodedAddress = encodeURIComponent(fullAddress);
                         window.open(`maps://maps.apple.com/?q=${encodedAddress}`, '_blank');
                       }}
-                      className="flex items-center gap-2 text-blue-400 active:text-blue-300 text-sm"
+                      className="flex items-center gap-2 text-orange-600 active:text-orange-500 text-sm"
                     >
-                      <div className="w-7 h-7 rounded-lg bg-blue-900/30 flex items-center justify-center">
-                        <MapPin className="w-4 h-4 text-blue-400" />
+                      <div className="w-7 h-7 rounded-lg bg-orange-100 border border-orange-300 flex items-center justify-center">
+                        <MapPin className="w-4 h-4 text-orange-600" />
                       </div>
                       <div className="text-left">
                         <p className="font-medium">
@@ -431,7 +431,7 @@ const ClientsHub: React.FC = () => {
                           </p>
                         )}
                       </div>
-                      <ChevronRight className="w-4 h-4 ml-auto text-zinc-500" />
+                      <ChevronRight className="w-4 h-4 ml-auto text-orange-500" />
                     </button>
                   ) : (
                     <button
@@ -441,7 +441,7 @@ const ClientsHub: React.FC = () => {
                       }}
                       className="flex items-center gap-2 text-zinc-500 text-sm"
                     >
-                      <div className="w-7 h-7 rounded-lg bg-zinc-800 flex items-center justify-center">
+                      <div className="w-7 h-7 rounded-lg bg-zinc-100 border border-zinc-300 flex items-center justify-center">
                         <MapPin className="w-4 h-4 text-zinc-500" />
                       </div>
                       <span className="italic">Needs address</span>
@@ -451,38 +451,38 @@ const ClientsHub: React.FC = () => {
                 </div>
 
                 {/* Stats Row */}
-                <div className={`px-3 md:px-4 py-2 md:py-3 ${theme === 'light' ? 'bg-gray-50' : 'bg-[#171717]'} border-t border-orange-500/20 flex items-center justify-between`}>
+                <div className="px-3 md:px-4 py-2 md:py-3 bg-orange-50 border-t border-orange-200 flex items-center justify-between">
                   <div className="flex items-center gap-3 md:gap-4">
                     {/* Projects */}
                     <div className="flex items-center gap-1.5">
-                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${clientProjects.length > 0 ? 'bg-purple-900/30' : 'bg-zinc-800'}`}>
-                        <Briefcase className={`w-4 h-4 ${clientProjects.length > 0 ? 'text-purple-400' : 'text-zinc-500'}`} />
+                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${clientProjects.length > 0 ? 'bg-orange-100 border border-orange-300' : 'bg-zinc-100 border border-zinc-300'}`}>
+                        <Briefcase className={`w-4 h-4 ${clientProjects.length > 0 ? 'text-orange-600' : 'text-zinc-500'}`} />
                       </div>
                       <div>
-                        <p className={`text-sm font-semibold ${clientProjects.length > 0 ? 'text-white' : 'text-zinc-500'}`}>
+                        <p className={`text-sm font-semibold ${clientProjects.length > 0 ? 'text-orange-700' : 'text-zinc-500'}`}>
                           {clientProjects.length}
                         </p>
-                        <p className="text-xs text-zinc-500">Projects</p>
+                        <p className="text-xs text-zinc-600">Projects</p>
                       </div>
                     </div>
 
                     {/* Revenue */}
                     <div className="flex items-center gap-1.5">
-                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${totalRevenue > 0 ? 'bg-green-900/30' : 'bg-zinc-800'}`}>
-                        <DollarSign className={`w-4 h-4 ${totalRevenue > 0 ? 'text-green-400' : 'text-zinc-500'}`} />
+                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${totalRevenue > 0 ? 'bg-orange-100 border border-orange-300' : 'bg-zinc-100 border border-zinc-300'}`}>
+                        <DollarSign className={`w-4 h-4 ${totalRevenue > 0 ? 'text-orange-600' : 'text-zinc-500'}`} />
                       </div>
                       <div>
-                        <p className={`text-sm font-semibold ${totalRevenue > 0 ? 'text-white' : 'text-zinc-500'}`}>
+                        <p className={`text-sm font-semibold ${totalRevenue > 0 ? 'text-orange-700' : 'text-zinc-500'}`}>
                           {formatCurrency(totalRevenue)}
                         </p>
-                        <p className="text-xs text-zinc-500">Revenue</p>
+                        <p className="text-xs text-zinc-600">Revenue</p>
                       </div>
                     </div>
                   </div>
 
                   {/* Date Added */}
                   {formatDate(client.createdAt) && (
-                    <div className="flex items-center gap-1 text-xs text-zinc-500">
+                    <div className="flex items-center gap-1 text-xs text-zinc-600">
                       <Calendar className="w-3.5 h-3.5" />
                       <span>{formatDate(client.createdAt)}</span>
                     </div>
@@ -835,18 +835,18 @@ const ClientsHub: React.FC = () => {
         <div className="fixed inset-0 z-50 overflow-hidden">
           {/* Backdrop */}
           <div
-            className="absolute inset-0 bg-black/70 transition-opacity"
+            className="absolute inset-0 bg-black/50 transition-opacity"
             onClick={() => setSelectedClient(null)}
           />
 
           {/* Slide-up Modal */}
-          <div className="absolute inset-x-0 bottom-0 top-12 bg-[#0F0F0F] rounded-t-3xl shadow-2xl flex flex-col animate-slide-up overflow-hidden">
+          <div className="absolute inset-x-0 bottom-0 top-12 bg-white rounded-t-3xl shadow-2xl flex flex-col animate-slide-up overflow-hidden">
             {/* Header */}
-            <div className="bg-[#1C1C1E] px-4 py-4 border-b border-orange-500/30 flex-shrink-0">
+            <div className="bg-white px-4 py-4 border-b-2 border-orange-400 flex-shrink-0">
               <div className="flex items-center justify-between">
                 <button
                   onClick={() => setSelectedClient(null)}
-                  className="flex items-center gap-2 text-zinc-400 active:text-white"
+                  className="flex items-center gap-2 text-zinc-600 active:text-black"
                 >
                   <ArrowLeft className="w-5 h-5" />
                   <span className="text-sm font-medium">Back</span>
@@ -854,7 +854,7 @@ const ClientsHub: React.FC = () => {
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => handleEditClient(selectedClient)}
-                    className="p-2 text-blue-400 active:text-blue-300 active:bg-blue-900/30 rounded-xl"
+                    className="p-2 text-orange-500 active:text-orange-600 active:bg-orange-100 rounded-xl"
                   >
                     <Pencil className="w-5 h-5" />
                   </button>
@@ -870,7 +870,7 @@ const ClientsHub: React.FC = () => {
                         }
                       }
                     }}
-                    className="p-2 text-red-400 active:text-red-300 active:bg-red-900/30 rounded-xl"
+                    className="p-2 text-red-500 active:text-red-600 active:bg-red-100 rounded-xl"
                   >
                     <Trash2 className="w-5 h-5" />
                   </button>
@@ -879,14 +879,14 @@ const ClientsHub: React.FC = () => {
 
               {/* Client Title */}
               <div className="mt-3 flex items-center gap-3">
-                <div className="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center text-white font-bold text-base md:text-lg shadow-lg shadow-blue-500/20">
+                <div className="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center text-white font-bold text-base md:text-lg shadow-lg shadow-orange-500/20">
                   {getInitials(selectedClient.name || 'NA')}
                 </div>
                 <div>
-                  <h1 className="text-lg md:text-xl font-bold text-white">{selectedClient.name || 'Unknown Client'}</h1>
+                  <h1 className="text-lg md:text-xl font-bold text-black">{selectedClient.name || 'Unknown Client'}</h1>
                   <div className="flex items-center gap-2 mt-0.5">
                     {selectedClient.company && (
-                      <span className="text-sm text-zinc-400">{selectedClient.company}</span>
+                      <span className="text-sm text-zinc-600">{selectedClient.company}</span>
                     )}
                     <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(selectedClient.status)}`}>
                       {selectedClient.status.charAt(0).toUpperCase() + selectedClient.status.slice(1)}
@@ -897,42 +897,42 @@ const ClientsHub: React.FC = () => {
             </div>
 
             {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto px-3 md:px-4 py-3 md:py-4 space-y-3 md:space-y-4 pb-24">
+            <div className="flex-1 overflow-y-auto px-3 md:px-4 py-3 md:py-4 space-y-3 md:space-y-4 pb-24 bg-zinc-50">
 
               {/* Contact Info Card */}
-              <div className="bg-[#1C1C1E] border border-orange-500/30 rounded-2xl p-3 md:p-4">
-                <label className="text-xs text-zinc-500 mb-3 block">Contact Information</label>
+              <div className="bg-white border-2 border-orange-400 rounded-2xl p-3 md:p-4 shadow-sm">
+                <label className="text-xs text-zinc-600 font-medium mb-3 block">Contact Information</label>
                 <div className="space-y-3">
                   {selectedClient.email && (
-                    <a href={`mailto:${selectedClient.email}`} className="flex items-center gap-3 text-zinc-300 active:text-blue-400">
-                      <div className="w-10 h-10 bg-blue-900/30 rounded-xl flex items-center justify-center">
-                        <Mail className="w-5 h-5 text-blue-400" />
+                    <a href={`mailto:${selectedClient.email}`} className="flex items-center gap-3 text-zinc-700 active:text-orange-600">
+                      <div className="w-10 h-10 bg-orange-100 border border-orange-300 rounded-xl flex items-center justify-center">
+                        <Mail className="w-5 h-5 text-orange-600" />
                       </div>
                       <div>
                         <p className="text-xs text-zinc-500">Email</p>
-                        <p className="font-medium">{selectedClient.email}</p>
+                        <p className="font-medium text-black">{selectedClient.email}</p>
                       </div>
                     </a>
                   )}
                   {selectedClient.phone && (
-                    <a href={`tel:${selectedClient.phone}`} className="flex items-center gap-3 text-zinc-300 active:text-green-400">
-                      <div className="w-10 h-10 bg-green-900/30 rounded-xl flex items-center justify-center">
-                        <Phone className="w-5 h-5 text-green-400" />
+                    <a href={`tel:${selectedClient.phone}`} className="flex items-center gap-3 text-zinc-700 active:text-orange-600">
+                      <div className="w-10 h-10 bg-orange-100 border border-orange-300 rounded-xl flex items-center justify-center">
+                        <Phone className="w-5 h-5 text-orange-600" />
                       </div>
                       <div>
                         <p className="text-xs text-zinc-500">Phone</p>
-                        <p className="font-medium">{selectedClient.phone}</p>
+                        <p className="font-medium text-black">{selectedClient.phone}</p>
                       </div>
                     </a>
                   )}
                   {(selectedClient.address || selectedClient.city || selectedClient.state) && (
-                    <div className="flex items-center gap-3 text-zinc-300">
-                      <div className="w-10 h-10 bg-purple-900/30 rounded-xl flex items-center justify-center">
-                        <MapPin className="w-5 h-5 text-purple-400" />
+                    <div className="flex items-center gap-3 text-zinc-700">
+                      <div className="w-10 h-10 bg-orange-100 border border-orange-300 rounded-xl flex items-center justify-center">
+                        <MapPin className="w-5 h-5 text-orange-600" />
                       </div>
                       <div>
                         <p className="text-xs text-zinc-500">Address</p>
-                        <p className="font-medium">
+                        <p className="font-medium text-black">
                           {[selectedClient.address, selectedClient.city, selectedClient.state, selectedClient.zip]
                             .filter(Boolean)
                             .join(', ')}
@@ -944,15 +944,15 @@ const ClientsHub: React.FC = () => {
               </div>
 
               {/* Projects Card */}
-              <div className="bg-[#1C1C1E] border border-orange-500/30 rounded-2xl p-3 md:p-4">
+              <div className="bg-white border-2 border-orange-400 rounded-2xl p-3 md:p-4 shadow-sm">
                 <div className="flex items-center justify-between mb-3">
-                  <label className="text-xs text-zinc-500">Projects</label>
+                  <label className="text-xs text-zinc-600 font-medium">Projects</label>
                   <button
                     onClick={() => {
                       setSelectedClient(null);
                       navigate('/projects-hub');
                     }}
-                    className="text-xs text-blue-400 font-medium"
+                    className="text-xs text-orange-600 font-medium"
                   >
                     View All
                   </button>
@@ -962,7 +962,7 @@ const ClientsHub: React.FC = () => {
                   if (clientProjects.length === 0) {
                     return (
                       <div className="text-center py-6">
-                        <Briefcase className="w-8 h-8 text-zinc-600 mx-auto mb-2" />
+                        <Briefcase className="w-8 h-8 text-zinc-400 mx-auto mb-2" />
                         <p className="text-sm text-zinc-500">No projects yet</p>
                       </div>
                     );
@@ -976,19 +976,19 @@ const ClientsHub: React.FC = () => {
                             setSelectedClient(null);
                             navigate('/projects-hub', { state: { selectedProjectId: project.id } });
                           }}
-                          className="flex items-center gap-3 p-3 bg-[#262626] rounded-xl active:bg-[#2C2C2E]"
+                          className="flex items-center gap-3 p-3 bg-orange-50 border border-orange-200 rounded-xl active:bg-orange-100"
                         >
-                          <div className="w-10 h-10 bg-purple-900/30 rounded-xl flex items-center justify-center">
-                            <Briefcase className="w-5 h-5 text-purple-400" />
+                          <div className="w-10 h-10 bg-orange-100 border border-orange-300 rounded-xl flex items-center justify-center">
+                            <Briefcase className="w-5 h-5 text-orange-600" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium text-white truncate">{project.name}</p>
-                            <p className="text-xs text-zinc-500">
+                            <p className="font-medium text-black truncate">{project.name}</p>
+                            <p className="text-xs text-zinc-600">
                               {project.status === 'active' ? 'Active' : project.status === 'completed' ? 'Completed' : 'On Hold'}
                               {project.budget ? ` • ${formatCurrency(project.budget)}` : ''}
                             </p>
                           </div>
-                          <ChevronRight className="w-4 h-4 text-zinc-500" />
+                          <ChevronRight className="w-4 h-4 text-orange-500" />
                         </div>
                       ))}
                       {clientProjects.length > 5 && (
@@ -1002,35 +1002,35 @@ const ClientsHub: React.FC = () => {
               </div>
 
               {/* Revenue Summary Card */}
-              <div className="bg-[#1C1C1E] border border-orange-500/30 rounded-2xl p-3 md:p-4">
-                <label className="text-xs text-zinc-500 mb-3 block">Revenue Summary</label>
+              <div className="bg-white border-2 border-orange-400 rounded-2xl p-3 md:p-4 shadow-sm">
+                <label className="text-xs text-zinc-600 font-medium mb-3 block">Revenue Summary</label>
                 <div className="flex items-center gap-4">
-                  <div className="flex-1 text-center p-3 bg-green-900/20 rounded-xl">
-                    <p className="text-2xl font-bold text-green-400">
+                  <div className="flex-1 text-center p-3 bg-orange-50 border border-orange-200 rounded-xl">
+                    <p className="text-2xl font-bold text-orange-600">
                       {formatCurrency(getClientRevenue(selectedClient.id, selectedClient.name))}
                     </p>
-                    <p className="text-xs text-zinc-500 mt-1">Total Budget</p>
+                    <p className="text-xs text-zinc-600 mt-1">Total Budget</p>
                   </div>
-                  <div className="flex-1 text-center p-3 bg-purple-900/20 rounded-xl">
-                    <p className="text-2xl font-bold text-purple-400">
+                  <div className="flex-1 text-center p-3 bg-orange-50 border border-orange-200 rounded-xl">
+                    <p className="text-2xl font-bold text-orange-600">
                       {getClientProjects(selectedClient.id, selectedClient.name).length}
                     </p>
-                    <p className="text-xs text-zinc-500 mt-1">Total Projects</p>
+                    <p className="text-xs text-zinc-600 mt-1">Total Projects</p>
                   </div>
                 </div>
               </div>
 
               {/* Notes Card */}
               {selectedClient.notes && (
-                <div className="bg-[#1C1C1E] border border-orange-500/30 rounded-2xl p-3 md:p-4">
-                  <label className="text-xs text-zinc-500 mb-2 block">Notes</label>
-                  <p className="text-sm text-zinc-300 whitespace-pre-wrap">{selectedClient.notes}</p>
+                <div className="bg-white border-2 border-orange-400 rounded-2xl p-3 md:p-4 shadow-sm">
+                  <label className="text-xs text-zinc-600 font-medium mb-2 block">Notes</label>
+                  <p className="text-sm text-zinc-700 whitespace-pre-wrap">{selectedClient.notes}</p>
                 </div>
               )}
 
               {/* Client Since */}
               {formatDate(selectedClient.createdAt) && (
-                <div className="text-center text-xs text-zinc-500 pt-2">
+                <div className="text-center text-xs text-zinc-600 pt-2">
                   Client since {formatDate(selectedClient.createdAt)}
                 </div>
               )}

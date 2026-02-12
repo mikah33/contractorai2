@@ -14,7 +14,9 @@ import {
   TrendingUp,
   Target,
   ChevronLeft,
-  Star
+  Star,
+  Newspaper,
+  RefreshCw
 } from 'lucide-react';
 import { useFinanceStore } from '../stores/financeStoreSupabase';
 import useProjectStore from '../stores/projectStore';
@@ -22,7 +24,9 @@ import { useCalendarStoreSupabase } from '../stores/calendarStoreSupabase';
 import { useData } from '../contexts/DataContext';
 import { useAuthStore } from '../stores/authStore';
 import { useOnboardingStore } from '../stores/onboardingStore';
+import { useNewsStore, type NewsArticle } from '../stores/newsStore';
 import DashboardTutorialModal from '../components/dashboard/DashboardTutorialModal';
+import NewsModal from '../components/news/NewsModal';
 import { useTheme, getThemeClasses } from '../contexts/ThemeContext';
 
 
@@ -36,7 +40,9 @@ const Dashboard: React.FC = () => {
   const { profile } = useData();
   const { user } = useAuthStore();
   const { dashboardTutorialCompleted, checkDashboardTutorial, setDashboardTutorialCompleted } = useOnboardingStore();
+  const { articles: newsArticles, isLoading: newsLoading, fetchNews, refreshNews } = useNewsStore();
   const [showTutorial, setShowTutorial] = useState(false);
+  const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(null);
 
   // Get display name from profile (company name or full name)
   const displayName = profile?.company || profile?.full_name || 'there';
@@ -66,6 +72,7 @@ const Dashboard: React.FC = () => {
     fetchPayments();
     fetchReceipts();
     fetchEvents();
+    fetchNews();
   }, []);
 
   useEffect(() => {
@@ -192,30 +199,67 @@ const Dashboard: React.FC = () => {
 
       <div className="px-2 py-2 space-y-2 max-w-5xl mx-auto">
         {/* News Carousel */}
-        <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} overflow-hidden mb-2`}>
-          <div className={`p-2 border-b ${themeClasses.border.primary}`}>
+        <div className="bg-white rounded-lg border-2 border-orange-400 overflow-hidden mb-2 shadow-sm">
+          <div className="p-2 border-b border-orange-200 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                <Star className="w-3 h-3 text-orange-500" />
+              <div className="w-6 h-6 bg-orange-100 rounded-lg flex items-center justify-center">
+                <Newspaper className="w-3 h-3 text-orange-600" />
               </div>
-              <h2 className={`font-semibold ${themeClasses.text.primary}`}>Industry News</h2>
+              <h2 className="font-semibold text-black">Industry News</h2>
             </div>
+            <button
+              onClick={() => refreshNews()}
+              className="p-1.5 text-orange-500 hover:bg-orange-50 rounded-lg transition-colors"
+              title="Refresh news"
+            >
+              <RefreshCw className={`w-4 h-4 ${newsLoading ? 'animate-spin' : ''}`} />
+            </button>
           </div>
           <div className="overflow-x-auto">
             <div className="flex gap-3 p-3">
-              {/* Sample news items */}
-              <div className="flex-shrink-0 w-64 p-3 bg-gradient-to-r from-orange-500/10 to-amber-500/10 rounded-lg border border-orange-500/20">
-                <h3 className={`font-semibold text-sm ${themeClasses.text.primary} mb-1`}>Construction Permits Up 15%</h3>
-                <p className={`text-xs ${themeClasses.text.muted} leading-relaxed`}>Building permits increased significantly in Q4, creating new opportunities for contractors.</p>
-              </div>
-              <div className="flex-shrink-0 w-64 p-3 bg-gradient-to-r from-blue-500/10 to-teal-500/10 rounded-lg border border-blue-500/20">
-                <h3 className={`font-semibold text-sm ${themeClasses.text.primary} mb-1`}>New Safety Regulations</h3>
-                <p className={`text-xs ${themeClasses.text.muted} leading-relaxed`}>Updated OSHA guidelines for 2026 now in effect. Stay compliant with our resources.</p>
-              </div>
-              <div className="flex-shrink-0 w-64 p-3 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-lg border border-green-500/20">
-                <h3 className={`font-semibold text-sm ${themeClasses.text.primary} mb-1`}>Material Costs Stable</h3>
-                <p className={`text-xs ${themeClasses.text.muted} leading-relaxed`}>Lumber and steel prices remain steady, providing better project predictability.</p>
-              </div>
+              {newsLoading && newsArticles.length === 0 ? (
+                // Loading skeleton
+                <>
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="flex-shrink-0 w-64 p-3 bg-zinc-100 rounded-lg border border-zinc-200 animate-pulse">
+                      <div className="h-4 bg-zinc-200 rounded w-3/4 mb-2"></div>
+                      <div className="h-3 bg-zinc-200 rounded w-full mb-1"></div>
+                      <div className="h-3 bg-zinc-200 rounded w-2/3"></div>
+                    </div>
+                  ))}
+                </>
+              ) : newsArticles.length > 0 ? (
+                // Real news articles
+                newsArticles.map((article) => (
+                  <button
+                    key={article.id}
+                    onClick={() => setSelectedArticle(article)}
+                    className="flex-shrink-0 w-64 p-3 bg-orange-50 hover:bg-orange-100 rounded-lg border border-orange-200 text-left transition-colors active:scale-[0.98]"
+                  >
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <span className="text-xs font-medium text-orange-600 truncate">{article.source_name}</span>
+                    </div>
+                    <h3 className="font-semibold text-sm text-black mb-1 line-clamp-2">{article.title}</h3>
+                    <p className="text-xs text-zinc-600 leading-relaxed line-clamp-2">{article.summary}</p>
+                  </button>
+                ))
+              ) : (
+                // Fallback static items when no news
+                <>
+                  <div className="flex-shrink-0 w-64 p-3 bg-orange-50 rounded-lg border border-orange-200">
+                    <h3 className="font-semibold text-sm text-black mb-1">Construction Permits Up 15%</h3>
+                    <p className="text-xs text-zinc-600 leading-relaxed">Building permits increased significantly in Q4, creating new opportunities for contractors.</p>
+                  </div>
+                  <div className="flex-shrink-0 w-64 p-3 bg-orange-50 rounded-lg border border-orange-200">
+                    <h3 className="font-semibold text-sm text-black mb-1">New Safety Regulations</h3>
+                    <p className="text-xs text-zinc-600 leading-relaxed">Updated OSHA guidelines for 2026 now in effect. Stay compliant with our resources.</p>
+                  </div>
+                  <div className="flex-shrink-0 w-64 p-3 bg-orange-50 rounded-lg border border-orange-200">
+                    <h3 className="font-semibold text-sm text-black mb-1">Material Costs Stable</h3>
+                    <p className="text-xs text-zinc-600 leading-relaxed">Lumber and steel prices remain steady, providing better project predictability.</p>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -448,31 +492,31 @@ const Dashboard: React.FC = () => {
           <div className="p-3">
             <div className="grid grid-cols-2 gap-3">
               <div className="p-3 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-lg border border-green-500/20">
-                <p className={`text-xs ${themeClasses.text.muted} mb-1`}>Total Revenue</p>
-                <p className="text-lg font-bold text-green-400">{formatCurrency(financialSummary?.totalRevenue || 0)}</p>
-                <p className="text-xs text-green-300">+12% from last month</p>
+                <p className="text-xs text-green-800 font-medium mb-1">Total Revenue</p>
+                <p className="text-lg font-bold text-green-600">{formatCurrency(financialSummary?.totalRevenue || 0)}</p>
+                <p className="text-xs text-green-700 font-medium">+12% from last month</p>
               </div>
-              <div className="p-3 bg-gradient-to-r from-orange-500/10 to-amber-500/10 rounded-lg border border-orange-500/20">
-                <p className={`text-xs ${themeClasses.text.muted} mb-1`}>Net Profit</p>
-                <p className={`text-lg font-bold ${(financialSummary?.profit || 0) >= 0 ? 'text-orange-500' : 'text-red-400'}`}>
+              <div className="p-3 bg-gradient-to-r from-orange-500/20 to-amber-500/20 rounded-lg border border-orange-500/40">
+                <p className="text-xs text-orange-800 font-medium mb-1">Net Profit</p>
+                <p className={`text-lg font-bold ${(financialSummary?.profit || 0) >= 0 ? 'text-orange-600' : 'text-red-600'}`}>
                   {formatCurrency(financialSummary?.profit || 0)}
                 </p>
-                <p className="text-xs text-orange-300">+8% from last month</p>
+                <p className="text-xs text-orange-700 font-medium">+8% from last month</p>
               </div>
             </div>
 
             <div className="mt-3 grid grid-cols-3 gap-2">
-              <div className="text-center p-2 bg-zinc-800/50 rounded-lg">
-                <p className="text-xs text-zinc-400">Pending</p>
-                <p className="text-sm font-bold text-amber-400">{formatCurrency(25000)}</p>
+              <div className="text-center p-2 bg-white rounded-lg border border-zinc-400">
+                <p className="text-xs text-black font-medium">Pending</p>
+                <p className="text-sm font-bold text-amber-600">{formatCurrency(25000)}</p>
               </div>
-              <div className="text-center p-2 bg-zinc-800/50 rounded-lg">
-                <p className="text-xs text-zinc-400">Expenses</p>
-                <p className="text-sm font-bold text-red-400">{formatCurrency(financialSummary?.totalExpenses || 0)}</p>
+              <div className="text-center p-2 bg-white rounded-lg border border-zinc-400">
+                <p className="text-xs text-black font-medium">Expenses</p>
+                <p className="text-sm font-bold text-red-600">{formatCurrency(financialSummary?.totalExpenses || 0)}</p>
               </div>
-              <div className="text-center p-2 bg-zinc-800/50 rounded-lg">
-                <p className="text-xs text-zinc-400">Collections</p>
-                <p className="text-sm font-bold text-blue-400">{formatCurrency(18750)}</p>
+              <div className="text-center p-2 bg-white rounded-lg border border-zinc-400">
+                <p className="text-xs text-black font-medium">Collections</p>
+                <p className="text-sm font-bold text-blue-600">{formatCurrency(18750)}</p>
               </div>
             </div>
           </div>
@@ -515,14 +559,14 @@ const Dashboard: React.FC = () => {
                 <button
                   key={project.id}
                   onClick={() => navigate(`/projects-hub?id=${project.id}`)}
-                  className="w-full flex items-center gap-3 p-2 hover:bg-[#2C2C2E] active:bg-[#3A3A3C] transition-colors"
+                  className="w-full flex items-center gap-3 p-2 hover:bg-zinc-100 active:bg-zinc-200 transition-colors"
                 >
                   <div className="w-6 h-6 bg-orange-500/20 rounded-lg flex items-center justify-center">
                     <Briefcase className="w-3 h-3 text-orange-500" />
                   </div>
                   <div className="flex-1 text-left">
-                    <p className="font-medium text-white">{project.name}</p>
-                    <div className="flex items-center gap-2 text-xs text-zinc-500">
+                    <p className="font-medium text-black">{project.name}</p>
+                    <div className="flex items-center gap-2 text-xs text-zinc-600">
                       {project.client_name && <span>{project.client_name}</span>}
                       <span className={`px-1.5 py-0.5 rounded font-semibold ${
                         project.status === 'completed'
@@ -536,7 +580,7 @@ const Dashboard: React.FC = () => {
                     </div>
                   </div>
                   {project.budget && (
-                    <p className="text-sm font-medium text-white">{formatCurrency(project.budget)}</p>
+                    <p className="text-sm font-medium text-black">{formatCurrency(project.budget)}</p>
                   )}
                 </button>
               ))}
@@ -553,6 +597,13 @@ const Dashboard: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* News Article Modal */}
+      <NewsModal
+        article={selectedArticle}
+        isOpen={selectedArticle !== null}
+        onClose={() => setSelectedArticle(null)}
+      />
     </div>
   );
 };
