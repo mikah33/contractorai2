@@ -844,35 +844,35 @@ const FinanceHub: React.FC = () => {
             </div>
 
             {/* Recent Transactions */}
-            <div className={`${themeClasses.bg.secondary} rounded-xl border border-orange-500/30`}>
-              <div className="p-4 border-b border-orange-500/20">
-                <h3 className={`font-semibold ${themeClasses.text.primary}`}>Recent Transactions</h3>
+            <div className={`${themeClasses.bg.secondary} rounded-2xl border-2 border-gray-300`}>
+              <div className="p-5 border-b-2 border-gray-200">
+                <h3 className={`font-bold text-lg ${themeClasses.text.primary}`}>Recent Transactions</h3>
               </div>
-              <div className="divide-y divide-orange-500/10">
+              <div className="p-4 space-y-3">
                 {(financialSummary?.recentTransactions || []).slice(0, 5).map((tx) => (
-                  <div key={tx.id} className="p-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                        tx.type === 'income' ? 'bg-green-900/30' : 'bg-red-900/30'
+                  <div key={tx.id} className="p-5 flex items-center justify-between bg-white rounded-2xl border-2 border-gray-300 shadow-sm">
+                    <div className="flex items-center gap-4">
+                      <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${
+                        tx.type === 'income' ? 'bg-green-100' : 'bg-red-100'
                       }`}>
                         {tx.type === 'income' ? (
-                          <ArrowUpRight className="w-5 h-5 text-green-400" />
+                          <ArrowUpRight className="w-7 h-7 text-green-500" />
                         ) : (
-                          <ArrowDownRight className="w-5 h-5 text-red-400" />
+                          <ArrowDownRight className="w-7 h-7 text-red-500" />
                         )}
                       </div>
                       <div>
-                        <p className={`font-medium ${themeClasses.text.primary}`}>{tx.description}</p>
-                        <p className="text-sm text-zinc-500">{new Date(tx.date).toLocaleDateString()}</p>
+                        <p className={`font-semibold text-lg ${themeClasses.text.primary}`}>{tx.description}</p>
+                        <p className="text-base text-gray-500">{new Date(tx.date).toLocaleDateString()}</p>
                       </div>
                     </div>
-                    <span className={`font-bold ${tx.type === 'income' ? 'text-green-400' : 'text-red-400'}`}>
+                    <span className={`font-bold text-xl ${tx.type === 'income' ? 'text-green-500' : 'text-red-500'}`}>
                       {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
                     </span>
                   </div>
                 ))}
                 {(financialSummary?.recentTransactions || []).length === 0 && (
-                  <div className="p-8 text-center text-zinc-500">
+                  <div className="p-8 text-center text-gray-500">
                     No transactions yet
                   </div>
                 )}

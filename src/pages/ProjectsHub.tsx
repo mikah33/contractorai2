@@ -26,11 +26,11 @@ import { useEmployeesStore } from '../stores/employeesStore';
 import usePhotosStore from '../stores/photosStore';
 import { useOnboardingStore } from '../stores/onboardingStore';
 import AIChatPopup from '../components/ai/AIChatPopup';
-import FloatingAIChatButton from '../components/ai/FloatingAIChatButton';
 import AddChoiceModal from '../components/common/AddChoiceModal';
 import PhotoGallery from '../components/photos/PhotoGallery';
 import { useTheme, getThemeClasses } from '../contexts/ThemeContext';
 import ProjectsTutorialModal from '../components/projects/ProjectsTutorialModal';
+import VisionCamModal from '../components/vision/VisionCamModal';
 import { estimateService } from '../services/estimateService';
 import { supabase } from '../lib/supabase';
 
@@ -59,6 +59,7 @@ const ProjectsHub: React.FC = () => {
   const { projectsTutorialCompleted, checkProjectsTutorial, setProjectsTutorialCompleted } = useOnboardingStore();
   const [showAddChoice, setShowAddChoice] = useState(false);
   const [showAIChat, setShowAIChat] = useState(false);
+  const [showVisionCam, setShowVisionCam] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showTutorial, setShowTutorial] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
@@ -482,7 +483,7 @@ const ProjectsHub: React.FC = () => {
       </div>
 
       {/* Projects List */}
-      <div className="px-4 space-y-3">
+      <div className="px-4 space-y-4">
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className={`animate-spin rounded-full h-8 w-8 border-b-2 ${theme === 'light' ? 'border-gray-600' : 'border-white'}`}></div>
@@ -498,20 +499,20 @@ const ProjectsHub: React.FC = () => {
             <button
               key={project.id}
               onClick={() => handleProjectClick(project.id)}
-              className={`w-full text-left ${themeClasses.bg.card} rounded-lg border border-orange-500/30 overflow-hidden active:scale-[0.98] transition-transform`}
+              className={`w-full text-left ${themeClasses.bg.card} rounded-2xl border-2 border-gray-300 shadow-sm overflow-hidden active:scale-[0.98] transition-transform hover:border-gray-400`}
             >
-              <div className="p-4">
+              <div className="p-6">
                 {/* Header: Name + Status */}
-                <div className="flex items-start justify-between mb-2">
+                <div className="flex items-start justify-between mb-4">
                   <div className="flex-1 min-w-0">
-                    <h3 className={`font-semibold ${themeClasses.text.primary} text-base`}>
+                    <h3 className={`font-bold ${themeClasses.text.primary} text-xl`}>
                       {project.name || 'Untitled Project'}
                     </h3>
                     {project.client_name && (
-                      <p className={`text-sm ${themeClasses.text.secondary}`}>{project.client_name}</p>
+                      <p className={`text-base ${themeClasses.text.secondary} mt-1`}>{project.client_name}</p>
                     )}
                   </div>
-                  <span className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium flex-shrink-0 ${getStatusColor(project.status)}`}>
+                  <span className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold flex-shrink-0 ${getStatusColor(project.status)}`}>
                     {getStatusIcon(project.status)}
                     {formatStatus(project.status)}
                   </span>
@@ -519,19 +520,19 @@ const ProjectsHub: React.FC = () => {
 
                 {/* Description preview */}
                 {project.description && (
-                  <p className={`text-sm ${themeClasses.text.secondary} line-clamp-2 mb-3`}>
+                  <p className={`text-base ${themeClasses.text.secondary} line-clamp-2 mb-4`}>
                     {project.description}
                   </p>
                 )}
 
                 {/* Progress bar */}
                 {typeof project.progress === 'number' && (
-                  <div className="mb-3">
-                    <div className="flex items-center justify-between text-xs mb-1">
-                      <span className={themeClasses.text.muted}>Progress</span>
-                      <span className={`font-medium ${theme === 'light' ? 'text-gray-700' : 'text-zinc-300'}`}>{project.progress}%</span>
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between text-sm mb-2">
+                      <span className={`font-medium ${themeClasses.text.muted}`}>Progress</span>
+                      <span className={`font-bold ${theme === 'light' ? 'text-gray-700' : 'text-zinc-300'}`}>{project.progress}%</span>
                     </div>
-                    <div className={`h-2 ${theme === 'light' ? 'bg-gray-200' : 'bg-zinc-800'} rounded-full overflow-hidden`}>
+                    <div className={`h-3 ${theme === 'light' ? 'bg-gray-200' : 'bg-zinc-800'} rounded-full overflow-hidden`}>
                       <div
                         className="h-full bg-orange-500 rounded-full transition-all"
                         style={{ width: `${project.progress}%` }}
@@ -541,27 +542,27 @@ const ProjectsHub: React.FC = () => {
                 )}
 
                 {/* Info row */}
-                <div className={`flex items-center gap-3 text-xs ${themeClasses.text.muted} flex-wrap`}>
+                <div className={`flex items-center gap-4 text-sm ${themeClasses.text.muted} flex-wrap`}>
                   {project.start_date && (
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-3.5 h-3.5" />
+                    <div className="flex items-center gap-1.5">
+                      <Calendar className="w-4 h-4" />
                       {new Date(project.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     </div>
                   )}
                   {project.team_members && project.team_members.length > 0 && (
-                    <div className="flex items-center gap-1">
-                      <Users className="w-3.5 h-3.5" />
+                    <div className="flex items-center gap-1.5">
+                      <Users className="w-4 h-4" />
                       {project.team_members.length}
                     </div>
                   )}
                   {project.budget > 0 && (
-                    <div className="flex items-center gap-1">
-                      <DollarSign className="w-3.5 h-3.5" />
+                    <div className="flex items-center gap-1.5 font-semibold text-green-600">
+                      <DollarSign className="w-4 h-4" />
                       {formatCurrency(project.budget)}
                     </div>
                   )}
                   <div className="flex-1" />
-                  <ChevronRight className={`w-4 h-4 ${themeClasses.text.muted}`} />
+                  <ChevronRight className={`w-6 h-6 text-orange-500`} />
                 </div>
               </div>
             </button>
@@ -604,6 +605,12 @@ const ProjectsHub: React.FC = () => {
         } : undefined}
       />
 
+      {/* Vision Cam Modal */}
+      <VisionCamModal
+        isOpen={showVisionCam}
+        onClose={() => setShowVisionCam(false)}
+      />
+
       {/* Project Details Modal - Slide Up */}
       {selectedProject && (
         <div className="fixed inset-0 z-50 overflow-hidden pb-16">
@@ -628,7 +635,7 @@ const ProjectsHub: React.FC = () => {
                 <div className="flex items-center gap-1">
                   <button
                     onClick={openEditProjectModal}
-                    className="p-2 text-purple-500 active:text-purple-700 active:bg-purple-50 rounded-xl"
+                    className="p-2 text-orange-500 active:text-orange-600 active:bg-orange-50 rounded-xl"
                   >
                     <Pencil className="w-5 h-5" />
                   </button>
@@ -665,7 +672,7 @@ const ProjectsHub: React.FC = () => {
                         }
                       });
                     }}
-                    className="text-sm text-purple-600 active:text-purple-800 flex items-center gap-1"
+                    className="text-sm text-orange-500 active:text-orange-600 flex items-center gap-1"
                   >
                     {selectedProject.client_name || selectedProject.client}
                     <Pencil className="w-3 h-3" />
@@ -680,56 +687,50 @@ const ProjectsHub: React.FC = () => {
             {/* Scrollable Content */}
             <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 pb-24">
 
-              {/* Status & Progress Card */}
-              <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
-                <div className="flex items-center justify-between mb-3">
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedProject.status)}`}>
-                    {formatStatus(selectedProject.status)}
-                  </span>
-                  <span className="text-sm font-semibold text-gray-700">{selectedProject.progress || 0}%</span>
-                </div>
-                <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-purple-500 to-purple-600 rounded-full transition-all"
-                    style={{ width: `${selectedProject.progress || 0}%` }}
-                  />
-                </div>
-                <div className="flex items-center justify-between mt-3 text-xs text-gray-500">
-                  <div className="flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5" />
-                    {selectedProject.start_date ? new Date(selectedProject.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'No date'}
-                    {selectedProject.end_date && ` - ${new Date(selectedProject.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
+              {/* Vision Cam Card */}
+              <div className="bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-400 rounded-3xl p-8 shadow-md">
+                <button
+                  onClick={() => setShowVisionCam(true)}
+                  className="w-full flex items-center gap-6 active:scale-[0.98] transition-transform"
+                >
+                  <div className="w-20 h-20 bg-gradient-to-r from-orange-500 to-amber-500 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg">
+                    <Camera className="w-10 h-10 text-white" />
                   </div>
-                </div>
+                  <div className="flex-1 text-left">
+                    <p className="font-bold text-2xl text-gray-900">Vision Cam</p>
+                    <p className="text-lg text-gray-600 mt-1">Show your customer their vision before you build it</p>
+                  </div>
+                  <ChevronRight className="w-8 h-8 text-orange-400" />
+                </button>
               </div>
 
               {/* Budget Card */}
-              <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
-                <div className="flex items-center justify-between mb-3">
-                  <label className="text-xs text-gray-500">Budget</label>
+              <div className="bg-white border border-gray-200 rounded-3xl p-8 shadow-sm">
+                <div className="flex items-center justify-between mb-6">
+                  <label className="text-lg font-semibold text-gray-600">Budget</label>
                   <button
                     onClick={() => {
                       setEditBudget({ budget: selectedProject.budget || 0, spent: selectedProject.spent || 0 });
                       setShowEditBudgetModal(true);
                     }}
-                    className="text-xs text-purple-600 font-medium"
+                    className="text-lg text-orange-500 font-bold"
                   >
                     Edit
                   </button>
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-gray-500">Spent</p>
-                    <p className="text-lg font-bold text-gray-900">{formatCurrency(selectedProject.spent || 0)}</p>
+                    <p className="text-base text-gray-500 mb-1">Spent</p>
+                    <p className="text-3xl font-bold text-gray-900">{formatCurrency(selectedProject.spent || 0)}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs text-gray-500">Budget</p>
-                    <p className="text-lg font-bold text-green-600">{formatCurrency(selectedProject.budget || 0)}</p>
+                    <p className="text-base text-gray-500 mb-1">Budget</p>
+                    <p className="text-3xl font-bold text-green-600">{formatCurrency(selectedProject.budget || 0)}</p>
                   </div>
                 </div>
                 {selectedProject.budget > 0 && (
-                  <div className="mt-3">
-                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="mt-6">
+                    <div className="h-4 bg-gray-100 rounded-full overflow-hidden">
                       <div
                         className={`h-full rounded-full transition-all ${
                           ((selectedProject.spent || 0) / selectedProject.budget) > 0.9 ? 'bg-red-500' :
@@ -743,29 +744,29 @@ const ProjectsHub: React.FC = () => {
               </div>
 
               {/* Team Card */}
-              <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
-                <div className="flex items-center justify-between mb-3">
-                  <label className="text-xs text-gray-500">Team</label>
+              <div className="bg-white border border-gray-200 rounded-3xl p-8 shadow-sm">
+                <div className="flex items-center justify-between mb-6">
+                  <label className="text-lg font-semibold text-gray-600">Team</label>
                   <button
                     onClick={() => {
                       setSelectedEmployeeId('');
                       setShowEditTeamModal(true);
                     }}
-                    className="text-xs text-purple-600 font-medium"
+                    className="text-lg text-orange-500 font-bold"
                   >
                     Add Member
                   </button>
                 </div>
                 {(selectedProject.team_members || selectedProject.team || []).length === 0 ? (
-                  <p className="text-sm text-gray-400">No team members assigned</p>
+                  <p className="text-xl text-gray-400">No team members assigned</p>
                 ) : (
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-4">
                     {(selectedProject.team_members || selectedProject.team || []).map((member: any, index: number) => (
-                      <div key={index} className="flex items-center gap-2 bg-gray-50 rounded-full px-3 py-1.5">
-                        <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-xs text-white font-medium">
+                      <div key={index} className="flex items-center gap-4 bg-gray-50 rounded-full px-5 py-3">
+                        <div className="w-14 h-14 bg-orange-500 rounded-full flex items-center justify-center text-lg text-white font-bold">
                           {(typeof member === 'string' ? member : member.name || '').split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                         </div>
-                        <span className="text-sm text-gray-700">{typeof member === 'string' ? member : member.name}</span>
+                        <span className="text-xl text-gray-700 font-semibold">{typeof member === 'string' ? member : member.name}</span>
                         <button
                           onClick={async () => {
                             const memberName = typeof member === 'string' ? member : member.name;
@@ -775,9 +776,9 @@ const ProjectsHub: React.FC = () => {
                               if (updated) setSelectedProject(updated);
                             }
                           }}
-                          className="ml-1 text-gray-400 active:text-red-500"
+                          className="ml-2 text-gray-400 active:text-red-500"
                         >
-                          <X className="w-3 h-3" />
+                          <X className="w-6 h-6" />
                         </button>
                       </div>
                     ))}
@@ -786,38 +787,38 @@ const ProjectsHub: React.FC = () => {
               </div>
 
               {/* Tasks Card */}
-              <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
-                <div className="flex items-center justify-between mb-3">
-                  <label className="text-xs text-gray-500">Tasks</label>
+              <div className="bg-white border border-gray-200 rounded-3xl p-8 shadow-sm">
+                <div className="flex items-center justify-between mb-6">
+                  <label className="text-lg font-semibold text-gray-600">Tasks</label>
                   <button
                     onClick={() => setShowTaskModal(true)}
-                    className="text-xs text-purple-600 font-medium"
+                    className="text-lg text-orange-500 font-bold"
                   >
                     Add Task
                   </button>
                 </div>
                 {(selectedProject.tasks || []).length === 0 ? (
-                  <div className="text-center py-6">
-                    <CheckCircle className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                    <p className="text-sm text-gray-400">No tasks yet</p>
+                  <div className="text-center py-10">
+                    <CheckCircle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <p className="text-xl text-gray-400">No tasks yet</p>
                   </div>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-4">
                     {(selectedProject.tasks || []).slice(0, 5).map((task: any) => (
-                      <div key={task.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                        <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
+                      <div key={task.id} className="flex items-center gap-5 p-5 bg-gray-50 rounded-2xl">
+                        <div className={`w-6 h-6 rounded-full flex-shrink-0 ${
                           task.status === 'completed' ? 'bg-green-500' :
                           task.status === 'in-progress' ? 'bg-yellow-500' : 'bg-gray-300'
                         }`} />
                         <div className="flex-1 min-w-0">
-                          <p className={`text-sm font-medium truncate ${task.status === 'completed' ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
+                          <p className={`text-xl font-semibold truncate ${task.status === 'completed' ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
                             {task.title}
                           </p>
                         </div>
                       </div>
                     ))}
                     {(selectedProject.tasks || []).length > 5 && (
-                      <p className="text-xs text-gray-500 text-center pt-2">
+                      <p className="text-base text-gray-500 text-center pt-4">
                         +{(selectedProject.tasks || []).length - 5} more tasks
                       </p>
                     )}
@@ -826,23 +827,23 @@ const ProjectsHub: React.FC = () => {
               </div>
 
               {/* Comments Card */}
-              <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
-                <label className="block text-xs text-gray-500 mb-3">Comments</label>
+              <div className="bg-white border border-gray-200 rounded-3xl p-8 shadow-sm">
+                <label className="block text-lg font-semibold text-gray-600 mb-6">Comments</label>
 
                 {(selectedProject.comments || []).length === 0 ? (
-                  <p className="text-sm text-gray-400 mb-3">No comments yet</p>
+                  <p className="text-xl text-gray-400 mb-6">No comments yet</p>
                 ) : (
-                  <div className="space-y-3 mb-3 max-h-48 overflow-y-auto">
+                  <div className="space-y-5 mb-6 max-h-80 overflow-y-auto">
                     {(selectedProject.comments || []).slice(-3).map((comment: any) => (
-                      <div key={comment.id} className="flex gap-2">
-                        <div className="w-7 h-7 bg-gray-200 rounded-full flex items-center justify-center text-xs font-medium text-gray-600 flex-shrink-0">
+                      <div key={comment.id} className="flex gap-4">
+                        <div className="w-14 h-14 bg-gray-200 rounded-full flex items-center justify-center text-lg font-bold text-gray-600 flex-shrink-0">
                           {comment.author.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="bg-gray-50 rounded-xl px-3 py-2">
-                            <p className="text-sm text-gray-900">{comment.content}</p>
+                          <div className="bg-gray-50 rounded-2xl px-5 py-4">
+                            <p className="text-lg text-gray-900">{comment.content}</p>
                           </div>
-                          <p className="text-xs text-gray-400 mt-1">{comment.author} • {new Date(comment.timestamp).toLocaleDateString()}</p>
+                          <p className="text-base text-gray-400 mt-2">{comment.author} • {new Date(comment.timestamp).toLocaleDateString()}</p>
                         </div>
                       </div>
                     ))}
@@ -850,55 +851,55 @@ const ProjectsHub: React.FC = () => {
                 )}
 
                 {/* Add Comment Input */}
-                <div className="flex gap-2">
+                <div className="flex gap-4">
                   <input
                     type="text"
                     placeholder="Add a comment..."
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
-                    className="flex-1 px-4 py-2.5 text-base border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="flex-1 px-6 py-4 text-lg border border-gray-200 rounded-2xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     onKeyPress={(e) => e.key === 'Enter' && handleAddComment()}
                   />
                   <button
                     onClick={handleAddComment}
-                    className="px-4 py-2.5 bg-purple-600 text-white rounded-xl active:bg-purple-700"
+                    className="px-6 py-4 bg-orange-500 text-white rounded-2xl active:bg-orange-600"
                   >
-                    <Send className="w-4 h-4" />
+                    <Send className="w-6 h-6" />
                   </button>
                 </div>
               </div>
 
               {/* Estimates Card */}
-              <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
-                <div className="flex items-center justify-between mb-3">
-                  <label className="text-xs text-gray-500">Estimates</label>
+              <div className="bg-white border border-gray-200 rounded-3xl p-8 shadow-sm">
+                <div className="flex items-center justify-between mb-6">
+                  <label className="text-lg font-semibold text-gray-600">Estimates</label>
                   <button
                     onClick={() => navigate('/pricing')}
-                    className="text-xs text-purple-600 font-medium"
+                    className="text-lg text-orange-500 font-bold"
                   >
                     Create New
                   </button>
                 </div>
                 {projectEstimates.length === 0 ? (
-                  <div className="text-center py-6">
-                    <FileText className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                    <p className="text-sm text-gray-400">No estimates yet</p>
+                  <div className="text-center py-10">
+                    <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <p className="text-xl text-gray-400">No estimates yet</p>
                   </div>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-4">
                     {projectEstimates.slice(0, 3).map((estimate) => (
                       <button
                         key={estimate.id}
                         onClick={() => navigate('/estimates', { state: { editEstimateId: estimate.id, returnTo: '/projects-hub', returnProjectId: selectedProject.id } })}
-                        className="w-full flex items-center justify-between p-3 bg-gray-50 rounded-xl active:bg-gray-100 text-left"
+                        className="w-full flex items-center justify-between p-5 bg-gray-50 rounded-2xl active:bg-gray-100 text-left"
                       >
                         <div className="min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">{estimate.title}</p>
-                          <p className="text-xs text-gray-500">{new Date(estimate.createdAt).toLocaleDateString()}</p>
+                          <p className="text-xl font-bold text-gray-900 truncate">{estimate.title}</p>
+                          <p className="text-base text-gray-500 mt-1">{new Date(estimate.createdAt).toLocaleDateString()}</p>
                         </div>
-                        <div className="text-right flex-shrink-0 ml-3">
-                          <p className="text-sm font-bold text-green-600">${estimate.total?.toFixed(2) || '0.00'}</p>
-                          <span className={`text-xs px-2 py-0.5 rounded-full ${
+                        <div className="text-right flex-shrink-0 ml-5">
+                          <p className="text-2xl font-bold text-green-600">${estimate.total?.toFixed(2) || '0.00'}</p>
+                          <span className={`text-base px-4 py-1.5 rounded-full ${
                             estimate.status === 'approved' ? 'bg-green-100 text-green-700' :
                             estimate.status === 'sent' ? 'bg-blue-100 text-blue-700' :
                             'bg-gray-100 text-gray-600'
@@ -913,30 +914,30 @@ const ProjectsHub: React.FC = () => {
               </div>
 
               {/* Progress Photos Card */}
-              <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
-                <div className="flex items-center justify-between mb-3">
-                  <label className="text-xs text-gray-500">Project Photos ({projectPhotos.length})</label>
+              <div className="bg-white border border-gray-200 rounded-3xl p-8 shadow-sm">
+                <div className="flex items-center justify-between mb-6">
+                  <label className="text-lg font-semibold text-gray-600">Project Photos ({projectPhotos.length})</label>
                   <button
                     onClick={() => setShowPhotoGallery(true)}
-                    className="text-xs text-purple-600 font-medium"
+                    className="text-lg text-orange-500 font-bold"
                   >
                     View All
                   </button>
                 </div>
                 {projectPhotos.length === 0 ? (
-                  <div className="text-center py-6">
-                    <Camera className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                    <p className="text-sm text-gray-400">No photos yet</p>
-                    <p className="text-xs text-gray-400 mt-1">Use the + button to add photos</p>
+                  <div className="text-center py-10">
+                    <Camera className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <p className="text-xl text-gray-400">No photos yet</p>
+                    <p className="text-base text-gray-400 mt-2">Use the + button to add photos</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-3 gap-4">
                     {projectPhotos.slice(0, 6).map((photo) => (
                       <img
                         key={photo.id}
                         src={photo.imageUrl}
                         alt={photo.caption || 'Project photo'}
-                        className="w-full aspect-square object-cover rounded-xl cursor-pointer hover:opacity-90"
+                        className="w-full aspect-square object-cover rounded-2xl cursor-pointer hover:opacity-90"
                         onClick={() => setShowPhotoGallery(true)}
                       />
                     ))}
@@ -969,7 +970,7 @@ const ProjectsHub: React.FC = () => {
                   type="text"
                   value={newTask.title}
                   onChange={(e) => setNewTask({...newTask, title: e.target.value})}
-                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   placeholder="Enter task title"
                 />
               </div>
@@ -979,7 +980,7 @@ const ProjectsHub: React.FC = () => {
                   type="date"
                   value={newTask.dueDate}
                   onChange={(e) => setNewTask({...newTask, dueDate: e.target.value})}
-                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 />
               </div>
               <div>
@@ -987,7 +988,7 @@ const ProjectsHub: React.FC = () => {
                 <select
                   value={newTask.priority}
                   onChange={(e) => setNewTask({...newTask, priority: e.target.value as 'low' | 'medium' | 'high'})}
-                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 >
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
@@ -1022,7 +1023,7 @@ const ProjectsHub: React.FC = () => {
                     }
                   }
                 }}
-                className="flex-1 px-4 py-2.5 bg-purple-600 text-white rounded-xl active:bg-purple-700"
+                className="flex-1 px-4 py-2.5 bg-orange-500 text-white rounded-xl active:bg-orange-600"
               >
                 Add Task
               </button>
@@ -1050,7 +1051,7 @@ const ProjectsHub: React.FC = () => {
                 <textarea
                   value={uploadDescription}
                   onChange={(e) => setUploadDescription(e.target.value)}
-                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   rows={3}
                   placeholder="Describe the progress update"
                 ></textarea>
@@ -1141,7 +1142,7 @@ const ProjectsHub: React.FC = () => {
                   setUploadImages([]);
                   setUploadPreviewUrls([]);
                 }}
-                className="flex-1 px-4 py-2.5 bg-purple-600 text-white rounded-xl active:bg-purple-700"
+                className="flex-1 px-4 py-2.5 bg-orange-500 text-white rounded-xl active:bg-orange-600"
               >
                 Upload
               </button>
@@ -1172,7 +1173,7 @@ const ProjectsHub: React.FC = () => {
                     type="number"
                     value={editBudget.budget || ''}
                     onChange={(e) => setEditBudget({...editBudget, budget: parseFloat(e.target.value) || 0})}
-                    className="w-full pl-8 pr-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full pl-8 pr-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     placeholder="0"
                   />
                 </div>
@@ -1185,7 +1186,7 @@ const ProjectsHub: React.FC = () => {
                     type="number"
                     value={editBudget.spent || ''}
                     onChange={(e) => setEditBudget({...editBudget, spent: parseFloat(e.target.value) || 0})}
-                    className="w-full pl-8 pr-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full pl-8 pr-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     placeholder="0"
                   />
                 </div>
@@ -1215,7 +1216,7 @@ const ProjectsHub: React.FC = () => {
                     }
                   }
                 }}
-                className="flex-1 px-4 py-2.5 bg-purple-600 text-white rounded-xl active:bg-purple-700"
+                className="flex-1 px-4 py-2.5 bg-orange-500 text-white rounded-xl active:bg-orange-600"
               >
                 Save
               </button>
@@ -1248,7 +1249,7 @@ const ProjectsHub: React.FC = () => {
                         setShowEditTeamModal(false);
                         navigate('/employees');
                       }}
-                      className="text-sm text-purple-600 font-medium"
+                      className="text-sm text-orange-500 font-medium"
                     >
                       Add Employees
                     </button>
@@ -1257,7 +1258,7 @@ const ProjectsHub: React.FC = () => {
                   <select
                     value={selectedEmployeeId}
                     onChange={(e) => setSelectedEmployeeId(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   >
                     <option value="">Select an employee...</option>
                     {employees
@@ -1306,7 +1307,7 @@ const ProjectsHub: React.FC = () => {
                 disabled={!selectedEmployeeId}
                 className={`flex-1 px-4 py-2.5 rounded-xl ${
                   selectedEmployeeId
-                    ? 'bg-purple-600 text-white active:bg-purple-700'
+                    ? 'bg-orange-500 text-white active:bg-orange-600'
                     : 'bg-gray-200 text-gray-400'
                 }`}
               >
@@ -1600,11 +1601,6 @@ const ProjectsHub: React.FC = () => {
         </div>
       )}
 
-      {/* Enhanced AI Chat Button */}
-      <FloatingAIChatButton
-        onClick={handleAIChat}
-        mode="projects"
-      />
     </div>
   );
 };

@@ -34,6 +34,7 @@ import PhotoUploadModal from '../photos/PhotoUploadModal';
 import VisionCamModal from '../vision/VisionCamModal';
 import SendEmailModal from '../email/SendEmailModal';
 import LiDARScannerModal from '../lidar/LiDARScannerModal';
+import { PlanCreationModal } from '../plans';
 import { format, parseISO } from 'date-fns';
 import { contractorChatHistoryManager, ContractorChatSession } from '../../lib/ai/contractorChatHistory';
 import AIChatPopup from '../ai/AIChatPopup';
@@ -55,6 +56,8 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
   const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [showVisionCamModal, setShowVisionCamModal] = useState(false);
   const [showLiDARScanner, setShowLiDARScanner] = useState(false);
+  const [showPlanCreation, setShowPlanCreation] = useState(false);
+  const [lidarPlanId, setLidarPlanId] = useState<string | null>(null);
   const [showChatHistory, setShowChatHistory] = useState(false);
   const [showSendEmailModal, setShowSendEmailModal] = useState(false);
   const [showEmailOptions, setShowEmailOptions] = useState(false);
@@ -200,7 +203,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
         setShowVisionCamModal(true);
         break;
       case 'lidar-scan':
-        setShowLiDARScanner(true);
+        setShowPlanCreation(true);
         break;
       case 'collect-payment':
         navigate('/finance-hub', { state: { openPaymentCollection: true } });
@@ -230,7 +233,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
   return (
     <>
       {/* Bottom Navigation Bar - Sits above the AI search bar */}
-      <nav className={`fixed bottom-[calc(52px+env(safe-area-inset-bottom))] left-0 right-0 ${themeClasses.bg.secondary} border-t ${themeClasses.border.primary} z-[100] ${className} ${showAIModal || showEventPicker || showNotificationModal || showPhotoModal || showVisionCamModal || showLiDARScanner || showChatHistory || showSendEmailModal || showEmailOptions || location.pathname === '/ai-team' ? 'hidden' : ''}`}>
+      <nav className={`fixed bottom-[calc(52px+env(safe-area-inset-bottom))] left-0 right-0 ${themeClasses.bg.secondary} border-t ${themeClasses.border.primary} z-[100] ${className} ${showAIModal || showEventPicker || showNotificationModal || showPhotoModal || showVisionCamModal || showLiDARScanner || showPlanCreation || showChatHistory || showSendEmailModal || showEmailOptions || location.pathname === '/ai-team' ? 'hidden' : ''}`}>
         <div className={`flex items-center justify-around h-16 ${themeClasses.bg.secondary}`}>
           {navItems.map((item) => {
             const isActive = location.pathname === item.href;
@@ -381,7 +384,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
             </div>
 
             {/* Chat History Button - Full Width */}
-            <div className="px-4 pb-6">
+            <div className="px-4 pb-2">
               <button
                 onClick={() => {
                   setShowAIModal(false);
@@ -393,6 +396,23 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
                   <History className={`w-4 h-4 ${themeClasses.text.secondary}`} />
                 </div>
                 <span className={`text-sm font-medium ${themeClasses.text.primary}`}>Chat History</span>
+                <ChevronRight className={`w-4 h-4 ${themeClasses.text.secondary} ml-auto`} />
+              </button>
+            </div>
+
+            {/* Settings Button - Full Width */}
+            <div className="px-4 pb-6">
+              <button
+                onClick={() => {
+                  setShowAIModal(false);
+                  navigate('/settings');
+                }}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 ${theme === 'light' ? 'bg-white' : 'bg-[#1C1C1E]'} rounded-lg border ${themeClasses.border.primary} ${themeClasses.hover.bg} active:scale-[0.98] transition-all`}
+              >
+                <div className={`w-8 h-8 ${themeClasses.bg.tertiary} rounded-md flex items-center justify-center`}>
+                  <Settings className={`w-4 h-4 ${themeClasses.text.secondary}`} />
+                </div>
+                <span className={`text-sm font-medium ${themeClasses.text.primary}`}>Settings</span>
                 <ChevronRight className={`w-4 h-4 ${themeClasses.text.secondary} ml-auto`} />
               </button>
             </div>
@@ -676,10 +696,24 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
         onClose={() => setShowVisionCamModal(false)}
       />
 
+      {/* Plan Creation Modal */}
+      <PlanCreationModal
+        isOpen={showPlanCreation}
+        onClose={() => setShowPlanCreation(false)}
+        onStartLiDAR={(planId) => {
+          setLidarPlanId(planId);
+          setShowLiDARScanner(true);
+        }}
+      />
+
       {/* LiDAR Scanner Modal */}
       <LiDARScannerModal
         isOpen={showLiDARScanner}
-        onClose={() => setShowLiDARScanner(false)}
+        onClose={() => {
+          setShowLiDARScanner(false);
+          setLidarPlanId(null);
+        }}
+        projectId={lidarPlanId || undefined}
       />
 
       {/* Send Email Modal */}

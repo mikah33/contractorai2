@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Home,
@@ -11,12 +11,11 @@ import {
   Calendar,
   CheckCircle2,
   Clock,
-  TrendingUp,
   Target,
   ChevronLeft,
-  Star,
-  Newspaper,
-  RefreshCw
+  Calculator,
+  CreditCard,
+  Camera
 } from 'lucide-react';
 import { useFinanceStore } from '../stores/financeStoreSupabase';
 import useProjectStore from '../stores/projectStore';
@@ -24,9 +23,10 @@ import { useCalendarStoreSupabase } from '../stores/calendarStoreSupabase';
 import { useData } from '../contexts/DataContext';
 import { useAuthStore } from '../stores/authStore';
 import { useOnboardingStore } from '../stores/onboardingStore';
-import { useNewsStore, type NewsArticle } from '../stores/newsStore';
 import DashboardTutorialModal from '../components/dashboard/DashboardTutorialModal';
-import NewsModal from '../components/news/NewsModal';
+import AddChoiceModal from '../components/common/AddChoiceModal';
+import AIChatPopup from '../components/ai/AIChatPopup';
+import VisionCamModal from '../components/vision/VisionCamModal';
 import { useTheme, getThemeClasses } from '../contexts/ThemeContext';
 
 
@@ -40,9 +40,14 @@ const Dashboard: React.FC = () => {
   const { profile } = useData();
   const { user } = useAuthStore();
   const { dashboardTutorialCompleted, checkDashboardTutorial, setDashboardTutorialCompleted } = useOnboardingStore();
-  const { articles: newsArticles, isLoading: newsLoading, fetchNews, refreshNews } = useNewsStore();
   const [showTutorial, setShowTutorial] = useState(false);
-  const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(null);
+  const [showAddChoice, setShowAddChoice] = useState(false);
+  const [showAIChat, setShowAIChat] = useState(false);
+  const [showVisionCam, setShowVisionCam] = useState(false);
+  const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
 
   // Get display name from profile (company name or full name)
   const displayName = profile?.company || profile?.full_name || 'there';
@@ -72,7 +77,6 @@ const Dashboard: React.FC = () => {
     fetchPayments();
     fetchReceipts();
     fetchEvents();
-    fetchNews();
   }, []);
 
   useEffect(() => {
@@ -168,7 +172,7 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className={`min-h-full ${themeClasses.bg.primary} pb-24`}>
+    <div className="min-h-full bg-white pb-60">
 
       {/* Dashboard Tutorial Modal */}
       <DashboardTutorialModal
@@ -198,187 +202,80 @@ const Dashboard: React.FC = () => {
       </div>
 
       <div className="px-2 py-2 space-y-2 max-w-5xl mx-auto">
-        {/* News Carousel */}
-        <div className="bg-white rounded-lg border-2 border-orange-400 overflow-hidden mb-2 shadow-sm">
-          <div className="p-2 border-b border-orange-200 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-orange-100 rounded-lg flex items-center justify-center">
-                <Newspaper className="w-3 h-3 text-orange-600" />
-              </div>
-              <h2 className="font-semibold text-black">Industry News</h2>
+        {/* Create Estimate Card - Standalone */}
+        <div
+          className={`${themeClasses.bg.card} rounded-xl border border-zinc-300 p-8 text-left transition-colors w-full min-h-[320px] flex flex-col relative overflow-hidden`}
+        >
+          {/* Background payment card visual */}
+          <div className="absolute top-6 right-6 w-44 h-28 bg-gradient-to-br from-orange-400 to-orange-600 rounded-xl shadow-lg transform rotate-6 opacity-20">
+            <div className="absolute bottom-3 left-3 flex gap-1">
+              <div className="w-8 h-5 bg-white/30 rounded"></div>
             </div>
-            <button
-              onClick={() => refreshNews()}
-              className="p-1.5 text-orange-500 hover:bg-orange-50 rounded-lg transition-colors"
-              title="Refresh news"
-            >
-              <RefreshCw className={`w-4 h-4 ${newsLoading ? 'animate-spin' : ''}`} />
-            </button>
           </div>
-          <div className="overflow-x-auto">
-            <div className="flex gap-3 p-3">
-              {newsLoading && newsArticles.length === 0 ? (
-                // Loading skeleton
-                <>
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="flex-shrink-0 w-64 p-3 bg-zinc-100 rounded-lg border border-zinc-200 animate-pulse">
-                      <div className="h-4 bg-zinc-200 rounded w-3/4 mb-2"></div>
-                      <div className="h-3 bg-zinc-200 rounded w-full mb-1"></div>
-                      <div className="h-3 bg-zinc-200 rounded w-2/3"></div>
-                    </div>
-                  ))}
-                </>
-              ) : newsArticles.length > 0 ? (
-                // Real news articles
-                newsArticles.map((article) => (
-                  <button
-                    key={article.id}
-                    onClick={() => setSelectedArticle(article)}
-                    className="flex-shrink-0 w-64 p-3 bg-orange-50 hover:bg-orange-100 rounded-lg border border-orange-200 text-left transition-colors active:scale-[0.98]"
-                  >
-                    <div className="flex items-center gap-1.5 mb-1.5">
-                      <span className="text-xs font-medium text-orange-600 truncate">{article.source_name}</span>
-                    </div>
-                    <h3 className="font-semibold text-sm text-black mb-1 line-clamp-2">{article.title}</h3>
-                    <p className="text-xs text-zinc-600 leading-relaxed line-clamp-2">{article.summary}</p>
-                  </button>
-                ))
-              ) : (
-                // Fallback static items when no news
-                <>
-                  <div className="flex-shrink-0 w-64 p-3 bg-orange-50 rounded-lg border border-orange-200">
-                    <h3 className="font-semibold text-sm text-black mb-1">Construction Permits Up 15%</h3>
-                    <p className="text-xs text-zinc-600 leading-relaxed">Building permits increased significantly in Q4, creating new opportunities for contractors.</p>
-                  </div>
-                  <div className="flex-shrink-0 w-64 p-3 bg-orange-50 rounded-lg border border-orange-200">
-                    <h3 className="font-semibold text-sm text-black mb-1">New Safety Regulations</h3>
-                    <p className="text-xs text-zinc-600 leading-relaxed">Updated OSHA guidelines for 2026 now in effect. Stay compliant with our resources.</p>
-                  </div>
-                  <div className="flex-shrink-0 w-64 p-3 bg-orange-50 rounded-lg border border-orange-200">
-                    <h3 className="font-semibold text-sm text-black mb-1">Material Costs Stable</h3>
-                    <p className="text-xs text-zinc-600 leading-relaxed">Lumber and steel prices remain steady, providing better project predictability.</p>
-                  </div>
-                </>
-              )}
+          <div className="absolute top-12 right-12 w-44 h-28 bg-gradient-to-br from-green-400 to-green-600 rounded-xl shadow-lg transform -rotate-3 opacity-15">
+            <CreditCard className="absolute top-3 right-3 w-8 h-8 text-white/50" />
+          </div>
+
+          <div className="flex items-center gap-5 mb-6 relative z-10">
+            <div className="w-20 h-20 bg-orange-500 rounded-2xl flex items-center justify-center shadow-lg">
+              <Calculator className="w-10 h-10 text-white" />
             </div>
+            <div>
+              <p className={`font-bold ${themeClasses.text.primary} text-3xl`}>Create Estimate</p>
+              <p className={`text-lg ${themeClasses.text.muted}`}>Send & get paid</p>
+            </div>
+          </div>
+
+          <p className={`text-lg ${themeClasses.text.secondary} mb-6 mt-4 relative z-10 leading-relaxed font-medium italic`}>
+            Create professional estimates and collect payments directly in the app. Easy to understand quotes sent straight to your customers.
+          </p>
+
+          <div className="mt-auto relative z-10">
+            <button
+              onClick={() => setShowAddChoice(true)}
+              className="w-full py-5 px-6 bg-orange-500 hover:bg-orange-600 text-white text-xl font-semibold rounded-xl transition-colors flex items-center justify-center gap-3 shadow-md"
+            >
+              <Calculator className="w-7 h-7" />
+              Create an Estimate
+            </button>
           </div>
         </div>
 
-        {/* Quick Preview Cards - Updated Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-          {/* Enhanced Finance Card */}
-          <button
-            onClick={() => navigate('/finance-hub')}
-            className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-2 text-left ${themeClasses.hover.bg} transition-colors`}
-          >
-            <div className="flex items-center gap-1 mb-2">
-              <div className="w-6 h-6 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                <DollarSign className="w-3 h-3 text-orange-500" />
-              </div>
-              <div>
-                <p className={`font-semibold ${themeClasses.text.primary} text-xs`}>Finance</p>
-                <p className={`text-xs ${themeClasses.text.muted}`}>This month</p>
-              </div>
-            </div>
-            <div className="space-y-1">
-              <div>
-                <p className={`text-xs ${themeClasses.text.muted}`}>Revenue</p>
-                <p className="text-xs font-bold text-green-400">{formatCurrency(financialSummary?.totalRevenue || 0)}</p>
-              </div>
-              <div>
-                <p className={`text-xs ${themeClasses.text.muted}`}>Profit</p>
-                <p className={`text-xs font-bold ${(financialSummary?.profit || 0) >= 0 ? 'text-orange-500' : 'text-red-400'}`}>
-                  {formatCurrency(financialSummary?.profit || 0)}
-                </p>
-              </div>
-            </div>
-          </button>
+        {/* Vision Cam Card */}
+        <div
+          className={`${themeClasses.bg.card} rounded-xl border border-zinc-300 p-8 text-left transition-colors w-full min-h-[320px] flex flex-col relative overflow-hidden`}
+        >
+          {/* Background camera visuals */}
+          <div className="absolute top-4 right-4 opacity-25">
+            <Camera className="w-32 h-32 text-orange-600 transform rotate-12" />
+          </div>
+          <div className="absolute top-16 right-16 opacity-30">
+            <Camera className="w-24 h-24 text-orange-700 transform -rotate-6" />
+          </div>
 
-          {/* Projects Card */}
-          <button
-            onClick={() => navigate('/projects-hub')}
-            className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-2 text-left ${themeClasses.hover.bg} transition-colors`}
-          >
-            <div className="flex items-center gap-1 mb-2">
-              <div className="w-6 h-6 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                <Briefcase className="w-3 h-3 text-orange-500" />
-              </div>
-              <div>
-                <p className={`font-semibold ${themeClasses.text.primary} text-xs`}>Projects</p>
-                <p className={`text-xs ${themeClasses.text.muted}`}>{projects.length} total</p>
-              </div>
+          <div className="flex items-center gap-5 mb-6 relative z-10">
+            <div className="w-20 h-20 bg-orange-500 rounded-2xl flex items-center justify-center shadow-lg">
+              <Camera className="w-10 h-10 text-white" />
             </div>
-            <div className="space-y-1">
-              <div>
-                <p className={`text-xs ${themeClasses.text.muted}`}>Active</p>
-                <p className="text-xs font-bold text-orange-500">{activeProjects}</p>
-              </div>
-              <div>
-                <p className={`text-xs ${themeClasses.text.muted}`}>Completed</p>
-                <p className="text-xs font-bold text-green-400">{projects.filter(p => p.status === 'completed').length}</p>
-              </div>
+            <div>
+              <p className={`font-bold ${themeClasses.text.primary} text-3xl`}>Vision Cam</p>
+              <p className={`text-lg ${themeClasses.text.muted}`}>AI-powered visualization</p>
             </div>
-          </button>
+          </div>
 
-          {/* Jobs Card */}
-          <button
-            onClick={() => navigate('/jobs-hub')}
-            className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-2 text-left ${themeClasses.hover.bg} transition-colors`}
-          >
-            <div className="flex items-center gap-1 mb-2">
-              <div className="w-6 h-6 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                <Calendar className="w-3 h-3 text-orange-500" />
-              </div>
-              <div>
-                <p className={`font-semibold ${themeClasses.text.primary} text-xs`}>Jobs</p>
-                <p className={`text-xs ${themeClasses.text.muted}`}>Upcoming</p>
-              </div>
-            </div>
-            <div className="space-y-1">
-              <div>
-                <p className={`text-xs ${themeClasses.text.muted}`}>Today</p>
-                <p className="text-xs font-bold text-orange-500">
-                  {events.filter(e => {
-                    const today = new Date();
-                    const eventDate = new Date(e.start_date);
-                    return eventDate.toDateString() === today.toDateString() &&
-                           ['task', 'meeting', 'delivery', 'inspection'].includes(e.event_type) &&
-                           e.status !== 'cancelled';
-                  }).length}
-                </p>
-              </div>
-              <div>
-                <p className={`text-xs ${themeClasses.text.muted}`}>This week</p>
-                <p className="text-xs font-bold text-blue-400">{upcomingJobs.length}</p>
-              </div>
-            </div>
-          </button>
+          <p className={`text-lg ${themeClasses.text.secondary} mb-6 mt-4 relative z-10 leading-relaxed font-medium italic`}>
+            Use AI to show your customer their vision for their project. Simply take a before photo, describe your customer's vision, and send them a photo.
+          </p>
 
-          {/* Goals Card */}
-          <button
-            onClick={() => navigate('/business-hub')}
-            className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-2 text-left ${themeClasses.hover.bg} transition-colors`}
-          >
-            <div className="flex items-center gap-1 mb-2">
-              <div className="w-6 h-6 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                <Target className="w-3 h-3 text-orange-500" />
-              </div>
-              <div>
-                <p className={`font-semibold ${themeClasses.text.primary} text-xs`}>Goals</p>
-                <p className={`text-xs ${themeClasses.text.muted}`}>Monthly</p>
-              </div>
-            </div>
-            <div className="space-y-1">
-              <div>
-                <p className={`text-xs ${themeClasses.text.muted}`}>Revenue</p>
-                <p className="text-xs font-bold text-green-400">75%</p>
-              </div>
-              <div>
-                <p className={`text-xs ${themeClasses.text.muted}`}>Projects</p>
-                <p className="text-xs font-bold text-orange-500">90%</p>
-              </div>
-            </div>
-          </button>
+          <div className="mt-auto relative z-10">
+            <button
+              onClick={() => setShowVisionCam(true)}
+              className="w-full py-5 px-6 bg-orange-500 hover:bg-orange-600 text-white text-xl font-semibold rounded-xl transition-colors flex items-center justify-center gap-3 shadow-md"
+            >
+              <Camera className="w-7 h-7" />
+              Use Vision Cam Now
+            </button>
+          </div>
         </div>
 
         {/* Upcoming Jobs Section */}
@@ -469,140 +366,207 @@ const Dashboard: React.FC = () => {
           </button>
         </div>
 
-        {/* Enhanced Finance Dashboard */}
-        <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} overflow-hidden`}>
-          <div className={`flex items-center justify-between p-2 border-b ${themeClasses.border.primary}`}>
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                <TrendingUp className="w-3 h-3 text-orange-500" />
-              </div>
-              <div>
-                <h2 className={`font-semibold ${themeClasses.text.primary}`}>Financial Overview</h2>
-                <p className="text-xs text-zinc-500">This month</p>
-              </div>
-            </div>
-            <button
-              onClick={() => navigate('/finance-hub')}
-              className="flex items-center gap-1 text-sm text-orange-500 font-medium"
+        {/* Quick Preview Cards - Carousel */}
+        <div className="relative">
+          <div
+            ref={carouselRef}
+            className="overflow-hidden rounded-lg"
+            onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
+            onTouchMove={(e) => { touchEndX.current = e.touches[0].clientX; }}
+            onTouchEnd={() => {
+              const diff = touchStartX.current - touchEndX.current;
+              if (Math.abs(diff) > 50) {
+                if (diff > 0 && currentCardIndex < 3) {
+                  setCurrentCardIndex(prev => prev + 1);
+                } else if (diff < 0 && currentCardIndex > 0) {
+                  setCurrentCardIndex(prev => prev - 1);
+                }
+              }
+            }}
+          >
+            <div
+              className="flex transition-transform duration-300 ease-out"
+              style={{ transform: `translateX(-${currentCardIndex * 100}%)` }}
             >
-              View All <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
+              {/* Finance Card */}
+              <button
+                onClick={() => navigate('/finance-hub')}
+                className={`${themeClasses.bg.card} rounded-lg border border-zinc-300 p-5 text-left ${themeClasses.hover.bg} transition-colors w-full flex-shrink-0 min-h-[220px] flex flex-col`}
+              >
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-14 h-14 bg-orange-500/20 rounded-xl flex items-center justify-center">
+                    <DollarSign className="w-7 h-7 text-orange-500" />
+                  </div>
+                  <div>
+                    <p className={`font-bold ${themeClasses.text.primary} text-xl`}>Finance</p>
+                    <p className={`text-sm ${themeClasses.text.muted}`}>This month</p>
+                  </div>
+                  <ChevronRight className="w-6 h-6 text-orange-500 ml-auto" />
+                </div>
+                <div className="grid grid-cols-2 gap-4 flex-1">
+                  <div className="p-4 bg-green-500/10 rounded-lg border border-green-500/20 flex flex-col justify-center">
+                    <p className={`text-sm ${themeClasses.text.muted} mb-1`}>Revenue</p>
+                    <p className="text-2xl font-bold text-green-400">{formatCurrency(financialSummary?.totalRevenue || 0)}</p>
+                  </div>
+                  <div className="p-4 bg-orange-500/10 rounded-lg border border-orange-500/20 flex flex-col justify-center">
+                    <p className={`text-sm ${themeClasses.text.muted} mb-1`}>Profit</p>
+                    <p className={`text-2xl font-bold ${(financialSummary?.profit || 0) >= 0 ? 'text-orange-500' : 'text-red-400'}`}>
+                      {formatCurrency(financialSummary?.profit || 0)}
+                    </p>
+                  </div>
+                </div>
+              </button>
 
-          <div className="p-3">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="p-3 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-lg border border-green-500/20">
-                <p className="text-xs text-green-800 font-medium mb-1">Total Revenue</p>
-                <p className="text-lg font-bold text-green-600">{formatCurrency(financialSummary?.totalRevenue || 0)}</p>
-                <p className="text-xs text-green-700 font-medium">+12% from last month</p>
-              </div>
-              <div className="p-3 bg-gradient-to-r from-orange-500/20 to-amber-500/20 rounded-lg border border-orange-500/40">
-                <p className="text-xs text-orange-800 font-medium mb-1">Net Profit</p>
-                <p className={`text-lg font-bold ${(financialSummary?.profit || 0) >= 0 ? 'text-orange-600' : 'text-red-600'}`}>
-                  {formatCurrency(financialSummary?.profit || 0)}
-                </p>
-                <p className="text-xs text-orange-700 font-medium">+8% from last month</p>
-              </div>
-            </div>
-
-            <div className="mt-3 grid grid-cols-3 gap-2">
-              <div className="text-center p-2 bg-white rounded-lg border border-zinc-400">
-                <p className="text-xs text-black font-medium">Pending</p>
-                <p className="text-sm font-bold text-amber-600">{formatCurrency(25000)}</p>
-              </div>
-              <div className="text-center p-2 bg-white rounded-lg border border-zinc-400">
-                <p className="text-xs text-black font-medium">Expenses</p>
-                <p className="text-sm font-bold text-red-600">{formatCurrency(financialSummary?.totalExpenses || 0)}</p>
-              </div>
-              <div className="text-center p-2 bg-white rounded-lg border border-zinc-400">
-                <p className="text-xs text-black font-medium">Collections</p>
-                <p className="text-sm font-bold text-blue-600">{formatCurrency(18750)}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Recent Projects */}
-        <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} overflow-hidden`}>
-          <div className={`flex items-center justify-between p-2 border-b ${themeClasses.border.primary}`}>
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                <Briefcase className="w-3 h-3 text-orange-500" />
-              </div>
-              <div>
-                <h2 className={`font-semibold ${themeClasses.text.primary}`}>Projects</h2>
-                <p className="text-xs text-zinc-500">{projects.length} total</p>
-              </div>
-            </div>
-            <button
-              onClick={() => navigate('/projects-hub')}
-              className="flex items-center gap-1 text-sm text-orange-500 font-medium"
-            >
-              View All <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-
-          {projects.length === 0 ? (
-            <div className="p-3 text-center">
-              <Briefcase className="w-6 h-6 text-zinc-600 mx-auto mb-2" />
-              <p className="text-zinc-400 text-sm">No projects yet</p>
+              {/* Projects Card */}
               <button
                 onClick={() => navigate('/projects-hub')}
-                className={`mt-3 flex items-center gap-2 px-4 py-2.5 ${themeClasses.button.primary} rounded-md font-medium ${themeClasses.button.primaryHover} active:scale-95 transition-all mx-auto`}
+                className={`${themeClasses.bg.card} rounded-lg border border-zinc-300 p-5 text-left ${themeClasses.hover.bg} transition-colors w-full flex-shrink-0 min-h-[220px] flex flex-col`}
               >
-                <Plus className="w-4 h-4" /> Add Project
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-14 h-14 bg-orange-500/20 rounded-xl flex items-center justify-center">
+                    <Briefcase className="w-7 h-7 text-orange-500" />
+                  </div>
+                  <div>
+                    <p className={`font-bold ${themeClasses.text.primary} text-xl`}>Projects</p>
+                    <p className={`text-sm ${themeClasses.text.muted}`}>{projects.length} total</p>
+                  </div>
+                  <ChevronRight className="w-6 h-6 text-orange-500 ml-auto" />
+                </div>
+                <div className="grid grid-cols-2 gap-4 flex-1">
+                  <div className="p-4 bg-orange-500/10 rounded-lg border border-orange-500/20 flex flex-col justify-center">
+                    <p className={`text-sm ${themeClasses.text.muted} mb-1`}>Active</p>
+                    <p className="text-2xl font-bold text-orange-500">{activeProjects}</p>
+                  </div>
+                  <div className="p-4 bg-green-500/10 rounded-lg border border-green-500/20 flex flex-col justify-center">
+                    <p className={`text-sm ${themeClasses.text.muted} mb-1`}>Completed</p>
+                    <p className="text-2xl font-bold text-green-400">{projects.filter(p => p.status === 'completed').length}</p>
+                  </div>
+                </div>
+              </button>
+
+              {/* Jobs Card */}
+              <button
+                onClick={() => navigate('/jobs-hub')}
+                className={`${themeClasses.bg.card} rounded-lg border border-zinc-300 p-5 text-left ${themeClasses.hover.bg} transition-colors w-full flex-shrink-0 min-h-[220px] flex flex-col`}
+              >
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-14 h-14 bg-orange-500/20 rounded-xl flex items-center justify-center">
+                    <Calendar className="w-7 h-7 text-orange-500" />
+                  </div>
+                  <div>
+                    <p className={`font-bold ${themeClasses.text.primary} text-xl`}>Jobs</p>
+                    <p className={`text-sm ${themeClasses.text.muted}`}>Upcoming</p>
+                  </div>
+                  <ChevronRight className="w-6 h-6 text-orange-500 ml-auto" />
+                </div>
+                <div className="grid grid-cols-2 gap-4 flex-1">
+                  <div className="p-4 bg-orange-500/10 rounded-lg border border-orange-500/20 flex flex-col justify-center">
+                    <p className={`text-sm ${themeClasses.text.muted} mb-1`}>Today</p>
+                    <p className="text-2xl font-bold text-orange-500">
+                      {events.filter(e => {
+                        const today = new Date();
+                        const eventDate = new Date(e.start_date);
+                        return eventDate.toDateString() === today.toDateString() &&
+                               ['task', 'meeting', 'delivery', 'inspection'].includes(e.event_type) &&
+                               e.status !== 'cancelled';
+                      }).length}
+                    </p>
+                  </div>
+                  <div className="p-4 bg-blue-500/10 rounded-lg border border-blue-500/20 flex flex-col justify-center">
+                    <p className={`text-sm ${themeClasses.text.muted} mb-1`}>This week</p>
+                    <p className="text-2xl font-bold text-blue-400">{upcomingJobs.length}</p>
+                  </div>
+                </div>
+              </button>
+
+              {/* Goals Card */}
+              <button
+                onClick={() => navigate('/business-hub')}
+                className={`${themeClasses.bg.card} rounded-lg border border-zinc-300 p-5 text-left ${themeClasses.hover.bg} transition-colors w-full flex-shrink-0 min-h-[220px] flex flex-col`}
+              >
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-14 h-14 bg-orange-500/20 rounded-xl flex items-center justify-center">
+                    <Target className="w-7 h-7 text-orange-500" />
+                  </div>
+                  <div>
+                    <p className={`font-bold ${themeClasses.text.primary} text-xl`}>Goals</p>
+                    <p className={`text-sm ${themeClasses.text.muted}`}>Monthly</p>
+                  </div>
+                  <ChevronRight className="w-6 h-6 text-orange-500 ml-auto" />
+                </div>
+                <div className="grid grid-cols-2 gap-4 flex-1">
+                  <div className="p-4 bg-green-500/10 rounded-lg border border-green-500/20 flex flex-col justify-center">
+                    <p className={`text-sm ${themeClasses.text.muted} mb-1`}>Revenue</p>
+                    <p className="text-2xl font-bold text-green-400">75%</p>
+                  </div>
+                  <div className="p-4 bg-orange-500/10 rounded-lg border border-orange-500/20 flex flex-col justify-center">
+                    <p className={`text-sm ${themeClasses.text.muted} mb-1`}>Projects</p>
+                    <p className="text-2xl font-bold text-orange-500">90%</p>
+                  </div>
+                </div>
               </button>
             </div>
-          ) : (
-            <div className="divide-y divide-orange-500/10">
-              {projects.slice(0, 3).map((project) => (
-                <button
-                  key={project.id}
-                  onClick={() => navigate(`/projects-hub?id=${project.id}`)}
-                  className="w-full flex items-center gap-3 p-2 hover:bg-zinc-100 active:bg-zinc-200 transition-colors"
-                >
-                  <div className="w-6 h-6 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                    <Briefcase className="w-3 h-3 text-orange-500" />
-                  </div>
-                  <div className="flex-1 text-left">
-                    <p className="font-medium text-black">{project.name}</p>
-                    <div className="flex items-center gap-2 text-xs text-zinc-600">
-                      {project.client_name && <span>{project.client_name}</span>}
-                      <span className={`px-1.5 py-0.5 rounded font-semibold ${
-                        project.status === 'completed'
-                          ? 'bg-orange-500/20 text-orange-500' :
-                        project.status === 'in_progress' || project.status === 'active'
-                          ? 'bg-orange-500/10 text-orange-400' :
-                        'bg-zinc-800 text-zinc-400'
-                      }`}>
-                        {(project.status || 'pending')?.replace('_', ' ')}
-                      </span>
-                    </div>
-                  </div>
-                  {project.budget && (
-                    <p className="text-sm font-medium text-black">{formatCurrency(project.budget)}</p>
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
+          </div>
 
-          {projects.length > 3 && (
-            <button
-              onClick={() => navigate('/projects-hub')}
-              className="w-full p-3 text-center text-sm text-orange-500 font-medium bg-orange-500/10 hover:bg-orange-500/20 transition-colors"
-            >
-              See all {projects.length} projects <ArrowRight className="w-4 h-4 inline ml-1" />
-            </button>
-          )}
+          {/* Navigation Arrows */}
+          <button
+            onClick={() => setCurrentCardIndex(prev => Math.max(0, prev - 1))}
+            className={`absolute left-1 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 flex items-center justify-center transition-opacity ${currentCardIndex === 0 ? 'opacity-30' : 'opacity-100'}`}
+            disabled={currentCardIndex === 0}
+          >
+            <ChevronLeft className="w-5 h-5 text-white" />
+          </button>
+          <button
+            onClick={() => setCurrentCardIndex(prev => Math.min(3, prev + 1))}
+            className={`absolute right-1 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 flex items-center justify-center transition-opacity ${currentCardIndex === 3 ? 'opacity-30' : 'opacity-100'}`}
+            disabled={currentCardIndex === 3}
+          >
+            <ChevronRight className="w-5 h-5 text-white" />
+          </button>
+
+          {/* Dots Indicator */}
+          <div className="flex justify-center gap-2 mt-2">
+            {[0, 1, 2, 3].map((index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentCardIndex(index)}
+                className={`w-2 h-2 rounded-full transition-all ${
+                  currentCardIndex === index
+                    ? 'bg-orange-500 w-4'
+                    : 'bg-zinc-400'
+                }`}
+              />
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* News Article Modal */}
-      <NewsModal
-        article={selectedArticle}
-        isOpen={selectedArticle !== null}
-        onClose={() => setSelectedArticle(null)}
+      {/* Create Estimate Choice Modal */}
+      <AddChoiceModal
+        isOpen={showAddChoice}
+        onClose={() => setShowAddChoice(false)}
+        onAIChat={() => setShowAIChat(true)}
+        onManual={() => navigate('/pricing')}
+        title="Create Estimate"
+        aiLabel="AI Assistant"
+        aiDescription="Describe your project and I'll build the estimate"
+        manualLabel="Calculator"
+        manualDescription="Use the pricing calculator manually"
+      />
+
+      {/* AI Chat Popup */}
+      {showAIChat && (
+        <AIChatPopup
+          isOpen={showAIChat}
+          onClose={() => setShowAIChat(false)}
+          mode="estimates"
+        />
+      )}
+
+      {/* Vision Cam Modal */}
+      <VisionCamModal
+        isOpen={showVisionCam}
+        onClose={() => setShowVisionCam(false)}
       />
     </div>
   );

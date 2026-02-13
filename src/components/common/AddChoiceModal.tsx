@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Bot, PenTool, Sparkles } from 'lucide-react';
+import { X, Bot, FileText, Sparkles } from 'lucide-react';
 
 interface AddChoiceModalProps {
   isOpen: boolean;
@@ -35,36 +35,41 @@ const AddChoiceModal: React.FC<AddChoiceModalProps> = ({
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-sm bg-white rounded-2xl shadow-xl animate-scale-up">
+      <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-xl animate-scale-up">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-100">
-          <h3 className="text-lg font-bold text-gray-900">{title}</h3>
+        <div className="flex items-center justify-between p-6 border-b border-gray-100">
+          <h3 className="text-2xl font-bold text-gray-900">{title}</h3>
           <button
             onClick={onClose}
-            className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
+            className="p-3 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
           >
-            <X className="w-5 h-5" />
+            <X className="w-7 h-7" />
           </button>
         </div>
 
         {/* Options */}
-        <div className="p-4 space-y-3">
+        <div className="p-6 space-y-4">
           {/* AI Chat Option */}
-          <button
-            onClick={() => {
-              onClose();
-              onAIChat();
-            }}
-            className="w-full flex items-center gap-4 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border-2 border-transparent hover:border-blue-400 active:scale-[0.98] transition-all"
-          >
-            <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center flex-shrink-0">
-              <Sparkles className="w-6 h-6 text-white" />
+          <div className="relative">
+            <div className="absolute -top-3 left-4 px-3 py-1 bg-orange-500 text-white text-sm font-bold rounded-full z-10">
+              Recommended
             </div>
-            <div className="text-left">
-              <p className="font-semibold text-gray-900">{aiLabel}</p>
-              <p className="text-sm text-gray-500">{aiDescription}</p>
-            </div>
-          </button>
+            <button
+              onClick={() => {
+                onClose();
+                onAIChat();
+              }}
+              className="w-full flex items-center gap-6 p-6 bg-gradient-to-r from-orange-50 to-amber-50 rounded-2xl border-2 border-orange-400 hover:border-orange-500 active:scale-[0.98] transition-all"
+            >
+              <div className="w-20 h-20 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden">
+                <img src="/logo.png" alt="AI" className="w-20 h-20 object-contain" />
+              </div>
+              <div className="text-left">
+                <p className="font-bold text-xl text-gray-900">{aiLabel}</p>
+                <p className="text-base text-gray-500 mt-1">{aiDescription}</p>
+              </div>
+            </button>
+          </div>
 
           {/* Manual Option */}
           <button
@@ -72,14 +77,14 @@ const AddChoiceModal: React.FC<AddChoiceModalProps> = ({
               onClose();
               onManual();
             }}
-            className="w-full flex items-center gap-4 p-4 bg-gray-50 rounded-xl border-2 border-transparent hover:border-gray-300 active:scale-[0.98] transition-all"
+            className="w-full flex items-center gap-6 p-6 bg-gray-50 rounded-2xl border-2 border-transparent hover:border-gray-300 active:scale-[0.98] transition-all"
           >
-            <div className="w-12 h-12 bg-gray-200 rounded-xl flex items-center justify-center flex-shrink-0">
-              <PenTool className="w-6 h-6 text-gray-600" />
+            <div className="w-20 h-20 bg-gray-200 rounded-2xl flex items-center justify-center flex-shrink-0">
+              <FileText className="w-10 h-10 text-gray-600" />
             </div>
             <div className="text-left">
-              <p className="font-semibold text-gray-900">{manualLabel}</p>
-              <p className="text-sm text-gray-500">{manualDescription}</p>
+              <p className="font-bold text-xl text-gray-900">{manualLabel}</p>
+              <p className="text-base text-gray-500 mt-1">{manualDescription}</p>
             </div>
           </button>
         </div>
