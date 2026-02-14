@@ -28,36 +28,36 @@ const EmailTutorialModal: React.FC<EmailTutorialModalProps> = ({
       icon: Mail,
       title: 'Welcome to Email',
       description: 'Send professional emails directly to customers. Keep all your communication in one place.',
-      color: 'text-orange-500',
-      bgColor: 'bg-orange-500/20'
+      color: 'text-blue-500',
+      bgColor: 'bg-blue-500/20'
     },
     {
       icon: Send,
       title: 'Send Emails',
       description: 'Compose and send emails to customers, employees, or anyone in your contacts list.',
-      color: 'text-orange-500',
-      bgColor: 'bg-orange-500/20'
+      color: 'text-blue-500',
+      bgColor: 'bg-blue-500/20'
     },
     {
       icon: Calendar,
       title: 'Calendar Event Emails',
       description: 'Send emails about specific calendar events. Keep clients informed about upcoming appointments.',
-      color: 'text-orange-500',
-      bgColor: 'bg-orange-500/20'
+      color: 'text-blue-500',
+      bgColor: 'bg-blue-500/20'
     },
     {
       icon: Image,
       title: 'Attach Project Images',
       description: 'Include photos from your projects in emails. Show progress updates or completed work.',
-      color: 'text-orange-500',
-      bgColor: 'bg-orange-500/20'
+      color: 'text-blue-500',
+      bgColor: 'bg-blue-500/20'
     },
     {
       icon: Receipt,
       title: 'Attach Receipts',
       description: 'Send receipts and invoices as email attachments. Keep your billing professional.',
-      color: 'text-orange-500',
-      bgColor: 'bg-orange-500/20'
+      color: 'text-blue-500',
+      bgColor: 'bg-blue-500/20'
     }
   ];
 
@@ -79,8 +79,8 @@ const EmailTutorialModal: React.FC<EmailTutorialModalProps> = ({
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 p-4">
       <div className="w-full max-w-sm bg-[#1C1C1E] rounded-2xl overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-orange-500/30">
-          <span className="text-xs text-orange-500 font-semibold">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-blue-500/30">
+          <span className="text-xs text-blue-500 font-semibold">
             {currentStep + 1} of {tutorialSteps.length}
           </span>
           <button
@@ -111,7 +111,7 @@ const EmailTutorialModal: React.FC<EmailTutorialModalProps> = ({
               <div
                 key={i}
                 className={`w-2 h-2 rounded-full transition-colors ${
-                  i === currentStep ? 'bg-orange-500' : 'bg-zinc-700'
+                  i === currentStep ? 'bg-blue-500' : 'bg-zinc-700'
                 }`}
               />
             ))}
@@ -122,7 +122,7 @@ const EmailTutorialModal: React.FC<EmailTutorialModalProps> = ({
         <div className="px-4 pb-6 space-y-4">
           <button
             onClick={handleNext}
-            className="w-full py-3.5 bg-orange-500 text-white rounded-xl font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
+            className="w-full py-3.5 bg-blue-500 text-white rounded-xl font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
           >
             {currentStep < tutorialSteps.length - 1 ? (
               <>
@@ -139,7 +139,7 @@ const EmailTutorialModal: React.FC<EmailTutorialModalProps> = ({
               type="checkbox"
               checked={dontShowAgain}
               onChange={(e) => setDontShowAgain(e.target.checked)}
-              className="rounded border-zinc-600 bg-zinc-800 text-orange-500 focus:ring-orange-500"
+              className="rounded border-zinc-600 bg-zinc-800 text-blue-500 focus:ring-blue-500"
             />
             Don't show this again
           </label>

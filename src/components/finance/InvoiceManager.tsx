@@ -58,7 +58,7 @@ export default function InvoiceManager() {
       draft: { color: 'bg-gray-100 text-gray-800', icon: FileText },
       sent: { color: 'bg-blue-100 text-blue-800', icon: Clock },
       outstanding: { color: 'bg-yellow-100 text-yellow-800', icon: AlertCircle },
-      partial: { color: 'bg-orange-100 text-orange-800', icon: DollarSign },
+      partial: { color: 'bg-blue-100 text-blue-800', icon: DollarSign },
       paid: { color: 'bg-green-100 text-green-800', icon: CheckCircle },
       overdue: { color: 'bg-red-100 text-red-800', icon: AlertCircle }
     };
@@ -126,7 +126,7 @@ export default function InvoiceManager() {
                   <td className="px-3 py-4 text-sm text-gray-900">
                     ${invoice.totalAmount.toLocaleString()}
                   </td>
-                  <td className="px-3 py-4 text-sm font-medium text-orange-600">
+                  <td className="px-3 py-4 text-sm font-medium text-blue-600">
                     ${invoice.balance.toLocaleString()}
                   </td>
                   <td className="px-2 py-3 text-sm">
@@ -176,7 +176,7 @@ export default function InvoiceManager() {
                     <p className="text-sm text-gray-500">Invoice: {invoice.invoiceNumber}</p>
                     <p className="text-sm text-gray-500">Total: ${invoice.totalAmount.toLocaleString()}</p>
                     <p className="text-sm text-gray-500">Paid: ${invoice.paidAmount.toLocaleString()}</p>
-                    <p className="text-sm font-medium text-orange-600">Balance: ${invoice.balance.toLocaleString()}</p>
+                    <p className="text-sm font-medium text-blue-600">Balance: ${invoice.balance.toLocaleString()}</p>
                   </div>
 
                   <div>
@@ -309,7 +309,7 @@ export default function InvoiceManager() {
                     <p className="text-sm font-medium text-gray-700">Invoice: {invoice.invoiceNumber}</p>
                     <p className="text-sm text-gray-600">Total: ${invoice.totalAmount.toLocaleString()}</p>
                     <p className="text-sm text-green-600">Total Paid: ${invoice.paidAmount.toLocaleString()}</p>
-                    <p className="text-sm text-orange-600">Balance: ${invoice.balance.toLocaleString()}</p>
+                    <p className="text-sm text-blue-600">Balance: ${invoice.balance.toLocaleString()}</p>
                   </div>
 
                   {paymentHistory.length > 0 ? (

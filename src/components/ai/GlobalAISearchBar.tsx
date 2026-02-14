@@ -39,11 +39,11 @@ interface EstimateLineItem {
 }
 
 const modeConfig: Record<ContractorMode, { icon: React.ReactNode; label: string; color: string }> = {
-  estimating: { icon: <Calculator className="w-4 h-4" />, label: 'Estimates', color: 'text-orange-500' },
+  estimating: { icon: <Calculator className="w-4 h-4" />, label: 'Estimates', color: 'text-blue-500' },
   projects: { icon: <Briefcase className="w-4 h-4" />, label: 'Projects', color: 'text-purple-500' },
   crm: { icon: <Users className="w-4 h-4" />, label: 'Clients', color: 'text-blue-500' },
   finance: { icon: <DollarSign className="w-4 h-4" />, label: 'Finance', color: 'text-green-500' },
-  general: { icon: <Sparkles className="w-4 h-4" />, label: 'General', color: 'text-orange-500' }
+  general: { icon: <Sparkles className="w-4 h-4" />, label: 'General', color: 'text-blue-500' }
 };
 
 const GlobalAISearchBar: React.FC = () => {
@@ -260,7 +260,7 @@ const GlobalAISearchBar: React.FC = () => {
       {isExpanded && (
         <div className="flex flex-col h-full pt-[env(safe-area-inset-top)]">
           {/* Header */}
-          <div className={`flex items-center justify-between px-4 py-5 ${themeClasses.bg.secondary} border-b ${theme === 'light' ? 'border-orange-300' : 'border-orange-500/30'}`}>
+          <div className={`flex items-center justify-between px-4 py-5 ${themeClasses.bg.secondary} border-b ${theme === 'light' ? 'border-blue-300' : 'border-blue-500/30'}`}>
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 rounded-xl flex items-center justify-center overflow-hidden">
                 <img src="/logo.png" alt="ContractorAI" className="w-14 h-14 object-cover" />
@@ -295,8 +295,8 @@ const GlobalAISearchBar: React.FC = () => {
           <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center px-4">
-                <div className="w-16 h-16 bg-orange-500/20 rounded-2xl flex items-center justify-center mb-4">
-                  <Sparkles className="w-8 h-8 text-orange-500" />
+                <div className="w-16 h-16 bg-blue-500/20 rounded-2xl flex items-center justify-center mb-4">
+                  <Sparkles className="w-8 h-8 text-blue-500" />
                 </div>
                 <h3 className={`text-lg font-semibold ${themeClasses.text.primary} mb-2`}>How can I help?</h3>
                 <p className={`text-sm ${themeClasses.text.secondary} max-w-xs`}>
@@ -317,7 +317,7 @@ const GlobalAISearchBar: React.FC = () => {
                         setInput(suggestion.text);
                         setCurrentMode(suggestion.mode);
                       }}
-                      className={`p-3 text-left text-sm ${themeClasses.text.primary} ${themeClasses.bg.card} rounded-lg border ${theme === 'light' ? 'border-orange-300 hover:border-orange-400' : 'border-orange-500/20 hover:border-orange-500/50'} active:scale-[0.98] transition-all`}
+                      className={`p-3 text-left text-sm ${themeClasses.text.primary} ${themeClasses.bg.card} rounded-lg border ${theme === 'light' ? 'border-blue-300 hover:border-blue-400' : 'border-blue-500/20 hover:border-blue-500/50'} active:scale-[0.98] transition-all`}
                     >
                       {suggestion.text}
                     </button>
@@ -333,7 +333,7 @@ const GlobalAISearchBar: React.FC = () => {
                   <div
                     className={`max-w-[85%] rounded-2xl px-4 py-3 ${
                       message.role === 'user'
-                        ? 'bg-orange-500 text-white'
+                        ? 'bg-blue-500 text-white'
                         : `${themeClasses.bg.card} ${themeClasses.text.primary}`
                     }`}
                   >
@@ -351,7 +351,7 @@ const GlobalAISearchBar: React.FC = () => {
               <div className="flex justify-start">
                 <div className={`${themeClasses.bg.card} rounded-2xl px-4 py-3`}>
                   <div className="flex items-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin text-orange-500" />
+                    <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
                     <span className={`text-sm ${themeClasses.text.secondary}`}>Thinking...</span>
                   </div>
                 </div>
@@ -366,11 +366,11 @@ const GlobalAISearchBar: React.FC = () => {
             <div className={`border-t ${themeClasses.border.primary} ${themeClasses.bg.secondary} px-4 py-3`}>
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-orange-500" />
+                  <FileText className="w-4 h-4 text-blue-500" />
                   <span className={`font-semibold ${themeClasses.text.primary} text-sm`}>Current Estimate</span>
                   <span className={`text-xs ${themeClasses.text.secondary}`}>({currentEstimate.length} items)</span>
                 </div>
-                <span className="font-bold text-orange-500">{formatCurrency(totalEstimate)}</span>
+                <span className="font-bold text-blue-500">{formatCurrency(totalEstimate)}</span>
               </div>
 
               <div className="max-h-32 overflow-y-auto space-y-1 mb-3">
@@ -395,7 +395,7 @@ const GlobalAISearchBar: React.FC = () => {
 
               <button
                 onClick={handleGenerateEstimate}
-                className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-4 rounded-xl transition-colors active:scale-[0.98]"
+                className="w-full flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-4 rounded-xl transition-colors active:scale-[0.98]"
               >
                 <FileText className="w-5 h-5" />
                 Create Estimate
@@ -414,13 +414,13 @@ const GlobalAISearchBar: React.FC = () => {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Ask anything..."
-                  className={`w-full px-4 py-3 ${themeClasses.bg.card} ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} rounded-xl border ${theme === 'light' ? 'border-orange-300 focus:border-orange-500' : 'border-orange-500/30 focus:border-orange-500'} focus:outline-none text-sm`}
+                  className={`w-full px-4 py-3 ${themeClasses.bg.card} ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} rounded-xl border ${theme === 'light' ? 'border-blue-300 focus:border-blue-500' : 'border-blue-500/30 focus:border-blue-500'} focus:outline-none text-sm`}
                 />
               </div>
               <button
                 type="submit"
                 disabled={!input.trim() || isLoading}
-                className="w-11 h-11 bg-orange-500 rounded-xl flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-transform"
+                className="w-11 h-11 bg-blue-500 rounded-xl flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-transform"
               >
                 {isLoading ? (
                   <Loader2 className="w-5 h-5 text-white animate-spin" />

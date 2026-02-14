@@ -52,7 +52,7 @@ const categoryConfig: Record<string, { color: string; icon: string }> = {
   countertops: { color: 'stone', icon: '🪨' },
   fixtures: { color: 'blue', icon: '🚿' },
   appliances: { color: 'zinc', icon: '🔌' },
-  flooring: { color: 'orange', icon: '🪵' },
+  flooring: { color: 'blue', icon: '🪵' },
   electrical: { color: 'yellow', icon: '⚡' },
   plumbing: { color: 'cyan', icon: '🔧' },
   other: { color: 'gray', icon: '📦' }

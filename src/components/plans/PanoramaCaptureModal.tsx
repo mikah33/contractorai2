@@ -337,7 +337,7 @@ const PanoramaCaptureModal: React.FC<PanoramaCaptureModalProps> = ({
                   pos.captured
                     ? 'bg-green-500 border-green-300'
                     : isHighlighted
-                    ? 'bg-orange-500 border-orange-300'
+                    ? 'bg-blue-500 border-blue-300'
                     : pos.zone === 'top'
                     ? 'bg-cyan-500/80 border-cyan-300'
                     : pos.zone === 'bottom'
@@ -372,10 +372,10 @@ const PanoramaCaptureModal: React.FC<PanoramaCaptureModalProps> = ({
             highlightedPosition
               ? highlightedPosition.captured
                 ? 'border-green-400 bg-green-500/10'
-                : 'border-orange-400 bg-orange-500/10'
+                : 'border-blue-400 bg-blue-500/10'
               : 'border-white/30'
           }`}>
-            <div className={`w-4 h-4 rounded-full ${highlightedPosition ? 'bg-orange-500' : 'bg-white/40'}`} />
+            <div className={`w-4 h-4 rounded-full ${highlightedPosition ? 'bg-blue-500' : 'bg-white/40'}`} />
           </div>
         </div>
       )}
@@ -403,7 +403,7 @@ const PanoramaCaptureModal: React.FC<PanoramaCaptureModalProps> = ({
           <div className="mt-3 flex gap-0.5">
             {positions.map(p => (
               <div key={p.id} className={`flex-1 h-1.5 rounded-full ${
-                p.captured ? 'bg-green-500' : highlightedPosition?.id === p.id ? 'bg-orange-500' : 'bg-white/30'
+                p.captured ? 'bg-green-500' : highlightedPosition?.id === p.id ? 'bg-blue-500' : 'bg-white/30'
               }`} />
             ))}
           </div>
@@ -460,7 +460,7 @@ const PanoramaCaptureModal: React.FC<PanoramaCaptureModalProps> = ({
             <button
               onClick={processPanorama}
               disabled={isProcessing}
-              className="w-full mt-4 py-3 bg-orange-500 text-white font-bold rounded-xl flex items-center justify-center gap-2"
+              className="w-full mt-4 py-3 bg-blue-500 text-white font-bold rounded-xl flex items-center justify-center gap-2"
             >
               {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
               {isProcessing ? 'Processing...' : 'Create 360° Panorama'}
@@ -477,7 +477,7 @@ const PanoramaCaptureModal: React.FC<PanoramaCaptureModalProps> = ({
             <p className="text-zinc-400 text-sm mb-4">Replace position {showRetakeConfirm}?</p>
             <div className="flex gap-3">
               <button onClick={() => setShowRetakeConfirm(null)} className="flex-1 py-2 bg-zinc-700 text-white rounded-lg">Cancel</button>
-              <button onClick={confirmRetake} className="flex-1 py-2 bg-orange-500 text-white rounded-lg">Retake</button>
+              <button onClick={confirmRetake} className="flex-1 py-2 bg-blue-500 text-white rounded-lg">Retake</button>
             </div>
           </div>
         </div>
@@ -487,8 +487,8 @@ const PanoramaCaptureModal: React.FC<PanoramaCaptureModalProps> = ({
       {showInstructions && (
         <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/90">
           <div className="bg-zinc-800 rounded-2xl p-6 mx-4 max-w-sm text-center">
-            <div className="w-20 h-20 bg-orange-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Camera className="w-10 h-10 text-orange-500" />
+            <div className="w-20 h-20 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Camera className="w-10 h-10 text-blue-500" />
             </div>
             <h3 className="text-white font-bold text-xl mb-3">360° Capture</h3>
             <div className="text-zinc-300 text-sm mb-6 text-left space-y-2">
@@ -498,7 +498,7 @@ const PanoramaCaptureModal: React.FC<PanoramaCaptureModalProps> = ({
               <p>• <strong className="text-purple-400">Purple dots (13-16):</strong> Point DOWN</p>
               <p>• Point camera at dot → capture</p>
             </div>
-            <button onClick={handleStart} className="w-full py-3 bg-orange-500 text-white rounded-xl font-bold">
+            <button onClick={handleStart} className="w-full py-3 bg-blue-500 text-white rounded-xl font-bold">
               Start Capturing
             </button>
           </div>

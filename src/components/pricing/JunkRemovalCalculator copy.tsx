@@ -255,7 +255,7 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   return (
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
       <div className="flex items-center mb-6">
-        <Trash className="h-6 w-6 text-orange-500 mr-2" />
+        <Trash className="h-6 w-6 text-blue-500 mr-2" />
         <h2 className="text-xl font-bold text-slate-800">Junk Removal Calculator</h2>
       </div>
       
@@ -390,7 +390,7 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
 
                 <div className="flex items-center space-x-4">
                   {item.requiresSpecialDisposal && (
-                    <span className="text-orange-500 text-sm">
+                    <span className="text-blue-500 text-sm">
                       Requires special disposal
                     </span>
                   )}
@@ -426,7 +426,7 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 step="0.1"
                 value={distance}
                 onChange={(e) => setDistance(e.target.value ? Number(e.target.value) : '')}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Enter distance in miles"
               />
             </div>
@@ -439,7 +439,7 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="accessDifficulty"
                 value={accessDifficulty}
                 onChange={(e) => setAccessDifficulty(e.target.value as 'easy' | 'moderate' | 'difficult')}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="easy">Easy Access</option>
                 <option value="moderate">Moderate Access</option>
@@ -458,7 +458,7 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 max="10"
                 value={floors}
                 onChange={(e) => setFloors(Number(e.target.value))}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
@@ -468,7 +468,7 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="needsLabor"
                 checked={needsLabor}
                 onChange={(e) => setNeedsLabor(e.target.checked)}
-                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
               />
               <label htmlFor="needsLabor" className="ml-2 block text-sm font-medium text-slate-700">
                 Need Loading Assistance
@@ -485,7 +485,7 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="laborers"
                 value={laborers}
                 onChange={(e) => setLaborers(Number(e.target.value) as 2 | 3 | 4)}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value={2}>2 Workers</option>
                 <option value={3}>3 Workers</option>
@@ -504,7 +504,7 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="includeDisposal"
                 checked={includeDisposal}
                 onChange={(e) => setIncludeDisposal(e.target.checked)}
-                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
               />
               <label htmlFor="includeDisposal" className="ml-2 block text-sm font-medium text-slate-700">
                 Include Disposal Fees
@@ -517,7 +517,7 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="needsPermit"
                 checked={needsPermit}
                 onChange={(e) => setNeedsPermit(e.target.checked)}
-                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
               />
               <label htmlFor="needsPermit" className="ml-2 block text-sm font-medium text-slate-700">
                 Requires Disposal Permit
@@ -530,7 +530,7 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="isHazardous"
                 checked={isHazardous}
                 onChange={(e) => setIsHazardous(e.target.checked)}
-                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
               />
               <label htmlFor="isHazardous" className="ml-2 block text-sm font-medium text-slate-700">
                 Contains Hazardous Materials
@@ -545,7 +545,7 @@ const JunkRemovalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         disabled={!isFormValid}
         className={`w-full py-3 px-4 rounded-md font-medium text-white ${
           isFormValid
-            ? 'bg-orange-500 hover:bg-orange-600 transition-colors'
+            ? 'bg-blue-500 hover:bg-blue-600 transition-colors'
             : 'bg-slate-300 cursor-not-allowed'
         }`}
       >

@@ -463,11 +463,11 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     return (
       <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
         <div className="flex items-center mb-6">
-          <Grid className="h-6 w-6 text-orange-500 mr-2" />
+          <Grid className="h-6 w-6 text-blue-500 mr-2" />
           <h2 className="text-xl font-bold text-slate-800">{t('calculators.flooring.title')}</h2>
         </div>
         <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading custom configuration...</p>
         </div>
       </div>
@@ -479,7 +479,7 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     return (
       <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
         <div className="flex items-center mb-6">
-          <Grid className="h-6 w-6 text-orange-500 mr-2" />
+          <Grid className="h-6 w-6 text-blue-500 mr-2" />
           <h2 className="text-xl font-bold text-slate-800">{t('calculators.flooring.title')}</h2>
         </div>
         <div className="text-center py-12">
@@ -496,7 +496,7 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   return (
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
       <div className="flex items-center mb-6">
-        <Grid className="h-6 w-6 text-orange-500 mr-2" />
+        <Grid className="h-6 w-6 text-blue-500 mr-2" />
         <h2 className="text-xl font-bold text-slate-800">{t('calculators.flooring.title')}</h2>
       </div>
 
@@ -514,7 +514,7 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               type="button"
               className={`px-4 py-2 text-sm font-medium rounded-l-lg ${
                 inputType === 'dimensions'
-                  ? 'bg-orange-500 text-white'
+                  ? 'bg-blue-500 text-white'
                   : 'bg-white text-slate-700 hover:bg-slate-100'
               } border border-slate-300`}
               onClick={() => setInputType('dimensions')}
@@ -525,7 +525,7 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               type="button"
               className={`px-4 py-2 text-sm font-medium rounded-r-lg ${
                 inputType === 'area'
-                  ? 'bg-orange-500 text-white'
+                  ? 'bg-blue-500 text-white'
                   : 'bg-white text-slate-700 hover:bg-slate-100'
               } border border-slate-300`}
               onClick={() => setInputType('area')}
@@ -548,7 +548,7 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 step="0.1"
                 value={length}
                 onChange={(e) => setLength(e.target.value ? Number(e.target.value) : '')}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder={t('calculators.flooring.lengthPlaceholder')}
               />
             </div>
@@ -564,7 +564,7 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 step="0.1"
                 value={width}
                 onChange={(e) => setWidth(e.target.value ? Number(e.target.value) : '')}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder={t('calculators.flooring.widthPlaceholder')}
               />
             </div>
@@ -581,7 +581,7 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               step="0.1"
               value={area}
               onChange={(e) => setArea(e.target.value ? Number(e.target.value) : '')}
-              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder={t('calculators.flooring.totalAreaPlaceholder')}
             />
           </div>
@@ -604,7 +604,7 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 setCustomPricePerBox('');
                 setCustomSqftPerBox('');
               }}
-              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="hardwood">{t('calculators.flooring.hardwood')}</option>
               <option value="engineered">{t('calculators.flooring.engineered')}</option>
@@ -627,7 +627,7 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 setCustomPricePerBox('');
                 setCustomSqftPerBox('');
               }}
-              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               {activeFlooringOptions[flooringType]?.map((option, index) => (
                 <option key={index} value={index}>
@@ -649,7 +649,7 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   id="customName"
                   value={customName}
                   onChange={(e) => setCustomName(e.target.value)}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder={t('calculators.flooring.productNamePlaceholder')}
                 />
               </div>
@@ -666,7 +666,7 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                     step="0.01"
                     value={customPricePerBox}
                     onChange={(e) => setCustomPricePerBox(e.target.value ? Number(e.target.value) : '')}
-                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder={t('calculators.flooring.pricePerBoxPlaceholder')}
                   />
                 </div>
@@ -682,7 +682,7 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                     step="0.01"
                     value={customSqftPerBox}
                     onChange={(e) => setCustomSqftPerBox(e.target.value ? Number(e.target.value) : '')}
-                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder={t('calculators.flooring.sqftPerBoxPlaceholder')}
                   />
                 </div>
@@ -702,7 +702,7 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="installPattern"
                 value={installPattern}
                 onChange={(e) => setInstallPattern(e.target.value as InstallPattern)}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 {(activeFlooringOptions[flooringType]?.[selectedFlooring]?.patterns || ['straight']).map(pattern => (
                   <option key={pattern} value={pattern}>
@@ -720,7 +720,7 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="wasteFactor"
                 value={wasteFactor}
                 onChange={(e) => setWasteFactor(Number(e.target.value) as 10 | 15 | 20)}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value={10}>{t('calculators.flooring.wasteFactor10')}</option>
                 <option value={15}>{t('calculators.flooring.wasteFactor15')}</option>
@@ -738,7 +738,7 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="includeUnderlayment"
                 checked={includeUnderlayment}
                 onChange={(e) => setIncludeUnderlayment(e.target.checked)}
-                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
               />
               <label htmlFor="includeUnderlayment" className="ml-2 block text-sm font-medium text-slate-700">
                 {t('calculators.flooring.includeUnderlayment')}
@@ -754,7 +754,7 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   id="underlaymentType"
                   value={underlaymentType}
                   onChange={(e) => setUnderlaymentType(e.target.value as UnderlaymentType)}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   {Object.entries(activeUnderlaymentOptions).map(([value, option]) => (
                     <option key={value} value={value}>
@@ -774,7 +774,7 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               id="includeTransitionStrips"
               checked={includeTransitionStrips}
               onChange={(e) => setIncludeTransitionStrips(e.target.checked)}
-              className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+              className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
             />
             <label htmlFor="includeTransitionStrips" className="ml-2 block text-sm font-medium text-slate-700">
               {t('calculators.flooring.includeTransitionStrips')}
@@ -793,7 +793,7 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 step="0.1"
                 value={transitionStripLength}
                 onChange={(e) => setTransitionStripLength(e.target.value ? Number(e.target.value) : '')}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder={t('calculators.flooring.transitionStripLengthPlaceholder')}
               />
             </div>
@@ -806,7 +806,7 @@ const FlooringCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         disabled={!isFormValid}
         className={`w-full py-3 px-4 rounded-md font-medium text-white ${
           isFormValid
-            ? 'bg-orange-500 hover:bg-orange-600 transition-colors'
+            ? 'bg-blue-500 hover:bg-blue-600 transition-colors'
             : 'bg-slate-300 cursor-not-allowed'
         }`}
       >

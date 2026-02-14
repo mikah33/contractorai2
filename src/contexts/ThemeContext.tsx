@@ -86,7 +86,7 @@ export const getThemeClasses = (theme: Theme) => ({
 
   // Borders
   border: {
-    primary: theme === 'light' ? 'border-gray-200' : 'border-orange-500/30',
+    primary: theme === 'light' ? 'border-gray-200' : 'border-blue-500/30',
     secondary: theme === 'light' ? 'border-gray-300' : 'border-[#3A3A3C]',
     input: theme === 'light' ? 'border-gray-200' : 'border-[#3A3A3C]'
   },
@@ -105,8 +105,8 @@ export const getThemeClasses = (theme: Theme) => ({
 
   // Focus states
   focus: {
-    ring: theme === 'light' ? 'focus:ring-blue-500' : 'focus:ring-orange-500',
-    border: theme === 'light' ? 'focus:border-blue-500' : 'focus:border-orange-500'
+    ring: theme === 'light' ? 'focus:ring-blue-500' : 'focus:ring-blue-500',
+    border: theme === 'light' ? 'focus:border-blue-500' : 'focus:border-blue-500'
   },
 
   // Button styles

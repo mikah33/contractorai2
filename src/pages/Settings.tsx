@@ -3,8 +3,9 @@ import {
   Save, Bell, Lock, User, Loader2, Calendar, Upload, X, Globe, Code,
   Trash2, AlertTriangle, CreditCard, CheckCircle, ExternalLink, XCircle,
   Clock, RefreshCw, ChevronRight, Mail, Building2, Phone, MapPin, FileText,
-  Settings as SettingsIcon, LogOut, Eye, BookOpen, Home, ClipboardList, Moon
+  Settings as SettingsIcon, LogOut, Eye, BookOpen, Home, ClipboardList, Moon, Megaphone
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { useData } from '../contexts/DataContext';
@@ -26,13 +27,14 @@ interface StripeConnectStatus {
   businessName?: string;
 }
 
-type SettingsSection = 'main' | 'profile' | 'notifications' | 'security' | 'payments' | 'language' | 'email' | 'tutorials' | 'theme' | 'danger';
+type SettingsSection = 'main' | 'profile' | 'notifications' | 'security' | 'payments' | 'language' | 'email' | 'tutorials' | 'theme' | 'danger' | 'marketing';
 
 const Settings = () => {
+  const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const { user, signOut } = useAuthStore();
   const { profile, loading: dataLoading, refreshProfile } = useData();
-  const { theme } = useTheme();
+  const { theme, toggleTheme } = useTheme();
   const themeClasses = getThemeClasses(theme);
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
@@ -568,18 +570,40 @@ const Settings = () => {
     );
   }
 
-  // Main menu items
-  const menuItems = [
-    { id: 'profile' as SettingsSection, icon: User, label: 'Profile & Business', description: 'Name, company, logo, terms', bgColor: 'bg-orange-500/20', iconColor: 'text-orange-500' },
-    { id: 'notifications' as SettingsSection, icon: Bell, label: 'Notifications', description: 'Calendar reminders, alerts', bgColor: 'bg-orange-500/20', iconColor: 'text-orange-500' },
-    { id: 'theme' as SettingsSection, icon: Moon, label: 'Appearance', description: theme === 'light' ? 'Light mode' : 'Dark mode', bgColor: 'bg-orange-500/20', iconColor: 'text-orange-500' },
-    { id: 'payments' as SettingsSection, icon: CreditCard, label: 'Payments', description: stripeStatus.connected ? 'Stripe connected' : 'Connect Stripe', bgColor: 'bg-orange-500/20', iconColor: 'text-orange-500' },
-    { id: 'security' as SettingsSection, icon: Lock, label: 'Security', description: 'Password, authentication', bgColor: 'bg-orange-500/20', iconColor: 'text-orange-500' },
-    { id: 'language' as SettingsSection, icon: Globe, label: 'Language', description: i18n.language === 'es' ? 'Español' : 'English', bgColor: 'bg-orange-500/20', iconColor: 'text-orange-500' },
-    { id: 'email' as SettingsSection, icon: Mail, label: 'Business Email', description: 'Professional email address', bgColor: 'bg-orange-500/20', iconColor: 'text-orange-500' },
-    { id: 'tutorials' as SettingsSection, icon: BookOpen, label: 'Tutorials', description: 'Reset onboarding guides', bgColor: 'bg-orange-500/20', iconColor: 'text-orange-500' },
-    { id: 'danger' as SettingsSection, icon: Trash2, label: 'Delete Account', description: 'Permanently remove data', bgColor: 'bg-orange-500/20', iconColor: 'text-red-500' },
+  // Categorized menu items
+  const menuCategories = [
+    {
+      title: 'Account',
+      items: [
+        { id: 'profile' as SettingsSection, icon: User, label: 'Profile & Business', description: 'Name, company, logo, terms', bgColor: 'bg-blue-500/20', iconColor: 'text-blue-500' },
+        { id: 'security' as SettingsSection, icon: Lock, label: 'Security', description: 'Password, authentication', bgColor: 'bg-blue-500/20', iconColor: 'text-blue-500' },
+      ]
+    },
+    {
+      title: 'Integrations',
+      items: [
+        { id: 'payments' as SettingsSection, icon: CreditCard, label: 'Payments', description: stripeStatus.connected ? 'Stripe connected' : 'Connect Stripe', bgColor: 'bg-blue-500/20', iconColor: 'text-blue-500' },
+        { id: 'email' as SettingsSection, icon: Mail, label: 'Business Email', description: 'Professional email address', bgColor: 'bg-blue-500/20', iconColor: 'text-blue-500' },
+      ]
+    },
+    {
+      title: 'Preferences',
+      items: [
+        { id: 'notifications' as SettingsSection, icon: Bell, label: 'Notifications', description: 'Calendar reminders, alerts', bgColor: 'bg-blue-500/20', iconColor: 'text-blue-500' },
+        { id: 'theme' as SettingsSection, icon: Moon, label: 'Appearance', description: theme === 'light' ? 'Light mode' : 'Dark mode', bgColor: 'bg-blue-500/20', iconColor: 'text-blue-500', hasToggle: true },
+        { id: 'tutorials' as SettingsSection, icon: BookOpen, label: 'Tutorials', description: 'Reset onboarding guides', bgColor: 'bg-blue-500/20', iconColor: 'text-blue-500' },
+      ]
+    },
+    {
+      title: 'More',
+      items: [
+        { id: 'marketing' as SettingsSection, icon: Megaphone, label: 'Marketing', description: 'Grow your business', bgColor: 'bg-blue-500/20', iconColor: 'text-blue-500', navigateTo: '/ad-analyzer' },
+      ]
+    },
   ];
+
+  // Danger zone item (separate)
+  const dangerItem = { id: 'danger' as SettingsSection, icon: Trash2, label: 'Delete Account', description: 'Permanently remove data', bgColor: 'bg-red-500/10', iconColor: 'text-red-500' };
 
   // Render section content
   const renderSection = () => {
@@ -672,7 +696,7 @@ const Settings = () => {
                   </div>
                 )}
                 <label className="flex-1 cursor-pointer">
-                  <div className="px-4 py-2.5 bg-orange-500/20 rounded-lg text-center font-medium text-orange-500 active:scale-95 transition-transform">
+                  <div className="px-4 py-2.5 bg-blue-500/20 rounded-lg text-center font-medium text-blue-500 active:scale-95 transition-transform">
                     {uploadingLogo ? 'Uploading...' : logoUrl ? 'Change' : 'Upload'}
                   </div>
                   <input
@@ -718,8 +742,8 @@ const Settings = () => {
             <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                    <Calendar className="w-5 h-5 text-orange-500" />
+                  <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                    <Calendar className="w-5 h-5 text-blue-500" />
                   </div>
                   <div>
                     <p className={`font-semibold ${themeClasses.text.primary}`}>Calendar Reminders</p>
@@ -729,7 +753,7 @@ const Settings = () => {
                 <button
                   onClick={() => handleNotificationChange('calendarReminders')}
                   className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
-                    notifications.calendarReminders ? 'bg-orange-500' : 'bg-zinc-700'
+                    notifications.calendarReminders ? 'bg-blue-500' : 'bg-zinc-700'
                   }`}
                 >
                   <span
@@ -745,8 +769,8 @@ const Settings = () => {
             <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                    <AlertTriangle className="w-5 h-5 text-orange-500" />
+                  <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                    <AlertTriangle className="w-5 h-5 text-blue-500" />
                   </div>
                   <div>
                     <p className={`font-semibold ${themeClasses.text.primary}`}>Security Alerts</p>
@@ -756,7 +780,7 @@ const Settings = () => {
                 <button
                   onClick={() => handleNotificationChange('securityAlerts')}
                   className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
-                    notifications.securityAlerts ? 'bg-orange-500' : 'bg-zinc-700'
+                    notifications.securityAlerts ? 'bg-blue-500' : 'bg-zinc-700'
                   }`}
                 >
                   <span
@@ -796,7 +820,7 @@ const Settings = () => {
                 <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <CheckCircle className="w-5 h-5 text-orange-500" />
+                      <CheckCircle className="w-5 h-5 text-blue-500" />
                       <span className={`font-semibold ${themeClasses.text.primary}`}>Stripe Connected</span>
                     </div>
                     <button
@@ -817,13 +841,13 @@ const Settings = () => {
 
                   <div className="flex gap-3">
                     <span className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${
-                      stripeStatus.chargesEnabled ? 'bg-orange-500/20 text-orange-500' : `${themeClasses.bg.secondary} ${themeClasses.text.secondary}`
+                      stripeStatus.chargesEnabled ? 'bg-blue-500/20 text-blue-500' : `${themeClasses.bg.secondary} ${themeClasses.text.secondary}`
                     }`}>
                       {stripeStatus.chargesEnabled ? <CheckCircle className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
                       {stripeStatus.chargesEnabled ? 'Charges Active' : 'Charges Pending'}
                     </span>
                     <span className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${
-                      stripeStatus.payoutsEnabled ? 'bg-orange-500/20 text-orange-500' : `${themeClasses.bg.secondary} ${themeClasses.text.secondary}`
+                      stripeStatus.payoutsEnabled ? 'bg-blue-500/20 text-blue-500' : `${themeClasses.bg.secondary} ${themeClasses.text.secondary}`
                     }`}>
                       {stripeStatus.payoutsEnabled ? <CheckCircle className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
                       {stripeStatus.payoutsEnabled ? 'Payouts Active' : 'Payouts Pending'}
@@ -855,8 +879,8 @@ const Settings = () => {
                 {/* Not Connected Info */}
                 <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-5`}>
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                      <CreditCard className="w-6 h-6 text-orange-500" />
+                    <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                      <CreditCard className="w-6 h-6 text-blue-500" />
                     </div>
                     <div>
                       <p className={`font-semibold ${themeClasses.text.primary}`}>Accept Payments Online</p>
@@ -867,7 +891,7 @@ const Settings = () => {
                   <ul className="space-y-2 mb-4">
                     {['Accept credit card payments', 'Send payment links to customers', 'Get paid faster online', 'Track payments in one place'].map((item, i) => (
                       <li key={i} className={`flex items-center gap-2 text-sm ${themeClasses.text.secondary}`}>
-                        <CheckCircle className="w-4 h-4 text-orange-500" />
+                        <CheckCircle className="w-4 h-4 text-blue-500" />
                         {item}
                       </li>
                     ))}
@@ -904,8 +928,8 @@ const Settings = () => {
               className={`w-full ${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4 active:scale-[0.98] transition-transform`}
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                  <Lock className="w-5 h-5 text-orange-500" />
+                <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                  <Lock className="w-5 h-5 text-blue-500" />
                 </div>
                 <div className="flex-1 text-left">
                   <p className={`font-semibold ${themeClasses.text.primary}`}>Change Password</p>
@@ -917,8 +941,8 @@ const Settings = () => {
 
             <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                  <CheckCircle className="w-5 h-5 text-orange-500" />
+                <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                  <CheckCircle className="w-5 h-5 text-blue-500" />
                 </div>
                 <div className="flex-1">
                   <p className={`font-semibold ${themeClasses.text.primary}`}>Email Verified</p>
@@ -950,13 +974,13 @@ const Settings = () => {
                     }
                   }}
                   className={`w-full flex items-center gap-3 p-4 border-b ${themeClasses.border.secondary} last:border-0 ${themeClasses.button.secondaryHover} transition-colors ${
-                    i18n.language === lang.code ? 'bg-orange-500/10' : ''
+                    i18n.language === lang.code ? 'bg-blue-500/10' : ''
                   }`}
                 >
                   <span className="text-2xl">{lang.flag}</span>
                   <span className={`flex-1 text-left font-medium ${themeClasses.text.primary}`}>{lang.label}</span>
                   {i18n.language === lang.code && (
-                    <CheckCircle className="w-5 h-5 text-orange-500" />
+                    <CheckCircle className="w-5 h-5 text-blue-500" />
                   )}
                 </button>
               ))}
@@ -970,8 +994,8 @@ const Settings = () => {
             {/* Theme Description */}
             <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                  <Moon className="w-5 h-5 text-orange-500" />
+                <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                  <Moon className="w-5 h-5 text-blue-500" />
                 </div>
                 <div>
                   <h3 className={`font-semibold ${themeClasses.text.primary}`}>App Appearance</h3>
@@ -1026,8 +1050,8 @@ const Settings = () => {
             <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                    <Home className="w-5 h-5 text-orange-500" />
+                  <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                    <Home className="w-5 h-5 text-blue-500" />
                   </div>
                   <div>
                     <p className={`font-semibold ${themeClasses.text.primary}`}>Dashboard Tutorial</p>
@@ -1043,7 +1067,7 @@ const Settings = () => {
                     }
                   }}
                   className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
-                    showDashboardTutorial ? 'bg-orange-500' : 'bg-zinc-700'
+                    showDashboardTutorial ? 'bg-blue-500' : 'bg-zinc-700'
                   }`}
                 >
                   <span
@@ -1082,7 +1106,7 @@ const Settings = () => {
                     }
                   }}
                   className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
-                    showVisionCamTutorial ? 'bg-orange-500' : 'bg-zinc-700'
+                    showVisionCamTutorial ? 'bg-blue-500' : 'bg-zinc-700'
                   }`}
                 >
                   <span
@@ -1098,8 +1122,8 @@ const Settings = () => {
             <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                    <ClipboardList className="w-5 h-5 text-orange-500" />
+                  <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                    <ClipboardList className="w-5 h-5 text-blue-500" />
                   </div>
                   <div>
                     <p className={`font-semibold ${themeClasses.text.primary}`}>Tasks Tutorial</p>
@@ -1115,7 +1139,7 @@ const Settings = () => {
                     }
                   }}
                   className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
-                    showTasksTutorial ? 'bg-orange-500' : 'bg-zinc-700'
+                    showTasksTutorial ? 'bg-blue-500' : 'bg-zinc-700'
                   }`}
                 >
                   <span
@@ -1131,8 +1155,8 @@ const Settings = () => {
             <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                    <FileText className="w-5 h-5 text-orange-500" />
+                  <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-blue-500" />
                   </div>
                   <div>
                     <p className={`font-semibold ${themeClasses.text.primary}`}>Estimating Tutorial</p>
@@ -1148,7 +1172,7 @@ const Settings = () => {
                     }
                   }}
                   className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
-                    showEstimatingTutorial ? 'bg-orange-500' : 'bg-zinc-700'
+                    showEstimatingTutorial ? 'bg-blue-500' : 'bg-zinc-700'
                   }`}
                 >
                   <span
@@ -1164,8 +1188,8 @@ const Settings = () => {
             <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                    <Building2 className="w-5 h-5 text-orange-500" />
+                  <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                    <Building2 className="w-5 h-5 text-blue-500" />
                   </div>
                   <div>
                     <p className={`font-semibold ${themeClasses.text.primary}`}>Projects Tutorial</p>
@@ -1181,7 +1205,7 @@ const Settings = () => {
                     }
                   }}
                   className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
-                    showProjectsTutorial ? 'bg-orange-500' : 'bg-zinc-700'
+                    showProjectsTutorial ? 'bg-blue-500' : 'bg-zinc-700'
                   }`}
                 >
                   <span
@@ -1197,8 +1221,8 @@ const Settings = () => {
             <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                    <CreditCard className="w-5 h-5 text-orange-500" />
+                  <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                    <CreditCard className="w-5 h-5 text-blue-500" />
                   </div>
                   <div>
                     <p className={`font-semibold ${themeClasses.text.primary}`}>Finance Tutorial</p>
@@ -1214,7 +1238,7 @@ const Settings = () => {
                     }
                   }}
                   className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
-                    showFinanceTutorial ? 'bg-orange-500' : 'bg-zinc-700'
+                    showFinanceTutorial ? 'bg-blue-500' : 'bg-zinc-700'
                   }`}
                 >
                   <span
@@ -1230,8 +1254,8 @@ const Settings = () => {
             <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                    <FileText className="w-5 h-5 text-orange-500" />
+                  <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-blue-500" />
                   </div>
                   <div>
                     <p className={`font-semibold ${themeClasses.text.primary}`}>Invoices Tutorial</p>
@@ -1247,7 +1271,7 @@ const Settings = () => {
                     }
                   }}
                   className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
-                    showPaymentsTutorial ? 'bg-orange-500' : 'bg-zinc-700'
+                    showPaymentsTutorial ? 'bg-blue-500' : 'bg-zinc-700'
                   }`}
                 >
                   <span
@@ -1263,8 +1287,8 @@ const Settings = () => {
             <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                    <User className="w-5 h-5 text-orange-500" />
+                  <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                    <User className="w-5 h-5 text-blue-500" />
                   </div>
                   <div>
                     <p className={`font-semibold ${themeClasses.text.primary}`}>Teams Tutorial</p>
@@ -1280,7 +1304,7 @@ const Settings = () => {
                     }
                   }}
                   className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
-                    showTeamsTutorial ? 'bg-orange-500' : 'bg-zinc-700'
+                    showTeamsTutorial ? 'bg-blue-500' : 'bg-zinc-700'
                   }`}
                 >
                   <span
@@ -1296,8 +1320,8 @@ const Settings = () => {
             <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                    <Mail className="w-5 h-5 text-orange-500" />
+                  <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                    <Mail className="w-5 h-5 text-blue-500" />
                   </div>
                   <div>
                     <p className={`font-semibold ${themeClasses.text.primary}`}>Email Tutorial</p>
@@ -1313,7 +1337,7 @@ const Settings = () => {
                     }
                   }}
                   className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
-                    showEmailTutorial ? 'bg-orange-500' : 'bg-zinc-700'
+                    showEmailTutorial ? 'bg-blue-500' : 'bg-zinc-700'
                   }`}
                 >
                   <span
@@ -1329,8 +1353,8 @@ const Settings = () => {
             <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                    <Eye className="w-5 h-5 text-orange-500" />
+                  <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                    <Eye className="w-5 h-5 text-blue-500" />
                   </div>
                   <div>
                     <p className={`font-semibold ${themeClasses.text.primary}`}>Photos Tutorial</p>
@@ -1346,7 +1370,7 @@ const Settings = () => {
                     }
                   }}
                   className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
-                    showPhotosTutorial ? 'bg-orange-500' : 'bg-zinc-700'
+                    showPhotosTutorial ? 'bg-blue-500' : 'bg-zinc-700'
                   }`}
                 >
                   <span
@@ -1362,8 +1386,8 @@ const Settings = () => {
             <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                    <Eye className="w-5 h-5 text-orange-500" />
+                  <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                    <Eye className="w-5 h-5 text-blue-500" />
                   </div>
                   <div>
                     <p className={`font-semibold ${themeClasses.text.primary}`}>Marketing Tutorial</p>
@@ -1379,7 +1403,7 @@ const Settings = () => {
                     }
                   }}
                   className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
-                    showMarketingTutorial ? 'bg-orange-500' : 'bg-zinc-700'
+                    showMarketingTutorial ? 'bg-blue-500' : 'bg-zinc-700'
                   }`}
                 >
                   <span
@@ -1440,7 +1464,7 @@ const Settings = () => {
                       setShowDeleteConfirm(false);
                       setDeleteConfirmText('');
                     }}
-                    className="flex-1 px-4 py-3 bg-orange-500/20 text-orange-500 rounded-lg font-medium active:scale-[0.98] transition-transform"
+                    className="flex-1 px-4 py-3 bg-blue-500/20 text-blue-500 rounded-lg font-medium active:scale-[0.98] transition-transform"
                   >
                     Cancel
                   </button>
@@ -1470,70 +1494,129 @@ const Settings = () => {
   };
 
   return (
-    <div className={`min-h-full ${themeClasses.bg.primary} pb-24`}>
+    <div className={`min-h-screen ${themeClasses.bg.primary} pb-40`}>
       {/* Header */}
-      <div className={`${themeClasses.bg.secondary} ${themeClasses.border.primary} border-b px-4 pb-4 pt-[calc(env(safe-area-inset-top)+16px)] sticky top-0 z-10`}>
-        <div className="flex items-center gap-3">
-          {activeSection !== 'main' ? (
-            <button
-              onClick={() => setActiveSection('main')}
-              className={`p-2 -ml-2 ${themeClasses.text.secondary} ${themeClasses.hover.text} active:scale-95 transition-transform`}
-            >
-              <ChevronRight className="w-6 h-6 rotate-180" />
-            </button>
-          ) : (
-            <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-              <SettingsIcon className="w-5 h-5 text-orange-500" />
+      <div className={`fixed top-0 left-0 right-0 z-50 ${themeClasses.bg.secondary} border-b ${themeClasses.border.primary}`}>
+        <div className="pt-[env(safe-area-inset-top)]">
+          <div className="px-4 pb-5 pt-4">
+            <div className="flex items-center gap-4">
+              {activeSection !== 'main' ? (
+                <button
+                  onClick={() => setActiveSection('main')}
+                  className={`w-14 h-14 ${themeClasses.bg.tertiary} rounded-xl flex items-center justify-center hover:opacity-80 active:scale-95 transition-all`}
+                >
+                  <ChevronRight className={`w-7 h-7 ${themeClasses.text.secondary} rotate-180`} />
+                </button>
+              ) : (
+                <div className="w-14 h-14 bg-blue-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <SettingsIcon className="w-7 h-7 text-blue-500" />
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <h1 className={`text-2xl font-bold ${themeClasses.text.primary}`}>
+                  {activeSection === 'main' ? 'Settings' :
+                   activeSection === 'profile' ? 'Profile & Business' :
+                   activeSection === 'notifications' ? 'Notifications' :
+                   activeSection === 'theme' ? 'Appearance' :
+                   activeSection === 'payments' ? 'Payments' :
+                   activeSection === 'security' ? 'Security' :
+                   activeSection === 'language' ? 'Language' :
+                   activeSection === 'email' ? 'Business Email' :
+                   activeSection === 'tutorials' ? 'Tutorials' :
+                   activeSection === 'danger' ? 'Delete Account' : 'Settings'}
+                </h1>
+                {activeSection === 'main' && (
+                  <p className={`text-base ${themeClasses.text.secondary}`}>Manage your preferences</p>
+                )}
+              </div>
             </div>
-          )}
-          <div>
-            <h1 className={`text-xl font-bold ${themeClasses.text.primary}`}>
-              {activeSection === 'main' ? 'Settings' :
-               activeSection === 'profile' ? 'Profile & Business' :
-               activeSection === 'notifications' ? 'Notifications' :
-               activeSection === 'theme' ? 'Appearance' :
-               activeSection === 'payments' ? 'Payments' :
-               activeSection === 'security' ? 'Security' :
-               activeSection === 'language' ? 'Language' :
-               activeSection === 'email' ? 'Business Email' :
-               activeSection === 'tutorials' ? 'Tutorials' :
-               activeSection === 'danger' ? 'Delete Account' : 'Settings'}
-            </h1>
-            {activeSection === 'main' && (
-              <p className={`text-sm ${themeClasses.text.secondary}`}>Manage your preferences</p>
-            )}
           </div>
         </div>
       </div>
+      {/* Spacer for fixed header */}
+      <div className="pt-[calc(env(safe-area-inset-top)+100px)]" />
 
       {/* Content */}
       <div className="px-4 py-4">
         {activeSection === 'main' ? (
-          <div className="space-y-3">
-            {menuItems.map((item) => (
+          <div className="space-y-6">
+            {menuCategories.map((category) => (
+              <div key={category.title}>
+                {/* Section Header */}
+                <h2 className={`text-sm font-semibold ${themeClasses.text.muted} uppercase tracking-wider mb-3 px-1`}>
+                  {category.title}
+                </h2>
+                <div className="space-y-2">
+                  {category.items.map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        if ('navigateTo' in item && item.navigateTo) {
+                          navigate(item.navigateTo);
+                        } else {
+                          setActiveSection(item.id);
+                        }
+                      }}
+                      className="card-interactive w-full p-4"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`icon-container-md ${item.bgColor}`}>
+                          <item.icon className={`w-5 h-5 ${item.iconColor}`} />
+                        </div>
+                        <div className="flex-1 text-left">
+                          <p className={`font-semibold ${themeClasses.text.primary}`}>{item.label}</p>
+                          <p className={`text-sm ${themeClasses.text.secondary}`}>{item.description}</p>
+                        </div>
+                        {'hasToggle' in item && item.hasToggle ? (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleTheme();
+                            }}
+                            className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
+                              theme === 'dark' ? 'bg-blue-500' : 'bg-zinc-300'
+                            }`}
+                          >
+                            <span
+                              className={`pointer-events-none inline-block h-6 w-6 transform rounded-full shadow-lg ring-0 transition duration-200 ease-in-out mt-0.5 ${
+                                theme === 'dark' ? 'translate-x-5 ml-0.5 bg-white' : 'translate-x-0.5 bg-white'
+                              }`}
+                            />
+                          </button>
+                        ) : (
+                          <ChevronRight className={`w-5 h-5 ${themeClasses.text.muted}`} />
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+
+            {/* Delete Account (Danger Zone) */}
+            <div>
               <button
-                key={item.id}
-                onClick={() => setActiveSection(item.id)}
+                onClick={() => setActiveSection(dangerItem.id)}
                 className="card-interactive w-full p-4"
               >
                 <div className="flex items-center gap-3">
-                  <div className={`icon-container-md ${item.bgColor}`}>
-                    <item.icon className={`w-5 h-5 ${item.iconColor}`} />
+                  <div className={`icon-container-md ${dangerItem.bgColor}`}>
+                    <dangerItem.icon className={`w-5 h-5 ${dangerItem.iconColor}`} />
                   </div>
                   <div className="flex-1 text-left">
-                    <p className={`font-semibold ${themeClasses.text.primary}`}>{item.label}</p>
-                    <p className={`text-sm ${themeClasses.text.secondary}`}>{item.description}</p>
+                    <p className={`font-semibold ${dangerItem.iconColor}`}>{dangerItem.label}</p>
+                    <p className={`text-sm ${themeClasses.text.secondary}`}>{dangerItem.description}</p>
                   </div>
                   <ChevronRight className={`w-5 h-5 ${themeClasses.text.muted}`} />
                 </div>
               </button>
-            ))}
+            </div>
 
             {/* Logout Button */}
             <button
               onClick={handleLogout}
               disabled={loggingOut}
-              className="card-interactive w-full p-4 mt-6"
+              className="card-interactive w-full p-4 mt-2"
             >
               <div className="flex items-center gap-3">
                 <div className="icon-container-md bg-status-red-100">

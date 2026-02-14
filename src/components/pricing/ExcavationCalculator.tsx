@@ -146,7 +146,7 @@ const ExcavationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   return (
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
       <div className="flex items-center mb-6">
-        <Shovel className="h-6 w-6 text-orange-500 mr-2" />
+        <Shovel className="h-6 w-6 text-blue-500 mr-2" />
         <h2 className="text-xl font-bold text-slate-800">{t('calculators.excavation.title')}</h2>
       </div>
 
@@ -170,7 +170,7 @@ const ExcavationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               step="0.1"
               value={length}
               onChange={(e) => setLength(e.target.value ? Number(e.target.value) : '')}
-              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder={t('calculators.excavation.enterLengthInFeet')}
             />
           </div>
@@ -186,7 +186,7 @@ const ExcavationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               step="0.1"
               value={width}
               onChange={(e) => setWidth(e.target.value ? Number(e.target.value) : '')}
-              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder={t('calculators.excavation.enterWidthInFeet')}
             />
           </div>
@@ -202,7 +202,7 @@ const ExcavationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               step="0.1"
               value={depth}
               onChange={(e) => setDepth(e.target.value ? Number(e.target.value) : '')}
-              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder={t('calculators.excavation.enterDepthInFeet')}
             />
           </div>
@@ -219,7 +219,7 @@ const ExcavationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             step="0.01"
             value={removalCostPerYard}
             onChange={(e) => setRemovalCostPerYard(e.target.value ? Number(e.target.value) : '')}
-            className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder={t('calculators.excavation.enterRemovalCostPerCubicYard')}
           />
         </div>
@@ -235,7 +235,7 @@ const ExcavationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="soilType"
                 value={soilType}
                 onChange={(e) => setSoilType(e.target.value as 'loose' | 'compacted' | 'rock')}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="loose">{t('calculators.excavation.looseSoil')}</option>
                 <option value="compacted">{t('calculators.excavation.compactedSoil')}</option>
@@ -249,7 +249,7 @@ const ExcavationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="hasSlopedSides"
                 checked={hasSlopedSides}
                 onChange={(e) => setHasSlopedSides(e.target.checked)}
-                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
               />
               <label htmlFor="hasSlopedSides" className="ml-2 block text-sm font-medium text-slate-700">
                 {t('calculators.excavation.includeSlopedSides')}
@@ -266,7 +266,7 @@ const ExcavationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="slopeRatio"
                 value={slopeRatio}
                 onChange={(e) => setSlopeRatio(Number(e.target.value) as 1 | 1.5 | 2)}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value={1}>{t('calculators.excavation.slope1to1')}</option>
                 <option value={1.5}>{t('calculators.excavation.slope1_5to1')}</option>
@@ -285,7 +285,7 @@ const ExcavationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="addSpoilFactor"
                 checked={addSpoilFactor}
                 onChange={(e) => setAddSpoilFactor(e.target.checked)}
-                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
               />
               <label htmlFor="addSpoilFactor" className="ml-2 block text-sm font-medium text-slate-700">
                 {t('calculators.excavation.addSpoilFactor')}
@@ -301,7 +301,7 @@ const ExcavationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   id="spoilFactor"
                   value={spoilFactor}
                   onChange={(e) => setSpoilFactor(Number(e.target.value) as 10 | 15 | 20)}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value={10}>{t('calculators.excavation.spoilFactor10')}</option>
                   <option value={15}>{t('calculators.excavation.spoilFactor15')}</option>
@@ -316,7 +316,7 @@ const ExcavationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="includeHaulOff"
                 checked={includeHaulOff}
                 onChange={(e) => setIncludeHaulOff(e.target.checked)}
-                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
               />
               <label htmlFor="includeHaulOff" className="ml-2 block text-sm font-medium text-slate-700">
                 {t('calculators.excavation.includeHaulOff')}
@@ -335,7 +335,7 @@ const ExcavationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   step="0.01"
                   value={totalHaulOffCost}
                   onChange={(e) => setTotalHaulOffCost(e.target.value ? Number(e.target.value) : '')}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder={t('calculators.excavation.enterTotalHaulOffCost')}
                 />
               </div>
@@ -349,7 +349,7 @@ const ExcavationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         disabled={!isFormValid}
         className={`w-full py-3 px-4 rounded-md font-medium text-white ${
           isFormValid
-            ? 'bg-orange-500 hover:bg-orange-600 transition-colors'
+            ? 'bg-blue-500 hover:bg-blue-600 transition-colors'
             : 'bg-slate-300 cursor-not-allowed'
         }`}
       >

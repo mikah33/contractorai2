@@ -257,7 +257,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   return (
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
       <div className="flex items-center mb-6">
-        <Foundation className="h-6 w-6 text-orange-500 mr-2" />
+        <Foundation className="h-6 w-6 text-blue-500 mr-2" />
         <h2 className="text-xl font-bold text-slate-800">Foundation Calculator</h2>
       </div>
       
@@ -268,7 +268,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               type="button"
               className={`px-4 py-2 text-sm font-medium ${
                 foundationType === 'strip-footing'
-                  ? 'bg-orange-500 text-white'
+                  ? 'bg-blue-500 text-white'
                   : 'bg-white text-slate-700 hover:bg-slate-100'
               } border border-slate-300 rounded-l-lg`}
               onClick={() => setFoundationType('strip-footing')}
@@ -279,7 +279,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               type="button"
               className={`px-4 py-2 text-sm font-medium ${
                 foundationType === 'spread-footings'
-                  ? 'bg-orange-500 text-white'
+                  ? 'bg-blue-500 text-white'
                   : 'bg-white text-slate-700 hover:bg-slate-100'
               } border-t border-b border-slate-300`}
               onClick={() => setFoundationType('spread-footings')}
@@ -290,7 +290,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               type="button"
               className={`px-4 py-2 text-sm font-medium ${
                 foundationType === 'thickened-edge'
-                  ? 'bg-orange-500 text-white'
+                  ? 'bg-blue-500 text-white'
                   : 'bg-white text-slate-700 hover:bg-slate-100'
               } border-t border-b border-slate-300`}
               onClick={() => setFoundationType('thickened-edge')}
@@ -301,7 +301,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               type="button"
               className={`px-4 py-2 text-sm font-medium ${
                 foundationType === 'frost-wall'
-                  ? 'bg-orange-500 text-white'
+                  ? 'bg-blue-500 text-white'
                   : 'bg-white text-slate-700 hover:bg-slate-100'
               } border border-slate-300 rounded-r-lg`}
               onClick={() => setFoundationType('frost-wall')}
@@ -318,7 +318,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               id="isBasement"
               checked={isBasement}
               onChange={(e) => setIsBasement(e.target.checked)}
-              className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+              className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
             />
             <label htmlFor="isBasement" className="ml-2 block text-sm font-medium text-slate-700">
               This is a basement foundation
@@ -338,7 +338,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               step="0.1"
               value={length}
               onChange={(e) => setLength(e.target.value ? Number(e.target.value) : '')}
-              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Enter length in feet"
             />
           </div>
@@ -354,7 +354,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               step="0.1"
               value={width}
               onChange={(e) => setWidth(e.target.value ? Number(e.target.value) : '')}
-              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Enter width in feet"
             />
           </div>
@@ -374,7 +374,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 step="1"
                 value={footingWidth}
                 onChange={(e) => setFootingWidth(e.target.value ? Number(e.target.value) : '')}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Enter footing width"
               />
             </div>
@@ -390,7 +390,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 step="1"
                 value={footingDepth}
                 onChange={(e) => setFootingDepth(e.target.value ? Number(e.target.value) : '')}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Enter footing depth"
               />
             </div>
@@ -413,7 +413,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 step="0.1"
                 value={stemWallHeight}
                 onChange={(e) => setStemWallHeight(e.target.value ? Number(e.target.value) : '')}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder={`Enter ${isBasement ? 'wall' : 'stem wall'} height in feet`}
               />
             </div>
@@ -429,7 +429,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 step="1"
                 value={stemWallThickness}
                 onChange={(e) => setStemWallThickness(e.target.value ? Number(e.target.value) : '')}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Enter wall thickness"
               />
             </div>
@@ -452,7 +452,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 step="0.5"
                 value={slabThickness}
                 onChange={(e) => setSlabThickness(e.target.value ? Number(e.target.value) : '')}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder={`Enter ${isBasement ? 'floor' : 'slab'} thickness`}
               />
             </div>
@@ -468,7 +468,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 step="1"
                 value={gravelBaseDepth}
                 onChange={(e) => setGravelBaseDepth(e.target.value ? Number(e.target.value) : '')}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Enter gravel base depth"
               />
             </div>
@@ -486,7 +486,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="soilType"
                 value={soilType}
                 onChange={(e) => setSoilType(e.target.value as SoilType)}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="sandy">Sandy Soil</option>
                 <option value="clay">Clay Soil</option>
@@ -503,7 +503,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   id="backfillType"
                   value={backfillType}
                   onChange={(e) => setBackfillType(e.target.value as BackfillType)}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="native">Native Soil</option>
                   <option value="gravel">Gravel</option>
@@ -523,7 +523,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 step="1"
                 value={frostDepth}
                 onChange={(e) => setFrostDepth(e.target.value ? Number(e.target.value) : '')}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Enter frost depth"
               />
             </div>
@@ -541,7 +541,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="concreteStrength"
                 value={concreteStrength}
                 onChange={(e) => setConcreteStrength(Number(e.target.value) as 3000 | 3500 | 4000 | 4500)}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value={3000}>3000 PSI</option>
                 <option value={3500}>3500 PSI</option>
@@ -556,7 +556,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="includeSteelReinforcement"
                 checked={includeSteelReinforcement}
                 onChange={(e) => setIncludeSteelReinforcement(e.target.checked)}
-                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
               />
               <label htmlFor="includeSteelReinforcement" className="ml-2 block text-sm font-medium text-slate-700">
                 Include Steel Reinforcement
@@ -574,7 +574,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   id="rebarSize"
                   value={rebarSize}
                   onChange={(e) => setRebarSize(e.target.value as '#3' | '#4' | '#5')}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="#3">#3 Rebar (3/8")</option>
                   <option value="#4">#4 Rebar (1/2")</option>
@@ -590,7 +590,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   id="rebarSpacing"
                   value={rebarSpacing}
                   onChange={(e) => setRebarSpacing(Number(e.target.value) as 12 | 16 | 18)}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value={12}>12" on center</option>
                   <option value={16}>16" on center</option>
@@ -610,7 +610,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="includeVaporBarrier"
                 checked={includeVaporBarrier}
                 onChange={(e) => setIncludeVaporBarrier(e.target.checked)}
-                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
               />
               <label htmlFor="includeVaporBarrier" className="ml-2 block text-sm font-medium text-slate-700">
                 Include Vapor Barrier
@@ -623,7 +623,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="includeWaterproofing"
                 checked={includeWaterproofing}
                 onChange={(e) => setIncludeWaterproofing(e.target.checked)}
-                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
               />
               <label htmlFor="includeWaterproofing" className="ml-2 block text-sm font-medium text-slate-700">
                 Include Waterproofing
@@ -636,7 +636,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="includeDrainage"
                 checked={includeDrainage}
                 onChange={(e) => setIncludeDrainage(e.target.checked)}
-                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
               />
               <label htmlFor="includeDrainage" className="ml-2 block text-sm font-medium text-slate-700">
                 Include Drainage System
@@ -651,7 +651,7 @@ const FoundationCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         disabled={!isFormValid}
         className={`w-full py-3 px-4 rounded-md font-medium text-white ${
           isFormValid
-            ? 'bg-orange-500 hover:bg-orange-600 transition-colors'
+            ? 'bg-blue-500 hover:bg-blue-600 transition-colors'
             : 'bg-slate-300 cursor-not-allowed'
         }`}
       >

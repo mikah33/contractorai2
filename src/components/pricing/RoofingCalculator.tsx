@@ -425,7 +425,7 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucce
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
       <div className="flex items-center mb-6">
-        <Warehouse className="h-6 w-6 text-orange-600 mr-2" />
+        <Warehouse className="h-6 w-6 text-blue-600 mr-2" />
         <h2 className="text-xl font-bold text-gray-900">Roofing Cost Calculator</h2>
       </div>
 
@@ -483,7 +483,7 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucce
               value={roofArea}
               onChange={(e) => setRoofArea(e.target.value ? parseFloat(e.target.value) : '')}
               placeholder="2000"
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
             />
             <span className="text-xs text-gray-500 mt-1 block">
@@ -499,7 +499,7 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucce
               value={material}
               onChange={(e) => setMaterial(e.target.value as RoofMaterial)}
               disabled={useCustomPricing}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
             >
               <option value="asphalt">Asphalt Shingles - ${materialPrices.asphalt}/sq</option>
               <option value="architectural">Architectural Shingles - ${materialPrices.architectural}/sq</option>
@@ -519,7 +519,7 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucce
             <select
               value={pitch}
               onChange={(e) => setPitch(e.target.value as RoofPitch)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="low">Low (0-4/12)</option>
               <option value="medium">Medium (5-8/12)</option>
@@ -535,7 +535,7 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucce
             <select
               value={stories}
               onChange={(e) => setStories(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="1">1 Story</option>
               <option value="2">2 Stories</option>
@@ -550,7 +550,7 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucce
             <select
               value={layers}
               onChange={(e) => setLayers(e.target.value ? parseInt(e.target.value) : '')}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="0">0 (New Build)</option>
               <option value="1">1 Layer</option>
@@ -569,7 +569,7 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucce
               onChange={(e) => setSkylights(e.target.value ? parseInt(e.target.value) : '')}
               placeholder="0"
               min="0"
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
 
@@ -585,7 +585,7 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucce
               min="0"
               max="100"
               step="1"
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
             <span className="text-xs text-gray-500 mt-1 block">
               Accounts for cuts, overlaps, and roof complexity (10-25% typical)
@@ -669,7 +669,7 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucce
               type="checkbox"
               checked={includeVentilation}
               onChange={(e) => setIncludeVentilation(e.target.checked)}
-              className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
             />
             <span className="text-sm text-gray-700">Include Ventilation System (+$625)</span>
           </label>
@@ -679,7 +679,7 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucce
               type="checkbox"
               checked={includeIceShield}
               onChange={(e) => setIncludeIceShield(e.target.checked)}
-              className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
             />
             <span className="text-sm text-gray-700">Include Ice & Water Shield</span>
           </label>
@@ -689,7 +689,7 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucce
               type="checkbox"
               checked={includeWarranty}
               onChange={(e) => setIncludeWarranty(e.target.checked)}
-              className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
             />
             <span className="text-sm text-gray-700">Extended Warranty ($27/sq)</span>
           </label>
@@ -698,7 +698,7 @@ const RoofingCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucce
         <div className="flex gap-3">
           <button
             onClick={handleCalculate}
-            className="flex-1 py-3 px-4 border border-transparent text-base font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors"
+            className="flex-1 py-3 px-4 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
           >
             Calculate Estimate
           </button>

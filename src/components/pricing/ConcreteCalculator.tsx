@@ -268,11 +268,11 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucc
     return (
       <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
         <div className="flex items-center mb-6">
-          <Calculator className="h-6 w-6 text-orange-500 mr-2" />
+          <Calculator className="h-6 w-6 text-blue-500 mr-2" />
           <h2 className="text-xl font-bold text-slate-800">{t('calculators.concrete.title')}</h2>
         </div>
         <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading custom configuration...</p>
         </div>
       </div>
@@ -284,7 +284,7 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucc
     return (
       <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
         <div className="flex items-center mb-6">
-          <Calculator className="h-6 w-6 text-orange-500 mr-2" />
+          <Calculator className="h-6 w-6 text-blue-500 mr-2" />
           <h2 className="text-xl font-bold text-slate-800">{t('calculators.concrete.title')}</h2>
         </div>
         <div className="text-center py-12">
@@ -307,7 +307,7 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucc
   return (
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
       <div className="flex items-center mb-6">
-        <Calculator className="h-6 w-6 text-orange-500 mr-2" />
+        <Calculator className="h-6 w-6 text-blue-500 mr-2" />
         <h2 className="text-xl font-bold text-slate-800">{t('calculators.concrete.title')}</h2>
       </div>
 
@@ -330,7 +330,7 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucc
               type="button"
               className={`px-4 py-2 text-sm font-medium rounded-l-lg ${
                 concreteType === 'flatwork'
-                  ? 'bg-orange-500 text-white'
+                  ? 'bg-blue-500 text-white'
                   : 'bg-white text-slate-700 hover:bg-slate-100'
               } border border-slate-300`}
               onClick={() => setConcreteType('flatwork')}
@@ -341,7 +341,7 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucc
               type="button"
               className={`px-4 py-2 text-sm font-medium rounded-r-lg ${
                 concreteType === 'wall'
-                  ? 'bg-orange-500 text-white'
+                  ? 'bg-blue-500 text-white'
                   : 'bg-white text-slate-700 hover:bg-slate-100'
               } border border-slate-300`}
               onClick={() => setConcreteType('wall')}
@@ -355,7 +355,7 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucc
               type="button"
               className={`px-4 py-2 text-sm font-medium rounded-l-lg ${
                 unit === 'imperial'
-                  ? 'bg-orange-500 text-white'
+                  ? 'bg-blue-500 text-white'
                   : 'bg-white text-slate-700 hover:bg-slate-100'
               } border border-slate-300`}
               onClick={() => setUnit('imperial')}
@@ -366,7 +366,7 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucc
               type="button"
               className={`px-4 py-2 text-sm font-medium rounded-r-lg ${
                 unit === 'metric'
-                  ? 'bg-orange-500 text-white'
+                  ? 'bg-blue-500 text-white'
                   : 'bg-white text-slate-700 hover:bg-slate-100'
               } border border-slate-300`}
               onClick={() => setUnit('metric')}
@@ -380,7 +380,7 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucc
               type="button"
               className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 text-sm font-medium rounded-l-lg ${
                 deliveryMethod === 'bags'
-                  ? 'bg-orange-500 text-white'
+                  ? 'bg-blue-500 text-white'
                   : 'bg-white text-slate-700 hover:bg-slate-100'
               } border border-slate-300`}
               onClick={() => setDeliveryMethod('bags')}
@@ -391,7 +391,7 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucc
               type="button"
               className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 text-sm font-medium rounded-r-lg ${
                 deliveryMethod === 'truck'
-                  ? 'bg-orange-500 text-white'
+                  ? 'bg-blue-500 text-white'
                   : 'bg-white text-slate-700 hover:bg-slate-100'
               } border border-slate-300`}
               onClick={() => setDeliveryMethod('truck')}
@@ -408,7 +408,7 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucc
                 type="button"
                 className={`px-4 py-2 text-sm font-medium rounded-l-lg ${
                   bagSize === 60
-                    ? 'bg-orange-500 text-white'
+                    ? 'bg-blue-500 text-white'
                     : 'bg-white text-slate-700 hover:bg-slate-100'
                 } border border-slate-300`}
                 onClick={() => setBagSize(60)}
@@ -419,7 +419,7 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucc
                 type="button"
                 className={`px-4 py-2 text-sm font-medium rounded-r-lg ${
                   bagSize === 80
-                    ? 'bg-orange-500 text-white'
+                    ? 'bg-blue-500 text-white'
                     : 'bg-white text-slate-700 hover:bg-slate-100'
                 } border border-slate-300`}
                 onClick={() => setBagSize(80)}
@@ -442,7 +442,7 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucc
               step="0.01"
               value={length}
               onChange={(e) => setLength(e.target.value ? Number(e.target.value) : '')}
-              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder={concreteType === 'wall' ? 'Total wall length' : `${t('calculators.concrete.enterLength')} ${unit === 'imperial' ? t('calculators.concrete.feet') : t('calculators.concrete.meters')}`}
             />
           </div>
@@ -459,7 +459,7 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucc
                 step="0.01"
                 value={width}
                 onChange={(e) => setWidth(e.target.value ? Number(e.target.value) : '')}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder={`${t('calculators.concrete.enterWidth')} ${unit === 'imperial' ? t('calculators.concrete.feet') : t('calculators.concrete.meters')}`}
               />
             </div>
@@ -477,7 +477,7 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucc
                 step="0.01"
                 value={height}
                 onChange={(e) => setHeight(e.target.value ? Number(e.target.value) : '')}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="e.g., 8"
               />
             </div>
@@ -495,7 +495,7 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucc
                 step="0.5"
                 value={thickness}
                 onChange={(e) => setThickness(e.target.value ? Number(e.target.value) : '')}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="e.g., 8"
               />
             </div>
@@ -513,7 +513,7 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucc
                 step="0.5"
                 value={height}
                 onChange={(e) => setHeight(e.target.value ? Number(e.target.value) : '')}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder={`${t('calculators.concrete.enterThickness')} ${unit === 'imperial' ? t('calculators.concrete.inches') : t('calculators.concrete.centimeters')}`}
               />
             </div>
@@ -531,7 +531,7 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucc
                   id="addColor"
                   checked={addColor}
                   onChange={(e) => setAddColor(e.target.checked)}
-                  className="mt-1 h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                  className="mt-1 h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
                 />
                 <div className="flex-1">
                   <label htmlFor="addColor" className="block text-sm font-medium text-slate-700 mb-1">
@@ -549,7 +549,7 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucc
                         step="0.01"
                         value={colorPricePerYard}
                         onChange={(e) => setColorPricePerYard(e.target.value ? Number(e.target.value) : '')}
-                        className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="e.g., 15.00"
                       />
                     </div>
@@ -563,7 +563,7 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucc
                   id="addFiber"
                   checked={addFiber}
                   onChange={(e) => setAddFiber(e.target.checked)}
-                  className="mt-1 h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                  className="mt-1 h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
                 />
                 <div className="flex-1">
                   <label htmlFor="addFiber" className="block text-sm font-medium text-slate-700 mb-1">
@@ -581,7 +581,7 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucc
                         step="0.01"
                         value={fiberPricePerYard}
                         onChange={(e) => setFiberPricePerYard(e.target.value ? Number(e.target.value) : '')}
-                        className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="e.g., 8.00"
                       />
                     </div>
@@ -603,7 +603,7 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucc
                 id="reinforcement"
                 value={reinforcement}
                 onChange={(e) => setReinforcement(e.target.value as 'none' | 'rebar' | 'mesh')}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="none">{t('calculators.concrete.noReinforcement')}</option>
                 <option value="rebar">{t('calculators.concrete.rebarGrid')}</option>
@@ -620,7 +620,7 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucc
                   id="rebarSpacing"
                   value={rebarSpacing}
                   onChange={(e) => setRebarSpacing(Number(e.target.value))}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   {unit === 'imperial' ? (
                     <>
@@ -650,7 +650,7 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucc
                   id="meshType"
                   value={meshType}
                   onChange={(e) => setMeshType(e.target.value as '6x6' | '4x4')}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="6x6">6x6 - W2.9 x W2.9</option>
                   <option value="4x4">4x4 - W4.0 x W4.0</option>
@@ -666,7 +666,7 @@ const ConcreteCalculator: React.FC<CalculatorProps> = ({ onCalculate, onSaveSucc
         disabled={!isFormValid}
         className={`w-full py-3 px-4 rounded-md font-medium text-white ${
           isFormValid
-            ? 'bg-orange-500 hover:bg-orange-600 transition-colors'
+            ? 'bg-blue-500 hover:bg-blue-600 transition-colors'
             : 'bg-slate-300 cursor-not-allowed'
         }`}
       >

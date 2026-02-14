@@ -306,7 +306,7 @@ const ConfigureElectricalCalculator = () => {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading configuration...</p>
         </div>
       </div>
@@ -347,7 +347,7 @@ const ConfigureElectricalCalculator = () => {
                 onClick={() => setActiveSection(section)}
                 className={`py-4 px-2 border-b-2 font-medium text-sm transition-colors ${
                   activeSection === section
-                    ? 'border-orange-600 text-orange-600'
+                    ? 'border-blue-600 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700'
                 }`}
               >
@@ -364,7 +364,7 @@ const ConfigureElectricalCalculator = () => {
             </h2>
             <button
               onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700"
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
             >
               <Plus className="w-4 h-4" />
               Add New Material
@@ -374,7 +374,7 @@ const ConfigureElectricalCalculator = () => {
           {/* Default Materials */}
           <div className="space-y-3 mb-8">
             {getCurrentDefaults().map((material, index) => (
-              <div key={index} className="flex items-center justify-between py-3 px-4 bg-orange-50 rounded-lg border border-orange-100">
+              <div key={index} className="flex items-center justify-between py-3 px-4 bg-blue-50 rounded-lg border border-blue-100">
                 {editingDefaultIndex === index ? (
                   <>
                     <div className="flex-1 grid grid-cols-4 gap-3">
@@ -437,7 +437,7 @@ const ConfigureElectricalCalculator = () => {
                     </div>
                     <button
                       onClick={() => startEditDefault(index, material)}
-                      className="p-2 text-orange-600 hover:bg-orange-50 rounded-md"
+                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-md"
                       title="Edit Price"
                     >
                       <Edit2 className="w-4 h-4" />
@@ -514,7 +514,7 @@ const ConfigureElectricalCalculator = () => {
                         <div className="flex gap-2">
                           <button
                             onClick={() => startEditCustom(material)}
-                            className="p-2 text-orange-600 hover:bg-orange-50 rounded-md"
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-md"
                             title="Edit"
                           >
                             <Edit2 className="w-4 h-4" />
@@ -624,7 +624,7 @@ const ConfigureElectricalCalculator = () => {
               <button
                 onClick={handleAddMaterial}
                 disabled={!newName || typeof newPrice !== 'number'}
-                className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:bg-gray-400"
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400"
               >
                 Add Material
               </button>

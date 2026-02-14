@@ -98,7 +98,7 @@ const MetricsDashboard = () => {
       value: aggregatedMetrics ? aggregatedMetrics.conversions.toLocaleString() : '0',
       change: '+22.1%',
       positive: true,
-      icon: <Target className="w-6 h-6 text-orange-600" />
+      icon: <Target className="w-6 h-6 text-blue-600" />
     },
     {
       title: 'CTR',

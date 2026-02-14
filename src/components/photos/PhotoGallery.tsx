@@ -109,14 +109,14 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ projectId, showProjectFilte
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
+        <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
       </div>
     );
   }
 
   if (photos.length === 0) {
     return (
-      <div className="text-center py-12 bg-[#1C1C1E] rounded-xl border border-orange-500/30">
+      <div className="text-center py-12 bg-[#1C1C1E] rounded-xl border border-blue-500/30">
         <Image className="w-12 h-12 text-zinc-600 mx-auto mb-3" />
         <p className="text-zinc-400 font-medium">No photos yet</p>
         <p className="text-sm text-zinc-500 mt-1">
@@ -177,7 +177,7 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({ projectId, showProjectFilte
                 </div>
               )}
               {selectedPhoto.projectName && (
-                <div className="flex items-center justify-center gap-2 text-orange-500">
+                <div className="flex items-center justify-center gap-2 text-blue-500">
                   <Briefcase className="w-4 h-4" />
                   <span className="text-sm font-medium">{selectedPhoto.projectName}</span>
                 </div>

@@ -333,8 +333,8 @@ const ProjectManager: React.FC = () => {
         <div className="flex items-center justify-between mb-4">
           <div className="flex-1">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                <Briefcase className="w-5 h-5 text-orange-500" />
+              <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                <Briefcase className="w-5 h-5 text-blue-500" />
               </div>
               <div>
                 <h1 className={`text-xl font-bold ${themeClasses.text.primary}`}>{t('projects.title')}</h1>
@@ -345,9 +345,9 @@ const ProjectManager: React.FC = () => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => navigate('/settings')}
-              className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center hover:bg-orange-500/30 transition-colors border border-orange-500/40"
+              className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center hover:bg-blue-500/30 transition-colors border border-blue-500/40"
             >
-              <Settings className="w-5 h-5 text-orange-500" />
+              <Settings className="w-5 h-5 text-blue-500" />
             </button>
             <button
               onClick={() => setShowProjectModal(true)}

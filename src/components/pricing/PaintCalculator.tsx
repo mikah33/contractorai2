@@ -288,11 +288,11 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     return (
       <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
         <div className="flex items-center mb-6">
-          <Paintbrush className="h-6 w-6 text-orange-500 mr-2" />
+          <Paintbrush className="h-6 w-6 text-blue-500 mr-2" />
           <h2 className="text-xl font-bold text-slate-800">{t('calculators.paint.title')}</h2>
         </div>
         <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading custom configuration...</p>
         </div>
       </div>
@@ -304,7 +304,7 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     return (
       <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
         <div className="flex items-center mb-6">
-          <Paintbrush className="h-6 w-6 text-orange-500 mr-2" />
+          <Paintbrush className="h-6 w-6 text-blue-500 mr-2" />
           <h2 className="text-xl font-bold text-slate-800">{t('calculators.paint.title')}</h2>
         </div>
         <div className="text-center py-12">
@@ -321,7 +321,7 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   return (
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
       <div className="flex items-center mb-6">
-        <Paintbrush className="h-6 w-6 text-orange-500 mr-2" />
+        <Paintbrush className="h-6 w-6 text-blue-500 mr-2" />
         <h2 className="text-xl font-bold text-slate-800">{t('calculators.paint.title')}</h2>
       </div>
 
@@ -339,7 +339,7 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               type="button"
               className={`px-4 py-2 text-sm font-medium rounded-l-lg ${
                 paintLocation === 'interior'
-                  ? 'bg-orange-500 text-white'
+                  ? 'bg-blue-500 text-white'
                   : 'bg-white text-slate-700 hover:bg-slate-100'
               } border border-slate-300`}
               onClick={() => setPaintLocation('interior')}
@@ -350,7 +350,7 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               type="button"
               className={`px-4 py-2 text-sm font-medium rounded-r-lg ${
                 paintLocation === 'exterior'
-                  ? 'bg-orange-500 text-white'
+                  ? 'bg-blue-500 text-white'
                   : 'bg-white text-slate-700 hover:bg-slate-100'
               } border border-slate-300`}
               onClick={() => setPaintLocation('exterior')}
@@ -364,7 +364,7 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               type="button"
               className={`px-4 py-2 text-sm font-medium rounded-l-lg ${
                 unit === 'imperial'
-                  ? 'bg-orange-500 text-white'
+                  ? 'bg-blue-500 text-white'
                   : 'bg-white text-slate-700 hover:bg-slate-100'
               } border border-slate-300`}
               onClick={() => setUnit('imperial')}
@@ -375,7 +375,7 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               type="button"
               className={`px-4 py-2 text-sm font-medium rounded-r-lg ${
                 unit === 'metric'
-                  ? 'bg-orange-500 text-white'
+                  ? 'bg-blue-500 text-white'
                   : 'bg-white text-slate-700 hover:bg-slate-100'
               } border border-slate-300`}
               onClick={() => setUnit('metric')}
@@ -507,7 +507,7 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="includePrimer"
                 checked={includePrimer}
                 onChange={(e) => setIncludePrimer(e.target.checked)}
-                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
               />
               <label htmlFor="includePrimer" className="ml-2 block text-sm font-medium text-slate-700">
                 {t('calculators.paint.includePrimer')}
@@ -523,7 +523,7 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               id="includeWaste"
               checked={includeWaste}
               onChange={(e) => setIncludeWaste(e.target.checked)}
-              className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+              className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
             />
             <label htmlFor="includeWaste" className="ml-2 block text-sm font-medium text-slate-700">
               {t('calculators.paint.includeWasteFactor')}
@@ -555,7 +555,7 @@ const PaintCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         disabled={!isFormValid}
         className={`w-full py-3 px-4 rounded-md font-medium text-white ${
           isFormValid
-            ? 'bg-orange-500 hover:bg-orange-600 transition-colors'
+            ? 'bg-blue-500 hover:bg-blue-600 transition-colors'
             : 'bg-slate-300 cursor-not-allowed'
         }`}
       >

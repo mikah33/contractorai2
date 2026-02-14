@@ -106,7 +106,7 @@ const BusinessHub: React.FC = () => {
     { id: 'clients', label: 'Clients', icon: Users, color: 'from-blue-500 to-blue-600', bgColor: 'bg-blue-100', iconColor: 'text-blue-600', href: '/clients-hub' },
     { id: 'employees', label: 'Team', icon: UserCheck, color: 'from-purple-500 to-purple-600', bgColor: 'bg-purple-100', iconColor: 'text-purple-600', href: '/employees-hub' },
     { id: 'finance', label: 'Finance', icon: DollarSign, color: 'from-green-500 to-green-600', bgColor: 'bg-green-100', iconColor: 'text-green-600', href: '/finance-hub' },
-    { id: 'projects', label: 'Projects', icon: Briefcase, color: 'from-orange-500 to-orange-600', bgColor: 'bg-orange-100', iconColor: 'text-orange-600', href: '/projects-hub' },
+    { id: 'projects', label: 'Projects', icon: Briefcase, color: 'from-blue-500 to-blue-600', bgColor: 'bg-blue-100', iconColor: 'text-blue-600', href: '/projects-hub' },
   ];
 
   // Get top 3 clients
@@ -158,7 +158,7 @@ const BusinessHub: React.FC = () => {
           </div>
           <div className={`${themeClasses.bg.card} rounded-2xl border ${themeClasses.border.secondary} p-4`}>
             <div className="flex items-center gap-2 mb-2">
-              <Briefcase className="w-4 h-4 text-orange-500" />
+              <Briefcase className="w-4 h-4 text-blue-500" />
               <span className={`text-sm ${themeClasses.text.secondary}`}>Active Projects</span>
             </div>
             <p className={`text-xl font-bold ${themeClasses.text.primary}`}>{activeProjects}</p>
@@ -344,8 +344,8 @@ const BusinessHub: React.FC = () => {
         <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
           <div className="flex items-center justify-between p-4 border-b border-gray-100">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
-                <Briefcase className="w-4 h-4 text-orange-600" />
+              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Briefcase className="w-4 h-4 text-blue-600" />
               </div>
               <div>
                 <h2 className="font-semibold text-gray-900">Projects</h2>
@@ -354,7 +354,7 @@ const BusinessHub: React.FC = () => {
             </div>
             <button
               onClick={() => navigate('/projects-hub')}
-              className="flex items-center gap-1 text-sm text-orange-600 font-medium"
+              className="flex items-center gap-1 text-sm text-blue-600 font-medium"
             >
               View All <ChevronRight className="w-4 h-4" />
             </button>
@@ -366,7 +366,7 @@ const BusinessHub: React.FC = () => {
               <p className="text-gray-500 text-sm">No projects yet</p>
               <button
                 onClick={() => navigate('/projects-hub')}
-                className="mt-3 flex items-center gap-1 text-sm text-orange-600 font-medium mx-auto"
+                className="mt-3 flex items-center gap-1 text-sm text-blue-600 font-medium mx-auto"
               >
                 <Plus className="w-4 h-4" /> Add Project
               </button>
@@ -379,7 +379,7 @@ const BusinessHub: React.FC = () => {
                   onClick={() => navigate('/projects-hub')}
                   className="w-full flex items-center gap-3 p-4 hover:bg-gray-50 active:bg-gray-100 transition-colors"
                 >
-                  <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-orange-600 rounded-xl flex items-center justify-center">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center">
                     <Briefcase className="w-5 h-5 text-white" />
                   </div>
                   <div className="flex-1 text-left">
@@ -406,7 +406,7 @@ const BusinessHub: React.FC = () => {
           {projects.length > 3 && (
             <button
               onClick={() => navigate('/projects-hub')}
-              className="w-full p-3 text-center text-sm text-orange-600 font-medium bg-orange-50 hover:bg-orange-100 transition-colors"
+              className="w-full p-3 text-center text-sm text-blue-600 font-medium bg-blue-50 hover:bg-blue-100 transition-colors"
             >
               See all {projects.length} projects <ArrowRight className="w-4 h-4 inline ml-1" />
             </button>

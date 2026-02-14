@@ -425,11 +425,11 @@ const SidingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     return (
       <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
         <div className="flex items-center mb-6">
-          <Square className="h-6 w-6 text-orange-500 mr-2" />
+          <Square className="h-6 w-6 text-blue-500 mr-2" />
           <h2 className="text-xl font-bold text-slate-800">{t('calculators.siding.title')}</h2>
         </div>
         <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading custom configuration...</p>
         </div>
       </div>
@@ -441,7 +441,7 @@ const SidingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     return (
       <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
         <div className="flex items-center mb-6">
-          <Square className="h-6 w-6 text-orange-500 mr-2" />
+          <Square className="h-6 w-6 text-blue-500 mr-2" />
           <h2 className="text-xl font-bold text-slate-800">{t('calculators.siding.title')}</h2>
         </div>
         <div className="text-center py-12">
@@ -464,7 +464,7 @@ const SidingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   return (
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
       <div className="flex items-center mb-6">
-        <Square className="h-6 w-6 text-orange-500 mr-2" />
+        <Square className="h-6 w-6 text-blue-500 mr-2" />
         <h2 className="text-xl font-bold text-slate-800">{t('calculators.siding.title')}</h2>
       </div>
 
@@ -485,7 +485,7 @@ const SidingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               id="sidingType"
               value={sidingType}
               onChange={(e) => setSidingType(e.target.value as SidingType)}
-              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="vinyl">{t('calculators.siding.vinylSiding')}</option>
               <option value="fiber-cement">{t('calculators.siding.fiberCementSiding')}</option>
@@ -503,7 +503,7 @@ const SidingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               id="sidingProfile"
               value={sidingProfile}
               onChange={(e) => setSidingProfile(e.target.value as SidingProfile)}
-              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="lap">{t('calculators.siding.traditionalLap')}</option>
               <option value="dutch-lap">{t('calculators.siding.dutchLap')}</option>
@@ -520,7 +520,7 @@ const SidingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               id="sidingExposure"
               value={sidingExposure}
               onChange={(e) => setSidingExposure(Number(e.target.value) as 4 | 5 | 6 | 7 | 8)}
-              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value={4}>{t('calculators.siding.exposure4')}</option>
               <option value={5}>{t('calculators.siding.exposure5')}</option>
@@ -538,7 +538,7 @@ const SidingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               id="wasteFactor"
               value={wasteFactor}
               onChange={(e) => setWasteFactor(Number(e.target.value) as 10 | 15 | 20)}
-              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value={10}>{t('calculators.siding.wasteFactor10')}</option>
               <option value={15}>{t('calculators.siding.wasteFactor15')}</option>
@@ -552,7 +552,7 @@ const SidingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             <h3 className="text-lg font-medium text-slate-800">{t('calculators.siding.walls')}</h3>
             <button
               onClick={addWall}
-              className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors"
+              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
             >
               {t('calculators.siding.addWall')}
             </button>
@@ -596,7 +596,7 @@ const SidingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                     type="checkbox"
                     checked={wall.isGable}
                     onChange={(e) => updateWall(wall.id, { isGable: e.target.checked })}
-                    className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                    className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
                   />
                   <label className="ml-2 block text-sm font-medium text-slate-700">
                     {t('calculators.siding.isGableWall')}
@@ -712,7 +712,7 @@ const SidingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="includeHouseWrap"
                 checked={includeHouseWrap}
                 onChange={(e) => setIncludeHouseWrap(e.target.checked)}
-                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
               />
               <label htmlFor="includeHouseWrap" className="ml-2 block text-sm font-medium text-slate-700">
                 {t('calculators.siding.includeHouseWrap')}
@@ -725,7 +725,7 @@ const SidingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="includeInsulation"
                 checked={includeInsulation}
                 onChange={(e) => setIncludeInsulation(e.target.checked)}
-                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
               />
               <label htmlFor="includeInsulation" className="ml-2 block text-sm font-medium text-slate-700">
                 {t('calculators.siding.includeFoamInsulation')}
@@ -738,7 +738,7 @@ const SidingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="includeStarter"
                 checked={includeStarter}
                 onChange={(e) => setIncludeStarter(e.target.checked)}
-                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
               />
               <label htmlFor="includeStarter" className="ml-2 block text-sm font-medium text-slate-700">
                 {t('calculators.siding.includeStarterStrip')}
@@ -751,7 +751,7 @@ const SidingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="includeJChannel"
                 checked={includeJChannel}
                 onChange={(e) => setIncludeJChannel(e.target.checked)}
-                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
               />
               <label htmlFor="includeJChannel" className="ml-2 block text-sm font-medium text-slate-700">
                 {t('calculators.siding.includeJChannel')}
@@ -764,7 +764,7 @@ const SidingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="includeCorners"
                 checked={includeCorners}
                 onChange={(e) => setIncludeCorners(e.target.checked)}
-                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
               />
               <label htmlFor="includeCorners" className="ml-2 block text-sm font-medium text-slate-700">
                 {t('calculators.siding.includeCornerPosts')}
@@ -777,7 +777,7 @@ const SidingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="includeTrim"
                 checked={includeTrim}
                 onChange={(e) => setIncludeTrim(e.target.checked)}
-                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
               />
               <label htmlFor="includeTrim" className="ml-2 block text-sm font-medium text-slate-700">
                 {t('calculators.siding.includeTrim')}
@@ -793,7 +793,7 @@ const SidingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   id="trimType"
                   value={trimType}
                   onChange={(e) => setTrimType(e.target.value as TrimType)}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="vinyl">{t('calculators.siding.vinylTrim')}</option>
                   <option value="wood">{t('calculators.siding.woodTrim')}</option>
@@ -811,7 +811,7 @@ const SidingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         disabled={!isFormValid}
         className={`w-full py-3 px-4 rounded-md font-medium text-white ${
           isFormValid
-            ? 'bg-orange-500 hover:bg-orange-600 transition-colors'
+            ? 'bg-blue-500 hover:bg-blue-600 transition-colors'
             : 'bg-slate-300 cursor-not-allowed'
         }`}
       >

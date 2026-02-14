@@ -72,7 +72,7 @@ const EmailConfirmation = () => {
           <p className="text-zinc-500 text-sm mb-4">
             You will be sent a confirmation email. Please sign in with your email and password after confirming.
           </p>
-          <p className="text-orange-500 font-semibold">
+          <p className="text-blue-500 font-semibold">
             {email}
           </p>
         </div>
@@ -102,7 +102,7 @@ const EmailConfirmation = () => {
                 type="checkbox"
                 checked={isConfirmed}
                 onChange={(e) => setIsConfirmed(e.target.checked)}
-                className="w-5 h-5 bg-[#0F0F0F] border border-[#2C2C2E] rounded focus:ring-orange-500 focus:ring-2 text-orange-500"
+                className="w-5 h-5 bg-[#0F0F0F] border border-[#2C2C2E] rounded focus:ring-blue-500 focus:ring-2 text-blue-500"
               />
               <span className="text-zinc-300 text-sm">
                 I have confirmed my email
@@ -115,7 +115,7 @@ const EmailConfirmation = () => {
             <button
               onClick={handleContinue}
               disabled={!isConfirmed}
-              className="w-full py-3 px-4 bg-orange-500 text-white rounded-md hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed font-semibold transition-colors"
+              className="w-full py-3 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed font-semibold transition-colors"
             >
               Continue to Sign In
             </button>

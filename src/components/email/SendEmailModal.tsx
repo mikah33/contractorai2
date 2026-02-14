@@ -540,46 +540,46 @@ const SendEmailModal = ({ isOpen, onClose, initialAttachments = [], draftId }: S
   });
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-end justify-center">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center px-4">
       <div className="absolute inset-0 bg-black/80" onClick={handleClose} />
 
-      <div className="relative w-full max-w-lg bg-[#1C1C1E] rounded-t-2xl max-h-[90vh] overflow-hidden animate-slide-up">
+      <div className="relative w-full max-w-xl bg-white rounded-2xl max-h-[85vh] overflow-hidden animate-slide-up shadow-2xl">
         {/* Handle */}
-        <div className="flex justify-center pt-3 pb-2">
-          <div className="w-10 h-1 bg-[#3A3A3C] rounded-full" />
+        <div className="flex justify-center pt-4 pb-3">
+          <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-4 pb-4 border-b border-[#3A3A3C]">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between px-6 pb-5 border-b border-gray-200">
+          <div className="flex items-center gap-4">
             {showDrafts && (
-              <button onClick={() => setShowDrafts(false)} className="p-1 text-zinc-400 hover:text-white">
-                <ChevronLeft className="w-5 h-5" />
+              <button onClick={() => setShowDrafts(false)} className="p-2 text-gray-500 hover:text-gray-700 bg-gray-100 rounded-xl">
+                <ChevronLeft className="w-6 h-6" />
               </button>
             )}
-            <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-              <Mail className="w-5 h-5 text-orange-500" />
+            <div className="w-14 h-14 bg-blue-500/20 rounded-xl flex items-center justify-center">
+              <Mail className="w-7 h-7 text-blue-500" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white">
+              <h2 className="text-2xl font-bold text-black">
                 {showDrafts ? 'Drafts' : 'Send Email'}
               </h2>
-              <p className="text-sm text-zinc-400">
+              <p className="text-base text-gray-500">
                 {showDrafts ? `${drafts.length} saved drafts` : 'Compose your message'}
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             {!showDrafts && drafts.length > 0 && (
               <button
                 onClick={() => setShowDrafts(true)}
-                className="p-2 text-zinc-400 hover:text-white"
+                className="p-3 text-gray-500 hover:text-gray-700 bg-gray-100 rounded-xl"
               >
-                <FileText className="w-5 h-5" />
+                <FileText className="w-6 h-6" />
               </button>
             )}
-            <button onClick={handleClose} className="p-2 text-zinc-400 hover:text-white">
-              <X className="w-6 h-6" />
+            <button onClick={handleClose} className="p-3 text-gray-500 hover:text-gray-700 bg-gray-100 rounded-xl">
+              <X className="w-7 h-7" />
             </button>
           </div>
         </div>
@@ -589,30 +589,30 @@ const SendEmailModal = ({ isOpen, onClose, initialAttachments = [], draftId }: S
           <div className="p-4 overflow-y-auto max-h-[60vh]">
             {drafts.length === 0 ? (
               <div className="text-center py-12">
-                <FileText className="w-12 h-12 text-zinc-600 mx-auto mb-3" />
-                <p className="text-zinc-400">No drafts saved</p>
+                <FileText className="w-12 h-12 text-gray-500 mx-auto mb-3" />
+                <p className="text-gray-500">No drafts saved</p>
               </div>
             ) : (
               <div className="space-y-2">
                 {drafts.map((draft) => (
                   <div
                     key={draft.id}
-                    className="flex items-center gap-3 p-4 bg-[#2C2C2E] rounded-lg border border-[#3A3A3C]"
+                    className="flex items-center gap-3 p-4 bg-gray-100 rounded-lg border border-gray-200"
                   >
                     <button
                       onClick={() => { loadDraft(draft.id); setShowDrafts(false); }}
                       className="flex-1 text-left"
                     >
-                      <p className="font-medium text-white truncate">
+                      <p className="font-medium text-black truncate">
                         {draft.subject || 'No subject'}
                       </p>
-                      <p className="text-sm text-zinc-400">
+                      <p className="text-sm text-gray-500">
                         {draft.recipients?.length || 0} recipients • {new Date(draft.updated_at).toLocaleDateString()}
                       </p>
                     </button>
                     <button
                       onClick={() => deleteDraft(draft.id)}
-                      className="p-2 text-zinc-500 hover:text-red-400"
+                      className="p-2 text-gray-400 hover:text-red-400"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -625,9 +625,9 @@ const SendEmailModal = ({ isOpen, onClose, initialAttachments = [], draftId }: S
           <>
             {/* Selected Recipients Bar */}
             {selectedRecipients.length > 0 && (
-              <div className="mx-4 mt-3 p-3 bg-[#2C2C2E] border border-[#3A3A3C] rounded-lg">
+              <div className="mx-4 mt-3 p-3 bg-gray-100 border border-gray-200 rounded-lg">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm font-medium text-white">
+                  <p className="text-sm font-medium text-black">
                     {selectedRecipients.length} recipient{selectedRecipients.length !== 1 ? 's' : ''}
                   </p>
                 </div>
@@ -635,12 +635,12 @@ const SendEmailModal = ({ isOpen, onClose, initialAttachments = [], draftId }: S
                   {selectedRecipients.map((r) => (
                     <div
                       key={`${r.type}-${r.id}`}
-                      className="flex items-center gap-2 px-3 py-1.5 bg-[#3A3A3C] rounded-md"
+                      className="flex items-center gap-2 px-3 py-1.5 bg-gray-200 rounded-md"
                     >
-                      <span className="text-sm text-white">{r.name}</span>
+                      <span className="text-sm text-black">{r.name}</span>
                       <button
                         onClick={() => removeRecipient(r.id, r.type)}
-                        className="text-zinc-400 hover:text-white"
+                        className="text-gray-500 hover:text-gray-700"
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -652,8 +652,8 @@ const SendEmailModal = ({ isOpen, onClose, initialAttachments = [], draftId }: S
 
             {/* Attachments Preview */}
             {attachments.length > 0 && (
-              <div className="mx-4 mt-3 p-3 bg-[#2C2C2E] border border-[#3A3A3C] rounded-lg">
-                <p className="text-sm font-medium text-white mb-2">
+              <div className="mx-4 mt-3 p-3 bg-gray-100 border border-gray-200 rounded-lg">
+                <p className="text-sm font-medium text-black mb-2">
                   {attachments.length} attachment{attachments.length !== 1 ? 's' : ''}
                 </p>
                 <div className="flex gap-2 overflow-x-auto pb-1">
@@ -681,7 +681,7 @@ const SendEmailModal = ({ isOpen, onClose, initialAttachments = [], draftId }: S
               <button
                 onClick={() => setStep('recipients')}
                 className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${
-                  step === 'recipients' ? 'bg-orange-500 text-white' : 'bg-[#2C2C2E] text-zinc-400'
+                  step === 'recipients' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-500'
                 }`}
               >
                 1. To
@@ -689,7 +689,7 @@ const SendEmailModal = ({ isOpen, onClose, initialAttachments = [], draftId }: S
               <button
                 onClick={() => selectedRecipients.length > 0 && setStep('compose')}
                 className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${
-                  step === 'compose' ? 'bg-orange-500 text-white' : 'bg-[#2C2C2E] text-zinc-400'
+                  step === 'compose' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-500'
                 }`}
               >
                 2. Compose
@@ -697,7 +697,7 @@ const SendEmailModal = ({ isOpen, onClose, initialAttachments = [], draftId }: S
               <button
                 onClick={() => selectedRecipients.length > 0 && subject && setStep('confirm')}
                 className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${
-                  step === 'confirm' ? 'bg-orange-500 text-white' : 'bg-[#2C2C2E] text-zinc-400'
+                  step === 'confirm' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-500'
                 }`}
               >
                 3. Send
@@ -709,11 +709,11 @@ const SendEmailModal = ({ isOpen, onClose, initialAttachments = [], draftId }: S
               {/* Step 1: Recipients */}
               {step === 'recipients' && (
                 <div className="space-y-3">
-                  <div className="flex gap-2 p-1 bg-[#2C2C2E] rounded-lg">
+                  <div className="flex gap-2 p-1 bg-gray-100 rounded-lg">
                     <button
                       onClick={() => { setRecipientTab('employees'); setSearchQuery(''); }}
                       className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-md text-sm font-medium transition-colors ${
-                        recipientTab === 'employees' ? 'bg-orange-500 text-white' : 'text-zinc-400'
+                        recipientTab === 'employees' ? 'bg-blue-500 text-white' : 'text-gray-500'
                       }`}
                     >
                       <Users className="w-4 h-4" />
@@ -722,7 +722,7 @@ const SendEmailModal = ({ isOpen, onClose, initialAttachments = [], draftId }: S
                     <button
                       onClick={() => { setRecipientTab('clients'); setSearchQuery(''); }}
                       className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-md text-sm font-medium transition-colors ${
-                        recipientTab === 'clients' ? 'bg-orange-500 text-white' : 'text-zinc-400'
+                        recipientTab === 'clients' ? 'bg-blue-500 text-white' : 'text-gray-500'
                       }`}
                     >
                       <Briefcase className="w-4 h-4" />
@@ -731,20 +731,20 @@ const SendEmailModal = ({ isOpen, onClose, initialAttachments = [], draftId }: S
                   </div>
 
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input
                       type="text"
                       placeholder={`Search ${recipientTab}...`}
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 bg-[#2C2C2E] border border-[#3A3A3C] rounded-lg text-white placeholder-zinc-500 focus:border-orange-500 focus:outline-none"
+                      className="w-full pl-10 pr-4 py-3 bg-gray-100 border border-gray-200 rounded-lg text-black placeholder-gray-400 focus:border-blue-500 focus:outline-none"
                     />
                   </div>
 
                   <div className="flex justify-end">
                     <button
                       onClick={() => setShowAddNew(!showAddNew)}
-                      className="text-sm text-orange-500 font-medium flex items-center gap-1"
+                      className="text-sm text-blue-500 font-medium flex items-center gap-1"
                     >
                       <UserPlus className="w-4 h-4" />
                       Add New
@@ -752,25 +752,25 @@ const SendEmailModal = ({ isOpen, onClose, initialAttachments = [], draftId }: S
                   </div>
 
                   {showAddNew && (
-                    <div className="p-4 bg-[#2C2C2E] rounded-lg border border-orange-500/30 space-y-3">
+                    <div className="p-4 bg-gray-100 rounded-lg border border-blue-500/30 space-y-3">
                       <input
                         type="text"
                         placeholder="Name"
                         value={newRecipient.name}
                         onChange={(e) => setNewRecipient({ ...newRecipient, name: e.target.value })}
-                        className="w-full px-4 py-3 bg-[#1C1C1E] border border-[#3A3A3C] rounded-md text-white placeholder-zinc-500"
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-md text-black placeholder-gray-400"
                       />
                       <input
                         type="email"
                         placeholder="Email"
                         value={newRecipient.email}
                         onChange={(e) => setNewRecipient({ ...newRecipient, email: e.target.value })}
-                        className="w-full px-4 py-3 bg-[#1C1C1E] border border-[#3A3A3C] rounded-md text-white placeholder-zinc-500"
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-md text-black placeholder-gray-400"
                       />
                       <button
                         onClick={handleCreateNew}
                         disabled={isCreating || !newRecipient.name || !newRecipient.email}
-                        className="w-full py-3 bg-orange-500 text-white rounded-md font-medium disabled:opacity-50"
+                        className="w-full py-3 bg-blue-500 text-white rounded-md font-medium disabled:opacity-50"
                       >
                         {isCreating ? 'Creating...' : 'Create & Add'}
                       </button>
@@ -779,8 +779,8 @@ const SendEmailModal = ({ isOpen, onClose, initialAttachments = [], draftId }: S
 
                   {filteredList.length === 0 ? (
                     <div className="text-center py-8">
-                      <Users className="w-12 h-12 text-zinc-600 mx-auto mb-3" />
-                      <p className="text-zinc-400">No {recipientTab} found</p>
+                      <Users className="w-12 h-12 text-gray-500 mx-auto mb-3" />
+                      <p className="text-gray-500">No {recipientTab} found</p>
                     </div>
                   ) : (
                     <div className="space-y-2">
@@ -793,22 +793,22 @@ const SendEmailModal = ({ isOpen, onClose, initialAttachments = [], draftId }: S
                             onClick={() => toggleRecipient(item, type)}
                             className={`w-full flex items-center gap-3 p-4 rounded-lg border transition-all ${
                               selected
-                                ? 'bg-orange-500/20 border-orange-500'
-                                : 'bg-[#2C2C2E] border-[#3A3A3C] hover:border-zinc-500'
+                                ? 'bg-blue-500/20 border-blue-500'
+                                : 'bg-gray-100 border-gray-200 hover:border-zinc-500'
                             }`}
                           >
                             <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                              selected ? 'bg-orange-500' : 'bg-[#3A3A3C]'
+                              selected ? 'bg-blue-500' : 'bg-gray-200'
                             }`}>
                               {selected ? (
                                 <Check className="w-5 h-5 text-white" />
                               ) : (
-                                <User className="w-5 h-5 text-zinc-400" />
+                                <User className="w-5 h-5 text-gray-500" />
                               )}
                             </div>
                             <div className="flex-1 text-left">
-                              <p className="font-medium text-white">{item.name}</p>
-                              <p className="text-sm text-zinc-400">{item.email}</p>
+                              <p className="font-medium text-black">{item.name}</p>
+                              <p className="text-sm text-gray-500">{item.email}</p>
                             </div>
                           </button>
                         );
@@ -828,7 +828,7 @@ const SendEmailModal = ({ isOpen, onClose, initialAttachments = [], draftId }: S
                       value={subject}
                       onChange={(e) => setSubject(e.target.value)}
                       placeholder="Enter subject..."
-                      className="w-full px-4 py-3 bg-[#2C2C2E] border border-[#3A3A3C] rounded-lg text-white placeholder-zinc-500 focus:border-orange-500 focus:outline-none"
+                      className="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-lg text-black placeholder-gray-400 focus:border-blue-500 focus:outline-none"
                     />
                   </div>
 
@@ -839,7 +839,7 @@ const SendEmailModal = ({ isOpen, onClose, initialAttachments = [], draftId }: S
                       onChange={(e) => setBody(e.target.value)}
                       placeholder="Write your message..."
                       rows={6}
-                      className="w-full px-4 py-3 bg-[#2C2C2E] border border-[#3A3A3C] rounded-lg text-white placeholder-zinc-500 focus:border-orange-500 focus:outline-none resize-none"
+                      className="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-lg text-black placeholder-gray-400 focus:border-blue-500 focus:outline-none resize-none"
                     />
                   </div>
 
@@ -848,14 +848,14 @@ const SendEmailModal = ({ isOpen, onClose, initialAttachments = [], draftId }: S
                     <div className="flex gap-2">
                       <button
                         onClick={() => fileInputRef.current?.click()}
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-[#2C2C2E] border border-dashed border-[#3A3A3C] rounded-lg text-zinc-400 hover:border-orange-500 hover:text-orange-500 transition-colors"
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 border border-dashed border-gray-200 rounded-lg text-gray-500 hover:border-blue-500 hover:text-blue-500 transition-colors"
                       >
                         <ImagePlus className="w-5 h-5" />
                         <span>Upload</span>
                       </button>
                       <button
                         onClick={openGalleryPicker}
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-[#2C2C2E] border border-dashed border-[#3A3A3C] rounded-lg text-zinc-400 hover:border-orange-500 hover:text-orange-500 transition-colors"
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 border border-dashed border-gray-200 rounded-lg text-gray-500 hover:border-blue-500 hover:text-blue-500 transition-colors"
                       >
                         <Images className="w-5 h-5" />
                         <span>Gallery</span>
@@ -876,8 +876,8 @@ const SendEmailModal = ({ isOpen, onClose, initialAttachments = [], draftId }: S
               {/* Step 3: Confirm */}
               {step === 'confirm' && (
                 <div className="space-y-4">
-                  <div className="p-4 bg-[#2C2C2E] rounded-lg">
-                    <h4 className="font-medium text-white mb-2">To:</h4>
+                  <div className="p-4 bg-gray-100 rounded-lg">
+                    <h4 className="font-medium text-black mb-2">To:</h4>
                     <div className="space-y-1">
                       {selectedRecipients.map((r) => (
                         <p key={`${r.type}-${r.id}`} className="text-sm text-zinc-300">
@@ -887,21 +887,21 @@ const SendEmailModal = ({ isOpen, onClose, initialAttachments = [], draftId }: S
                     </div>
                   </div>
 
-                  <div className="p-4 bg-[#2C2C2E] rounded-lg">
-                    <h4 className="font-medium text-white mb-2">Subject:</h4>
+                  <div className="p-4 bg-gray-100 rounded-lg">
+                    <h4 className="font-medium text-black mb-2">Subject:</h4>
                     <p className="text-sm text-zinc-300">{subject}</p>
                   </div>
 
                   {body && (
-                    <div className="p-4 bg-[#2C2C2E] rounded-lg">
-                      <h4 className="font-medium text-white mb-2">Message:</h4>
+                    <div className="p-4 bg-gray-100 rounded-lg">
+                      <h4 className="font-medium text-black mb-2">Message:</h4>
                       <p className="text-sm text-zinc-300 whitespace-pre-wrap">{body}</p>
                     </div>
                   )}
 
                   {attachments.length > 0 && (
-                    <div className="p-4 bg-[#2C2C2E] rounded-lg">
-                      <h4 className="font-medium text-white mb-2">
+                    <div className="p-4 bg-gray-100 rounded-lg">
+                      <h4 className="font-medium text-black mb-2">
                         {attachments.length} Attachment{attachments.length !== 1 ? 's' : ''}
                       </h4>
                       <div className="flex gap-2">
@@ -921,13 +921,13 @@ const SendEmailModal = ({ isOpen, onClose, initialAttachments = [], draftId }: S
             </div>
 
             {/* Footer */}
-            <div className="p-4 border-t border-[#3A3A3C] bg-[#1C1C1E]">
+            <div className="p-4 border-t border-gray-200 bg-gray-50">
               {step === 'recipients' && (
                 <div className="flex gap-3">
                   <button
                     onClick={() => saveDraft()}
                     disabled={isSavingDraft}
-                    className="flex-1 py-4 bg-[#2C2C2E] text-white rounded-md font-semibold flex items-center justify-center gap-2 border border-[#3A3A3C]"
+                    className="flex-1 py-4 bg-gray-100 text-black rounded-md font-semibold flex items-center justify-center gap-2 border border-gray-200"
                   >
                     <Save className="w-5 h-5" />
                     {isSavingDraft ? 'Saving...' : 'Save Draft'}
@@ -935,7 +935,7 @@ const SendEmailModal = ({ isOpen, onClose, initialAttachments = [], draftId }: S
                   <button
                     onClick={() => setStep('compose')}
                     disabled={selectedRecipients.length === 0}
-                    className="flex-1 py-4 bg-orange-500 text-white rounded-md font-semibold disabled:opacity-50"
+                    className="flex-1 py-4 bg-blue-500 text-white rounded-md font-semibold disabled:opacity-50"
                   >
                     Continue
                   </button>
@@ -946,14 +946,14 @@ const SendEmailModal = ({ isOpen, onClose, initialAttachments = [], draftId }: S
                 <div className="flex gap-3">
                   <button
                     onClick={() => setStep('recipients')}
-                    className="flex-1 py-4 bg-[#2C2C2E] text-white rounded-md font-semibold border border-[#3A3A3C]"
+                    className="flex-1 py-4 bg-gray-100 text-black rounded-md font-semibold border border-gray-200"
                   >
                     Back
                   </button>
                   <button
                     onClick={() => setStep('confirm')}
                     disabled={!subject.trim()}
-                    className="flex-1 py-4 bg-orange-500 text-white rounded-md font-semibold disabled:opacity-50"
+                    className="flex-1 py-4 bg-blue-500 text-white rounded-md font-semibold disabled:opacity-50"
                   >
                     Review
                   </button>
@@ -964,14 +964,14 @@ const SendEmailModal = ({ isOpen, onClose, initialAttachments = [], draftId }: S
                 <div className="flex gap-3">
                   <button
                     onClick={() => setStep('compose')}
-                    className="flex-1 py-4 bg-[#2C2C2E] text-white rounded-md font-semibold border border-[#3A3A3C]"
+                    className="flex-1 py-4 bg-gray-100 text-black rounded-md font-semibold border border-gray-200"
                   >
                     Back
                   </button>
                   <button
                     onClick={handleSend}
                     disabled={isSending}
-                    className="flex-1 py-4 bg-orange-500 text-white rounded-md font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
+                    className="flex-1 py-4 bg-blue-500 text-white rounded-md font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
                   >
                     {isSending ? (
                       <Loader2 className="w-5 h-5 animate-spin" />
@@ -992,34 +992,34 @@ const SendEmailModal = ({ isOpen, onClose, initialAttachments = [], draftId }: S
         <div className="fixed inset-0 z-[300] flex items-end justify-center">
           <div className="absolute inset-0 bg-black/90" onClick={() => setShowGalleryPicker(false)} />
 
-          <div className="relative w-full max-w-lg bg-[#1C1C1E] rounded-t-2xl max-h-[85vh] overflow-hidden animate-slide-up">
+          <div className="relative w-full max-w-lg bg-gray-50 rounded-t-2xl max-h-[85vh] overflow-hidden animate-slide-up">
             {/* Handle */}
             <div className="flex justify-center pt-3 pb-2">
-              <div className="w-10 h-1 bg-[#3A3A3C] rounded-full" />
+              <div className="w-10 h-1 bg-gray-200 rounded-full" />
             </div>
 
             {/* Header */}
-            <div className="flex items-center justify-between px-4 pb-4 border-b border-[#3A3A3C]">
+            <div className="flex items-center justify-between px-4 pb-4 border-b border-gray-200">
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setShowGalleryPicker(false)}
-                  className="p-1 text-zinc-400 hover:text-white"
+                  className="p-1 text-gray-500 hover:text-gray-700"
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
-                <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                  <Images className="w-5 h-5 text-orange-500" />
+                <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                  <Images className="w-5 h-5 text-blue-500" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-white">Select Photos</h2>
-                  <p className="text-sm text-zinc-400">
+                  <h2 className="text-2xl font-bold text-black">Select Photos</h2>
+                  <p className="text-sm text-gray-500">
                     {selectedGalleryPhotos.size > 0
                       ? `${selectedGalleryPhotos.size} selected`
                       : 'Choose from your gallery'}
                   </p>
                 </div>
               </div>
-              <button onClick={() => setShowGalleryPicker(false)} className="p-2 text-zinc-400 hover:text-white">
+              <button onClick={() => setShowGalleryPicker(false)} className="p-2 text-gray-500 hover:text-gray-700">
                 <X className="w-6 h-6" />
               </button>
             </div>
@@ -1028,13 +1028,13 @@ const SendEmailModal = ({ isOpen, onClose, initialAttachments = [], draftId }: S
             <div className="p-4 overflow-y-auto max-h-[55vh]">
               {loadingGallery ? (
                 <div className="flex items-center justify-center py-12">
-                  <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
+                  <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
                 </div>
               ) : galleryPhotos.length === 0 ? (
                 <div className="text-center py-12">
-                  <Images className="w-12 h-12 text-zinc-600 mx-auto mb-3" />
-                  <p className="text-zinc-400 font-medium">No photos in gallery</p>
-                  <p className="text-sm text-zinc-500 mt-1">Take some project photos first</p>
+                  <Images className="w-12 h-12 text-gray-500 mx-auto mb-3" />
+                  <p className="text-gray-500 font-medium">No photos in gallery</p>
+                  <p className="text-sm text-gray-400 mt-1">Take some project photos first</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-3 gap-2">
@@ -1046,7 +1046,7 @@ const SendEmailModal = ({ isOpen, onClose, initialAttachments = [], draftId }: S
                         onClick={() => toggleGalleryPhoto(photo.id)}
                         className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${
                           isSelected
-                            ? 'border-orange-500 ring-2 ring-orange-500/50'
+                            ? 'border-blue-500 ring-2 ring-blue-500/50'
                             : 'border-transparent hover:border-zinc-600'
                         }`}
                       >
@@ -1056,15 +1056,15 @@ const SendEmailModal = ({ isOpen, onClose, initialAttachments = [], draftId }: S
                           className="w-full h-full object-cover"
                         />
                         {isSelected && (
-                          <div className="absolute inset-0 bg-orange-500/30 flex items-center justify-center">
-                            <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
+                          <div className="absolute inset-0 bg-blue-500/30 flex items-center justify-center">
+                            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
                               <Check className="w-5 h-5 text-white" />
                             </div>
                           </div>
                         )}
                         {photo.projectName && (
                           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-1.5">
-                            <p className="text-xs text-white truncate">{photo.projectName}</p>
+                            <p className="text-xs text-black truncate">{photo.projectName}</p>
                           </div>
                         )}
                       </button>
@@ -1075,11 +1075,11 @@ const SendEmailModal = ({ isOpen, onClose, initialAttachments = [], draftId }: S
             </div>
 
             {/* Footer */}
-            <div className="p-4 border-t border-[#3A3A3C] bg-[#1C1C1E]">
+            <div className="p-4 border-t border-gray-200 bg-gray-50">
               <button
                 onClick={addSelectedGalleryPhotos}
                 disabled={selectedGalleryPhotos.size === 0}
-                className="w-full py-4 bg-orange-500 text-white rounded-md font-semibold disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full py-4 bg-blue-500 text-white rounded-md font-semibold disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 <ImagePlus className="w-5 h-5" />
                 {selectedGalleryPhotos.size > 0

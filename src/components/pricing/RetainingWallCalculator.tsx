@@ -437,11 +437,11 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
     return (
       <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
         <div className="flex items-center mb-6">
-          <Wall className="h-6 w-6 text-orange-500 mr-2" />
+          <Wall className="h-6 w-6 text-blue-500 mr-2" />
           <h2 className="text-xl font-bold text-slate-800">{t('calculators.retainingWall.title')}</h2>
         </div>
         <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading custom configuration...</p>
         </div>
       </div>
@@ -453,7 +453,7 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
     return (
       <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
         <div className="flex items-center mb-6">
-          <Wall className="h-6 w-6 text-orange-500 mr-2" />
+          <Wall className="h-6 w-6 text-blue-500 mr-2" />
           <h2 className="text-xl font-bold text-slate-800">{t('calculators.retainingWall.title')}</h2>
         </div>
         <div className="text-center py-12">
@@ -470,7 +470,7 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
       <div className="flex items-center mb-6">
-        <Wall className="h-6 w-6 text-orange-500 mr-2" />
+        <Wall className="h-6 w-6 text-blue-500 mr-2" />
         <h2 className="text-xl font-bold text-slate-800">{t('calculators.retainingWall.title')}</h2>
       </div>
 
@@ -488,7 +488,7 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
               type="button"
               className={`px-4 py-2 text-sm font-medium ${
                 wallType === 'block'
-                  ? 'bg-orange-500 text-white'
+                  ? 'bg-blue-500 text-white'
                   : 'bg-white text-slate-700 hover:bg-slate-100'
               } border border-slate-300 rounded-l-lg`}
               onClick={() => setWallType('block')}
@@ -499,7 +499,7 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
               type="button"
               className={`px-4 py-2 text-sm font-medium ${
                 wallType === 'concrete'
-                  ? 'bg-orange-500 text-white'
+                  ? 'bg-blue-500 text-white'
                   : 'bg-white text-slate-700 hover:bg-slate-100'
               } border-t border-b border-slate-300`}
               onClick={() => setWallType('concrete')}
@@ -510,7 +510,7 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
               type="button"
               className={`px-4 py-2 text-sm font-medium ${
                 wallType === 'timber'
-                  ? 'bg-orange-500 text-white'
+                  ? 'bg-blue-500 text-white'
                   : 'bg-white text-slate-700 hover:bg-slate-100'
               } border border-slate-300`}
               onClick={() => setWallType('timber')}
@@ -521,7 +521,7 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
               type="button"
               className={`px-4 py-2 text-sm font-medium ${
                 wallType === 'boulder'
-                  ? 'bg-orange-500 text-white'
+                  ? 'bg-blue-500 text-white'
                   : 'bg-white text-slate-700 hover:bg-slate-100'
               } border border-slate-300 rounded-r-lg`}
               onClick={() => setWallType('boulder')}
@@ -546,7 +546,7 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
                   step="0.5"
                   value={machineHours}
                   onChange={(e) => setMachineHours(e.target.value ? Number(e.target.value) : '')}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="e.g., 8.5"
                 />
               </div>
@@ -562,7 +562,7 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
                   step="0.01"
                   value={pricePerHour}
                   onChange={(e) => setPricePerHour(e.target.value ? Number(e.target.value) : '')}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="e.g., 150.00"
                 />
               </div>
@@ -578,7 +578,7 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
                   step="1"
                   value={boulderQuantity}
                   onChange={(e) => setBoulderQuantity(e.target.value ? Number(e.target.value) : '')}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="e.g., 25"
                 />
               </div>
@@ -594,7 +594,7 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
                   step="0.01"
                   value={pricePerBoulder}
                   onChange={(e) => setPricePerBoulder(e.target.value ? Number(e.target.value) : '')}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="e.g., 75.00"
                 />
               </div>
@@ -616,7 +616,7 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
                 step="0.1"
                 value={length}
                 onChange={(e) => setLength(e.target.value ? Number(e.target.value) : '')}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder={t('calculators.retainingWall.enterWallLengthPlaceholder')}
               />
             </div>
@@ -632,7 +632,7 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
                 step="0.1"
                 value={height}
                 onChange={(e) => setHeight(e.target.value ? Number(e.target.value) : '')}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder={t('calculators.retainingWall.enterWallHeightPlaceholder')}
               />
             </div>
@@ -648,7 +648,7 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
               id="blockType"
               value={blockType}
               onChange={(e) => setBlockType(e.target.value as BlockType)}
-              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="standard">{t('calculators.retainingWall.standardBlock')}</option>
               <option value="pinned">{t('calculators.retainingWall.pinnedBlock')}</option>
@@ -745,7 +745,7 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
               step="1"
               value={concreteWidth}
               onChange={(e) => setConcreteWidth(e.target.value ? Number(e.target.value) : '')}
-              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder={t('calculators.retainingWall.enterWallThicknessPlaceholder')}
             />
             <p className="text-sm text-slate-500 mt-1">
@@ -765,7 +765,7 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
                   id="soilType"
                   value={soilType}
                   onChange={(e) => setSoilType(e.target.value as 'sandy' | 'clay' | 'gravel')}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="sandy">{t('calculators.retainingWall.sandySoil')}</option>
                   <option value="clay">{t('calculators.retainingWall.claySoil')}</option>
@@ -781,7 +781,7 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
                   id="drainageType"
                   value={drainageType}
                   onChange={(e) => setDrainageType(e.target.value as DrainageType)}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="both">{t('calculators.retainingWall.gravelAndPipe')}</option>
                   <option value="gravel">{t('calculators.retainingWall.gravelOnly')}</option>
@@ -800,7 +800,7 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
                     id="includeFrost"
                     checked={includeFrost}
                     onChange={(e) => setIncludeFrost(e.target.checked)}
-                    className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                    className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
                   />
                   <label htmlFor="includeFrost" className="ml-2 block text-sm font-medium text-slate-700">
                     {t('calculators.retainingWall.includeFrostProtection')}
@@ -814,7 +814,7 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
                       id="includeCapstone"
                       checked={includeCapstone}
                       onChange={(e) => setIncludeCapstone(e.target.checked)}
-                      className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                      className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
                     />
                     <label htmlFor="includeCapstone" className="ml-2 block text-sm font-medium text-slate-700">
                       {t('calculators.retainingWall.includeCapstone')}
@@ -834,7 +834,7 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
                 id="includeGeogrid"
                 checked={includeGeogrid}
                 onChange={(e) => setIncludeGeogrid(e.target.checked)}
-                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
               />
               <label htmlFor="includeGeogrid" className="ml-2 block text-sm font-medium text-slate-700">
                 {t('calculators.retainingWall.includeGeogridReinforcement')}
@@ -850,7 +850,7 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
                   id="geogridLayers"
                   value={geogridLayers}
                   onChange={(e) => setGeogridLayers(Number(e.target.value))}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   {[2, 3, 4, 5].map(num => (
                     <option key={num} value={num}>{t('calculators.retainingWall.layersCount', { count: num })}</option>
@@ -867,7 +867,7 @@ const RetainingWallCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => 
         disabled={!isFormValid}
         className={`w-full py-3 px-4 rounded-md font-medium text-white ${
           isFormValid
-            ? 'bg-orange-500 hover:bg-orange-600 transition-colors'
+            ? 'bg-blue-500 hover:bg-blue-600 transition-colors'
             : 'bg-slate-300 cursor-not-allowed'
         }`}
       >

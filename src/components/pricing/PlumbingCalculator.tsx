@@ -576,11 +576,11 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     return (
       <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
         <div className="flex items-center mb-6">
-          <Pipe className="h-6 w-6 text-orange-500 mr-2" />
+          <Pipe className="h-6 w-6 text-blue-500 mr-2" />
           <h2 className="text-xl font-bold text-slate-800">{t('calculators.plumbing.title')}</h2>
         </div>
         <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading custom configuration...</p>
         </div>
       </div>
@@ -592,7 +592,7 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     return (
       <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
         <div className="flex items-center mb-6">
-          <Pipe className="h-6 w-6 text-orange-500 mr-2" />
+          <Pipe className="h-6 w-6 text-blue-500 mr-2" />
           <h2 className="text-xl font-bold text-slate-800">{t('calculators.plumbing.title')}</h2>
         </div>
         <div className="text-center py-12">
@@ -609,7 +609,7 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   return (
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
       <div className="flex items-center mb-6">
-        <Pipe className="h-6 w-6 text-orange-500 mr-2" />
+        <Pipe className="h-6 w-6 text-blue-500 mr-2" />
         <h2 className="text-xl font-bold text-slate-800">{t('calculators.plumbing.title')}</h2>
       </div>
 
@@ -960,7 +960,7 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="includeWaterHeater"
                 checked={includeWaterHeater}
                 onChange={(e) => setIncludeWaterHeater(e.target.checked)}
-                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
               />
               <label htmlFor="includeWaterHeater" className="ml-2 block text-sm font-medium text-slate-700">
                 {t('calculators.plumbing.includeWaterHeater')}
@@ -1009,7 +1009,7 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="includeWaterSoftener"
                 checked={includeWaterSoftener}
                 onChange={(e) => setIncludeWaterSoftener(e.target.checked)}
-                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
               />
               <label htmlFor="includeWaterSoftener" className="ml-2 block text-sm font-medium text-slate-700">
                 {t('calculators.plumbing.includeWaterSoftener')}
@@ -1022,7 +1022,7 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="includePressureTank"
                 checked={includePressureTank}
                 onChange={(e) => setIncludePressureTank(e.target.checked)}
-                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
               />
               <label htmlFor="includePressureTank" className="ml-2 block text-sm font-medium text-slate-700">
                 {t('calculators.plumbing.includePressureTank')}
@@ -1058,7 +1058,7 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="includeSewerConnection"
                 checked={includeSewerConnection}
                 onChange={(e) => setIncludeSewerConnection(e.target.checked)}
-                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
               />
               <label htmlFor="includeSewerConnection" className="ml-2 block text-sm font-medium text-slate-700">
                 {t('calculators.plumbing.includeSewerConnection')}
@@ -1089,7 +1089,7 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="includeCleanouts"
                 checked={includeCleanouts}
                 onChange={(e) => setIncludeCleanouts(e.target.checked)}
-                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
               />
               <label htmlFor="includeCleanouts" className="ml-2 block text-sm font-medium text-slate-700">
                 {t('calculators.plumbing.includeCleanouts')}
@@ -1122,7 +1122,7 @@ const PlumbingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         disabled={!isFormValid}
         className={`w-full py-3 px-4 rounded-md font-medium text-white ${
           isFormValid
-            ? 'bg-orange-500 hover:bg-orange-600 transition-colors'
+            ? 'bg-blue-500 hover:bg-blue-600 transition-colors'
             : 'bg-slate-300 cursor-not-allowed'
         }`}
       >

@@ -772,11 +772,11 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     return (
       <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
         <div className="flex items-center mb-6">
-          <Grid className="h-6 w-6 text-orange-500 mr-2" />
+          <Grid className="h-6 w-6 text-blue-500 mr-2" />
           <h2 className="text-xl font-bold text-slate-800">{t('calculators.deck.title')}</h2>
         </div>
         <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading custom configuration...</p>
         </div>
       </div>
@@ -788,7 +788,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     return (
       <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
         <div className="flex items-center mb-6">
-          <Grid className="h-6 w-6 text-orange-500 mr-2" />
+          <Grid className="h-6 w-6 text-blue-500 mr-2" />
           <h2 className="text-xl font-bold text-slate-800">{t('calculators.deck.title')}</h2>
         </div>
         <div className="text-center py-12">
@@ -817,7 +817,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   return (
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
       <div className="flex items-center mb-6">
-        <Grid className="h-6 w-6 text-orange-500 mr-2" />
+        <Grid className="h-6 w-6 text-blue-500 mr-2" />
         <h2 className="text-xl font-bold text-slate-800">{t('calculators.deck.title')}</h2>
       </div>
 
@@ -835,7 +835,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               type="button"
               className={`px-4 py-2 text-sm font-medium rounded-l-lg ${
                 inputType === 'dimensions'
-                  ? 'bg-orange-500 text-white'
+                  ? 'bg-blue-500 text-white'
                   : 'bg-white text-slate-700 hover:bg-slate-100'
               } border border-slate-300`}
               onClick={() => setInputType('dimensions')}
@@ -846,7 +846,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               type="button"
               className={`px-4 py-2 text-sm font-medium rounded-r-lg ${
                 inputType === 'area'
-                  ? 'bg-orange-500 text-white'
+                  ? 'bg-blue-500 text-white'
                   : 'bg-white text-slate-700 hover:bg-slate-100'
               } border border-slate-300`}
               onClick={() => setInputType('area')}
@@ -869,7 +869,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 step="0.1"
                 value={length}
                 onChange={(e) => setLength(e.target.value ? Number(e.target.value) : '')}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder={t('calculators.deck.lengthPlaceholder')}
               />
             </div>
@@ -885,7 +885,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 step="0.1"
                 value={width}
                 onChange={(e) => setWidth(e.target.value ? Number(e.target.value) : '')}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder={t('calculators.deck.widthPlaceholder')}
               />
             </div>
@@ -902,7 +902,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               step="0.1"
               value={area}
               onChange={(e) => setArea(e.target.value ? Number(e.target.value) : '')}
-              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder={t('calculators.deck.totalAreaPlaceholder')}
             />
           </div>
@@ -916,7 +916,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             id="deckingType"
             value={deckingType}
             onChange={(e) => setDeckingType(e.target.value)}
-            className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             {activeDeckingTypes.map(type => (
               <option key={type.id} value={type.id}>{type.name}</option>
@@ -937,7 +937,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 step="0.1"
                 value={customDeckingWidth}
                 onChange={(e) => setCustomDeckingWidth(e.target.value ? Number(e.target.value) : '')}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder={t('calculators.deck.enterBoardWidth')}
               />
             </div>
@@ -952,7 +952,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 step="0.01"
                 value={customDeckingSpacing}
                 onChange={(e) => setCustomDeckingSpacing(e.target.value ? Number(e.target.value) : '')}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder={t('calculators.deck.enterSpacing')}
               />
             </div>
@@ -970,7 +970,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="joistsSpacing"
                 value={joistsSpacing}
                 onChange={(e) => setJoistsSpacing(Number(e.target.value) as 12 | 16)}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value={12}>{t('calculators.deck.joistSpacing12')}</option>
                 <option value={16}>{t('calculators.deck.joistSpacing16')}</option>
@@ -984,7 +984,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="joistSize"
                 value={joistSize}
                 onChange={(e) => setJoistSize(e.target.value as typeof joistSize)}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="2x6">{t('calculators.deck.joists2x6')}</option>
                 <option value="2x8">{t('calculators.deck.joists2x8')}</option>
@@ -1003,7 +1003,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 step="0.1"
                 value={beamSpan}
                 onChange={(e) => setBeamSpan(e.target.value ? Number(e.target.value) : '')}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder={t('calculators.deck.enterBeamSpan')}
               />
             </div>
@@ -1022,7 +1022,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   setCantileverLength('');
                 }
               }}
-              className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+              className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
             />
             <label htmlFor="includeCantilever" className="ml-2 block text-sm font-medium text-slate-700">
               {t('calculators.deck.includeCantilever')}
@@ -1042,7 +1042,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 step="1"
                 value={cantileverLength}
                 onChange={(e) => setCantileverLength(e.target.value ? Number(e.target.value) : '')}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder={t('calculators.deck.enterCantilever')}
               />
               {typeof cantileverLength === 'number' && cantileverLength > 24 && (
@@ -1059,7 +1059,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               id="includeStairs"
               checked={includeStairs}
               onChange={(e) => setIncludeStairs(e.target.checked)}
-              className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+              className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
             />
             <label htmlFor="includeStairs" className="ml-2 block text-sm font-medium text-slate-700">
               {t('calculators.deck.includeStairs')}
@@ -1084,7 +1084,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                     );
                     setStaircases(newStaircases);
                   }}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value={1}>1 Staircase</option>
                   <option value={2}>2 Staircases</option>
@@ -1114,7 +1114,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                         newStaircases[index].heightAboveGrade = e.target.value ? Number(e.target.value) : 0;
                         setStaircases(newStaircases);
                       }}
-                      className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder={t('calculators.deck.enterHeightInches')}
                     />
                     <p className="mt-1 text-sm text-slate-500">
@@ -1137,7 +1137,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                         newStaircases[index].width = e.target.value ? Number(e.target.value) : 0;
                         setStaircases(newStaircases);
                       }}
-                      className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder={t('calculators.deck.enterStairWidth')}
                     />
                     {staircase.width < 36 && staircase.width > 0 && (
@@ -1159,7 +1159,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                         newStaircases[index].stairRun = Number(e.target.value) as 10 | 12;
                         setStaircases(newStaircases);
                       }}
-                      className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                       <option value={10}>{t('calculators.deck.stairRun10')}</option>
                       <option value={12}>{t('calculators.deck.stairRun12')}</option>
@@ -1183,7 +1183,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   setRailingLength('');
                 }
               }}
-              className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+              className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
             />
             <label htmlFor="includeRailing" className="ml-2 block text-sm font-medium text-slate-700">
               {t('calculators.deck.includeRailing')}
@@ -1200,7 +1200,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   id="railingType"
                   value={railingType}
                   onChange={(e) => setRailingType(e.target.value as 'pt' | 'trex')}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="pt">{t('calculators.deck.pressureTreated')}</option>
                   <option value="trex">{t('calculators.deck.trexComposite')}</option>
@@ -1218,7 +1218,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   step="0.1"
                   value={railingLength}
                   onChange={(e) => setRailingLength(e.target.value ? Number(e.target.value) : '')}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder={t('calculators.deck.enterRailingLength')}
                 />
               </div>
@@ -1238,7 +1238,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   setFasciaLength('');
                 }
               }}
-              className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+              className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
             />
             <label htmlFor="includeFascia" className="ml-2 block text-sm font-medium text-slate-700">
               {t('calculators.deck.includeFascia')}
@@ -1255,7 +1255,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   id="fasciaType"
                   value={fasciaType}
                   onChange={(e) => setFasciaType(e.target.value as 'pt' | 'azek' | 'metal')}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="pt">{t('calculators.deck.pressureTreated')}</option>
                   <option value="azek">{t('calculators.deck.azekPVC')}</option>
@@ -1274,7 +1274,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   step="0.1"
                   value={fasciaLength}
                   onChange={(e) => setFasciaLength(e.target.value ? Number(e.target.value) : '')}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder={t('calculators.deck.enterFasciaLength')}
                 />
               </div>
@@ -1294,7 +1294,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   setTripleBeamLength('');
                 }
               }}
-              className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+              className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
             />
             <label htmlFor="includeTripleBeam" className="ml-2 block text-sm font-medium text-slate-700">
               Include Triple Beam (Cantilever Support)
@@ -1313,7 +1313,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 step="0.1"
                 value={tripleBeamLength}
                 onChange={(e) => setTripleBeamLength(e.target.value ? Number(e.target.value) : '')}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Enter triple beam length"
               />
               <p className="mt-1 text-sm text-slate-500">
@@ -1335,7 +1335,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   setNumFreestandingPosts('');
                 }
               }}
-              className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+              className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
             />
             <label htmlFor="includeFreestandingPosts" className="ml-2 block text-sm font-medium text-slate-700">
               Freestanding Deck Posts
@@ -1352,7 +1352,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   id="postSize"
                   value={postSize}
                   onChange={(e) => setPostSize(e.target.value as '4x4' | '6x6')}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="6x6">6x6 Posts ($9 per foot)</option>
                   <option value="4x4">4x4 Posts ($6 per foot)</option>
@@ -1370,7 +1370,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   step="1"
                   value={numFreestandingPosts}
                   onChange={(e) => setNumFreestandingPosts(e.target.value ? Number(e.target.value) : '')}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Enter number of posts"
                 />
               </div>
@@ -1386,7 +1386,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   step="0.1"
                   value={postHeight}
                   onChange={(e) => setPostHeight(e.target.value ? Number(e.target.value) : '')}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Enter post height in feet"
                 />
                 <p className="mt-1 text-sm text-slate-500">
@@ -1409,7 +1409,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   setLedgerBoardLength('');
                 }
               }}
-              className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+              className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
             />
             <label htmlFor="includeLedgerBoard" className="ml-2 block text-sm font-medium text-slate-700">
               Include Ledger Board
@@ -1428,7 +1428,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 step="0.1"
                 value={ledgerBoardLength}
                 onChange={(e) => setLedgerBoardLength(e.target.value ? Number(e.target.value) : '')}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Enter ledger board length"
               />
               <p className="mt-1 text-sm text-slate-500">
@@ -1444,7 +1444,7 @@ const DeckCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         disabled={!isFormValid}
         className={`w-full py-3 px-4 rounded-md font-medium text-white ${
           isFormValid
-            ? 'bg-orange-500 hover:bg-orange-600 transition-colors'
+            ? 'bg-blue-500 hover:bg-blue-600 transition-colors'
             : 'bg-slate-300 cursor-not-allowed'
         }`}
       >

@@ -84,7 +84,7 @@ export const MarketingTutorialModal: React.FC<MarketingTutorialModalProps> = ({
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 px-4">
       <div className="w-full max-w-md bg-[#1C1C1E] rounded-2xl overflow-hidden">
         {/* Header */}
-        <div className="relative bg-gradient-to-r from-orange-500/20 to-orange-600/20 px-4 py-6">
+        <div className="relative bg-gradient-to-r from-blue-500/20 to-blue-600/20 px-4 py-6">
           <button
             onClick={handleSkip}
             className="absolute top-4 right-4 w-8 h-8 bg-black/20 rounded-full flex items-center justify-center"
@@ -93,8 +93,8 @@ export const MarketingTutorialModal: React.FC<MarketingTutorialModalProps> = ({
           </button>
 
           <div className="flex flex-col items-center">
-            <div className="w-16 h-16 bg-orange-500/30 rounded-2xl flex items-center justify-center mb-3">
-              <CurrentIcon className="w-8 h-8 text-orange-500" />
+            <div className="w-16 h-16 bg-blue-500/30 rounded-2xl flex items-center justify-center mb-3">
+              <CurrentIcon className="w-8 h-8 text-blue-500" />
             </div>
             <h2 className="text-xl font-bold text-white text-center">
               {tutorialSteps[currentStep].title}
@@ -116,9 +116,9 @@ export const MarketingTutorialModal: React.FC<MarketingTutorialModalProps> = ({
               key={index}
               className={`h-1.5 rounded-full transition-all ${
                 index === currentStep
-                  ? 'w-6 bg-orange-500'
+                  ? 'w-6 bg-blue-500'
                   : index < currentStep
-                  ? 'w-1.5 bg-orange-500/50'
+                  ? 'w-1.5 bg-blue-500/50'
                   : 'w-1.5 bg-zinc-700'
               }`}
             />
@@ -139,7 +139,7 @@ export const MarketingTutorialModal: React.FC<MarketingTutorialModalProps> = ({
             )}
             <button
               onClick={handleNext}
-              className="flex-1 py-3 bg-orange-500 text-white font-semibold rounded-xl flex items-center justify-center gap-2"
+              className="flex-1 py-3 bg-blue-500 text-white font-semibold rounded-xl flex items-center justify-center gap-2"
             >
               {currentStep === tutorialSteps.length - 1 ? 'Get Started' : 'Next'}
               {currentStep < tutorialSteps.length - 1 && <ChevronRight className="w-4 h-4" />}
@@ -154,7 +154,7 @@ export const MarketingTutorialModal: React.FC<MarketingTutorialModalProps> = ({
               type="checkbox"
               checked={dontShowAgain}
               onChange={(e) => setDontShowAgain(e.target.checked)}
-              className="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-orange-500 focus:ring-orange-500 focus:ring-offset-0"
+              className="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-blue-500 focus:ring-blue-500 focus:ring-offset-0"
             />
             <span className="text-zinc-500 text-sm">Don't show this again</span>
           </label>

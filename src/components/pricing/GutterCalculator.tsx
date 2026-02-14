@@ -346,11 +346,11 @@ const GuttersCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     return (
       <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
         <div className="flex items-center mb-6">
-          <Droplets className="h-6 w-6 text-orange-500 mr-2" />
+          <Droplets className="h-6 w-6 text-blue-500 mr-2" />
           <h2 className="text-xl font-bold text-slate-800">{t('calculators.gutters.title')}</h2>
         </div>
         <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading custom configuration...</p>
         </div>
       </div>
@@ -362,7 +362,7 @@ const GuttersCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     return (
       <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
         <div className="flex items-center mb-6">
-          <Droplets className="h-6 w-6 text-orange-500 mr-2" />
+          <Droplets className="h-6 w-6 text-blue-500 mr-2" />
           <h2 className="text-xl font-bold text-slate-800">{t('calculators.gutters.title')}</h2>
         </div>
         <div className="text-center py-12">
@@ -379,7 +379,7 @@ const GuttersCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   return (
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
       <div className="flex items-center mb-6">
-        <Droplets className="h-6 w-6 text-orange-500 mr-2" />
+        <Droplets className="h-6 w-6 text-blue-500 mr-2" />
         <h2 className="text-xl font-bold text-slate-800">{t('calculators.gutters.title')}</h2>
       </div>
 
@@ -403,7 +403,7 @@ const GuttersCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               step="0.1"
               value={roofLength}
               onChange={(e) => setRoofLength(e.target.value ? Number(e.target.value) : '')}
-              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Enter total length in feet"
             />
           </div>
@@ -416,7 +416,7 @@ const GuttersCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               id="roofPitch"
               value={roofPitch}
               onChange={(e) => setRoofPitch(Number(e.target.value))}
-              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               {[2, 3, 4, 5, 6, 7, 8, 9, 10, 12].map(pitch => (
                 <option key={pitch} value={pitch}>{pitch}/12 pitch</option>
@@ -439,7 +439,7 @@ const GuttersCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   setGutterMaterial(e.target.value as GutterMaterial);
                   setGutterSize('5'); // Reset size when material changes
                 }}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="aluminum">Aluminum</option>
                 <option value="vinyl">Vinyl</option>
@@ -456,7 +456,7 @@ const GuttersCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="gutterSize"
                 value={gutterSize}
                 onChange={(e) => setGutterSize(e.target.value as GutterSize)}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="5">5" K-Style</option>
                 <option value="6">6" K-Style</option>
@@ -478,7 +478,7 @@ const GuttersCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   step="0.01"
                   value={customGutterPrice}
                   onChange={(e) => setCustomGutterPrice(e.target.value ? Number(e.target.value) : '')}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Enter price per foot"
                 />
               </div>
@@ -493,7 +493,7 @@ const GuttersCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   step="1"
                   value={customGutterMaxSpan}
                   onChange={(e) => setCustomGutterMaxSpan(e.target.value ? Number(e.target.value) : '')}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Enter maximum span"
                 />
               </div>
@@ -512,7 +512,7 @@ const GuttersCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="downspoutSize"
                 value={downspoutSize}
                 onChange={(e) => setDownspoutSize(e.target.value as DownspoutSize)}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="2x3">2" x 3"</option>
                 <option value="3x4">3" x 4"</option>
@@ -532,7 +532,7 @@ const GuttersCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   step="0.01"
                   value={customDownspoutPrice}
                   onChange={(e) => setCustomDownspoutPrice(e.target.value ? Number(e.target.value) : '')}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Enter price per foot"
                 />
               </div>
@@ -554,7 +554,7 @@ const GuttersCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 step="1"
                 value={valleyCount}
                 onChange={(e) => setValleyCount(e.target.value ? Number(e.target.value) : '')}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Enter number of valleys"
               />
             </div>
@@ -565,7 +565,7 @@ const GuttersCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="includeLeafGuards"
                 checked={includeLeafGuards}
                 onChange={(e) => setIncludeLeafGuards(e.target.checked)}
-                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
               />
               <label htmlFor="includeLeafGuards" className="ml-2 block text-sm font-medium text-slate-700">
                 Include Leaf Guards
@@ -583,7 +583,7 @@ const GuttersCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   id="includeEndcaps"
                   checked={includeEndcaps}
                   onChange={(e) => setIncludeEndcaps(e.target.checked)}
-                  className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                  className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
                 />
                 <label htmlFor="includeEndcaps" className="ml-2 block text-sm font-medium text-slate-700">
                   Include Endcaps
@@ -603,7 +603,7 @@ const GuttersCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                       setCornerCount('');
                     }
                   }}
-                  className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                  className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
                 />
                 <label htmlFor="includeCorners" className="ml-2 block text-sm font-medium text-slate-700">
                   Include Corners
@@ -623,7 +623,7 @@ const GuttersCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   step="1"
                   value={cornerCount}
                   onChange={(e) => setCornerCount(e.target.value ? Number(e.target.value) : '')}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Enter number of corners"
                 />
               </div>
@@ -641,7 +641,7 @@ const GuttersCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                       setHeatTapeLength('');
                     }
                   }}
-                  className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                  className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
                 />
                 <label htmlFor="includeHeatTape" className="ml-2 block text-sm font-medium text-slate-700">
                   Include Heat Tape
@@ -661,7 +661,7 @@ const GuttersCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   step="1"
                   value={heatTapeLength}
                   onChange={(e) => setHeatTapeLength(e.target.value ? Number(e.target.value) : '')}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Enter heat tape length"
                 />
               </div>
@@ -675,7 +675,7 @@ const GuttersCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         disabled={!isFormValid}
         className={`w-full py-3 px-4 rounded-md font-medium text-white ${
           isFormValid
-            ? 'bg-orange-500 hover:bg-orange-600 transition-colors'
+            ? 'bg-blue-500 hover:bg-blue-600 transition-colors'
             : 'bg-slate-300 cursor-not-allowed'
         }`}
       >

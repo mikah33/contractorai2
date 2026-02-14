@@ -720,7 +720,7 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose }) => {
                     }}
                     className="flex flex-col items-center gap-1 p-3 bg-[#2C2C2E] rounded-xl active:scale-95 transition-transform"
                   >
-                    <Mail className="w-5 h-5 text-orange-400" />
+                    <Mail className="w-5 h-5 text-blue-400" />
                     <span className="text-xs text-zinc-300">Email</span>
                   </button>
                   <button
@@ -842,7 +842,7 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose }) => {
                 onClick={handleSendToEmail}
                 className="flex flex-col items-center gap-1 p-3 bg-[#2C2C2E] rounded-xl active:scale-95 transition-transform"
               >
-                <Mail className="w-5 h-5 text-orange-400" />
+                <Mail className="w-5 h-5 text-blue-400" />
                 <span className="text-xs text-zinc-300">Email</span>
               </button>
               <button

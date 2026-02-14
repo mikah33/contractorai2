@@ -78,7 +78,7 @@ interface AIChatPopupProps {
 }
 
 const modeConfig: Record<ContractorMode, { color: string; bgColor: string; icon: React.ReactNode; label: string }> = {
-  estimating: { color: 'orange', bgColor: 'from-orange-500 to-orange-600', icon: <Calculator className="w-5 h-5" />, label: 'Estimating' },
+  estimating: { color: 'blue', bgColor: 'from-blue-500 to-blue-600', icon: <Calculator className="w-5 h-5" />, label: 'Estimating' },
   projects: { color: 'purple', bgColor: 'from-purple-500 to-purple-600', icon: <Briefcase className="w-5 h-5" />, label: 'Projects' },
   crm: { color: 'blue', bgColor: 'from-blue-500 to-blue-600', icon: <Users className="w-5 h-5" />, label: 'Clients' },
   finance: { color: 'green', bgColor: 'from-green-500 to-green-600', icon: <DollarSign className="w-5 h-5" />, label: 'Finance' },
@@ -634,7 +634,7 @@ const AIChatPopup: React.FC<AIChatPopupProps> = ({ isOpen, onClose, mode, onEsti
           <div className="flex items-center gap-1">
             <button
               onClick={() => setShowHistory(!showHistory)}
-              className={`p-2 rounded-full hover:bg-white/10 ${showHistory ? 'text-orange-500' : 'text-zinc-400 hover:text-white'}`}
+              className={`p-2 rounded-full hover:bg-white/10 ${showHistory ? 'text-blue-500' : 'text-zinc-400 hover:text-white'}`}
             >
               <History className="w-5 h-5" />
             </button>
@@ -661,7 +661,7 @@ const AIChatPopup: React.FC<AIChatPopupProps> = ({ isOpen, onClose, mode, onEsti
               <h4 className="font-semibold text-white">Chat History</h4>
               <button
                 onClick={handleNewChat}
-                className="flex items-center gap-2 px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg transition-colors"
+                className="flex items-center gap-2 px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 New Chat
@@ -681,7 +681,7 @@ const AIChatPopup: React.FC<AIChatPopupProps> = ({ isOpen, onClose, mode, onEsti
                   <button
                     key={chatSession.id}
                     onClick={() => handleLoadSession(chatSession)}
-                    className="w-full flex items-center gap-3 p-3 bg-[#242424] rounded-xl border border-white/10 hover:border-orange-500/50 active:scale-[0.98] transition-all text-left"
+                    className="w-full flex items-center gap-3 p-3 bg-[#242424] rounded-xl border border-white/10 hover:border-blue-500/50 active:scale-[0.98] transition-all text-left"
                   >
                     <div className={`w-10 h-10 bg-gradient-to-r ${config.bgColor} rounded-lg flex items-center justify-center text-white flex-shrink-0`}>
                       {config.icon}
@@ -750,11 +750,11 @@ const AIChatPopup: React.FC<AIChatPopupProps> = ({ isOpen, onClose, mode, onEsti
               <div className="border-t border-white/10 bg-[#141414] px-4 py-3">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-orange-500" />
+                    <FileText className="w-4 h-4 text-blue-500" />
                     <span className="font-semibold text-white text-sm">Current Estimate</span>
                     <span className="text-xs text-zinc-400">({currentEstimate.length} items)</span>
                   </div>
-                  <span className="font-bold text-orange-500">{formatCurrency(totalEstimate)}</span>
+                  <span className="font-bold text-blue-500">{formatCurrency(totalEstimate)}</span>
                 </div>
 
                 <div className="max-h-20 overflow-y-auto space-y-1 mb-2">
@@ -779,7 +779,7 @@ const AIChatPopup: React.FC<AIChatPopupProps> = ({ isOpen, onClose, mode, onEsti
 
                 <button
                   onClick={handleGenerateEstimate}
-                  className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2.5 px-4 rounded-xl transition-colors"
+                  className="w-full flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2.5 px-4 rounded-xl transition-colors"
                 >
                   <FileText className="w-4 h-4" />
                   Create Estimate
@@ -822,7 +822,7 @@ const AIChatPopup: React.FC<AIChatPopupProps> = ({ isOpen, onClose, mode, onEsti
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder={`Ask about ${config.label.toLowerCase()}...`}
-                  className="flex-1 px-4 py-3 text-base bg-[#141414] border border-white/10 rounded-full text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="flex-1 px-4 py-3 text-base bg-[#141414] border border-white/10 rounded-full text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   disabled={isLoading}
                 />
 

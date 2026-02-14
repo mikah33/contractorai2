@@ -62,7 +62,7 @@ interface ChatSession {
 
 // Mode colors and icons
 const modeConfig: Record<ContractorMode, { color: string; bgColor: string; icon: React.ReactNode; label: string }> = {
-  estimating: { color: 'orange', bgColor: 'from-orange-500 to-orange-600', icon: <Calculator className="w-5 h-5" />, label: 'Estimating' },
+  estimating: { color: 'blue', bgColor: 'from-blue-500 to-blue-600', icon: <Calculator className="w-5 h-5" />, label: 'Estimating' },
   projects: { color: 'purple', bgColor: 'from-purple-500 to-purple-600', icon: <Briefcase className="w-5 h-5" />, label: 'Projects' },
   crm: { color: 'blue', bgColor: 'from-blue-500 to-blue-600', icon: <Users className="w-5 h-5" />, label: 'CRM' },
   finance: { color: 'green', bgColor: 'from-green-500 to-green-600', icon: <DollarSign className="w-5 h-5" />, label: 'Finance' },
@@ -618,7 +618,7 @@ export const ContractorChatbot: React.FC<ContractorChatbotProps> = ({ initialMod
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Ask Contractor anything..."
-              className="flex-1 px-4 py-3 text-base bg-[#141414] border border-white/10 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="flex-1 px-4 py-3 text-base bg-[#141414] border border-white/10 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               disabled={isLoading}
             />
             <button
@@ -685,14 +685,14 @@ export const ContractorChatbot: React.FC<ContractorChatbotProps> = ({ initialMod
                 <div className="pt-3 mt-3 border-t border-gray-300">
                   <div className="flex justify-between items-center mb-4">
                     <span className="text-lg font-bold text-gray-900">Total:</span>
-                    <span className="text-2xl font-bold text-orange-600">
+                    <span className="text-2xl font-bold text-blue-600">
                       {formatCurrency(totalEstimate)}
                     </span>
                   </div>
 
                   <button
                     onClick={handleGenerateEstimate}
-                    className="w-full px-4 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 flex items-center justify-center gap-2 font-semibold"
+                    className="w-full px-4 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center justify-center gap-2 font-semibold"
                   >
                     <FileText className="w-5 h-5" />
                     Generate Estimate

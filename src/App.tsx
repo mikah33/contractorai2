@@ -63,6 +63,7 @@ import FinanceHub from './pages/FinanceHub';
 import BusinessHub from './pages/BusinessHub';
 import TodoHub from './pages/TodoHub';
 import JobsHub from './pages/JobsHub';
+import SearchHub from './pages/SearchHub';
 import MobileBottomNav from './components/layout/MobileBottomNav';
 import GlobalAISearchBar from './components/ai/GlobalAISearchBar';
 // Deprecated: Individual chatbot pages - now redirected to unified AITeamHub
@@ -322,6 +323,7 @@ function App() {
                     <Route path="/finance-hub" element={<FinanceHub />} />
                     <Route path="/business-hub" element={<BusinessHub />} />
                     <Route path="/jobs-hub" element={<JobsHub />} />
+                    <Route path="/search" element={<SearchHub />} />
                     <Route path="/todo-hub" element={<TodoHub />} />
                     <Route path="/employees-hub" element={<EmployeesHub />} />
                     {/* Redirect deprecated chatbot routes to unified AITeamHub with mode */}

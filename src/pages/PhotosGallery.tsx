@@ -182,7 +182,7 @@ const PhotosGallery: React.FC = () => {
             onClick={() => { setFilter('all'); setSelectedProjectId(null); }}
             className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
               filter === 'all' && !selectedProjectId
-                ? 'bg-orange-500 text-white'
+                ? 'bg-blue-500 text-white'
                 : `${themeClasses.bg.tertiary} ${themeClasses.text.secondary} ${themeClasses.hover.text}`
             }`}
           >
@@ -193,7 +193,7 @@ const PhotosGallery: React.FC = () => {
             onClick={() => { setFilter('project'); setSelectedProjectId(null); }}
             className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
               filter === 'project' && !selectedProjectId
-                ? 'bg-orange-500 text-white'
+                ? 'bg-blue-500 text-white'
                 : `${themeClasses.bg.tertiary} ${themeClasses.text.secondary} ${themeClasses.hover.text}`
             }`}
           >
@@ -204,7 +204,7 @@ const PhotosGallery: React.FC = () => {
             onClick={() => { setFilter('general'); setSelectedProjectId(null); }}
             className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
               filter === 'general'
-                ? 'bg-orange-500 text-white'
+                ? 'bg-blue-500 text-white'
                 : `${themeClasses.bg.tertiary} ${themeClasses.text.secondary} ${themeClasses.hover.text}`
             }`}
           >
@@ -235,7 +235,7 @@ const PhotosGallery: React.FC = () => {
                   onClick={() => setSelectedProjectId(group.projectId)}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
                     selectedProjectId === group.projectId
-                      ? 'bg-orange-500/30 text-orange-400 border border-orange-500'
+                      ? 'bg-blue-500/30 text-blue-400 border border-blue-500'
                       : `${themeClasses.bg.tertiary} ${themeClasses.text.secondary} border border-transparent`
                   }`}
                 >
@@ -250,7 +250,7 @@ const PhotosGallery: React.FC = () => {
       <div className="p-4">
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
+            <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
           </div>
         ) : photos.length === 0 ? (
           <div className={`text-center py-12 ${themeClasses.bg.card} rounded-xl border-2 ${theme === 'light' ? 'border-gray-300' : 'border-zinc-600'}`}>
@@ -268,10 +268,10 @@ const PhotosGallery: React.FC = () => {
                   <div className={`flex items-center justify-between p-4 border-b ${themeClasses.border.primary}`}>
                     <div className="flex items-center gap-3">
                       <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                        group.projectId ? 'bg-orange-500/20' : themeClasses.bg.tertiary
+                        group.projectId ? 'bg-blue-500/20' : themeClasses.bg.tertiary
                       }`}>
                         {group.projectId ? (
-                          <Briefcase className="w-5 h-5 text-orange-500" />
+                          <Briefcase className="w-5 h-5 text-blue-500" />
                         ) : (
                           <Camera className={`w-5 h-5 ${themeClasses.text.muted}`} />
                         )}
@@ -304,7 +304,7 @@ const PhotosGallery: React.FC = () => {
                             setFilter('general');
                           }
                         }}
-                        className="w-full mt-3 py-2 text-sm text-orange-500 font-medium"
+                        className="w-full mt-3 py-2 text-sm text-blue-500 font-medium"
                       >
                         View all {group.photos.length} photos
                       </button>
@@ -378,7 +378,7 @@ const PhotosGallery: React.FC = () => {
                 </div>
               )}
               {selectedPhoto.projectName && (
-                <div className="flex items-center justify-center gap-2 text-orange-500">
+                <div className="flex items-center justify-center gap-2 text-blue-500">
                   <Briefcase className="w-4 h-4" />
                   <span className="text-sm font-medium">{selectedPhoto.projectName}</span>
                 </div>

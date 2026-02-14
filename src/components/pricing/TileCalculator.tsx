@@ -376,11 +376,11 @@ const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     return (
       <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
         <div className="flex items-center mb-6">
-          <Grid className="h-6 w-6 text-orange-500 mr-2" />
+          <Grid className="h-6 w-6 text-blue-500 mr-2" />
           <h2 className="text-xl font-bold text-slate-800">{t('calculators.tile.title')}</h2>
         </div>
         <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading custom configuration...</p>
         </div>
       </div>
@@ -392,7 +392,7 @@ const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     return (
       <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
         <div className="flex items-center mb-6">
-          <Grid className="h-6 w-6 text-orange-500 mr-2" />
+          <Grid className="h-6 w-6 text-blue-500 mr-2" />
           <h2 className="text-xl font-bold text-slate-800">{t('calculators.tile.title')}</h2>
         </div>
         <div className="text-center py-12">
@@ -409,7 +409,7 @@ const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   return (
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
       <div className="flex items-center mb-6">
-        <Grid className="h-6 w-6 text-orange-500 mr-2" />
+        <Grid className="h-6 w-6 text-blue-500 mr-2" />
         <h2 className="text-xl font-bold text-slate-800">{t('calculators.tile.title')}</h2>
       </div>
 
@@ -427,7 +427,7 @@ const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               type="button"
               className={`px-4 py-2 text-sm font-medium rounded-l-lg ${
                 surfaceType === 'floor'
-                  ? 'bg-orange-500 text-white'
+                  ? 'bg-blue-500 text-white'
                   : 'bg-white text-slate-700 hover:bg-slate-100'
               } border border-slate-300`}
               onClick={() => setSurfaceType('floor')}
@@ -438,7 +438,7 @@ const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               type="button"
               className={`px-4 py-2 text-sm font-medium rounded-r-lg ${
                 surfaceType === 'wall'
-                  ? 'bg-orange-500 text-white'
+                  ? 'bg-blue-500 text-white'
                   : 'bg-white text-slate-700 hover:bg-slate-100'
               } border border-slate-300`}
               onClick={() => setSurfaceType('wall')}
@@ -452,7 +452,7 @@ const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               type="button"
               className={`px-4 py-2 text-sm font-medium rounded-l-lg ${
                 inputType === 'dimensions'
-                  ? 'bg-orange-500 text-white'
+                  ? 'bg-blue-500 text-white'
                   : 'bg-white text-slate-700 hover:bg-slate-100'
               } border border-slate-300`}
               onClick={() => setInputType('dimensions')}
@@ -463,7 +463,7 @@ const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               type="button"
               className={`px-4 py-2 text-sm font-medium rounded-r-lg ${
                 inputType === 'area'
-                  ? 'bg-orange-500 text-white'
+                  ? 'bg-blue-500 text-white'
                   : 'bg-white text-slate-700 hover:bg-slate-100'
               } border border-slate-300`}
               onClick={() => setInputType('area')}
@@ -488,7 +488,7 @@ const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 step="0.1"
                 value={length}
                 onChange={(e) => setLength(e.target.value ? Number(e.target.value) : '')}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder={surfaceType === 'wall'
                   ? t('calculators.tile.placeholderWallLength')
                   : t('calculators.tile.placeholderLength')}
@@ -507,7 +507,7 @@ const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   step="0.1"
                   value={width}
                   onChange={(e) => setWidth(e.target.value ? Number(e.target.value) : '')}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder={t('calculators.tile.placeholderWidth')}
                 />
               </div>
@@ -523,7 +523,7 @@ const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   step="0.1"
                   value={height}
                   onChange={(e) => setHeight(e.target.value ? Number(e.target.value) : '')}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder={t('calculators.tile.placeholderWallHeight')}
                 />
               </div>
@@ -541,7 +541,7 @@ const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               step="0.1"
               value={area}
               onChange={(e) => setArea(e.target.value ? Number(e.target.value) : '')}
-              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder={t('calculators.tile.placeholderTotalArea')}
             />
           </div>
@@ -565,7 +565,7 @@ const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   setCustomTileWidth(value);
                   setTileSize(prev => ({ ...prev, width: value as number }));
                 }}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder={t('calculators.tile.placeholderTileWidth')}
               />
             </div>
@@ -585,7 +585,7 @@ const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   setCustomTileLength(value);
                   setTileSize(prev => ({ ...prev, length: value as number }));
                 }}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder={t('calculators.tile.placeholderTileLength')}
               />
             </div>
@@ -605,7 +605,7 @@ const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   setCustomTilePiecesPerBox(value);
                   setTileSize(prev => ({ ...prev, piecesPerBox: value as number }));
                 }}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder={t('calculators.tile.placeholderPiecesPerBox')}
               />
             </div>
@@ -625,7 +625,7 @@ const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   setCustomTilePricePerBox(value);
                   setTileSize(prev => ({ ...prev, pricePerBox: value as number }));
                 }}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder={t('calculators.tile.placeholderPricePerBox')}
               />
             </div>
@@ -643,7 +643,7 @@ const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="pattern"
                 value={pattern}
                 onChange={(e) => setPattern(e.target.value as TilePattern)}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="straight">{t('calculators.tile.patterns.straight')}</option>
                 <option value="diagonal">{t('calculators.tile.patterns.diagonal')}</option>
@@ -661,7 +661,7 @@ const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="groutWidth"
                 value={groutWidth}
                 onChange={(e) => setGroutWidth(Number(e.target.value) as GroutWidth)}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value={0.125}>{t('calculators.tile.groutWidths.1_8')}</option>
                 <option value={0.25}>{t('calculators.tile.groutWidths.1_4')}</option>
@@ -770,7 +770,7 @@ const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="mortarType"
                 value={mortarType}
                 onChange={(e) => setMortarType(e.target.value as 'modified' | 'unmodified' | 'epoxy')}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="modified">{t('calculators.tile.mortarTypes.modified')}</option>
                 <option value="unmodified">{t('calculators.tile.mortarTypes.unmodified')}</option>
@@ -786,7 +786,7 @@ const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="groutType"
                 value={groutType}
                 onChange={(e) => setGroutType(e.target.value as 'sanded' | 'unsanded' | 'epoxy')}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="sanded">{t('calculators.tile.groutTypes.sanded')}</option>
                 <option value="unsanded">{t('calculators.tile.groutTypes.unsanded')}</option>
@@ -807,7 +807,7 @@ const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="wasteFactor"
                 value={wasteFactor}
                 onChange={(e) => setWasteFactor(Number(e.target.value) as 10 | 15 | 20)}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value={10}>{t('calculators.tile.wasteFactors.10')}</option>
                 <option value={15}>{t('calculators.tile.wasteFactors.15')}</option>
@@ -821,7 +821,7 @@ const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="includeBackerBoard"
                 checked={includeBackerBoard}
                 onChange={(e) => setIncludeBackerBoard(e.target.checked)}
-                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
               />
               <label htmlFor="includeBackerBoard" className="ml-2 block text-sm font-medium text-slate-700">
                 {t('calculators.tile.includeBackerBoard')}
@@ -837,7 +837,7 @@ const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   id="backerBoardThickness"
                   value={backerBoardThickness}
                   onChange={(e) => setBackerBoardThickness(e.target.value as '1/4' | '1/2')}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="1/4">{t('calculators.tile.backerBoardThicknesses.1_4')}</option>
                   <option value="1/2">{t('calculators.tile.backerBoardThicknesses.1_2')}</option>
@@ -851,7 +851,7 @@ const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="includeMembrane"
                 checked={includeMembrane}
                 onChange={(e) => setIncludeMembrane(e.target.checked)}
-                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
               />
               <label htmlFor="includeMembrane" className="ml-2 block text-sm font-medium text-slate-700">
                 {t('calculators.tile.includeWaterproofMembrane')}
@@ -864,7 +864,7 @@ const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="includeEdging"
                 checked={includeEdging}
                 onChange={(e) => setIncludeEdging(e.target.checked)}
-                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
               />
               <label htmlFor="includeEdging" className="ml-2 block text-sm font-medium text-slate-700">
                 {t('calculators.tile.includeEdgeTrim')}
@@ -880,7 +880,7 @@ const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   id="edgingType"
                   value={edgingType}
                   onChange={(e) => setEdgingType(e.target.value as 'metal' | 'stone')}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 
                 >
                   <option value="metal">{t('calculators.tile.edgingTypes.metal')}</option>
@@ -897,7 +897,7 @@ const TileCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         disabled={!isFormValid}
         className={`w-full py-3 px-4 rounded-md font-medium text-white ${
           isFormValid
-            ? 'bg-orange-500 hover:bg-orange-600 transition-colors'
+            ? 'bg-blue-500 hover:bg-blue-600 transition-colors'
             : 'bg-slate-300 cursor-not-allowed'
         }`}
       >

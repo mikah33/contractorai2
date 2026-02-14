@@ -191,7 +191,7 @@ const PanoramaViewer: React.FC<PanoramaViewerProps> = ({
                 <button
                   onClick={() => setShowAfter(false)}
                   className={`px-6 py-2 rounded-full font-medium transition-colors ${
-                    !showAfter ? 'bg-orange-500 text-white' : 'text-white/70 hover:text-white'
+                    !showAfter ? 'bg-blue-500 text-white' : 'text-white/70 hover:text-white'
                   }`}
                 >
                   Before
@@ -199,7 +199,7 @@ const PanoramaViewer: React.FC<PanoramaViewerProps> = ({
                 <button
                   onClick={() => setShowAfter(true)}
                   className={`px-6 py-2 rounded-full font-medium transition-colors ${
-                    showAfter ? 'bg-orange-500 text-white' : 'text-white/70 hover:text-white'
+                    showAfter ? 'bg-blue-500 text-white' : 'text-white/70 hover:text-white'
                   }`}
                 >
                   After
@@ -238,7 +238,7 @@ const PanoramaViewer: React.FC<PanoramaViewerProps> = ({
             <button
               onClick={() => setShowAfter(false)}
               className={`absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full transition-all ${
-                !showAfter ? 'bg-orange-500 text-white' : 'bg-white/20 text-white hover:bg-white/30'
+                !showAfter ? 'bg-blue-500 text-white' : 'bg-white/20 text-white hover:bg-white/30'
               }`}
             >
               <ChevronLeft className="w-6 h-6" />
@@ -246,7 +246,7 @@ const PanoramaViewer: React.FC<PanoramaViewerProps> = ({
             <button
               onClick={() => setShowAfter(true)}
               className={`absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full transition-all ${
-                showAfter ? 'bg-orange-500 text-white' : 'bg-white/20 text-white hover:bg-white/30'
+                showAfter ? 'bg-blue-500 text-white' : 'bg-white/20 text-white hover:bg-white/30'
               }`}
             >
               <ChevronRight className="w-6 h-6" />

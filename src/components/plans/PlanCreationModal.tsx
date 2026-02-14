@@ -222,8 +222,8 @@ const PlanCreationModal: React.FC<PlanCreationModalProps> = ({
       <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80">
         <div className="bg-[#1C1C1E] rounded-2xl w-full max-w-md p-6">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 bg-orange-500/20 rounded-xl flex items-center justify-center">
-              <Lock className="w-6 h-6 text-orange-500" />
+            <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
+              <Lock className="w-6 h-6 text-blue-500" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-white">Plan Creation</h2>
@@ -257,7 +257,7 @@ const PlanCreationModal: React.FC<PlanCreationModalProps> = ({
             </button>
             <button
               onClick={handleBetaSubmit}
-              className="flex-1 px-4 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-medium transition-colors"
+              className="flex-1 px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium transition-colors"
             >
               Unlock
             </button>
@@ -295,7 +295,7 @@ const PlanCreationModal: React.FC<PlanCreationModalProps> = ({
             onClick={() => setActiveTab('new')}
             className={`flex-1 py-3 text-sm font-medium transition-colors ${
               activeTab === 'new'
-                ? 'text-orange-500 border-b-2 border-orange-500'
+                ? 'text-blue-500 border-b-2 border-blue-500'
                 : 'text-zinc-400 hover:text-white'
             }`}
           >
@@ -305,7 +305,7 @@ const PlanCreationModal: React.FC<PlanCreationModalProps> = ({
             onClick={() => setActiveTab('saved')}
             className={`flex-1 py-3 text-sm font-medium transition-colors ${
               activeTab === 'saved'
-                ? 'text-orange-500 border-b-2 border-orange-500'
+                ? 'text-blue-500 border-b-2 border-blue-500'
                 : 'text-zinc-400 hover:text-white'
             }`}
           >
@@ -364,7 +364,7 @@ const PlanCreationModal: React.FC<PlanCreationModalProps> = ({
                   </div>
                   <div className="w-full h-2 bg-zinc-700 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-orange-500 to-pink-500 rounded-full transition-all"
+                      className="h-full bg-gradient-to-r from-blue-500 to-pink-500 rounded-full transition-all"
                       style={{ width: `${(aiGenerationStatus.count / aiGenerationStatus.limit) * 100}%` }}
                     />
                   </div>
@@ -423,7 +423,7 @@ const PlanCreationModal: React.FC<PlanCreationModalProps> = ({
                   <button
                     onClick={handleCreatePlan}
                     disabled={!newPlanName.trim() || creatingPlan}
-                    className="w-full py-3 bg-orange-500 hover:bg-orange-600 disabled:bg-zinc-700 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+                    className="w-full py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-zinc-700 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
                   >
                     {creatingPlan ? (
                       <>
@@ -447,7 +447,7 @@ const PlanCreationModal: React.FC<PlanCreationModalProps> = ({
             <div className="space-y-3">
               {isLoading ? (
                 <div className="flex items-center justify-center py-12">
-                  <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
+                  <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
                 </div>
               ) : plans.length === 0 ? (
                 <div className="text-center py-12">
@@ -463,7 +463,7 @@ const PlanCreationModal: React.FC<PlanCreationModalProps> = ({
                     <button
                       key={plan.id}
                       onClick={() => handleSelectPlan(plan)}
-                      className="w-full flex items-center gap-3 p-4 bg-[#1C1C1E] rounded-xl border border-white/10 hover:border-orange-500/50 active:scale-[0.98] transition-all text-left"
+                      className="w-full flex items-center gap-3 p-4 bg-[#1C1C1E] rounded-xl border border-white/10 hover:border-blue-500/50 active:scale-[0.98] transition-all text-left"
                     >
                       {/* Thumbnail */}
                       <div className="w-16 h-16 bg-zinc-800 rounded-lg overflow-hidden flex-shrink-0">
@@ -496,7 +496,7 @@ const PlanCreationModal: React.FC<PlanCreationModalProps> = ({
                             360° {hasPanorama ? '✓' : '–'}
                           </span>
                           {aiDesignCount > 0 && (
-                            <span className="text-xs px-2 py-0.5 rounded bg-orange-500/20 text-orange-400">
+                            <span className="text-xs px-2 py-0.5 rounded bg-blue-500/20 text-blue-400">
                               AI ×{aiDesignCount}
                             </span>
                           )}
@@ -621,10 +621,10 @@ const PlanCreationModal: React.FC<PlanCreationModalProps> = ({
 
               {/* AI Design Section */}
               {selectedPlan.scans?.some(s => s.scan_type === 'panorama') && (
-                <div className="bg-[#1C1C1E] rounded-xl p-4 border border-orange-500/30">
+                <div className="bg-[#1C1C1E] rounded-xl p-4 border border-blue-500/30">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                      <Sparkles className="w-5 h-5 text-orange-500" />
+                    <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                      <Sparkles className="w-5 h-5 text-blue-500" />
                     </div>
                     <div>
                       <h4 className="font-semibold text-white">AI Redesign</h4>
@@ -642,7 +642,7 @@ const PlanCreationModal: React.FC<PlanCreationModalProps> = ({
                       key={scan.id}
                       className="flex items-center gap-3 p-3 bg-zinc-800 rounded-lg mb-2"
                     >
-                      <Image className="w-5 h-5 text-orange-400" />
+                      <Image className="w-5 h-5 text-blue-400" />
                       <span className="flex-1 text-sm text-white truncate">
                         {scan.prompt || 'AI Design'}
                       </span>
@@ -657,7 +657,7 @@ const PlanCreationModal: React.FC<PlanCreationModalProps> = ({
                             setShowPanoramaViewer(true);
                           }
                         }}
-                        className="p-1.5 text-orange-400 hover:bg-orange-500/20 rounded transition-colors"
+                        className="p-1.5 text-blue-400 hover:bg-blue-500/20 rounded transition-colors"
                       >
                         <Eye className="w-4 h-4" />
                       </button>
@@ -668,7 +668,7 @@ const PlanCreationModal: React.FC<PlanCreationModalProps> = ({
                   <button
                     onClick={() => setShowAIPrompt(true)}
                     disabled={!canGenerateAI()}
-                    className="w-full mt-2 py-3 bg-orange-500 hover:bg-orange-600 disabled:bg-zinc-700 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+                    className="w-full mt-2 py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-zinc-700 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
                   >
                     <Wand2 className="w-5 h-5" />
                     {canGenerateAI() ? 'Generate AI Design' : 'Limit Reached'}
@@ -737,7 +737,7 @@ const PlanCreationModal: React.FC<PlanCreationModalProps> = ({
               <button
                 onClick={handleGenerateAIDesign}
                 disabled={!aiPrompt.trim() || generatingAI}
-                className="flex-1 py-3 bg-orange-500 hover:bg-orange-600 disabled:bg-zinc-700 disabled:cursor-not-allowed text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+                className="flex-1 py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-zinc-700 disabled:cursor-not-allowed text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
               >
                 {generatingAI ? (
                   <>

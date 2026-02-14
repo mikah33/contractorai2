@@ -433,13 +433,13 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
         <div className="flex items-center mb-6">
           <div className="flex space-x-2">
-            <DoorClosed className="h-6 w-6 text-orange-500" />
-            <AppWindow className="h-6 w-6 text-orange-500" />
+            <DoorClosed className="h-6 w-6 text-blue-500" />
+            <AppWindow className="h-6 w-6 text-blue-500" />
           </div>
           <h2 className="text-xl font-bold text-slate-800 ml-2">{t('calculators.doorsWindows.title')}</h2>
         </div>
         <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading custom configuration...</p>
         </div>
       </div>
@@ -452,8 +452,8 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
       <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
         <div className="flex items-center mb-6">
           <div className="flex space-x-2">
-            <DoorClosed className="h-6 w-6 text-orange-500" />
-            <AppWindow className="h-6 w-6 text-orange-500" />
+            <DoorClosed className="h-6 w-6 text-blue-500" />
+            <AppWindow className="h-6 w-6 text-blue-500" />
           </div>
           <h2 className="text-xl font-bold text-slate-800 ml-2">{t('calculators.doorsWindows.title')}</h2>
         </div>
@@ -472,8 +472,8 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
       <div className="flex items-center mb-6">
         <div className="flex space-x-2">
-          <DoorClosed className="h-6 w-6 text-orange-500" />
-          <AppWindow className="h-6 w-6 text-orange-500" />
+          <DoorClosed className="h-6 w-6 text-blue-500" />
+          <AppWindow className="h-6 w-6 text-blue-500" />
         </div>
         <h2 className="text-xl font-bold text-slate-800 ml-2">{t('calculators.doorsWindows.title')}</h2>
       </div>
@@ -490,13 +490,13 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
           <div className="flex space-x-2">
             <button
               onClick={() => addOpening('door')}
-              className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors"
+              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
             >
               {t('calculators.doorsWindows.addDoor')}
             </button>
             <button
               onClick={() => addOpening('window')}
-              className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors"
+              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
             >
               {t('calculators.doorsWindows.addWindow')}
             </button>
@@ -516,7 +516,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                     style: e.target.value,
                     material: (opening.type === 'door' ? doorStyles : windowStyles)[e.target.value].materials[0]
                   })}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   {Object.entries(opening.type === 'door' ? doorStyles : windowStyles).map(([value, { name }]) => (
                     <option key={value} value={value}>{name}</option>
@@ -531,7 +531,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 <select
                   value={opening.material}
                   onChange={(e) => updateOpening(opening.id, { material: e.target.value })}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   {(opening.type === 'door' ? doorStyles : windowStyles)[opening.style].materials.map(material => (
                     <option key={material} value={material}>
@@ -548,7 +548,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 <select
                   value={opening.finish}
                   onChange={(e) => updateOpening(opening.id, { finish: e.target.value })}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   {opening.type === 'window'
                     ? windowStyles[opening.style].finishes[opening.material].map(finish => (
@@ -575,7 +575,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   step="0.125"
                   value={opening.width}
                   onChange={(e) => updateOpening(opening.id, { width: Number(e.target.value) })}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
 
@@ -589,7 +589,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   step="0.125"
                   value={opening.height}
                   onChange={(e) => updateOpening(opening.id, { height: Number(e.target.value) })}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
 
@@ -603,7 +603,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   step="1"
                   value={opening.quantity}
                   onChange={(e) => updateOpening(opening.id, { quantity: Number(e.target.value) })}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
 
@@ -614,7 +614,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                     id={`customCost-${opening.id}`}
                     checked={opening.useCustomCost}
                     onChange={(e) => updateOpening(opening.id, { useCustomCost: e.target.checked })}
-                    className="mt-1 h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                    className="mt-1 h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
                   />
                   <div className="flex-1">
                     <label htmlFor={`customCost-${opening.id}`} className="block text-sm font-medium text-slate-700 mb-1">
@@ -631,7 +631,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                           step="0.01"
                           value={opening.customCostPerUnit}
                           onChange={(e) => updateOpening(opening.id, { customCostPerUnit: e.target.value ? Number(e.target.value) : '' })}
-                          className="w-full max-w-xs p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          className="w-full max-w-xs p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           placeholder="e.g., 350.00"
                         />
                       </div>
@@ -645,7 +645,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   type="checkbox"
                   checked={opening.isExterior}
                   onChange={(e) => updateOpening(opening.id, { isExterior: e.target.checked })}
-                  className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                  className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
                 />
                 <label className="ml-2 block text-sm font-medium text-slate-700">
                   {t('calculators.doorsWindows.exteriorInstallation')}
@@ -658,7 +658,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                     type="checkbox"
                     checked={opening.isPreHung}
                     onChange={(e) => updateOpening(opening.id, { isPreHung: e.target.checked })}
-                    className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                    className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
                   />
                   <label className="ml-2 block text-sm font-medium text-slate-700">
                     {t('calculators.doorsWindows.preHung')}
@@ -671,7 +671,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   type="checkbox"
                   checked={opening.includeTrim}
                   onChange={(e) => updateOpening(opening.id, { includeTrim: e.target.checked })}
-                  className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                  className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
                 />
                 <label className="ml-2 block text-sm font-medium text-slate-700">
                   {t('calculators.doorsWindows.includeTrim')}
@@ -686,7 +686,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   <select
                     value={opening.trimStyle}
                     onChange={(e) => updateOpening(opening.id, { trimStyle: e.target.value as Opening['trimStyle'] })}
-                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     {Object.entries(trimStyles).map(([value, { name }]) => (
                       <option key={value} value={value}>{name}</option>
@@ -700,7 +700,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   type="checkbox"
                   checked={opening.includeHardware}
                   onChange={(e) => updateOpening(opening.id, { includeHardware: e.target.checked })}
-                  className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                  className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
                 />
                 <label className="ml-2 block text-sm font-medium text-slate-700">
                   {t('calculators.doorsWindows.includeHardware')}
@@ -727,13 +727,13 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             <div className="flex justify-center space-x-2">
               <button
                 onClick={() => addOpening('door')}
-                className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors"
+                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
               >
                 {t('calculators.doorsWindows.addDoor')}
               </button>
               <button
                 onClick={() => addOpening('window')}
-                className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors"
+                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
               >
                 {t('calculators.doorsWindows.addWindow')}
               </button>
@@ -750,7 +750,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="includeInsulation"
                 checked={includeInsulation}
                 onChange={(e) => setIncludeInsulation(e.target.checked)}
-                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
               />
               <label htmlFor="includeInsulation" className="ml-2 block text-sm font-medium text-slate-700">
                 {t('calculators.doorsWindows.includeInsulation')}
@@ -763,7 +763,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="includeFlashing"
                 checked={includeFlashing}
                 onChange={(e) => setIncludeFlashing(e.target.checked)}
-                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
               />
               <label htmlFor="includeFlashing" className="ml-2 block text-sm font-medium text-slate-700">
                 {t('calculators.doorsWindows.includeFlashing')}
@@ -776,7 +776,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="includeCaulk"
                 checked={includeCaulk}
                 onChange={(e) => setIncludeCaulk(e.target.checked)}
-                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
               />
               <label htmlFor="includeCaulk" className="ml-2 block text-sm font-medium text-slate-700">
                 {t('calculators.doorsWindows.includeCaulk')}
@@ -789,7 +789,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="includeShims"
                 checked={includeShims}
                 onChange={(e) => setIncludeShims(e.target.checked)}
-                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
               />
               <label htmlFor="includeShims" className="ml-2 block text-sm font-medium text-slate-700">
                 {t('calculators.doorsWindows.includeShims')}
@@ -804,7 +804,7 @@ const DoorsWindowsCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         disabled={!isFormValid}
         className={`w-full py-3 px-4 rounded-md font-medium text-white ${
           isFormValid
-            ? 'bg-orange-500 hover:bg-orange-600 transition-colors'
+            ? 'bg-blue-500 hover:bg-blue-600 transition-colors'
             : 'bg-slate-300 cursor-not-allowed'
         }`}
       >

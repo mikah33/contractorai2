@@ -51,7 +51,7 @@ const AddChoiceModal: React.FC<AddChoiceModalProps> = ({
         <div className="p-6 space-y-4">
           {/* AI Chat Option */}
           <div className="relative">
-            <div className="absolute -top-3 left-4 px-3 py-1 bg-orange-500 text-white text-sm font-bold rounded-full z-10">
+            <div className="absolute -top-3 left-4 px-3 py-1 bg-blue-500 text-white text-sm font-bold rounded-full z-10">
               Recommended
             </div>
             <button
@@ -59,7 +59,7 @@ const AddChoiceModal: React.FC<AddChoiceModalProps> = ({
                 onClose();
                 onAIChat();
               }}
-              className="w-full flex items-center gap-6 p-6 bg-gradient-to-r from-orange-50 to-amber-50 rounded-2xl border-2 border-orange-400 hover:border-orange-500 active:scale-[0.98] transition-all"
+              className="w-full flex items-center gap-6 p-6 bg-gradient-to-r from-blue-50 to-amber-50 rounded-2xl border-2 border-blue-400 hover:border-blue-500 active:scale-[0.98] transition-all"
             >
               <div className="w-20 h-20 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden">
                 <img src="/logo.png" alt="AI" className="w-20 h-20 object-contain" />

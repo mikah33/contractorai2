@@ -94,7 +94,7 @@ const AdAccountsSetup: React.FC = () => {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center">
-          <Settings className="h-8 w-8 mr-3 text-orange-600" />
+          <Settings className="h-8 w-8 mr-3 text-blue-600" />
           Ad Accounts Setup
         </h1>
         <p className="text-gray-600">Connect and manage your Google Ads and Meta Ads accounts</p>
@@ -106,7 +106,7 @@ const AdAccountsSetup: React.FC = () => {
           <h2 className="text-xl font-semibold text-gray-900">Connected Accounts</h2>
           <button
             onClick={() => setShowAddModal(true)}
-            className="inline-flex items-center px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700"
+            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
           >
             <Plus className="h-4 w-4 mr-2" />
             Add Account
@@ -120,7 +120,7 @@ const AdAccountsSetup: React.FC = () => {
             <p className="text-gray-500 mb-6">Connect your Google Ads or Meta Ads account to start tracking performance</p>
             <button
               onClick={() => setShowAddModal(true)}
-              className="inline-flex items-center px-6 py-3 bg-orange-600 text-white rounded-md hover:bg-orange-700"
+              className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700"
             >
               <Plus className="h-5 w-5 mr-2" />
               Connect Ad Account

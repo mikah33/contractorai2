@@ -692,7 +692,7 @@ Use standard contractor pricing and break down by category.`
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-gradient-to-r from-amber-500 to-blue-500 rounded-xl flex items-center justify-center">
                 <Sparkles className="w-6 h-6 text-white" />
               </div>
               <div>
@@ -747,7 +747,7 @@ Use standard contractor pricing and break down by category.`
           {/* Submit button */}
           <button
             onClick={handleBetaUnlock}
-            className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl hover:from-amber-600 hover:to-orange-600 transition-colors"
+            className="w-full py-3 bg-gradient-to-r from-amber-500 to-blue-500 text-white font-semibold rounded-xl hover:from-amber-600 hover:to-blue-600 transition-colors"
           >
             Unlock Beta Access
           </button>
@@ -827,7 +827,7 @@ Use standard contractor pricing and break down by category.`
                   <span className="text-sm text-zinc-300">Floors</span>
                 </div>
                 <div className="flex items-center gap-2 p-3 bg-[#2C2C2E] rounded-lg">
-                  <DoorOpen className="w-5 h-5 text-orange-400" />
+                  <DoorOpen className="w-5 h-5 text-blue-400" />
                   <span className="text-sm text-zinc-300">Doors</span>
                 </div>
                 <div className="flex items-center gap-2 p-3 bg-[#2C2C2E] rounded-lg">
@@ -1190,7 +1190,7 @@ Use standard contractor pricing and break down by category.`
                   {/* Material Calculator Button */}
                   <button
                     onClick={() => setShowMaterialCalculator(true)}
-                    className="w-full flex items-center justify-center gap-2 py-2 bg-gradient-to-r from-orange-500/20 to-amber-500/20 text-orange-400 font-medium rounded-lg"
+                    className="w-full flex items-center justify-center gap-2 py-2 bg-gradient-to-r from-blue-500/20 to-amber-500/20 text-blue-400 font-medium rounded-lg"
                   >
                     <Calculator className="w-4 h-4" />
                     Material Calculator
@@ -1210,7 +1210,7 @@ Use standard contractor pricing and break down by category.`
                     <div className="p-4 bg-[#1A1A1A] rounded-lg space-y-3">
                       <div className="flex items-center justify-between">
                         <h5 className="font-semibold text-white flex items-center gap-2">
-                          <Calculator className="w-4 h-4 text-orange-400" />
+                          <Calculator className="w-4 h-4 text-blue-400" />
                           Material Estimates
                         </h5>
                         <button
@@ -1604,7 +1604,7 @@ Use standard contractor pricing and break down by category.`
                   {/* Material Calculator Button */}
                   <button
                     onClick={() => setShowMaterialCalculator(true)}
-                    className="w-full flex items-center justify-center gap-2 py-2 bg-gradient-to-r from-orange-500/20 to-amber-500/20 text-orange-400 font-medium rounded-lg"
+                    className="w-full flex items-center justify-center gap-2 py-2 bg-gradient-to-r from-blue-500/20 to-amber-500/20 text-blue-400 font-medium rounded-lg"
                   >
                     <Calculator className="w-4 h-4" />
                     Material Calculator
@@ -1624,7 +1624,7 @@ Use standard contractor pricing and break down by category.`
                     <div className="p-4 bg-[#1A1A1A] rounded-lg space-y-3">
                       <div className="flex items-center justify-between">
                         <h5 className="font-semibold text-white flex items-center gap-2">
-                          <Calculator className="w-4 h-4 text-orange-400" />
+                          <Calculator className="w-4 h-4 text-blue-400" />
                           Material Estimates
                         </h5>
                         <button
@@ -1923,7 +1923,7 @@ Use standard contractor pricing and break down by category.`
                   {/* Material Calculator Button */}
                   <button
                     onClick={() => setShowMaterialCalculator(true)}
-                    className="w-full flex items-center justify-center gap-2 py-2 bg-gradient-to-r from-orange-500/20 to-amber-500/20 text-orange-400 font-medium rounded-lg"
+                    className="w-full flex items-center justify-center gap-2 py-2 bg-gradient-to-r from-blue-500/20 to-amber-500/20 text-blue-400 font-medium rounded-lg"
                   >
                     <Calculator className="w-4 h-4" />
                     Material Calculator
@@ -2015,9 +2015,9 @@ Use standard contractor pricing and break down by category.`
 
               {/* AI Estimate section */}
               {aiEstimate && (
-                <div className="p-4 bg-orange-500/10 border border-orange-500/30 rounded-xl">
+                <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl">
                   <div className="flex items-center gap-2 mb-2">
-                    <Sparkles className="w-5 h-5 text-orange-500" />
+                    <Sparkles className="w-5 h-5 text-blue-500" />
                     <h4 className="font-semibold text-white">AI Estimate</h4>
                   </div>
                   <p className="text-sm text-zinc-300 whitespace-pre-wrap">{aiEstimate.message}</p>
@@ -2035,7 +2035,7 @@ Use standard contractor pricing and break down by category.`
                         onClick={() => toggleRenovation(option.id)}
                         className={`p-3 rounded-lg text-center transition-all ${
                           selectedRenovations.includes(option.id)
-                            ? 'bg-orange-500 text-white'
+                            ? 'bg-blue-500 text-white'
                             : 'bg-[#3C3C3E] text-zinc-300 hover:bg-[#4C4C4E]'
                         }`}
                       >
@@ -2061,7 +2061,7 @@ Use standard contractor pricing and break down by category.`
                     <button
                       onClick={generateAIEstimate}
                       disabled={selectedRenovations.length === 0}
-                      className="flex-1 py-2 px-4 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-semibold rounded-lg disabled:opacity-50"
+                      className="flex-1 py-2 px-4 bg-gradient-to-r from-blue-500 to-amber-500 text-white font-semibold rounded-lg disabled:opacity-50"
                     >
                       Generate Estimate
                     </button>
@@ -2075,7 +2075,7 @@ Use standard contractor pricing and break down by category.`
                 <button
                   onClick={() => setShowRenovationOptions(true)}
                   disabled={isGeneratingEstimate}
-                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-semibold py-3 px-4 rounded-xl disabled:opacity-50 active:scale-[0.98] transition-transform"
+                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-amber-500 text-white font-semibold py-3 px-4 rounded-xl disabled:opacity-50 active:scale-[0.98] transition-transform"
                 >
                   {isGeneratingEstimate ? (
                     <>

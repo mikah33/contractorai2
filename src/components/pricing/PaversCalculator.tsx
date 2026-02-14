@@ -262,11 +262,11 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     return (
       <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
         <div className="flex items-center mb-6">
-          <Layout className="h-6 w-6 text-orange-500 mr-2" />
+          <Layout className="h-6 w-6 text-blue-500 mr-2" />
           <h2 className="text-xl font-bold text-slate-800">{t('calculators.pavers.title')}</h2>
         </div>
         <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading custom configuration...</p>
         </div>
       </div>
@@ -278,7 +278,7 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     return (
       <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
         <div className="flex items-center mb-6">
-          <Layout className="h-6 w-6 text-orange-500 mr-2" />
+          <Layout className="h-6 w-6 text-blue-500 mr-2" />
           <h2 className="text-xl font-bold text-slate-800">{t('calculators.pavers.title')}</h2>
         </div>
         <div className="text-center py-12">
@@ -295,7 +295,7 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   return (
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
       <div className="flex items-center mb-6">
-        <Layout className="h-6 w-6 text-orange-500 mr-2" />
+        <Layout className="h-6 w-6 text-blue-500 mr-2" />
         <h2 className="text-xl font-bold text-slate-800">{t('calculators.pavers.title')}</h2>
       </div>
 
@@ -314,7 +314,7 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 type="button"
                 className={`px-4 py-2 text-sm font-medium rounded-l-lg ${
                   inputType === 'dimensions'
-                    ? 'bg-orange-500 text-white'
+                    ? 'bg-blue-500 text-white'
                     : 'bg-white text-slate-700 hover:bg-slate-100'
                 } border border-slate-300`}
                 onClick={() => setInputType('dimensions')}
@@ -325,7 +325,7 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 type="button"
                 className={`px-4 py-2 text-sm font-medium rounded-r-lg ${
                   inputType === 'area'
-                    ? 'bg-orange-500 text-white'
+                    ? 'bg-blue-500 text-white'
                     : 'bg-white text-slate-700 hover:bg-slate-100'
                 } border border-slate-300`}
                 onClick={() => setInputType('area')}
@@ -348,7 +348,7 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   step="0.1"
                   value={length}
                   onChange={(e) => setLength(e.target.value ? Number(e.target.value) : '')}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder={t('calculators.enterLength')}
                 />
               </div>
@@ -364,7 +364,7 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   step="0.1"
                   value={width}
                   onChange={(e) => setWidth(e.target.value ? Number(e.target.value) : '')}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder={t('calculators.enterWidth')}
                 />
               </div>
@@ -381,7 +381,7 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 step="0.1"
                 value={area}
                 onChange={(e) => setArea(e.target.value ? Number(e.target.value) : '')}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Enter total area in square feet"
               />
             </div>
@@ -404,7 +404,7 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             step="0.01"
             value={paverCostPerSqFt}
             onChange={(e) => setPaverCostPerSqFt(e.target.value ? Number(e.target.value) : '')}
-            className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder="Enter paver cost per square foot"
             disabled={activeTab === 'custom' && customPricing?.paver_cost_per_sqft !== undefined}
           />
@@ -423,7 +423,7 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             id="wasteFactor"
             value={wasteFactor}
             onChange={(e) => setWasteFactor(Number(e.target.value) as 5 | 10 | 15 | 20)}
-            className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value={5}>5% waste</option>
             <option value={10}>10% waste</option>
@@ -445,7 +445,7 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               step="0.5"
               value={baseDepth}
               onChange={(e) => setBaseDepth(e.target.value ? Number(e.target.value) : '')}
-              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Enter base depth in inches"
             />
           </div>
@@ -462,7 +462,7 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="beddingType"
                 value={beddingType}
                 onChange={(e) => setBeddingType(e.target.value as 'sand' | 'stone-dust' | '3/8-stone')}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="sand">Sand</option>
                 <option value="stone-dust">Stone Dust</option>
@@ -480,7 +480,7 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 step="0.5"
                 value={beddingDepth}
                 onChange={(e) => setBeddingDepth(e.target.value ? Number(e.target.value) : '')}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Enter bedding depth in inches"
               />
             </div>
@@ -499,7 +499,7 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   setBorderLength('');
                 }
               }}
-              className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+              className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
             />
             <label htmlFor="hasBorder" className="ml-2 block text-sm font-medium text-slate-700">
               Add border edge blocks
@@ -516,7 +516,7 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   id="borderStyle"
                   value={borderStyle}
                   onChange={(e) => setBorderStyle(e.target.value as 'soldier' | 'sailor' | 'double-sailor')}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="soldier">Soldier</option>
                   <option value="sailor">Sailor</option>
@@ -539,7 +539,7 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                       setCustomEdgeLength('');
                     }
                   }}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="4x8">4" x 8"</option>
                   <option value="6x9">6" x 9"</option>
@@ -561,7 +561,7 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                       step="0.5"
                       value={customEdgeWidth}
                       onChange={(e) => setCustomEdgeWidth(e.target.value ? Number(e.target.value) : '')}
-                      className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="Enter width in inches"
                     />
                   </div>
@@ -576,7 +576,7 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                       step="0.5"
                       value={customEdgeLength}
                       onChange={(e) => setCustomEdgeLength(e.target.value ? Number(e.target.value) : '')}
-                      className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="Enter length in inches"
                     />
                   </div>
@@ -594,7 +594,7 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   step="0.1"
                   value={borderLength}
                   onChange={(e) => setBorderLength(e.target.value ? Number(e.target.value) : '')}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Enter total perimeter length in feet"
                 />
               </div>
@@ -608,7 +608,7 @@ const PaversCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         disabled={!isFormValid}
         className={`w-full py-3 px-4 rounded-md font-medium text-white ${
           isFormValid
-            ? 'bg-orange-500 hover:bg-orange-600 transition-colors'
+            ? 'bg-blue-500 hover:bg-blue-600 transition-colors'
             : 'bg-slate-300 cursor-not-allowed'
         }`}
       >

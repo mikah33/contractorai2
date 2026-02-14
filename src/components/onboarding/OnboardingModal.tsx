@@ -106,13 +106,13 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComplete })
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-      <div className="bg-[#1C1C1E] rounded-2xl w-full max-w-md max-h-[90vh] overflow-hidden shadow-2xl border border-orange-500/30">
+      <div className="bg-[#1C1C1E] rounded-2xl w-full max-w-md max-h-[90vh] overflow-hidden shadow-2xl border border-blue-500/30">
         {/* Header */}
-        <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-5">
+        <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-5">
           <h2 className="text-xl font-bold text-white">
             {step === 1 ? 'Finish Setting Up Your Account' : 'All Set!'}
           </h2>
-          <p className="text-orange-100 text-sm mt-1">
+          <p className="text-blue-100 text-sm mt-1">
             {step === 1 ? 'Complete your profile to get started' : 'Your profile has been saved'}
           </p>
         </div>
@@ -131,7 +131,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComplete })
                   type="text"
                   value={profile.name}
                   onChange={(e) => handleChange('name', e.target.value)}
-                  className="w-full px-4 py-3 bg-[#2C2C2E] border border-orange-500/30 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                  className="w-full px-4 py-3 bg-[#2C2C2E] border border-blue-500/30 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                   placeholder="John Smith"
                 />
               </div>
@@ -146,7 +146,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComplete })
                   type="text"
                   value={profile.company}
                   onChange={(e) => handleChange('company', e.target.value)}
-                  className="w-full px-4 py-3 bg-[#2C2C2E] border border-orange-500/30 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                  className="w-full px-4 py-3 bg-[#2C2C2E] border border-blue-500/30 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                   placeholder="Smith Roofing LLC"
                 />
               </div>
@@ -161,7 +161,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComplete })
                   type="tel"
                   value={profile.phone}
                   onChange={(e) => handleChange('phone', e.target.value)}
-                  className="w-full px-4 py-3 bg-[#2C2C2E] border border-orange-500/30 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                  className="w-full px-4 py-3 bg-[#2C2C2E] border border-blue-500/30 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                   placeholder="(555) 123-4567"
                 />
               </div>
@@ -176,7 +176,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComplete })
                   value={profile.address}
                   onChange={(e) => handleChange('address', e.target.value)}
                   rows={2}
-                  className="w-full px-4 py-3 bg-[#2C2C2E] border border-orange-500/30 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 resize-none"
+                  className="w-full px-4 py-3 bg-[#2C2C2E] border border-blue-500/30 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
                   placeholder="123 Main St, City, State 12345"
                 />
               </div>
@@ -191,7 +191,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComplete })
                   value={profile.defaultTerms}
                   onChange={(e) => handleChange('defaultTerms', e.target.value)}
                   rows={3}
-                  className="w-full px-4 py-3 bg-[#2C2C2E] border border-orange-500/30 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 resize-none"
+                  className="w-full px-4 py-3 bg-[#2C2C2E] border border-blue-500/30 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
                   placeholder="Payment due within 30 days of invoice..."
                 />
                 <p className="text-xs text-zinc-500 mt-1">This will auto-fill on new estimates</p>
@@ -199,11 +199,11 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComplete })
             </div>
 
             {/* Footer */}
-            <div className="px-6 py-4 bg-[#151517] border-t border-orange-500/20">
+            <div className="px-6 py-4 bg-[#151517] border-t border-blue-500/20">
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {saving ? (
                   <>

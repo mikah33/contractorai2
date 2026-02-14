@@ -18,8 +18,8 @@ const FloatingAIChatButton: React.FC<FloatingAIChatButtonProps> = ({
     switch (mode) {
       case 'estimates':
         return {
-          gradient: 'from-orange-500 to-orange-600',
-          shadow: 'shadow-orange-500/25',
+          gradient: 'from-blue-500 to-blue-600',
+          shadow: 'shadow-blue-500/25',
           text: 'Ask about estimates'
         };
       case 'projects':
@@ -42,8 +42,8 @@ const FloatingAIChatButton: React.FC<FloatingAIChatButtonProps> = ({
         };
       default:
         return {
-          gradient: 'from-orange-500 to-orange-600',
-          shadow: 'shadow-orange-500/25',
+          gradient: 'from-blue-500 to-blue-600',
+          shadow: 'shadow-blue-500/25',
           text: 'Ask Contractor AI'
         };
     }

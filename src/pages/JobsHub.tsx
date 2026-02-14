@@ -121,17 +121,17 @@ const JobsHub: React.FC = () => {
         const estimateStats = getEstimateStats();
         return (
           <div className="mt-3 flex flex-wrap gap-3">
-            <div className="flex items-center gap-1.5 bg-orange-100 border border-orange-300 px-2.5 py-1 rounded-lg">
-              <Clock className="w-3.5 h-3.5 text-orange-600" />
-              <span className="text-xs font-medium text-orange-700">{estimateStats.pending} Pending</span>
+            <div className="flex items-center gap-1.5 bg-blue-100 border border-blue-300 px-2.5 py-1 rounded-lg">
+              <Clock className="w-3.5 h-3.5 text-blue-600" />
+              <span className="text-xs font-medium text-blue-700">{estimateStats.pending} Pending</span>
             </div>
-            <div className="flex items-center gap-1.5 bg-orange-100 border border-orange-300 px-2.5 py-1 rounded-lg">
-              <CheckCircle className="w-3.5 h-3.5 text-orange-600" />
-              <span className="text-xs font-medium text-orange-700">{estimateStats.approved} Approved</span>
+            <div className="flex items-center gap-1.5 bg-blue-100 border border-blue-300 px-2.5 py-1 rounded-lg">
+              <CheckCircle className="w-3.5 h-3.5 text-blue-600" />
+              <span className="text-xs font-medium text-blue-700">{estimateStats.approved} Approved</span>
             </div>
-            <div className="flex items-center gap-1.5 bg-orange-100 border border-orange-300 px-2.5 py-1 rounded-lg">
-              <DollarSign className="w-3.5 h-3.5 text-orange-600" />
-              <span className="text-xs font-medium text-orange-700">${estimateStats.totalValue.toLocaleString()}</span>
+            <div className="flex items-center gap-1.5 bg-blue-100 border border-blue-300 px-2.5 py-1 rounded-lg">
+              <DollarSign className="w-3.5 h-3.5 text-blue-600" />
+              <span className="text-xs font-medium text-blue-700">${estimateStats.totalValue.toLocaleString()}</span>
             </div>
           </div>
         );
@@ -140,17 +140,17 @@ const JobsHub: React.FC = () => {
         const projectStats = getProjectStats();
         return (
           <div className="mt-3 flex flex-wrap gap-3">
-            <div className="flex items-center gap-1.5 bg-orange-100 border border-orange-300 px-2.5 py-1 rounded-lg">
-              <Briefcase className="w-3.5 h-3.5 text-orange-600" />
-              <span className="text-xs font-medium text-orange-700">{projectStats.active} Active</span>
+            <div className="flex items-center gap-1.5 bg-blue-100 border border-blue-300 px-2.5 py-1 rounded-lg">
+              <Briefcase className="w-3.5 h-3.5 text-blue-600" />
+              <span className="text-xs font-medium text-blue-700">{projectStats.active} Active</span>
             </div>
-            <div className="flex items-center gap-1.5 bg-orange-100 border border-orange-300 px-2.5 py-1 rounded-lg">
-              <CheckCircle className="w-3.5 h-3.5 text-orange-600" />
-              <span className="text-xs font-medium text-orange-700">{projectStats.completed} Done</span>
+            <div className="flex items-center gap-1.5 bg-blue-100 border border-blue-300 px-2.5 py-1 rounded-lg">
+              <CheckCircle className="w-3.5 h-3.5 text-blue-600" />
+              <span className="text-xs font-medium text-blue-700">{projectStats.completed} Done</span>
             </div>
-            <div className="flex items-center gap-1.5 bg-orange-100 border border-orange-300 px-2.5 py-1 rounded-lg">
-              <TrendingUp className="w-3.5 h-3.5 text-orange-600" />
-              <span className="text-xs font-medium text-orange-700">{projectStats.avgProgress}% Avg</span>
+            <div className="flex items-center gap-1.5 bg-blue-100 border border-blue-300 px-2.5 py-1 rounded-lg">
+              <TrendingUp className="w-3.5 h-3.5 text-blue-600" />
+              <span className="text-xs font-medium text-blue-700">{projectStats.avgProgress}% Avg</span>
             </div>
           </div>
         );
@@ -159,13 +159,13 @@ const JobsHub: React.FC = () => {
         const clientStats = getClientStats();
         return (
           <div className="mt-3 flex flex-wrap gap-3">
-            <div className="flex items-center gap-1.5 bg-orange-100 border border-orange-300 px-2.5 py-1 rounded-lg">
-              <Users className="w-3.5 h-3.5 text-orange-600" />
-              <span className="text-xs font-medium text-orange-700">{clientStats.total} Total</span>
+            <div className="flex items-center gap-1.5 bg-blue-100 border border-blue-300 px-2.5 py-1 rounded-lg">
+              <Users className="w-3.5 h-3.5 text-blue-600" />
+              <span className="text-xs font-medium text-blue-700">{clientStats.total} Total</span>
             </div>
-            <div className="flex items-center gap-1.5 bg-orange-100 border border-orange-300 px-2.5 py-1 rounded-lg">
-              <UserPlus className="w-3.5 h-3.5 text-orange-600" />
-              <span className="text-xs font-medium text-orange-700">{clientStats.recent} This Week</span>
+            <div className="flex items-center gap-1.5 bg-blue-100 border border-blue-300 px-2.5 py-1 rounded-lg">
+              <UserPlus className="w-3.5 h-3.5 text-blue-600" />
+              <span className="text-xs font-medium text-blue-700">{clientStats.recent} This Week</span>
             </div>
           </div>
         );
@@ -174,17 +174,17 @@ const JobsHub: React.FC = () => {
         const taskStats = getTaskStats();
         return (
           <div className="mt-3 flex flex-wrap gap-3">
-            <div className="flex items-center gap-1.5 bg-orange-100 border border-orange-300 px-2.5 py-1 rounded-lg">
-              <CalendarIcon className="w-3.5 h-3.5 text-orange-600" />
-              <span className="text-xs font-medium text-orange-700">{taskStats.upcoming} Upcoming</span>
+            <div className="flex items-center gap-1.5 bg-blue-100 border border-blue-300 px-2.5 py-1 rounded-lg">
+              <CalendarIcon className="w-3.5 h-3.5 text-blue-600" />
+              <span className="text-xs font-medium text-blue-700">{taskStats.upcoming} Upcoming</span>
             </div>
             <div className="flex items-center gap-1.5 bg-red-100 border border-red-300 px-2.5 py-1 rounded-lg">
               <AlertCircle className="w-3.5 h-3.5 text-red-600" />
               <span className="text-xs font-medium text-red-700">{taskStats.overdue} Overdue</span>
             </div>
-            <div className="flex items-center gap-1.5 bg-orange-100 border border-orange-300 px-2.5 py-1 rounded-lg">
-              <CheckCircle className="w-3.5 h-3.5 text-orange-600" />
-              <span className="text-xs font-medium text-orange-700">{taskStats.completed} Done</span>
+            <div className="flex items-center gap-1.5 bg-blue-100 border border-blue-300 px-2.5 py-1 rounded-lg">
+              <CheckCircle className="w-3.5 h-3.5 text-blue-600" />
+              <span className="text-xs font-medium text-blue-700">{taskStats.completed} Done</span>
             </div>
           </div>
         );
@@ -193,18 +193,18 @@ const JobsHub: React.FC = () => {
         const teamStats = getTeamStats();
         return (
           <div className="mt-3 flex flex-wrap gap-3">
-            <div className="flex items-center gap-1.5 bg-orange-100 border border-orange-300 px-2.5 py-1 rounded-lg">
-              <Users className="w-3.5 h-3.5 text-orange-600" />
-              <span className="text-xs font-medium text-orange-700">{teamStats.total} Total</span>
+            <div className="flex items-center gap-1.5 bg-blue-100 border border-blue-300 px-2.5 py-1 rounded-lg">
+              <Users className="w-3.5 h-3.5 text-blue-600" />
+              <span className="text-xs font-medium text-blue-700">{teamStats.total} Total</span>
             </div>
-            <div className="flex items-center gap-1.5 bg-orange-100 border border-orange-300 px-2.5 py-1 rounded-lg">
-              <UserCheck className="w-3.5 h-3.5 text-orange-600" />
-              <span className="text-xs font-medium text-orange-700">{teamStats.active} Active</span>
+            <div className="flex items-center gap-1.5 bg-blue-100 border border-blue-300 px-2.5 py-1 rounded-lg">
+              <UserCheck className="w-3.5 h-3.5 text-blue-600" />
+              <span className="text-xs font-medium text-blue-700">{teamStats.active} Active</span>
             </div>
             {teamStats.onLeave > 0 && (
-              <div className="flex items-center gap-1.5 bg-orange-100 border border-orange-300 px-2.5 py-1 rounded-lg">
-                <Clock className="w-3.5 h-3.5 text-orange-600" />
-                <span className="text-xs font-medium text-orange-700">{teamStats.onLeave} On Leave</span>
+              <div className="flex items-center gap-1.5 bg-blue-100 border border-blue-300 px-2.5 py-1 rounded-lg">
+                <Clock className="w-3.5 h-3.5 text-blue-600" />
+                <span className="text-xs font-medium text-blue-700">{teamStats.onLeave} On Leave</span>
               </div>
             )}
           </div>
@@ -222,7 +222,7 @@ const JobsHub: React.FC = () => {
       description: 'Create & manage project estimates',
       icon: Calculator,
       href: '/estimates-hub',
-      color: 'orange',
+      color: 'blue',
       stats: 'Quick estimate tools'
     },
     {
@@ -231,7 +231,7 @@ const JobsHub: React.FC = () => {
       description: 'Track active projects & schedules',
       icon: Briefcase,
       href: '/projects-hub',
-      color: 'orange',
+      color: 'blue',
       stats: 'Project management'
     },
     {
@@ -240,7 +240,7 @@ const JobsHub: React.FC = () => {
       description: 'Manage client relationships',
       icon: UserPlus,
       href: '/clients-hub',
-      color: 'orange',
+      color: 'blue',
       stats: 'CRM & contacts'
     },
     {
@@ -249,7 +249,7 @@ const JobsHub: React.FC = () => {
       description: 'Schedule appointments & jobs',
       icon: CalendarIcon,
       href: '/todo-hub',
-      color: 'orange',
+      color: 'blue',
       stats: 'Time management'
     },
     {
@@ -258,21 +258,21 @@ const JobsHub: React.FC = () => {
       description: 'Manage employees & crews',
       icon: UserCheck,
       href: '/employees-hub',
-      color: 'orange',
+      color: 'blue',
       stats: 'Team management'
     }
   ];
 
 
   const getColorClasses = (color: string) => {
-    // Always use orange theme with dark mode support
+    // Always use blue theme with dark mode support
     return {
       bg: themeClasses.bg.secondary,
-      border: 'border-orange-400',
-      hoverBorder: 'hover:border-orange-500',
-      iconBg: 'bg-orange-500',
+      border: 'border-blue-400',
+      hoverBorder: 'hover:border-blue-500',
+      iconBg: 'bg-blue-500',
       iconText: 'text-white',
-      accent: 'text-orange-600'
+      accent: 'text-blue-600'
     };
   };
 
@@ -284,8 +284,8 @@ const JobsHub: React.FC = () => {
           <div className="px-4 pb-5 pt-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-orange-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <Briefcase className="w-7 h-7 text-orange-500" />
+                <div className="w-14 h-14 bg-blue-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Briefcase className="w-7 h-7 text-blue-500" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h1 className={`text-2xl font-bold ${themeClasses.text.primary}`}>Jobs</h1>
@@ -327,11 +327,11 @@ const JobsHub: React.FC = () => {
                       <h3 className={`font-bold ${themeClasses.text.primary} text-lg`}>{module.title}</h3>
                       <p className={`${themeClasses.text.secondary} text-sm`}>{module.description}</p>
                     </div>
-                    <ChevronRight className="w-6 h-6 text-orange-500" />
+                    <ChevronRight className="w-6 h-6 text-blue-500" />
                   </div>
 
                   {/* Dashboard Preview */}
-                  <div className={`border-t border-orange-200/50 pt-4`}>
+                  <div className={`border-t border-blue-200/50 pt-4`}>
                     <div className="flex items-center justify-between mb-2">
                       <span className={`text-sm font-medium ${themeClasses.text.secondary}`}>Quick Overview</span>
                       <span className={`text-xs font-medium ${colors.accent}`}>Live Data</span>

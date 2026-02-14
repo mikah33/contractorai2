@@ -474,12 +474,12 @@ const RevenueTracker: React.FC<RevenueTrackerProps> = ({
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500">Est. Monthly Recurring</p>
-              <p className="mt-2 text-3xl font-bold text-orange-600">
+              <p className="mt-2 text-3xl font-bold text-blue-600">
                 ${monthlyRecurringCost.toLocaleString()}
               </p>
             </div>
-            <div className="p-3 bg-orange-100 rounded-full">
-              <Calendar className="h-6 w-6 text-orange-600" />
+            <div className="p-3 bg-blue-100 rounded-full">
+              <Calendar className="h-6 w-6 text-blue-600" />
             </div>
           </div>
           <p className="mt-2 text-sm text-gray-500">

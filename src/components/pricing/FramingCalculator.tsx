@@ -268,11 +268,11 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     return (
       <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
         <div className="flex items-center mb-6">
-          <Ruler className="h-6 w-6 text-orange-500 mr-2" />
+          <Ruler className="h-6 w-6 text-blue-500 mr-2" />
           <h2 className="text-xl font-bold text-slate-800">{t('calculators.framing.title')}</h2>
         </div>
         <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading custom configuration...</p>
         </div>
       </div>
@@ -284,7 +284,7 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     return (
       <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
         <div className="flex items-center mb-6">
-          <Ruler className="h-6 w-6 text-orange-500 mr-2" />
+          <Ruler className="h-6 w-6 text-blue-500 mr-2" />
           <h2 className="text-xl font-bold text-slate-800">{t('calculators.framing.title')}</h2>
         </div>
         <div className="text-center py-12">
@@ -305,7 +305,7 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   return (
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
       <div className="flex items-center mb-6">
-        <Ruler className="h-6 w-6 text-orange-500 mr-2" />
+        <Ruler className="h-6 w-6 text-blue-500 mr-2" />
         <h2 className="text-xl font-bold text-slate-800">{t('calculators.framing.title')}</h2>
       </div>
 
@@ -323,7 +323,7 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               type="button"
               className={`px-4 py-2 text-sm font-medium ${
                 framingType === 'wall'
-                  ? 'bg-orange-500 text-white'
+                  ? 'bg-blue-500 text-white'
                   : 'bg-white text-slate-700 hover:bg-slate-100'
               } border border-slate-300 rounded-l-lg`}
               onClick={() => setFramingType('wall')}
@@ -334,7 +334,7 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               type="button"
               className={`px-4 py-2 text-sm font-medium ${
                 framingType === 'floor'
-                  ? 'bg-orange-500 text-white'
+                  ? 'bg-blue-500 text-white'
                   : 'bg-white text-slate-700 hover:bg-slate-100'
               } border-t border-b border-slate-300`}
               onClick={() => setFramingType('floor')}
@@ -345,7 +345,7 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               type="button"
               className={`px-4 py-2 text-sm font-medium ${
                 framingType === 'ceiling'
-                  ? 'bg-orange-500 text-white'
+                  ? 'bg-blue-500 text-white'
                   : 'bg-white text-slate-700 hover:bg-slate-100'
               } border border-slate-300 rounded-r-lg`}
               onClick={() => setFramingType('ceiling')}
@@ -367,7 +367,7 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               step="0.1"
               value={length}
               onChange={(e) => setLength(e.target.value ? Number(e.target.value) : '')}
-              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder={t('calculators.framing.lengthPlaceholder')}
             />
           </div>
@@ -384,7 +384,7 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 step="0.1"
                 value={height}
                 onChange={(e) => setHeight(e.target.value ? Number(e.target.value) : '')}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder={t('calculators.framing.heightPlaceholder')}
               />
             </div>
@@ -400,7 +400,7 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               id="studSpacing"
               value={studSpacing}
               onChange={(e) => setStudSpacing(Number(e.target.value) as 16 | 24)}
-              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value={16}>{t('calculators.framing.spacing16')}</option>
               <option value={24}>{t('calculators.framing.spacing24')}</option>
@@ -415,7 +415,7 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               id="lumberSize"
               value={lumberSize}
               onChange={(e) => setLumberSize(e.target.value as '2x4' | '2x6')}
-              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="2x4">{t('calculators.framing.lumber2x4')}</option>
               <option value="2x6">{t('calculators.framing.lumber2x6')}</option>
@@ -431,7 +431,7 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="plateCount"
                 value={plateCount}
                 onChange={(e) => setPlateCount(Number(e.target.value) as 2 | 3)}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value={2}>{t('calculators.framing.singleTopPlate')}</option>
                 <option value={3}>{t('calculators.framing.doubleTopPlate')}</option>
@@ -498,7 +498,7 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                         type="checkbox"
                         checked={opening.roughOpening}
                         onChange={(e) => updateOpening(index, 'roughOpening', e.target.checked)}
-                        className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                        className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
                       />
                       <span className="ml-2 text-sm text-slate-600">{t('calculators.framing.add2Inches')}</span>
                     </div>
@@ -524,7 +524,7 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="includeBlocking"
                 checked={includeBlocking}
                 onChange={(e) => setIncludeBlocking(e.target.checked)}
-                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
               />
               <label htmlFor="includeBlocking" className="ml-2 block text-sm font-medium text-slate-700">
                 {t('calculators.framing.includeBlocking')}
@@ -538,7 +538,7 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   id="includeFireblocking"
                   checked={includeFireblocking}
                   onChange={(e) => setIncludeFireblocking(e.target.checked)}
-                  className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                  className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
                 />
                 <label htmlFor="includeFireblocking" className="ml-2 block text-sm font-medium text-slate-700">
                   {t('calculators.framing.includeFireblocking')}
@@ -552,7 +552,7 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="includeTiedowns"
                 checked={includeTiedowns}
                 onChange={(e) => setIncludeTiedowns(e.target.checked)}
-                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
               />
               <label htmlFor="includeTiedowns" className="ml-2 block text-sm font-medium text-slate-700">
                 {t('calculators.framing.includeTiedowns')}
@@ -568,7 +568,7 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               id="includeSheathing"
               checked={includeSheathing}
               onChange={(e) => setIncludeSheathing(e.target.checked)}
-              className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+              className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
             />
             <label htmlFor="includeSheathing" className="ml-2 block text-sm font-medium text-slate-700">
               {t('calculators.framing.includeSheathing')}
@@ -585,7 +585,7 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   id="sheathingType"
                   value={sheathingType}
                   onChange={(e) => setSheathingType(e.target.value as 'osb' | 'plywood')}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="osb">{t('calculators.framing.osb')}</option>
                   <option value="plywood">{t('calculators.framing.plywood')}</option>
@@ -600,7 +600,7 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   id="sheathingThickness"
                   value={sheathingThickness}
                   onChange={(e) => setSheathingThickness(e.target.value as '7/16' | '15/32' | '19/32')}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="7/16">7/16"</option>
                   <option value="15/32">15/32"</option>
@@ -617,7 +617,7 @@ const FramingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         disabled={!isFormValid}
         className={`w-full py-3 px-4 rounded-md font-medium text-white ${
           isFormValid
-            ? 'bg-orange-500 hover:bg-orange-600 transition-colors'
+            ? 'bg-blue-500 hover:bg-blue-600 transition-colors'
             : 'bg-slate-300 cursor-not-allowed'
         }`}
       >

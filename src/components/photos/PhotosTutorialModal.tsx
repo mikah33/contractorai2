@@ -28,36 +28,36 @@ const PhotosTutorialModal: React.FC<PhotosTutorialModalProps> = ({
       icon: Camera,
       title: 'Welcome to Photos',
       description: 'Capture and organize job site photos. Document your work and keep everything in one place.',
-      color: 'text-orange-500',
-      bgColor: 'bg-orange-500/20'
+      color: 'text-blue-500',
+      bgColor: 'bg-blue-500/20'
     },
     {
       icon: Image,
       title: 'Take Pictures',
       description: 'Snap photos directly from the app. Capture before, during, and after shots of your projects.',
-      color: 'text-orange-500',
-      bgColor: 'bg-orange-500/20'
+      color: 'text-blue-500',
+      bgColor: 'bg-blue-500/20'
     },
     {
       icon: Briefcase,
       title: 'Attach to Projects',
       description: 'Link photos to specific projects. Keep all job documentation organized and easy to find.',
-      color: 'text-orange-500',
-      bgColor: 'bg-orange-500/20'
+      color: 'text-blue-500',
+      bgColor: 'bg-blue-500/20'
     },
     {
       icon: Cloud,
       title: 'Store in Your Account',
       description: 'Photos are saved to your account. Access them from any device, anytime you need them.',
-      color: 'text-orange-500',
-      bgColor: 'bg-orange-500/20'
+      color: 'text-blue-500',
+      bgColor: 'bg-blue-500/20'
     },
     {
       icon: FolderPlus,
       title: 'Create Projects On-the-Fly',
       description: 'Start a new project while adding photos. Perfect for documenting new jobs from the field.',
-      color: 'text-orange-500',
-      bgColor: 'bg-orange-500/20'
+      color: 'text-blue-500',
+      bgColor: 'bg-blue-500/20'
     }
   ];
 
@@ -79,8 +79,8 @@ const PhotosTutorialModal: React.FC<PhotosTutorialModalProps> = ({
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 p-4">
       <div className="w-full max-w-sm bg-[#1C1C1E] rounded-2xl overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-orange-500/30">
-          <span className="text-xs text-orange-500 font-semibold">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-blue-500/30">
+          <span className="text-xs text-blue-500 font-semibold">
             {currentStep + 1} of {tutorialSteps.length}
           </span>
           <button
@@ -111,7 +111,7 @@ const PhotosTutorialModal: React.FC<PhotosTutorialModalProps> = ({
               <div
                 key={i}
                 className={`w-2 h-2 rounded-full transition-colors ${
-                  i === currentStep ? 'bg-orange-500' : 'bg-zinc-700'
+                  i === currentStep ? 'bg-blue-500' : 'bg-zinc-700'
                 }`}
               />
             ))}
@@ -122,7 +122,7 @@ const PhotosTutorialModal: React.FC<PhotosTutorialModalProps> = ({
         <div className="px-4 pb-6 space-y-4">
           <button
             onClick={handleNext}
-            className="w-full py-3.5 bg-orange-500 text-white rounded-xl font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
+            className="w-full py-3.5 bg-blue-500 text-white rounded-xl font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
           >
             {currentStep < tutorialSteps.length - 1 ? (
               <>
@@ -139,7 +139,7 @@ const PhotosTutorialModal: React.FC<PhotosTutorialModalProps> = ({
               type="checkbox"
               checked={dontShowAgain}
               onChange={(e) => setDontShowAgain(e.target.checked)}
-              className="rounded border-zinc-600 bg-zinc-800 text-orange-500 focus:ring-orange-500"
+              className="rounded border-zinc-600 bg-zinc-800 text-blue-500 focus:ring-blue-500"
             />
             Don't show this again
           </label>

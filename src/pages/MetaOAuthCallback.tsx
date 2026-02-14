@@ -134,7 +134,7 @@ const MetaOAuthCallback: React.FC = () => {
             </pre>
             <button
               onClick={() => navigate('/ad-accounts')}
-              className="mt-6 px-6 py-3 bg-orange-600 text-white rounded-md hover:bg-orange-700"
+              className="mt-6 px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700"
             >
               Return to Ad Accounts
             </button>

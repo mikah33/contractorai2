@@ -29,36 +29,36 @@ const DashboardTutorialModal: React.FC<DashboardTutorialModalProps> = ({
       icon: Home,
       title: 'Welcome to Your Dashboard',
       description: 'Your central hub for managing your contracting business. Get a quick overview of everything at a glance.',
-      color: 'text-orange-500',
-      bgColor: 'bg-orange-500/20'
+      color: 'text-blue-500',
+      bgColor: 'bg-blue-500/20'
     },
     {
       icon: TrendingUp,
       title: 'Revenue & Profit',
       description: 'Track your total revenue, expenses, and net profit. See how your business is performing financially.',
-      color: 'text-orange-500',
-      bgColor: 'bg-orange-500/20'
+      color: 'text-blue-500',
+      bgColor: 'bg-blue-500/20'
     },
     {
       icon: Briefcase,
       title: 'Active Projects',
       description: 'View your current projects and their status. Keep track of ongoing work and deadlines.',
-      color: 'text-orange-500',
-      bgColor: 'bg-orange-500/20'
+      color: 'text-blue-500',
+      bgColor: 'bg-blue-500/20'
     },
     {
       icon: Users,
       title: 'Recent Clients',
       description: 'Quick access to your client list. See contact info and manage customer relationships.',
-      color: 'text-orange-500',
-      bgColor: 'bg-orange-500/20'
+      color: 'text-blue-500',
+      bgColor: 'bg-blue-500/20'
     },
     {
       icon: UserCheck,
       title: 'Your Team',
       description: 'Manage your employees and team members. Track roles and hourly rates.',
-      color: 'text-orange-500',
-      bgColor: 'bg-orange-500/20'
+      color: 'text-blue-500',
+      bgColor: 'bg-blue-500/20'
     }
   ];
 
@@ -80,8 +80,8 @@ const DashboardTutorialModal: React.FC<DashboardTutorialModalProps> = ({
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 p-4">
       <div className="w-full max-w-sm bg-[#1C1C1E] rounded-2xl overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-orange-500/30">
-          <span className="text-xs text-orange-500 font-semibold">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-blue-500/30">
+          <span className="text-xs text-blue-500 font-semibold">
             {currentStep + 1} of {tutorialSteps.length}
           </span>
           <button
@@ -112,7 +112,7 @@ const DashboardTutorialModal: React.FC<DashboardTutorialModalProps> = ({
               <div
                 key={i}
                 className={`w-2 h-2 rounded-full transition-colors ${
-                  i === currentStep ? 'bg-orange-500' : 'bg-zinc-700'
+                  i === currentStep ? 'bg-blue-500' : 'bg-zinc-700'
                 }`}
               />
             ))}
@@ -123,7 +123,7 @@ const DashboardTutorialModal: React.FC<DashboardTutorialModalProps> = ({
         <div className="px-4 pb-6 space-y-4">
           <button
             onClick={handleNext}
-            className="w-full py-3.5 bg-orange-500 text-white rounded-xl font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
+            className="w-full py-3.5 bg-blue-500 text-white rounded-xl font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
           >
             {currentStep < tutorialSteps.length - 1 ? (
               <>
@@ -140,7 +140,7 @@ const DashboardTutorialModal: React.FC<DashboardTutorialModalProps> = ({
               type="checkbox"
               checked={dontShowAgain}
               onChange={(e) => setDontShowAgain(e.target.checked)}
-              className="rounded border-zinc-600 bg-zinc-800 text-orange-500 focus:ring-orange-500"
+              className="rounded border-zinc-600 bg-zinc-800 text-blue-500 focus:ring-blue-500"
             />
             Don't show this again
           </label>

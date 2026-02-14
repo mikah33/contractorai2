@@ -468,27 +468,31 @@ const Calendar = () => {
   return (
     <div className={`min-h-full ${themeClasses.bg.primary} pb-24`}>
       {/* Header */}
-      <div className={`${themeClasses.bg.secondary} border-b ${themeClasses.border.primary} px-4 pb-4 pt-[calc(env(safe-area-inset-top)+16px)] sticky top-0 z-10`}>
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                <CalendarIcon className="w-5 h-5 text-orange-500" />
+      <div className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
+        <div className="pt-[env(safe-area-inset-top)]">
+          <div className="px-4 pb-5 pt-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-blue-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <CalendarIcon className="w-7 h-7 text-blue-500" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h1 className="text-2xl font-bold text-black">{t('calendar.title')}</h1>
+                  <p className="text-base text-gray-500">{t('calendar.subtitle')}</p>
+                </div>
               </div>
-              <div>
-                <h1 className={`text-xl font-bold ${themeClasses.text.primary}`}>{t('calendar.title')}</h1>
-                <p className={`text-sm ${themeClasses.text.secondary}`}>{t('calendar.subtitle')}</p>
-              </div>
+              <button
+                onClick={() => navigate('/settings')}
+                className="w-14 h-14 bg-gray-100 rounded-xl flex items-center justify-center hover:bg-gray-200 transition-colors"
+              >
+                <Settings className="w-7 h-7 text-gray-600" />
+              </button>
             </div>
           </div>
-          <button
-            onClick={() => navigate('/settings')}
-            className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center hover:bg-orange-500/30 transition-colors border border-orange-500/40"
-          >
-            <Settings className="w-5 h-5 text-orange-500" />
-          </button>
         </div>
       </div>
+      {/* Spacer for fixed header */}
+      <div className="pt-[calc(env(safe-area-inset-top)+100px)]" />
 
       <div className="px-4 py-4 space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

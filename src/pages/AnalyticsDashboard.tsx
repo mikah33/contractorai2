@@ -65,8 +65,8 @@ const AnalyticsDashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-xl text-gray-600">Loading analytics...</div>
+      <div className={`flex items-center justify-center h-screen ${themeClasses.bg.primary}`}>
+        <div className={`text-xl ${themeClasses.text.secondary}`}>Loading analytics...</div>
       </div>
     );
   }
@@ -74,54 +74,58 @@ const AnalyticsDashboard: React.FC = () => {
   return (
     <div className={`min-h-full ${themeClasses.bg.primary} pb-24`}>
       {/* Header */}
-      <div className={`${themeClasses.bg.secondary} border-b ${themeClasses.border.primary} px-4 pb-4 pt-[calc(env(safe-area-inset-top)+16px)] sticky top-0 z-10`}>
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                <BarChart3 className="w-5 h-5 text-orange-500" />
+      <div className={`fixed top-0 left-0 right-0 z-50 ${themeClasses.bg.secondary} border-b ${themeClasses.border.primary}`}>
+        <div className="pt-[env(safe-area-inset-top)]">
+          <div className="px-4 pb-5 pt-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-blue-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <BarChart3 className="w-7 h-7 text-blue-500" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h1 className={`text-2xl font-bold ${themeClasses.text.primary}`}>Analytics</h1>
+                  <p className={`text-base ${themeClasses.text.secondary}`}>Track your marketing performance</p>
+                </div>
               </div>
-              <div>
-                <h1 className={`text-xl font-bold ${themeClasses.text.primary}`}>Analytics</h1>
-                <p className={`text-sm ${themeClasses.text.secondary}`}>Track your marketing performance</p>
-              </div>
+              <button
+                onClick={() => navigate('/settings')}
+                className={`w-14 h-14 ${themeClasses.bg.tertiary} rounded-xl flex items-center justify-center hover:opacity-80 transition-colors`}
+              >
+                <Settings className={`w-7 h-7 ${themeClasses.text.secondary}`} />
+              </button>
             </div>
           </div>
-          <button
-            onClick={() => navigate('/settings')}
-            className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center hover:bg-orange-500/30 transition-colors border border-orange-500/40"
-          >
-            <Settings className="w-5 h-5 text-orange-500" />
-          </button>
         </div>
       </div>
+      {/* Spacer for fixed header */}
+      <div className="pt-[calc(env(safe-area-inset-top)+100px)]" />
 
       <div className="px-4 py-4">
 
       {/* Date Range Selector */}
-      <div className="bg-white rounded-lg shadow p-4 mb-6">
+      <div className={`${themeClasses.bg.secondary} rounded-lg shadow p-4 mb-6`}>
         <div className="flex items-center space-x-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+            <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Start Date</label>
             <input
               type="date"
               value={dateRange.start}
               onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-              className="border border-gray-300 rounded-md px-3 py-2"
+              className={`border ${themeClasses.border.primary} ${themeClasses.bg.input} ${themeClasses.text.primary} rounded-md px-3 py-2`}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+            <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>End Date</label>
             <input
               type="date"
               value={dateRange.end}
               onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-              className="border border-gray-300 rounded-md px-3 py-2"
+              className={`border ${themeClasses.border.primary} ${themeClasses.bg.input} ${themeClasses.text.primary} rounded-md px-3 py-2`}
             />
           </div>
           <button
             onClick={loadAnalytics}
-            className="mt-6 px-6 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700"
+            className="mt-6 px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
           >
             Update
           </button>
@@ -130,7 +134,7 @@ const AnalyticsDashboard: React.FC = () => {
 
       {/* Real-Time Metrics */}
       {realTime && (
-        <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg shadow-lg p-6 mb-6 text-white">
+        <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-lg p-6 mb-6 text-white">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold flex items-center">
               <Activity className="h-5 w-5 mr-2" />
@@ -195,24 +199,24 @@ const AnalyticsDashboard: React.FC = () => {
 
           {/* Platform Breakdown */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <PieChart className="h-5 w-5 mr-2 text-orange-600" />
+            <div className={`${themeClasses.bg.secondary} rounded-lg shadow p-6`}>
+              <h3 className={`text-lg font-semibold ${themeClasses.text.primary} mb-4 flex items-center`}>
+                <PieChart className="h-5 w-5 mr-2 text-blue-600" />
                 Platform Performance
               </h3>
               <div className="space-y-4">
                 {summary.platform_breakdown.map((platform) => (
                   <div key={platform.platform} className="flex items-center justify-between">
                     <div className="flex-1">
-                      <div className="text-sm font-medium text-gray-900 capitalize">
+                      <div className={`text-sm font-medium ${themeClasses.text.primary} capitalize`}>
                         {platform.platform.replace('_', ' ')}
                       </div>
-                      <div className="text-xs text-gray-500">
+                      <div className={`text-xs ${themeClasses.text.secondary}`}>
                         ${platform.spend.toFixed(2)} spend
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-sm font-semibold text-gray-900">
+                      <div className={`text-sm font-semibold ${themeClasses.text.primary}`}>
                         {platform.conversions} conv
                       </div>
                       <div className="text-xs text-green-600">
@@ -225,22 +229,22 @@ const AnalyticsDashboard: React.FC = () => {
             </div>
 
             {/* Top Campaigns */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <BarChart3 className="h-5 w-5 mr-2 text-orange-600" />
+            <div className={`${themeClasses.bg.secondary} rounded-lg shadow p-6`}>
+              <h3 className={`text-lg font-semibold ${themeClasses.text.primary} mb-4 flex items-center`}>
+                <BarChart3 className="h-5 w-5 mr-2 text-blue-600" />
                 Top Campaigns
               </h3>
               <div className="space-y-4">
                 {summary.top_campaigns.map((campaign) => (
                   <div key={campaign.campaign_id} className="flex items-center justify-between">
                     <div className="flex-1">
-                      <div className="text-sm font-medium text-gray-900">{campaign.name}</div>
-                      <div className="text-xs text-gray-500 capitalize">
+                      <div className={`text-sm font-medium ${themeClasses.text.primary}`}>{campaign.name}</div>
+                      <div className={`text-xs ${themeClasses.text.secondary} capitalize`}>
                         {campaign.platform.replace('_', ' ')}
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-sm font-semibold text-gray-900">
+                      <div className={`text-sm font-semibold ${themeClasses.text.primary}`}>
                         {campaign.conversions} conv
                       </div>
                       <div className="text-xs text-green-600">
@@ -254,9 +258,9 @@ const AnalyticsDashboard: React.FC = () => {
           </div>
 
           {/* Performance Chart Placeholder */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Performance Trend</h3>
-            <div className="h-64 flex items-center justify-center text-gray-400">
+          <div className={`${themeClasses.bg.secondary} rounded-lg shadow p-6`}>
+            <h3 className={`text-lg font-semibold ${themeClasses.text.primary} mb-4`}>Performance Trend</h3>
+            <div className={`h-64 flex items-center justify-center ${themeClasses.text.secondary}`}>
               Chart visualization will be added with AI integration
             </div>
           </div>
@@ -277,16 +281,19 @@ interface MetricCardProps {
 }
 
 const MetricCard: React.FC<MetricCardProps> = ({ icon, title, value, change, positive }) => {
+  const { theme } = useTheme();
+  const themeClasses = getThemeClasses(theme);
+
   return (
-    <div className="bg-white rounded-lg shadow p-6">
+    <div className={`${themeClasses.bg.secondary} rounded-lg shadow p-6`}>
       <div className="flex items-center justify-between mb-2">
-        <div className="text-gray-500">{icon}</div>
+        <div className={themeClasses.text.secondary}>{icon}</div>
         <span className={`text-sm font-medium ${positive ? 'text-green-600' : 'text-red-600'}`}>
           {change}
         </span>
       </div>
-      <h3 className="text-sm font-medium text-gray-600 mb-1">{title}</h3>
-      <p className="text-2xl font-bold text-gray-900">{value}</p>
+      <h3 className={`text-sm font-medium ${themeClasses.text.secondary} mb-1`}>{title}</h3>
+      <p className={`text-2xl font-bold ${themeClasses.text.primary}`}>{value}</p>
     </div>
   );
 };

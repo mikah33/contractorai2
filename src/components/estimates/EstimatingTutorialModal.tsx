@@ -28,36 +28,36 @@ const EstimatingTutorialModal: React.FC<EstimatingTutorialModalProps> = ({
       icon: FileText,
       title: 'Welcome to Estimates',
       description: 'Create professional estimates for your customers in seconds. Use AI or our calculators to build accurate quotes.',
-      color: 'text-orange-500',
-      bgColor: 'bg-orange-500/20'
+      color: 'text-blue-500',
+      bgColor: 'bg-blue-500/20'
     },
     {
       icon: Sparkles,
       title: 'AI Estimating Assistant',
       description: 'Click "AI Estimating Agent" to describe your project in plain English. Our AI will create a detailed estimate for you.',
-      color: 'text-orange-500',
-      bgColor: 'bg-orange-500/20'
+      color: 'text-blue-500',
+      bgColor: 'bg-blue-500/20'
     },
     {
       icon: Calculator,
       title: '21 Pricing Calculators',
       description: 'Tap "+ Add" to manually input project details using one of our 21 specialized calculators for different job types.',
-      color: 'text-orange-500',
-      bgColor: 'bg-orange-500/20'
+      color: 'text-blue-500',
+      bgColor: 'bg-blue-500/20'
     },
     {
       icon: History,
       title: 'View Your History',
       description: 'Access all your past estimates in the list. Search, edit, or duplicate previous quotes for similar jobs.',
-      color: 'text-orange-500',
-      bgColor: 'bg-orange-500/20'
+      color: 'text-blue-500',
+      bgColor: 'bg-blue-500/20'
     },
     {
       icon: Send,
       title: 'Send or Download',
       description: 'Once your estimate is ready, click "Create Estimate" to send it directly to customers or download as a PDF.',
-      color: 'text-orange-500',
-      bgColor: 'bg-orange-500/20'
+      color: 'text-blue-500',
+      bgColor: 'bg-blue-500/20'
     }
   ];
 
@@ -79,8 +79,8 @@ const EstimatingTutorialModal: React.FC<EstimatingTutorialModalProps> = ({
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 p-4">
       <div className="w-full max-w-sm bg-[#1C1C1E] rounded-2xl overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-orange-500/30">
-          <span className="text-xs text-orange-500 font-semibold">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-blue-500/30">
+          <span className="text-xs text-blue-500 font-semibold">
             {currentStep + 1} of {tutorialSteps.length}
           </span>
           <button
@@ -111,7 +111,7 @@ const EstimatingTutorialModal: React.FC<EstimatingTutorialModalProps> = ({
               <div
                 key={i}
                 className={`w-2 h-2 rounded-full transition-colors ${
-                  i === currentStep ? 'bg-orange-500' : 'bg-zinc-700'
+                  i === currentStep ? 'bg-blue-500' : 'bg-zinc-700'
                 }`}
               />
             ))}
@@ -122,7 +122,7 @@ const EstimatingTutorialModal: React.FC<EstimatingTutorialModalProps> = ({
         <div className="px-4 pb-6 space-y-4">
           <button
             onClick={handleNext}
-            className="w-full py-3.5 bg-orange-500 text-white rounded-xl font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
+            className="w-full py-3.5 bg-blue-500 text-white rounded-xl font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
           >
             {currentStep < tutorialSteps.length - 1 ? (
               <>
@@ -139,7 +139,7 @@ const EstimatingTutorialModal: React.FC<EstimatingTutorialModalProps> = ({
               type="checkbox"
               checked={dontShowAgain}
               onChange={(e) => setDontShowAgain(e.target.checked)}
-              className="rounded border-zinc-600 bg-zinc-800 text-orange-500 focus:ring-orange-500"
+              className="rounded border-zinc-600 bg-zinc-800 text-blue-500 focus:ring-blue-500"
             />
             Don't show this again
           </label>

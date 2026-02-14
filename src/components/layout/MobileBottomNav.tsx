@@ -23,7 +23,9 @@ import {
   Trash2,
   MessageSquare,
   Eye,
-  Scan
+  Scan,
+  MoreHorizontal,
+  Search
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../stores/authStore';
@@ -117,7 +119,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
 
   const getModeIcon = (mode: string) => {
     switch (mode) {
-      case 'estimating': return <Calculator className="w-5 h-5 text-orange-500" />;
+      case 'estimating': return <Calculator className="w-5 h-5 text-blue-500" />;
       case 'projects': return <Briefcase className="w-5 h-5 text-purple-500" />;
       case 'finance': return <DollarSign className="w-5 h-5 text-green-500" />;
       case 'crm': return <UserPlus className="w-5 h-5 text-blue-500" />;
@@ -137,10 +139,10 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
 
   const navItems = [
     { name: 'Home', icon: Home, href: '/' },
-    { name: 'Jobs', icon: Briefcase, href: '/jobs-hub' },
+    { name: 'Search', icon: Search, href: '/search' },
     { name: 'AI', icon: Plus, href: '#', isCenter: true },
     { name: 'Finance', icon: DollarSign, href: '/finance-hub' },
-    { name: 'Marketing', icon: BarChart3, href: '/ad-analyzer' },
+    { name: 'More', icon: MoreHorizontal, href: '/settings' },
   ];
 
   const aiModes = [
@@ -244,7 +246,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
                 <button
                   key={item.name}
                   onClick={handleAIClick}
-                  className="relative -mt-10 w-[72px] h-[72px] bg-orange-500 rounded-full flex items-center justify-center shadow-lg shadow-orange-500/30 active:scale-95 transition-transform"
+                  className="relative -mt-10 w-[72px] h-[72px] bg-blue-500 rounded-full flex items-center justify-center shadow-lg shadow-blue-500/30 active:scale-95 transition-transform"
                 >
                   <Plus className="w-9 h-9 text-white" />
                 </button>
@@ -256,10 +258,10 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
                 key={item.name}
                 to={item.href}
                 className={`flex flex-col items-center justify-center flex-1 h-full ${
-                  isActive ? 'text-orange-500' : 'text-zinc-500'
+                  isActive ? 'text-blue-500' : 'text-zinc-500'
                 }`}
               >
-                <item.icon className={`w-6 h-6 ${isActive ? 'text-orange-500' : 'text-zinc-500'}`} />
+                <item.icon className={`w-6 h-6 ${isActive ? 'text-blue-500' : 'text-zinc-500'}`} />
                 <span className="text-xs mt-1 font-medium">{item.name}</span>
               </Link>
             );
@@ -270,13 +272,13 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
         <div className="px-4 pb-2">
           <button
             onClick={() => window.dispatchEvent(new CustomEvent('openAIChat'))}
-            className={`w-full flex items-center gap-3 px-4 py-2.5 ${themeClasses.bg.card} rounded-xl border ${theme === 'light' ? 'border-orange-300' : 'border-orange-500/30'} active:scale-[0.98] transition-transform`}
+            className={`w-full flex items-center gap-3 px-4 py-2.5 ${themeClasses.bg.card} rounded-xl border ${theme === 'light' ? 'border-blue-300' : 'border-blue-500/30'} active:scale-[0.98] transition-transform`}
           >
-            <div className="w-7 h-7 bg-orange-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Sparkles className="w-4 h-4 text-orange-500" />
+            <div className="w-7 h-7 bg-blue-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Sparkles className="w-4 h-4 text-blue-500" />
             </div>
             <span className={`flex-1 text-left text-sm ${themeClasses.text.secondary}`}>Ask Contractor AI anything...</span>
-            <div className={`flex items-center gap-1 px-2 py-0.5 rounded-md ${theme === 'light' ? 'bg-gray-200' : 'bg-zinc-800'} text-orange-500`}>
+            <div className={`flex items-center gap-1 px-2 py-0.5 rounded-md ${theme === 'light' ? 'bg-gray-200' : 'bg-zinc-800'} text-blue-500`}>
               <Sparkles className="w-4 h-4" />
             </div>
           </button>
@@ -302,8 +304,8 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
             {/* Header */}
             <div className="flex items-center justify-between px-5 pb-4">
               <div className="flex items-center gap-3">
-                <div className="w-11 h-11 bg-orange-500/20 rounded-xl flex items-center justify-center">
-                  <Sparkles className="w-6 h-6 text-orange-500" />
+                <div className="w-11 h-11 bg-blue-500/20 rounded-xl flex items-center justify-center">
+                  <Sparkles className="w-6 h-6 text-blue-500" />
                 </div>
                 <div>
                   <h2 className={`text-lg font-bold ${themeClasses.text.primary}`}>Contractor AI</h2>
@@ -326,8 +328,8 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
                   onClick={() => handleModeSelect(mode.id)}
                   className={`flex flex-col items-center p-3.5 ${theme === 'light' ? 'bg-white' : 'bg-[#1C1C1E]'} rounded-xl border border-gray-200 hover:border-gray-300 active:scale-[0.98] transition-all`}
                 >
-                  <div className="w-11 h-11 bg-orange-500/20 rounded-xl flex items-center justify-center mb-2">
-                    <mode.icon className="w-6 h-6 text-orange-500" />
+                  <div className="w-11 h-11 bg-blue-500/20 rounded-xl flex items-center justify-center mb-2">
+                    <mode.icon className="w-6 h-6 text-blue-500" />
                   </div>
                   <span className={`font-semibold text-sm ${themeClasses.text.primary}`}>{mode.name}</span>
                   <span className={`text-xs ${themeClasses.text.secondary} text-center mt-0.5`}>{mode.description}</span>
@@ -375,7 +377,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
                 onClick={() => handleModeSelect('photos')}
                 className={`w-full flex items-center gap-4 p-3.5 ${theme === 'light' ? 'bg-white' : 'bg-[#1C1C1E]'} rounded-t-xl border border-gray-200 border-b-0 hover:border-gray-300 active:scale-[0.98] transition-all`}
               >
-                <div className="w-11 h-11 bg-orange-500 rounded-xl flex items-center justify-center">
+                <div className="w-11 h-11 bg-blue-500 rounded-xl flex items-center justify-center">
                   <Camera className="w-6 h-6 text-white" />
                 </div>
                 <div className="flex-1 text-left">
@@ -392,8 +394,8 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
                 }}
                 className={`w-full flex items-center gap-3 px-4 py-2.5 ${theme === 'light' ? 'bg-white' : 'bg-[#1C1C1E]'} rounded-b-xl border border-gray-200 border-t-0 hover:border-gray-300 active:scale-[0.98] transition-all`}
               >
-                <div className="w-8 h-8 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                  <Camera className="w-4 h-4 text-orange-400" />
+                <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                  <Camera className="w-4 h-4 text-blue-400" />
                 </div>
                 <span className={`text-sm font-medium ${themeClasses.text.primary}`}>Gallery</span>
                 <ChevronRight className={`w-4 h-4 ${themeClasses.text.secondary} ml-auto`} />
@@ -523,10 +525,10 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
             </div>
 
             {/* Header */}
-            <div className="flex items-center justify-between px-4 pb-4 border-b border-orange-500/30">
+            <div className="flex items-center justify-between px-4 pb-4 border-b border-blue-500/30">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                  <Mail className="w-5 h-5 text-orange-500" />
+                <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                  <Mail className="w-5 h-5 text-blue-500" />
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-white">Send Email</h2>
@@ -545,7 +547,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
             <div className="p-4 overflow-y-auto max-h-[60vh]">
               {loadingEvents ? (
                 <div className="flex items-center justify-center py-12">
-                  <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+                  <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
                 </div>
               ) : events.length === 0 ? (
                 <div className="text-center py-12">
@@ -557,7 +559,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
                       setShowEventPicker(false);
                       navigate('/calendar');
                     }}
-                    className="mt-4 px-4 py-2 bg-orange-500 text-white rounded-md font-medium hover:bg-orange-600 active:scale-95 transition-all"
+                    className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md font-medium hover:bg-blue-600 active:scale-95 transition-all"
                   >
                     Go to Calendar
                   </button>
@@ -572,10 +574,10 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
                         setShowEventPicker(false);
                         setShowNotificationModal(true);
                       }}
-                      className="w-full flex items-center gap-3 p-4 bg-[#2C2C2E] rounded-lg border border-orange-500/30 hover:border-orange-500/60 active:scale-[0.98] transition-all text-left"
+                      className="w-full flex items-center gap-3 p-4 bg-[#2C2C2E] rounded-lg border border-blue-500/30 hover:border-blue-500/60 active:scale-[0.98] transition-all text-left"
                     >
-                      <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <CalendarIcon className="w-5 h-5 text-orange-500" />
+                      <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <CalendarIcon className="w-5 h-5 text-blue-500" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="font-medium text-white truncate">{event.title}</h3>
@@ -641,7 +643,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
             <div className="p-4 overflow-y-auto max-h-[70vh]">
               {loadingHistory ? (
                 <div className="flex items-center justify-center py-12">
-                  <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+                  <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
                 </div>
               ) : chatHistory.length === 0 ? (
                 <div className="text-center py-12">
@@ -658,7 +660,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
                         setSelectedChatSession(session);
                         setShowChatHistory(false);
                       }}
-                      className="w-full flex items-center gap-3 p-4 bg-[#2C2C2E] rounded-lg border border-white/10 hover:border-orange-500/50 active:scale-[0.98] transition-all text-left"
+                      className="w-full flex items-center gap-3 p-4 bg-[#2C2C2E] rounded-lg border border-white/10 hover:border-blue-500/50 active:scale-[0.98] transition-all text-left"
                     >
                       <div className="w-10 h-10 bg-[#3A3A3C] rounded-lg flex items-center justify-center flex-shrink-0">
                         {getModeIcon(session.mode || 'general')}

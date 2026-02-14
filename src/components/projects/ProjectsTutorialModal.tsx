@@ -28,36 +28,36 @@ const ProjectsTutorialModal: React.FC<ProjectsTutorialModalProps> = ({
       icon: Briefcase,
       title: 'Welcome to Projects',
       description: 'Your command center for managing all your jobs. Track progress, teams, and schedules in one place.',
-      color: 'text-orange-500',
-      bgColor: 'bg-orange-500/20'
+      color: 'text-blue-500',
+      bgColor: 'bg-blue-500/20'
     },
     {
       icon: Sparkles,
       title: 'AI Project Manager',
       description: 'Click "AI Project Manager" to add projects using AI. Just describe your job and AI will organize everything for you.',
-      color: 'text-orange-500',
-      bgColor: 'bg-orange-500/20'
+      color: 'text-blue-500',
+      bgColor: 'bg-blue-500/20'
     },
     {
       icon: Users,
       title: 'Assign Teams',
       description: 'Add team members to projects. Assign employees to specific jobs and track who\'s working on what.',
-      color: 'text-orange-500',
-      bgColor: 'bg-orange-500/20'
+      color: 'text-blue-500',
+      bgColor: 'bg-blue-500/20'
     },
     {
       icon: Calendar,
       title: 'Manage Schedules',
       description: 'Set start and end dates for projects. Keep track of deadlines and milestones for every job.',
-      color: 'text-orange-500',
-      bgColor: 'bg-orange-500/20'
+      color: 'text-blue-500',
+      bgColor: 'bg-blue-500/20'
     },
     {
       icon: UserPlus,
       title: 'Attach Customers & Employees',
       description: 'Link customers and employees directly to projects. Keep all your contacts organized by job.',
-      color: 'text-orange-500',
-      bgColor: 'bg-orange-500/20'
+      color: 'text-blue-500',
+      bgColor: 'bg-blue-500/20'
     }
   ];
 
@@ -79,8 +79,8 @@ const ProjectsTutorialModal: React.FC<ProjectsTutorialModalProps> = ({
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 p-4">
       <div className="w-full max-w-sm bg-[#1C1C1E] rounded-2xl overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-orange-500/30">
-          <span className="text-xs text-orange-500 font-semibold">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-blue-500/30">
+          <span className="text-xs text-blue-500 font-semibold">
             {currentStep + 1} of {tutorialSteps.length}
           </span>
           <button
@@ -111,7 +111,7 @@ const ProjectsTutorialModal: React.FC<ProjectsTutorialModalProps> = ({
               <div
                 key={i}
                 className={`w-2 h-2 rounded-full transition-colors ${
-                  i === currentStep ? 'bg-orange-500' : 'bg-zinc-700'
+                  i === currentStep ? 'bg-blue-500' : 'bg-zinc-700'
                 }`}
               />
             ))}
@@ -122,7 +122,7 @@ const ProjectsTutorialModal: React.FC<ProjectsTutorialModalProps> = ({
         <div className="px-4 pb-6 space-y-4">
           <button
             onClick={handleNext}
-            className="w-full py-3.5 bg-orange-500 text-white rounded-xl font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
+            className="w-full py-3.5 bg-blue-500 text-white rounded-xl font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
           >
             {currentStep < tutorialSteps.length - 1 ? (
               <>
@@ -139,7 +139,7 @@ const ProjectsTutorialModal: React.FC<ProjectsTutorialModalProps> = ({
               type="checkbox"
               checked={dontShowAgain}
               onChange={(e) => setDontShowAgain(e.target.checked)}
-              className="rounded border-zinc-600 bg-zinc-800 text-orange-500 focus:ring-orange-500"
+              className="rounded border-zinc-600 bg-zinc-800 text-blue-500 focus:ring-blue-500"
             />
             Don't show this again
           </label>

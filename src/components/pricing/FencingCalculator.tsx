@@ -620,11 +620,11 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     return (
       <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
         <div className="flex items-center mb-6">
-          <Fence className="h-6 w-6 text-orange-500 mr-2" />
+          <Fence className="h-6 w-6 text-blue-500 mr-2" />
           <h2 className="text-xl font-bold text-slate-800">{t('calculators.fencing.title')}</h2>
         </div>
         <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading custom configuration...</p>
         </div>
       </div>
@@ -636,7 +636,7 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     return (
       <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
         <div className="flex items-center mb-6">
-          <Fence className="h-6 w-6 text-orange-500 mr-2" />
+          <Fence className="h-6 w-6 text-blue-500 mr-2" />
           <h2 className="text-xl font-bold text-slate-800">{t('calculators.fencing.title')}</h2>
         </div>
         <div className="text-center py-12">
@@ -653,7 +653,7 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   return (
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
       <div className="flex items-center mb-6">
-        <Fence className="h-6 w-6 text-orange-500 mr-2" />
+        <Fence className="h-6 w-6 text-blue-500 mr-2" />
         <h2 className="text-xl font-bold text-slate-800">{t('calculators.fencing.title')}</h2>
       </div>
 
@@ -674,7 +674,7 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               id="fenceType"
               value={fenceType}
               onChange={(e) => setFenceType(e.target.value as typeof fenceType)}
-              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="privacy">{t('calculators.fencing.privacyFence')}</option>
               <option value="picket">{t('calculators.fencing.picketFence')}</option>
@@ -694,7 +694,7 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="material"
                 value={material}
                 onChange={(e) => setMaterial(e.target.value as typeof material)}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 {fenceType !== 'chain-link' && (
                   <>
@@ -719,7 +719,7 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="postMaterial"
                 value={postMaterial}
                 onChange={(e) => setPostMaterial(e.target.value as typeof postMaterial)}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="wood">Wood ($24.98)</option>
                 <option value="vinyl-5x5">Vinyl 5x5 ($42.00)</option>
@@ -745,7 +745,7 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   step="0.1"
                   value={customLinearFeet}
                   onChange={(e) => setCustomLinearFeet(e.target.value ? Number(e.target.value) : '')}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Enter total linear feet"
                 />
               </div>
@@ -761,7 +761,7 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   step="0.01"
                   value={customPricePerFoot}
                   onChange={(e) => setCustomPricePerFoot(e.target.value ? Number(e.target.value) : '')}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="e.g., 25.00"
                 />
               </div>
@@ -786,7 +786,7 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               step="0.1"
               value={length}
               onChange={(e) => setLength(e.target.value ? Number(e.target.value) : '')}
-              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder={t('calculators.fencing.enterFenceLength')}
             />
           </div>
@@ -802,7 +802,7 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               step="1"
               value={height}
               onChange={(e) => setHeight(e.target.value ? Number(e.target.value) : '')}
-              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder={t('calculators.fencing.enterFenceHeight')}
             />
           </div>
@@ -815,7 +815,7 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
               id="postSpacing"
               value={postSpacing}
               onChange={(e) => setPostSpacing(Number(e.target.value) as 6 | 8)}
-              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value={6}>{t('calculators.fencing.sixFeet')}</option>
               <option value={8}>{t('calculators.fencing.eightFeet')}</option>
@@ -900,7 +900,7 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                     type="checkbox"
                     checked={gate.includeHardware}
                     onChange={(e) => updateGate(gate.id, { includeHardware: e.target.checked })}
-                    className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                    className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
                   />
                   <label className="ml-2 block text-sm font-medium text-slate-700">
                     {t('calculators.fencing.includeHardware')}
@@ -967,7 +967,7 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="slopeType"
                 value={slopeType}
                 onChange={(e) => setSlopeType(e.target.value as typeof slopeType)}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="level">{t('calculators.fencing.levelGround')}</option>
                 <option value="stepping">{t('calculators.fencing.stepping')}</option>
@@ -988,7 +988,7 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   step="1"
                   value={slopePercentage}
                   onChange={(e) => setSlopePercentage(e.target.value ? Number(e.target.value) : '')}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder={t('calculators.fencing.enterSlopePercentage')}
                 />
               </div>
@@ -1002,7 +1002,7 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="postMountType"
                 value={postMountType}
                 onChange={(e) => setPostMountType(e.target.value as typeof postMountType)}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="concrete">{t('calculators.fencing.concrete')}</option>
                 <option value="spike">{t('calculators.fencing.groundSpike')}</option>
@@ -1022,7 +1022,7 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   step="1"
                   value={concreteDepth}
                   onChange={(e) => setConcreteDepth(e.target.value ? Number(e.target.value) : '')}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder={t('calculators.fencing.enterPostHoleDepth')}
                 />
               </div>
@@ -1039,7 +1039,7 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="includePostCaps"
                 checked={includePostCaps}
                 onChange={(e) => setIncludePostCaps(e.target.checked)}
-                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
               />
               <label htmlFor="includePostCaps" className="ml-2 block text-sm font-medium text-slate-700">
                 {t('calculators.fencing.includePostCaps')}
@@ -1052,7 +1052,7 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="includeKickboard"
                 checked={includeKickboard}
                 onChange={(e) => setIncludeKickboard(e.target.checked)}
-                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
               />
               <label htmlFor="includeKickboard" className="ml-2 block text-sm font-medium text-slate-700">
                 {t('calculators.fencing.includeKickboard')}
@@ -1067,7 +1067,7 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="wasteFactor"
                 value={wasteFactor}
                 onChange={(e) => setWasteFactor(Number(e.target.value) as 10 | 15 | 20)}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value={10}>{t('calculators.fencing.wasteFactorSimple')}</option>
                 <option value={15}>{t('calculators.fencing.wasteFactorAverage')}</option>
@@ -1085,7 +1085,7 @@ const FencingCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         disabled={!isFormValid}
         className={`w-full py-3 px-4 rounded-md font-medium text-white ${
           isFormValid
-            ? 'bg-orange-500 hover:bg-orange-600 transition-colors'
+            ? 'bg-blue-500 hover:bg-blue-600 transition-colors'
             : 'bg-slate-300 cursor-not-allowed'
         }`}
       >

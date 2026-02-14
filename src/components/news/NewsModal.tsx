@@ -36,10 +36,10 @@ const NewsModal: React.FC<NewsModalProps> = ({ article, isOpen, onClose }) => {
       {/* Modal */}
       <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[80vh] overflow-hidden animate-scale-in">
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b-2 border-orange-400 px-4 py-3 flex items-center justify-between">
+        <div className="sticky top-0 bg-white border-b-2 border-blue-400 px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
-              <Newspaper className="w-4 h-4 text-orange-600" />
+            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+              <Newspaper className="w-4 h-4 text-blue-600" />
             </div>
             <span className="text-sm font-medium text-zinc-600">Industry News</span>
           </div>
@@ -85,12 +85,12 @@ const NewsModal: React.FC<NewsModalProps> = ({ article, isOpen, onClose }) => {
           </div>
 
           {/* AI Summary */}
-          <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
             <div className="flex items-center gap-2 mb-2">
-              <div className="w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center">
+              <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
                 <span className="text-white text-xs font-bold">AI</span>
               </div>
-              <span className="text-xs font-medium text-orange-700">Summary</span>
+              <span className="text-xs font-medium text-blue-700">Summary</span>
             </div>
             <p className="text-zinc-700 leading-relaxed">
               {article.summary}
@@ -107,7 +107,7 @@ const NewsModal: React.FC<NewsModalProps> = ({ article, isOpen, onClose }) => {
         <div className="sticky bottom-0 bg-white border-t border-zinc-200 p-4">
           <button
             onClick={handleReadMore}
-            className="w-full flex items-center justify-center gap-2 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl transition-colors"
+            className="w-full flex items-center justify-center gap-2 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl transition-colors"
           >
             <span>Read Full Article</span>
             <ExternalLink className="w-4 h-4" />

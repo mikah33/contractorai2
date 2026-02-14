@@ -338,11 +338,11 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     return (
       <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
         <div className="flex items-center mb-6">
-          <Zap className="h-6 w-6 text-orange-500 mr-2" />
+          <Zap className="h-6 w-6 text-blue-500 mr-2" />
           <h2 className="text-xl font-bold text-slate-800">{t('calculators.electrical.title')}</h2>
         </div>
         <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading custom configuration...</p>
         </div>
       </div>
@@ -354,7 +354,7 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
     return (
       <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
         <div className="flex items-center mb-6">
-          <Zap className="h-6 w-6 text-orange-500 mr-2" />
+          <Zap className="h-6 w-6 text-blue-500 mr-2" />
           <h2 className="text-xl font-bold text-slate-800">{t('calculators.electrical.title')}</h2>
         </div>
         <div className="text-center py-12">
@@ -371,7 +371,7 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
   return (
     <div className="bg-white p-6 rounded-lg shadow-md animate-fade-in">
       <div className="flex items-center mb-6">
-        <Zap className="h-6 w-6 text-orange-500 mr-2" />
+        <Zap className="h-6 w-6 text-blue-500 mr-2" />
         <h2 className="text-xl font-bold text-slate-800">{t('calculators.electrical.title')}</h2>
       </div>
 
@@ -387,7 +387,7 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
           <h3 className="text-lg font-medium text-slate-800">{t('calculators.electrical.circuits')}</h3>
           <button
             onClick={addCircuit}
-            className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors"
+            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
           >
             {t('calculators.electrical.addCircuit')}
           </button>
@@ -399,7 +399,7 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
             <p className="text-gray-600 mb-4">{t('calculators.electrical.addCircuitsPrompt')}</p>
             <button
               onClick={addCircuit}
-              className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors"
+              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
             >
               {t('calculators.electrical.addFirstCircuit')}
             </button>
@@ -416,7 +416,7 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 <select
                   value={circuit.type}
                   onChange={(e) => updateCircuit(circuit.id, { type: e.target.value as Circuit['type'] })}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="lighting">{t('calculators.electrical.lightingCircuit')}</option>
                   <option value="receptacle">{t('calculators.electrical.receptacleCircuit')}</option>
@@ -432,7 +432,7 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 <select
                   value={circuit.amperage}
                   onChange={(e) => updateCircuit(circuit.id, { amperage: Number(e.target.value) as Circuit['amperage'] })}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value={15}>{t('calculators.electrical.fifteenAmp')}</option>
                   <option value={20}>{t('calculators.electrical.twentyAmp')}</option>
@@ -449,7 +449,7 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 <select
                   value={circuit.voltage}
                   onChange={(e) => updateCircuit(circuit.id, { voltage: Number(e.target.value) as Circuit['voltage'] })}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value={120}>{t('calculators.electrical.onetwentyV')}</option>
                   <option value={240}>{t('calculators.electrical.twofortyV')}</option>
@@ -466,7 +466,7 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   step="1"
                   value={circuit.length || ''}
                   onChange={(e) => updateCircuit(circuit.id, { length: Number(e.target.value) })}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder={t('calculators.electrical.enterWireLength')}
                 />
               </div>
@@ -478,7 +478,7 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 <select
                   value={circuit.wireGauge}
                   onChange={(e) => updateCircuit(circuit.id, { wireGauge: Number(e.target.value) as Circuit['wireGauge'] })}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value={14}>{t('calculators.electrical.fourteenAWG')}</option>
                   <option value={12}>{t('calculators.electrical.twelveAWG')}</option>
@@ -495,7 +495,7 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 <select
                   value={circuit.wireType}
                   onChange={(e) => updateCircuit(circuit.id, { wireType: e.target.value as Circuit['wireType'] })}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="nm-b">{t('calculators.electrical.nmb')}</option>
                   <option value="thhn">{t('calculators.electrical.thhn')}</option>
@@ -514,7 +514,7 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   step="1"
                   value={circuit.deviceCount || ''}
                   onChange={(e) => updateCircuit(circuit.id, { deviceCount: Number(e.target.value) })}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder={t('calculators.electrical.enterDeviceCount')}
                 />
               </div>
@@ -529,7 +529,7 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   step="1"
                   value={circuit.boxCount || ''}
                   onChange={(e) => updateCircuit(circuit.id, { boxCount: Number(e.target.value) })}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder={t('calculators.electrical.enterBoxCount')}
                 />
               </div>
@@ -539,7 +539,7 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   type="checkbox"
                   checked={circuit.conduit}
                   onChange={(e) => updateCircuit(circuit.id, { conduit: e.target.checked })}
-                  className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                  className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
                 />
                 <label className="ml-2 block text-sm font-medium text-slate-700">
                   {t('calculators.electrical.requiresConduit')}
@@ -556,7 +556,7 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   <select
                     value={circuit.conduitType}
                     onChange={(e) => updateCircuit(circuit.id, { conduitType: e.target.value as Circuit['conduitType'] })}
-                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="emt">{t('calculators.electrical.emt')}</option>
                     <option value="pvc">{t('calculators.electrical.pvc')}</option>
@@ -571,7 +571,7 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                   <select
                     value={circuit.conduitSize}
                     onChange={(e) => updateCircuit(circuit.id, { conduitSize: Number(e.target.value) as Circuit['conduitSize'] })}
-                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value={0.5}>{t('calculators.electrical.halfInch')}</option>
                     <option value={0.75}>{t('calculators.electrical.threeQuarterInch')}</option>
@@ -599,7 +599,7 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="includePanel"
                 checked={includePanel}
                 onChange={(e) => setIncludePanel(e.target.checked)}
-                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
               />
               <label htmlFor="includePanel" className="ml-2 block text-sm font-medium text-slate-700">
                 {t('calculators.electrical.includePanel')}
@@ -616,7 +616,7 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                     id="panelSize"
                     value={panelSize}
                     onChange={(e) => setPanelSize(Number(e.target.value) as 100 | 150 | 200)}
-                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value={100}>{t('calculators.electrical.oneHundredAmp')}</option>
                     <option value={150}>{t('calculators.electrical.oneFiftyAmp')}</option>
@@ -632,7 +632,7 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                     id="panelSpaces"
                     value={panelSpaces}
                     onChange={(e) => setPanelSpaces(Number(e.target.value) as 20 | 30 | 40)}
-                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value={20}>{t('calculators.electrical.twentySpace')}</option>
                     <option value={30}>{t('calculators.electrical.thirtySpace')}</option>
@@ -646,7 +646,7 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                     id="includeGroundRods"
                     checked={includeGroundRods}
                     onChange={(e) => setIncludeGroundRods(e.target.checked)}
-                    className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                    className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
                   />
                   <label htmlFor="includeGroundRods" className="ml-2 block text-sm font-medium text-slate-700">
                     {t('calculators.electrical.includeGroundRods')}
@@ -661,7 +661,7 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="includeGFCI"
                 checked={includeGFCI}
                 onChange={(e) => setIncludeGFCI(e.target.checked)}
-                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
               />
               <label htmlFor="includeGFCI" className="ml-2 block text-sm font-medium text-slate-700">
                 {t('calculators.electrical.includeGFCIProtection')}
@@ -674,7 +674,7 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
                 id="includeAFCI"
                 checked={includeAFCI}
                 onChange={(e) => setIncludeAFCI(e.target.checked)}
-                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-slate-300 rounded"
+                className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-slate-300 rounded"
               />
               <label htmlFor="includeAFCI" className="ml-2 block text-sm font-medium text-slate-700">
                 {t('calculators.electrical.includeAFCIProtection')}
@@ -689,7 +689,7 @@ const ElectricalCalculator: React.FC<CalculatorProps> = ({ onCalculate }) => {
         disabled={!isFormValid}
         className={`w-full py-3 px-4 rounded-md font-medium text-white ${
           isFormValid
-            ? 'bg-orange-500 hover:bg-orange-600 transition-colors'
+            ? 'bg-blue-500 hover:bg-blue-600 transition-colors'
             : 'bg-slate-300 cursor-not-allowed'
         }`}
       >

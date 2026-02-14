@@ -62,7 +62,7 @@ const Header = ({ sidebarOpen, setSidebarOpen }: HeaderProps) => {
         {/* Settings Icon - Small */}
         <button
           onClick={() => navigate('/settings')}
-          className="p-2 text-gray-500 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-orange-500"
+          className="p-2 text-gray-500 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
           title="Settings"
         >
           <Settings className="w-5 h-5" />

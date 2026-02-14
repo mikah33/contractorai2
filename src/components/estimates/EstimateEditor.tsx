@@ -610,7 +610,7 @@ const EstimateEditor: React.FC<EstimateEditorProps> = ({
 
                 <button
                   onClick={() => handleQuickAddItem('equipment')}
-                  className="flex flex-col items-center justify-center p-3 border-2 border-orange-700/50 rounded-xl text-orange-400 bg-orange-900/30 active:bg-orange-900/50"
+                  className="flex flex-col items-center justify-center p-3 border-2 border-blue-700/50 rounded-xl text-blue-400 bg-orange-900/30 active:bg-orange-900/50"
                 >
                   <Wrench className="h-5 w-5 mb-1" />
                   <span className="text-xs">Equip</span>

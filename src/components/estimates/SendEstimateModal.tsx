@@ -493,12 +493,12 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
       <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
         <div className="fixed inset-0 transition-opacity bg-black/70" onClick={onClose}></div>
 
-        <div className={`inline-block w-full max-w-2xl my-8 overflow-hidden text-left align-middle transition-all transform ${themeClasses.bg.secondary} rounded-2xl shadow-xl border border-orange-500/30`}>
+        <div className={`inline-block w-full max-w-2xl my-8 overflow-hidden text-left align-middle transition-all transform ${themeClasses.bg.secondary} rounded-2xl shadow-xl border border-blue-500/30`}>
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-orange-500/30">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-blue-500/30">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                <Mail className="w-5 h-5 text-orange-500" />
+              <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                <Mail className="w-5 h-5 text-blue-500" />
               </div>
               <h3 className={`text-lg font-semibold ${themeClasses.text.primary}`}>Send Estimate to Customer</h3>
             </div>
@@ -529,7 +529,7 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
             {/* Contractor Email Input */}
             <div>
               <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-2`}>
-                <Bell className="inline w-4 h-4 mr-1 text-orange-500" />
+                <Bell className="inline w-4 h-4 mr-1 text-blue-500" />
                 Your Email (for notifications)
               </label>
               <input
@@ -538,7 +538,7 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
                 onChange={(e) => setContractorEmail(e.target.value)}
                 placeholder="your-email@company.com"
                 disabled={isLoading}
-                className={`w-full px-4 py-3 ${themeClasses.bg.tertiary} border border-orange-500/30 rounded-lg ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} focus:outline-none focus:border-orange-500 disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={`w-full px-4 py-3 ${themeClasses.bg.tertiary} border border-blue-500/30 rounded-lg ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} focus:outline-none focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed`}
               />
               <p className={`mt-1 text-xs ${themeClasses.text.muted}`}>
                 You'll receive notifications when the customer responds to this estimate
@@ -555,7 +555,7 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
                   <button
                     onClick={() => setShowAddClient(true)}
                     disabled={isLoading}
-                    className="text-sm text-orange-500 hover:text-orange-400 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="text-sm text-blue-500 hover:text-blue-400 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     + Add New Client
                   </button>
@@ -567,7 +567,7 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
                     setSelectedClient(client || null);
                   }}
                   disabled={isLoading}
-                  className={`w-full px-4 py-3 ${themeClasses.bg.tertiary} border border-orange-500/30 rounded-lg ${themeClasses.text.primary} focus:outline-none focus:border-orange-500 disabled:opacity-50 disabled:cursor-not-allowed`}
+                  className={`w-full px-4 py-3 ${themeClasses.bg.tertiary} border border-blue-500/30 rounded-lg ${themeClasses.text.primary} focus:outline-none focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   <option value="">Choose a client...</option>
                   {clients.map(client => (
@@ -608,7 +608,7 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
                       onChange={(e) => setNewClientName(e.target.value)}
                       placeholder="John Smith"
                       disabled={isLoading}
-                      className={`w-full px-4 py-3 ${themeClasses.bg.tertiary} border border-orange-500/30 rounded-lg ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} focus:outline-none focus:border-orange-500 disabled:opacity-50 disabled:cursor-not-allowed`}
+                      className={`w-full px-4 py-3 ${themeClasses.bg.tertiary} border border-blue-500/30 rounded-lg ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} focus:outline-none focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed`}
                     />
                   </div>
                   <div>
@@ -621,7 +621,7 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
                       onChange={(e) => setNewClientEmail(e.target.value)}
                       placeholder="john@example.com"
                       disabled={isLoading}
-                      className={`w-full px-4 py-3 ${themeClasses.bg.tertiary} border border-orange-500/30 rounded-lg ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} focus:outline-none focus:border-orange-500 disabled:opacity-50 disabled:cursor-not-allowed`}
+                      className={`w-full px-4 py-3 ${themeClasses.bg.tertiary} border border-blue-500/30 rounded-lg ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} focus:outline-none focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed`}
                     />
                   </div>
                   <div>
@@ -634,7 +634,7 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
                       onChange={(e) => setNewClientPhone(e.target.value)}
                       placeholder="(555) 123-4567"
                       disabled={isLoading}
-                      className={`w-full px-4 py-3 ${themeClasses.bg.tertiary} border border-orange-500/30 rounded-lg ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} focus:outline-none focus:border-orange-500 disabled:opacity-50 disabled:cursor-not-allowed`}
+                      className={`w-full px-4 py-3 ${themeClasses.bg.tertiary} border border-blue-500/30 rounded-lg ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} focus:outline-none focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed`}
                     />
                   </div>
                   <div>
@@ -647,7 +647,7 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
                       onChange={(e) => setNewClientAddress(e.target.value)}
                       placeholder="123 Main St, City, State"
                       disabled={isLoading}
-                      className={`w-full px-4 py-3 ${themeClasses.bg.tertiary} border border-orange-500/30 rounded-lg ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} focus:outline-none focus:border-orange-500 disabled:opacity-50 disabled:cursor-not-allowed`}
+                      className={`w-full px-4 py-3 ${themeClasses.bg.tertiary} border border-blue-500/30 rounded-lg ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} focus:outline-none focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed`}
                     />
                   </div>
                 </div>
@@ -675,7 +675,7 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
                     <button
                       onClick={() => handleConnectGmail(selectedClient)}
                       disabled={isConnectingGmail || isLoading}
-                      className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                      className="flex items-center gap-2 px-4 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                     >
                       {isConnectingGmail ? (
                         <>
@@ -721,7 +721,7 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
                     value={emailSubject}
                     onChange={(e) => setEmailSubject(e.target.value)}
                     disabled={isLoading}
-                    className={`w-full px-4 py-3 ${themeClasses.bg.tertiary} border border-orange-500/30 rounded-lg ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} focus:outline-none focus:border-orange-500 disabled:opacity-50 disabled:cursor-not-allowed`}
+                    className={`w-full px-4 py-3 ${themeClasses.bg.tertiary} border border-blue-500/30 rounded-lg ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} focus:outline-none focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed`}
                   />
                 </div>
 
@@ -735,18 +735,18 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
                     onChange={(e) => setEmailBody(e.target.value)}
                     rows={8}
                     disabled={isLoading}
-                    className={`w-full px-4 py-3 ${themeClasses.bg.tertiary} border border-orange-500/30 rounded-lg ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} focus:outline-none focus:border-orange-500 disabled:opacity-50 disabled:cursor-not-allowed resize-none`}
+                    className={`w-full px-4 py-3 ${themeClasses.bg.tertiary} border border-blue-500/30 rounded-lg ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} focus:outline-none focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed resize-none`}
                   />
                 </div>
               </>
             )}
 
             {/* Info Box */}
-            <div className="bg-orange-500/10 border border-orange-500/30 rounded-lg p-4">
+            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
               <div className="flex items-start space-x-3">
-                <FileText className="w-5 h-5 text-orange-500 mt-0.5" />
+                <FileText className="w-5 h-5 text-blue-500 mt-0.5" />
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-orange-400">What happens when you click "Send":</p>
+                  <p className="text-sm font-medium text-blue-400">What happens when you click "Send":</p>
                   <ul className={`mt-2 text-sm ${themeClasses.text.muted} list-disc list-inside space-y-1`}>
                     <li>PDF estimate will be uploaded to secure storage</li>
                     <li>Email will be sent to customer with Accept/Decline buttons</li>
@@ -759,7 +759,7 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
           </div>
 
           {/* Footer */}
-          <div className={`flex items-center justify-end px-6 py-4 space-x-3 ${themeClasses.bg.tertiary} border-t border-orange-500/30`}>
+          <div className={`flex items-center justify-end px-6 py-4 space-x-3 ${themeClasses.bg.tertiary} border-t border-blue-500/30`}>
             <button
               onClick={onClose}
               disabled={isLoading}
@@ -775,7 +775,7 @@ const SendEstimateModal: React.FC<SendEstimateModalProps> = ({
                 (showAddClient && (!newClientEmail || !newClientName)) ||
                 (selectedClient && !selectedClient.email_sending_enabled)
               }
-              className="px-5 py-2.5 text-sm font-semibold text-white bg-orange-500 rounded-lg hover:bg-orange-600 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-orange-500/30 disabled:hover:bg-orange-500"
+              className="px-5 py-2.5 text-sm font-semibold text-white bg-blue-500 rounded-lg hover:bg-blue-600 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-500/30 disabled:hover:bg-blue-500"
             >
               {isLoading ? (
                 <>

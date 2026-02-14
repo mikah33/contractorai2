@@ -126,9 +126,9 @@ export const BusinessEmailSetup: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-6">
+      <div className="bg-[#1C1C1E] rounded-lg border border-blue-500/30 p-6">
         <div className="flex items-center justify-center">
-          <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
+          <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
         </div>
       </div>
     );
@@ -137,11 +137,11 @@ export const BusinessEmailSetup: React.FC = () => {
   return (
     <div className="space-y-4">
       {/* Header Card */}
-      <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4">
+      <div className="bg-[#1C1C1E] rounded-lg border border-blue-500/30 p-4">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-orange-500/20 rounded-lg flex items-center justify-center">
-              <Mail className="w-6 h-6 text-orange-500" />
+            <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
+              <Mail className="w-6 h-6 text-blue-500" />
             </div>
             <div>
               <h3 className="text-lg font-semibold text-white">Business Email</h3>
@@ -194,7 +194,7 @@ export const BusinessEmailSetup: React.FC = () => {
 
           <button
             onClick={handleSendTestEmail}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-orange-500/20 text-orange-500 rounded-lg font-medium hover:bg-orange-500/30 transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-500/20 text-blue-500 rounded-lg font-medium hover:bg-blue-500/30 transition-colors"
           >
             <Send className="w-5 h-5" />
             Send Test Email
@@ -207,7 +207,7 @@ export const BusinessEmailSetup: React.FC = () => {
       ) : showSetup ? (
         /* Setup Form */
         <div className="space-y-4">
-          <div className="bg-[#1C1C1E] rounded-lg border border-orange-500/30 p-4 space-y-4">
+          <div className="bg-[#1C1C1E] rounded-lg border border-blue-500/30 p-4 space-y-4">
             <div>
               <label className="block text-sm font-medium text-zinc-300 mb-2">
                 Your Business Name
@@ -217,11 +217,11 @@ export const BusinessEmailSetup: React.FC = () => {
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
                 placeholder="e.g., Smith Plumbing"
-                className="w-full px-4 py-3 bg-[#2C2C2E] border border-[#3A3A3C] rounded-lg text-white placeholder-zinc-500 focus:border-orange-500 focus:outline-none"
+                className="w-full px-4 py-3 bg-[#2C2C2E] border border-[#3A3A3C] rounded-lg text-white placeholder-zinc-500 focus:border-blue-500 focus:outline-none"
                 maxLength={30}
               />
               <p className="text-xs text-zinc-500 mt-2">
-                Your email will be: <span className="text-orange-500">{companyName ? `${companyName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')}@contractorai.work` : 'yourcompany@contractorai.work'}</span>
+                Your email will be: <span className="text-blue-500">{companyName ? `${companyName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')}@contractorai.work` : 'yourcompany@contractorai.work'}</span>
               </p>
             </div>
 
@@ -239,7 +239,7 @@ export const BusinessEmailSetup: React.FC = () => {
               <button
                 onClick={handleCreateMailbox}
                 disabled={isCreating || !companyName.trim()}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-orange-500 text-white rounded-lg font-semibold disabled:opacity-50"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-blue-500 text-white rounded-lg font-semibold disabled:opacity-50"
               >
                 {isCreating ? (
                   <>
@@ -273,7 +273,7 @@ export const BusinessEmailSetup: React.FC = () => {
                 'Works with estimates and notifications'
               ].map((item, i) => (
                 <li key={i} className="flex items-center gap-2 text-sm text-zinc-400">
-                  <CheckCircle className="w-4 h-4 text-orange-500 flex-shrink-0" />
+                  <CheckCircle className="w-4 h-4 text-blue-500 flex-shrink-0" />
                   {item}
                 </li>
               ))}
@@ -282,7 +282,7 @@ export const BusinessEmailSetup: React.FC = () => {
 
           <button
             onClick={() => setShowSetup(true)}
-            className="w-full flex items-center justify-center gap-2 px-4 py-4 bg-orange-500 text-white rounded-lg font-semibold"
+            className="w-full flex items-center justify-center gap-2 px-4 py-4 bg-blue-500 text-white rounded-lg font-semibold"
           >
             <Mail className="w-5 h-5" />
             Set Up Business Email

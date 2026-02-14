@@ -167,7 +167,7 @@ const EventModal = ({ isOpen, onClose, selectedDate, event }: EventModalProps) =
                   </button>
                   <button
                     onClick={() => setShowManageNotificationsModal(true)}
-                    className="text-orange-500 hover:text-orange-400 p-2 rounded-lg hover:bg-orange-500/10"
+                    className="text-blue-500 hover:text-blue-400 p-2 rounded-lg hover:bg-blue-500/10"
                     title="Manage Scheduled Notifications"
                   >
                     <BellOff className="w-5 h-5" />

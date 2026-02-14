@@ -100,7 +100,7 @@ const SubscriptionsWeb = () => {
     return (
       <div className="min-h-screen bg-[#0F0F0F] text-white flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-orange-500" />
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-500" />
           <p className="text-zinc-400">Loading subscription options...</p>
         </div>
       </div>
@@ -143,7 +143,7 @@ const SubscriptionsWeb = () => {
       <div className="max-w-2xl mx-auto px-4 py-8">
         {/* Hero */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl mb-4">
             <Crown className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold mb-2">ContractorAI Pro</h1>
@@ -158,12 +158,12 @@ const SubscriptionsWeb = () => {
               onClick={() => setSelectedPackage(pkg.identifier)}
               className={`w-full p-4 rounded-xl border-2 transition-all text-left relative ${
                 selectedPackage === pkg.identifier
-                  ? 'border-orange-500 bg-orange-500/10'
+                  ? 'border-blue-500 bg-blue-500/10'
                   : 'border-[#2C2C2E] bg-[#1C1C1E] hover:border-[#3C3C3E]'
               }`}
             >
               {pkg.popular && (
-                <span className="absolute -top-2.5 left-4 px-2 py-0.5 bg-orange-500 text-white text-xs font-medium rounded-full">
+                <span className="absolute -top-2.5 left-4 px-2 py-0.5 bg-blue-500 text-white text-xs font-medium rounded-full">
                   Most Popular
                 </span>
               )}
@@ -172,7 +172,7 @@ const SubscriptionsWeb = () => {
                 <div className="flex items-center gap-3">
                   <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
                     selectedPackage === pkg.identifier
-                      ? 'border-orange-500 bg-orange-500'
+                      ? 'border-blue-500 bg-blue-500'
                       : 'border-zinc-600'
                   }`}>
                     {selectedPackage === pkg.identifier && (
@@ -199,7 +199,7 @@ const SubscriptionsWeb = () => {
         {/* Features */}
         <div className="bg-[#1C1C1E] rounded-xl p-6 mb-8">
           <h3 className="font-semibold mb-4 flex items-center gap-2">
-            <Zap className="w-5 h-5 text-orange-500" />
+            <Zap className="w-5 h-5 text-blue-500" />
             Everything included
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -223,7 +223,7 @@ const SubscriptionsWeb = () => {
         <button
           onClick={handlePurchase}
           disabled={!selectedPackage || purchasing}
-          className="w-full py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="w-full py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {purchasing ? (
             <>
@@ -240,8 +240,8 @@ const SubscriptionsWeb = () => {
         {/* Terms */}
         <p className="text-center text-xs text-zinc-500 mt-4">
           Free trial included. Cancel anytime. By subscribing, you agree to our{' '}
-          <a href="/legal/terms" className="text-orange-500 hover:underline">Terms</a> and{' '}
-          <a href="/legal/privacy" className="text-orange-500 hover:underline">Privacy Policy</a>.
+          <a href="/legal/terms" className="text-blue-500 hover:underline">Terms</a> and{' '}
+          <a href="/legal/privacy" className="text-blue-500 hover:underline">Privacy Policy</a>.
         </p>
       </div>
     </div>
