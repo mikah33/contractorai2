@@ -24,11 +24,14 @@ import { useOnboardingStore } from '../stores/onboardingStore';
 import SendEmailModal from '../components/email/SendEmailModal';
 import PhotosTutorialModal from '../components/photos/PhotosTutorialModal';
 import { supabase } from '../lib/supabase';
+import { useTheme, getThemeClasses } from '../contexts/ThemeContext';
 
 type FilterType = 'all' | 'project' | 'general' | 'ai-generated';
 
 const PhotosGallery: React.FC = () => {
   const navigate = useNavigate();
+  const { theme } = useTheme();
+  const themeClasses = getThemeClasses(theme);
   const { photos, isLoading, fetchAllPhotos, deletePhoto } = usePhotosStore();
   const { projects, fetchProjects } = useProjectStore();
   const { photosTutorialCompleted, checkPhotosTutorial, setPhotosTutorialCompleted } = useOnboardingStore();
@@ -157,19 +160,19 @@ const PhotosGallery: React.FC = () => {
   }, {} as Record<string, { projectId: string | null; projectName: string; photos: typeof photos }>);
 
   return (
-    <div className="min-h-screen bg-[#0F0F0F] pb-24">
+    <div className={`min-h-screen ${themeClasses.bg.primary} pb-24`}>
       {/* Header */}
-      <div className="bg-[#1C1C1E] border-b border-orange-500/30 px-4 pb-4 pt-[calc(env(safe-area-inset-top)+16px)] sticky top-0 z-10">
+      <div className={`${themeClasses.bg.secondary} border-b ${themeClasses.border.primary} px-4 pb-4 pt-[calc(env(safe-area-inset-top)+16px)] sticky top-0 z-10`}>
         <div className="flex items-center gap-3 mb-4">
           <button
             onClick={() => navigate(-1)}
-            className="p-2 text-white hover:bg-white/10 rounded-lg"
+            className={`p-2 ${themeClasses.text.primary} ${themeClasses.hover.bg} rounded-lg`}
           >
             <ArrowLeft className="w-6 h-6" />
           </button>
           <div className="flex-1">
-            <h1 className="text-xl font-bold text-white">Photo Gallery</h1>
-            <p className="text-sm text-zinc-400">{photos.length} total photos</p>
+            <h1 className={`text-xl font-bold ${themeClasses.text.primary}`}>Photo Gallery</h1>
+            <p className={`text-sm ${themeClasses.text.secondary}`}>{photos.length} total photos</p>
           </div>
         </div>
 
@@ -180,7 +183,7 @@ const PhotosGallery: React.FC = () => {
             className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
               filter === 'all' && !selectedProjectId
                 ? 'bg-orange-500 text-white'
-                : 'bg-[#2C2C2E] text-zinc-400 hover:text-white'
+                : `${themeClasses.bg.tertiary} ${themeClasses.text.secondary} ${themeClasses.hover.text}`
             }`}
           >
             <Image className="w-4 h-4" />
@@ -191,7 +194,7 @@ const PhotosGallery: React.FC = () => {
             className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
               filter === 'project' && !selectedProjectId
                 ? 'bg-orange-500 text-white'
-                : 'bg-[#2C2C2E] text-zinc-400 hover:text-white'
+                : `${themeClasses.bg.tertiary} ${themeClasses.text.secondary} ${themeClasses.hover.text}`
             }`}
           >
             <Briefcase className="w-4 h-4" />
@@ -202,7 +205,7 @@ const PhotosGallery: React.FC = () => {
             className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
               filter === 'general'
                 ? 'bg-orange-500 text-white'
-                : 'bg-[#2C2C2E] text-zinc-400 hover:text-white'
+                : `${themeClasses.bg.tertiary} ${themeClasses.text.secondary} ${themeClasses.hover.text}`
             }`}
           >
             <Camera className="w-4 h-4" />
@@ -213,7 +216,7 @@ const PhotosGallery: React.FC = () => {
             className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
               filter === 'ai-generated'
                 ? 'bg-purple-500 text-white'
-                : 'bg-[#2C2C2E] text-zinc-400 hover:text-white'
+                : `${themeClasses.bg.tertiary} ${themeClasses.text.secondary} ${themeClasses.hover.text}`
             }`}
           >
             <Sparkles className="w-4 h-4" />
@@ -233,7 +236,7 @@ const PhotosGallery: React.FC = () => {
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
                     selectedProjectId === group.projectId
                       ? 'bg-orange-500/30 text-orange-400 border border-orange-500'
-                      : 'bg-[#2C2C2E] text-zinc-400 border border-transparent'
+                      : `${themeClasses.bg.tertiary} ${themeClasses.text.secondary} border border-transparent`
                   }`}
                 >
                   {group.projectName} ({group.photos.length})
@@ -250,10 +253,10 @@ const PhotosGallery: React.FC = () => {
             <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
           </div>
         ) : photos.length === 0 ? (
-          <div className="text-center py-12 bg-[#1C1C1E] rounded-xl border border-orange-500/30">
-            <Image className="w-12 h-12 text-zinc-600 mx-auto mb-3" />
-            <p className="text-zinc-400 font-medium">No photos yet</p>
-            <p className="text-sm text-zinc-500 mt-1">Use the + button to capture photos</p>
+          <div className={`text-center py-12 ${themeClasses.bg.card} rounded-xl border-2 ${theme === 'light' ? 'border-gray-300' : 'border-zinc-600'}`}>
+            <Image className={`w-12 h-12 ${themeClasses.text.muted} mx-auto mb-3`} />
+            <p className={`${themeClasses.text.secondary} font-medium`}>No photos yet</p>
+            <p className={`text-sm ${themeClasses.text.muted} mt-1`}>Use the + button to capture photos</p>
           </div>
         ) : (
           // Show grid view for all filters
@@ -261,21 +264,21 @@ const PhotosGallery: React.FC = () => {
             {filter === 'all' && !selectedProjectId ? (
               // Grouped by project view
               Object.values(photosByProject).map(group => (
-                <div key={group.projectId || 'general'} className="bg-[#1C1C1E] rounded-xl border border-orange-500/30 overflow-hidden">
-                  <div className="flex items-center justify-between p-4 border-b border-orange-500/20">
+                <div key={group.projectId || 'general'} className={`${themeClasses.bg.card} rounded-xl border-2 ${theme === 'light' ? 'border-gray-300' : 'border-zinc-600'} overflow-hidden`}>
+                  <div className={`flex items-center justify-between p-4 border-b ${themeClasses.border.primary}`}>
                     <div className="flex items-center gap-3">
                       <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                        group.projectId ? 'bg-orange-500/20' : 'bg-zinc-700'
+                        group.projectId ? 'bg-orange-500/20' : themeClasses.bg.tertiary
                       }`}>
                         {group.projectId ? (
                           <Briefcase className="w-5 h-5 text-orange-500" />
                         ) : (
-                          <Camera className="w-5 h-5 text-zinc-400" />
+                          <Camera className={`w-5 h-5 ${themeClasses.text.muted}`} />
                         )}
                       </div>
                       <div>
-                        <p className="font-semibold text-white">{group.projectName}</p>
-                        <p className="text-xs text-zinc-500">{group.photos.length} photo{group.photos.length !== 1 ? 's' : ''}</p>
+                        <p className={`font-semibold ${themeClasses.text.primary}`}>{group.projectName}</p>
+                        <p className={`text-xs ${themeClasses.text.muted}`}>{group.photos.length} photo{group.photos.length !== 1 ? 's' : ''}</p>
                       </div>
                     </div>
                   </div>
@@ -311,14 +314,14 @@ const PhotosGallery: React.FC = () => {
               ))
             ) : filteredPhotos.length === 0 ? (
               // No photos for this filter
-              <div className="text-center py-12 bg-[#1C1C1E] rounded-xl border border-orange-500/30">
+              <div className={`text-center py-12 ${themeClasses.bg.card} rounded-xl border-2 ${theme === 'light' ? 'border-gray-300' : 'border-zinc-600'}`}>
                 {filter === 'ai-generated' ? (
                   <Sparkles className="w-12 h-12 text-purple-500 mx-auto mb-3" />
                 ) : (
-                  <Image className="w-12 h-12 text-zinc-600 mx-auto mb-3" />
+                  <Image className={`w-12 h-12 ${themeClasses.text.muted} mx-auto mb-3`} />
                 )}
-                <p className="text-zinc-400 font-medium">No photos in this category</p>
-                <p className="text-sm text-zinc-500 mt-1">
+                <p className={`${themeClasses.text.secondary} font-medium`}>No photos in this category</p>
+                <p className={`text-sm ${themeClasses.text.muted} mt-1`}>
                   {filter === 'project' ? 'Add photos to your projects' :
                    filter === 'ai-generated' ? 'Use Vision Cam to generate AI visualizations' :
                    'Take some general photos to see them here'}
@@ -330,7 +333,7 @@ const PhotosGallery: React.FC = () => {
                 {filteredPhotos.map(photo => (
                   <div
                     key={photo.id}
-                    className="relative aspect-square rounded-lg overflow-hidden bg-zinc-800 cursor-pointer hover:opacity-80 transition-opacity"
+                    className={`relative aspect-square rounded-lg overflow-hidden ${themeClasses.bg.tertiary} cursor-pointer hover:opacity-80 transition-opacity`}
                     onClick={() => setSelectedPhoto(photo)}
                   >
                     <img
@@ -395,31 +398,31 @@ const PhotosGallery: React.FC = () => {
 
           {/* Action Menu Dropdown */}
           {showActionMenu && (
-            <div className="absolute top-16 right-4 bg-[#2C2C2E] rounded-xl overflow-hidden shadow-2xl z-10 border border-zinc-700">
+            <div className={`absolute top-16 right-4 ${themeClasses.bg.secondary} rounded-xl overflow-hidden shadow-2xl z-10 border ${themeClasses.border.primary}`}>
               <button
                 onClick={handleDownload}
-                className="w-full flex items-center gap-3 px-4 py-3 text-white hover:bg-white/10 transition-colors"
+                className={`w-full flex items-center gap-3 px-4 py-3 ${themeClasses.text.primary} ${themeClasses.hover.bg} transition-colors`}
               >
                 <Download className="w-5 h-5 text-blue-400" />
                 <span>Download</span>
               </button>
               <button
                 onClick={handleShare}
-                className="w-full flex items-center gap-3 px-4 py-3 text-white hover:bg-white/10 transition-colors border-t border-zinc-700"
+                className={`w-full flex items-center gap-3 px-4 py-3 ${themeClasses.text.primary} ${themeClasses.hover.bg} transition-colors border-t ${themeClasses.border.primary}`}
               >
                 <Share2 className="w-5 h-5 text-green-400" />
                 <span>Share</span>
               </button>
               <button
                 onClick={handleEmailPhoto}
-                className="w-full flex items-center gap-3 px-4 py-3 text-white hover:bg-white/10 transition-colors border-t border-zinc-700"
+                className={`w-full flex items-center gap-3 px-4 py-3 ${themeClasses.text.primary} ${themeClasses.hover.bg} transition-colors border-t ${themeClasses.border.primary}`}
               >
                 <Mail className="w-5 h-5 text-cyan-400" />
                 <span>Send Email</span>
               </button>
               <button
                 onClick={() => { setDeleteConfirm(selectedPhoto.id); setShowActionMenu(false); }}
-                className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 transition-colors border-t border-zinc-700"
+                className={`w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 transition-colors border-t ${themeClasses.border.primary}`}
               >
                 <Trash2 className="w-5 h-5" />
                 <span>Delete</span>
@@ -474,13 +477,13 @@ const PhotosGallery: React.FC = () => {
       {deleteConfirm && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/80" onClick={() => setDeleteConfirm(null)} />
-          <div className="relative bg-[#1C1C1E] rounded-2xl p-6 max-w-sm w-full">
-            <h3 className="text-lg font-bold text-white mb-2">Delete Photo?</h3>
-            <p className="text-zinc-400 mb-6">This action cannot be undone.</p>
+          <div className={`relative ${themeClasses.bg.secondary} rounded-2xl p-6 max-w-sm w-full`}>
+            <h3 className={`text-lg font-bold ${themeClasses.text.primary} mb-2`}>Delete Photo?</h3>
+            <p className={`${themeClasses.text.secondary} mb-6`}>This action cannot be undone.</p>
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="flex-1 py-3 bg-zinc-700 text-white rounded-xl font-medium"
+                className={`flex-1 py-3 ${themeClasses.bg.tertiary} ${themeClasses.text.primary} rounded-xl font-medium`}
               >
                 Cancel
               </button>

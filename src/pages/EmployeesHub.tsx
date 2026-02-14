@@ -21,7 +21,6 @@ import { supabase } from '../lib/supabase';
 import useProjectStore from '../stores/projectStore';
 import { useOnboardingStore } from '../stores/onboardingStore';
 import AIChatPopup from '../components/ai/AIChatPopup';
-import FloatingAIChatButton from '../components/ai/FloatingAIChatButton';
 import TeamsTutorialModal from '../components/employees/TeamsTutorialModal';
 import { useTheme, getThemeClasses } from '../contexts/ThemeContext';
 
@@ -327,53 +326,82 @@ const EmployeesHub: React.FC = () => {
   };
 
   return (
-    <div className={`min-h-full ${themeClasses.bg.primary} pb-24`}>
+    <div className={`min-h-screen ${themeClasses.bg.primary} pb-40`}>
       {/* Header */}
-      <div className={`${themeClasses.bg.secondary} border-b ${themeClasses.border.secondary} px-4 pb-4 pt-[calc(env(safe-area-inset-top)+16px)] sticky top-0 z-10`}>
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                <UserCheck className="w-5 h-5 text-orange-500" />
+      <div className={`fixed top-0 left-0 right-0 z-50 ${themeClasses.bg.secondary} border-b ${themeClasses.border.primary}`}>
+        <div className="pt-[env(safe-area-inset-top)]">
+          <div className="px-4 pb-5 pt-4">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-orange-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <UserCheck className="w-7 h-7 text-orange-500" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h1 className={`text-2xl font-bold ${themeClasses.text.primary}`}>Team</h1>
+                  <p className={`text-base ${themeClasses.text.secondary}`}>{employees.length} members</p>
+                </div>
               </div>
-              <div>
-                <h1 className={`text-xl font-bold ${themeClasses.text.primary}`}>Team</h1>
-                <p className={`text-sm ${themeClasses.text.secondary}`}>{employees.length} members</p>
-              </div>
+              <button
+                onClick={handleManual}
+                className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 active:scale-95 transition-all"
+              >
+                <Plus className="w-5 h-5" />
+                <span>Add</span>
+              </button>
+            </div>
+
+            {/* Search */}
+            <div className="relative">
+              <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 ${themeClasses.text.muted}`} />
+              <input
+                type="text"
+                placeholder="Search team members..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={`w-full pl-10 pr-4 py-2.5 ${themeClasses.bg.input} rounded-lg border ${themeClasses.border.input} ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} focus:ring-2 focus:ring-orange-500 transition-all`}
+              />
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => navigate('/settings')}
-              className={`w-10 h-10 ${themeClasses.bg.tertiary} rounded-lg flex items-center justify-center ${themeClasses.hover.bg} transition-colors`}
-            >
-              <Settings className={`w-5 h-5 ${themeClasses.text.secondary}`} />
-            </button>
+        </div>
+      </div>
+      {/* Spacer for fixed header */}
+      <div className="pt-[calc(env(safe-area-inset-top)+160px)]" />
+
+      {/* Add Team Member Card */}
+      <div className="px-4 pb-4 -mt-1">
+        <div className={`${themeClasses.bg.card} rounded-2xl border-2 ${theme === 'light' ? 'border-gray-300' : 'border-zinc-600'} p-6 relative overflow-hidden`}>
+          {/* Background decorations */}
+          <div className="absolute -right-6 -top-6 w-44 h-44 bg-orange-500/10 rounded-full" />
+          <div className="absolute right-16 top-20 w-28 h-28 bg-orange-500/5 rounded-full" />
+
+          <div className="relative">
+            <div className="flex items-center gap-4 mb-5">
+              <div className="w-16 h-16 bg-orange-500/20 rounded-2xl flex items-center justify-center">
+                <UserCheck className="w-8 h-8 text-orange-500" />
+              </div>
+              <div>
+                <h3 className={`font-bold ${themeClasses.text.primary} text-xl`}>Add Team Member</h3>
+                <p className={`${themeClasses.text.secondary} text-base`}>Manage your crew & employees</p>
+              </div>
+            </div>
+
+            <p className={`${themeClasses.text.secondary} italic text-base mb-6`}>
+              Add team members to assign to projects, track hours, and manage your workforce.
+            </p>
+
             <button
               onClick={handleManual}
-              className={`flex items-center gap-2 px-4 py-2.5 ${themeClasses.button.primary} rounded-md font-medium ${themeClasses.button.primaryHover} active:scale-95 transition-all`}
+              className="w-full flex items-center justify-center gap-2 px-5 py-4 bg-orange-500 text-white rounded-xl font-semibold text-lg hover:bg-orange-600 active:scale-[0.98] transition-all shadow-lg shadow-orange-500/20"
             >
-              <Plus className="w-5 h-5" />
-              <span>Add</span>
+              <Plus className="w-6 h-6" />
+              Add Team Member
             </button>
           </div>
-        </div>
-
-        {/* Search */}
-        <div className="relative">
-          <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 ${themeClasses.text.muted}`} />
-          <input
-            type="text"
-            placeholder="Search team members..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className={`w-full pl-10 pr-4 py-2.5 ${themeClasses.bg.tertiary} rounded-lg border ${themeClasses.border.primary} ${themeClasses.text.primary} ${themeClasses.text.placeholder} focus:ring-2 focus:ring-orange-500 ${themeClasses.focus.bg} transition-all`}
-          />
         </div>
       </div>
 
       {/* Team List */}
-      <div className="px-4 py-4 space-y-3">
+      <div className="px-4 py-4 space-y-3 -mt-2">
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className={`animate-spin rounded-full h-8 w-8 border-b-2 ${theme === 'light' ? 'border-gray-900' : 'border-white'}`}></div>
@@ -922,12 +950,6 @@ const EmployeesHub: React.FC = () => {
       <AIChatPopup
         isOpen={showAIChat}
         onClose={() => setShowAIChat(false)}
-        mode="general"
-      />
-
-      {/* Enhanced AI Chat Button */}
-      <FloatingAIChatButton
-        onClick={handleAIChat}
         mode="general"
       />
     </div>

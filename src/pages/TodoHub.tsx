@@ -26,7 +26,6 @@ import { useOnboardingStore } from '../stores/onboardingStore';
 import { supabase } from '../lib/supabase';
 import { notificationService } from '../services/notifications/notificationService';
 import AIChatPopup from '../components/ai/AIChatPopup';
-import FloatingAIChatButton from '../components/ai/FloatingAIChatButton';
 import TasksTutorialModal from '../components/tasks/TasksTutorialModal';
 import { useTheme, getThemeClasses } from '../contexts/ThemeContext';
 
@@ -424,7 +423,7 @@ const TodoHub: React.FC = () => {
   ).length;
 
   return (
-    <div className={`min-h-full ${themeClasses.bg.primary} pb-24`}>
+    <div className={`min-h-screen ${themeClasses.bg.primary} pb-40`}>
       {/* Tasks Tutorial Modal */}
       <TasksTutorialModal
         isOpen={showTutorial}
@@ -432,35 +431,30 @@ const TodoHub: React.FC = () => {
       />
 
       {/* Header */}
-      <div className={`${themeClasses.bg.secondary} ${themeClasses.border.primary} border-b px-4 pb-4 pt-[calc(env(safe-area-inset-top)+16px)] sticky top-0 z-10`}>
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-              <ClipboardList className="w-5 h-5 text-orange-500" />
+      <div className={`fixed top-0 left-0 right-0 z-50 ${themeClasses.bg.secondary} border-b ${themeClasses.border.primary}`}>
+        <div className="pt-[env(safe-area-inset-top)]">
+          <div className="px-4 pb-5 pt-4">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-orange-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <ClipboardList className="w-7 h-7 text-orange-500" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h1 className={`text-2xl font-bold ${themeClasses.text.primary}`}>Tasks & Calendar</h1>
+                  <p className={`text-base ${themeClasses.text.secondary}`}>{format(new Date(), 'EEEE, MMM d')}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowAddTask(true)}
+                className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 active:scale-95 transition-all"
+              >
+                <Plus className="w-5 h-5" />
+                <span>Add</span>
+              </button>
             </div>
-            <div>
-              <h1 className={`text-xl font-bold ${themeClasses.text.primary}`}>Tasks & Calendar</h1>
-              <p className={`text-sm ${themeClasses.text.secondary}`}>{format(new Date(), 'EEEE, MMM d')}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate('/settings')}
-              className={`w-10 h-10 ${themeClasses.bg.tertiary} rounded-lg flex items-center justify-center ${themeClasses.hover.bg} transition-colors`}
-            >
-              <Settings className={`w-5 h-5 ${themeClasses.text.secondary}`} />
-            </button>
-            <button
-              onClick={() => setShowAddTask(true)}
-              className={`flex items-center gap-2 px-4 py-2.5 ${themeClasses.button.primary} rounded-md font-medium ${themeClasses.button.primaryHover} active:scale-95 transition-all`}
-            >
-            <Plus className="w-5 h-5" />
-            <span>Add</span>
-          </button>
-        </div>
 
-        {/* Quick Stats */}
-        <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1">
+            {/* Quick Stats */}
+            <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1">
           <button
             onClick={() => { setFilter('all'); setSelectedDate(null); }}
             className={`flex-shrink-0 px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
@@ -487,34 +481,70 @@ const TodoHub: React.FC = () => {
               Overdue ({overdueCount})
             </button>
           )}
+            </div>
+          </div>
         </div>
       </div>
+      {/* Spacer for fixed header */}
+      <div className="pt-[calc(env(safe-area-inset-top)+155px)]" />
 
-      <div className="px-4 py-4 space-y-4">
+      {/* Content */}
+      <div className="px-4 pb-4 space-y-4 -mt-1">
+        {/* Add Task Card */}
+        <div className={`${themeClasses.bg.card} rounded-2xl border-2 ${theme === 'light' ? 'border-gray-300' : 'border-zinc-600'} p-6 relative overflow-hidden`}>
+          {/* Background decorations */}
+          <div className="absolute -right-6 -top-6 w-44 h-44 bg-orange-500/10 rounded-full" />
+          <div className="absolute right-16 top-20 w-28 h-28 bg-orange-500/5 rounded-full" />
+
+          <div className="relative">
+            <div className="flex items-center gap-4 mb-5">
+              <div className="w-16 h-16 bg-orange-500/20 rounded-2xl flex items-center justify-center">
+                <ClipboardList className="w-8 h-8 text-orange-500" />
+              </div>
+              <div>
+                <h3 className={`font-bold ${themeClasses.text.primary} text-xl`}>Add Task</h3>
+                <p className={`${themeClasses.text.secondary} text-base`}>Stay organized & on schedule</p>
+              </div>
+            </div>
+
+            <p className={`${themeClasses.text.secondary} italic text-base mb-6`}>
+              Create tasks with due dates, priorities, and project assignments to keep your work on track.
+            </p>
+
+            <button
+              onClick={() => setShowAddTask(true)}
+              className="w-full flex items-center justify-center gap-2 px-5 py-4 bg-orange-500 text-white rounded-xl font-semibold text-lg hover:bg-orange-600 active:scale-[0.98] transition-all shadow-lg shadow-orange-500/20"
+            >
+              <Plus className="w-6 h-6" />
+              Add Task
+            </button>
+          </div>
+        </div>
+
         {/* Mini Calendar */}
-        <div className="bg-[#1C1C1E] rounded-2xl border border-orange-500/30 p-4">
+        <div className={`${themeClasses.bg.card} rounded-2xl border-2 ${theme === 'light' ? 'border-gray-300' : 'border-zinc-600'} p-4`}>
           <div className="flex items-center justify-between mb-4">
             <button
               onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-              className="p-2 rounded-lg hover:bg-[#2C2C2E] active:bg-[#3A3A3C]"
+              className={`p-2 rounded-lg ${themeClasses.hover.bg}`}
             >
-              <ChevronLeft className="w-5 h-5 text-zinc-400" />
+              <ChevronLeft className={`w-5 h-5 ${themeClasses.text.secondary}`} />
             </button>
-            <h3 className="font-semibold text-white">
+            <h3 className={`font-semibold ${themeClasses.text.primary}`}>
               {format(currentMonth, 'MMMM yyyy')}
             </h3>
             <button
               onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-              className="p-2 rounded-lg hover:bg-[#2C2C2E] active:bg-[#3A3A3C]"
+              className={`p-2 rounded-lg ${themeClasses.hover.bg}`}
             >
-              <ChevronRight className="w-5 h-5 text-zinc-400" />
+              <ChevronRight className={`w-5 h-5 ${themeClasses.text.secondary}`} />
             </button>
           </div>
 
           {/* Day headers */}
           <div className="grid grid-cols-7 gap-1 mb-2">
             {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
-              <div key={i} className="text-center text-xs font-medium text-zinc-500 py-1">
+              <div key={i} className={`text-center text-xs font-medium ${themeClasses.text.muted} py-1`}>
                 {day}
               </div>
             ))}
@@ -538,15 +568,15 @@ const TodoHub: React.FC = () => {
                       : isToday(day)
                       ? 'bg-orange-500/20 text-orange-500 font-semibold'
                       : isCurrentMonth
-                      ? 'text-zinc-300 hover:bg-[#2C2C2E]'
-                      : 'text-zinc-600'
+                      ? `${themeClasses.text.primary} ${themeClasses.hover.bg}`
+                      : themeClasses.text.muted
                   }`}
                 >
                   {format(day, 'd')}
                   {hasItems && !isSelected && (
                     <div className="absolute bottom-1 flex gap-0.5">
                       {taskCount > 0 && <div className="w-1 h-1 rounded-full bg-orange-500" />}
-                      {eventCount > 0 && <div className="w-1 h-1 rounded-full bg-zinc-400" />}
+                      {eventCount > 0 && <div className={`w-1 h-1 rounded-full ${theme === 'light' ? 'bg-gray-400' : 'bg-zinc-400'}`} />}
                     </div>
                   )}
                 </button>
@@ -557,7 +587,7 @@ const TodoHub: React.FC = () => {
           {selectedDate && (
             <button
               onClick={() => setSelectedDate(null)}
-              className="w-full mt-3 py-2 text-sm text-zinc-400 font-medium"
+              className={`w-full mt-3 py-2 text-sm ${themeClasses.text.secondary} font-medium`}
             >
               Clear selection
             </button>
@@ -566,34 +596,34 @@ const TodoHub: React.FC = () => {
 
         {/* Today's Events */}
         {todayEvents.length > 0 && !selectedDate && filter === 'all' && (
-          <div className="bg-[#1C1C1E] rounded-2xl border border-orange-500/30 overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b border-orange-500/20">
+          <div className={`${themeClasses.bg.card} rounded-2xl border-2 ${theme === 'light' ? 'border-gray-300' : 'border-zinc-600'} overflow-hidden`}>
+            <div className={`flex items-center justify-between p-4 border-b ${themeClasses.border.primary}`}>
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 bg-orange-500/20 rounded-lg flex items-center justify-center">
                   <CalendarIcon className="w-4 h-4 text-orange-500" />
                 </div>
                 <div>
-                  <h2 className="font-semibold text-white">Today's Events</h2>
-                  <p className="text-xs text-zinc-500">{todayEvents.length} scheduled</p>
+                  <h2 className={`font-semibold ${themeClasses.text.primary}`}>Today's Events</h2>
+                  <p className={`text-xs ${themeClasses.text.muted}`}>{todayEvents.length} scheduled</p>
                 </div>
               </div>
               <button
                 onClick={() => navigate('/calendar')}
-                className="text-sm text-zinc-400 font-medium flex items-center gap-1"
+                className={`text-sm ${themeClasses.text.secondary} font-medium flex items-center gap-1`}
               >
                 Calendar <ChevronRight className="w-4 h-4" />
               </button>
             </div>
-            <div className="divide-y divide-orange-500/10">
+            <div className={`divide-y ${themeClasses.border.primary}`}>
               {todayEvents.slice(0, 3).map((event) => (
                 <div key={event.id} className="p-4 flex items-center gap-3">
                   <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
                     <CalendarIcon className="w-5 h-5 text-orange-500" />
                   </div>
                   <div className="flex-1">
-                    <p className="font-medium text-white">{event.title}</p>
+                    <p className={`font-medium ${themeClasses.text.primary}`}>{event.title}</p>
                     {event.start_date && (
-                      <p className="text-sm text-zinc-400">
+                      <p className={`text-sm ${themeClasses.text.secondary}`}>
                         {format(parseISO(event.start_date), 'h:mm a')}
                       </p>
                     )}
@@ -605,42 +635,42 @@ const TodoHub: React.FC = () => {
         )}
 
         {/* Tasks List */}
-        <div className="bg-[#1C1C1E] rounded-2xl border border-orange-500/30 overflow-hidden">
-          <div className="flex items-center justify-between p-4 border-b border-orange-500/20">
+        <div className={`${themeClasses.bg.card} rounded-2xl border-2 ${theme === 'light' ? 'border-gray-300' : 'border-zinc-600'} overflow-hidden`}>
+          <div className={`flex items-center justify-between p-4 border-b ${themeClasses.border.primary}`}>
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 bg-orange-500/20 rounded-lg flex items-center justify-center">
                 <ClipboardList className="w-4 h-4 text-orange-500" />
               </div>
               <div>
-                <h2 className="font-semibold text-white">
+                <h2 className={`font-semibold ${themeClasses.text.primary}`}>
                   {selectedDate ? format(selectedDate, 'MMM d') + ' Tasks' : 'Tasks'}
                 </h2>
-                <p className="text-xs text-zinc-500">{filteredTasks.length} items</p>
+                <p className={`text-xs ${themeClasses.text.muted}`}>{filteredTasks.length} items</p>
               </div>
             </div>
           </div>
 
           {loading ? (
             <div className="p-6 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto"></div>
+              <div className={`animate-spin rounded-full h-8 w-8 border-b-2 ${theme === 'light' ? 'border-gray-900' : 'border-white'} mx-auto`}></div>
             </div>
           ) : filteredTasks.length === 0 ? (
             <div className="p-6 text-center">
-              <ClipboardList className="w-10 h-10 text-zinc-600 mx-auto mb-2" />
-              <p className="text-zinc-400 text-sm">No tasks found</p>
+              <ClipboardList className={`w-10 h-10 ${themeClasses.text.muted} mx-auto mb-2`} />
+              <p className={`${themeClasses.text.secondary} text-sm`}>No tasks found</p>
               <button
                 onClick={() => setShowAddTask(true)}
-                className="mt-3 flex items-center gap-1 text-sm text-white font-medium mx-auto"
+                className={`mt-3 flex items-center gap-1 text-sm ${themeClasses.text.primary} font-medium mx-auto`}
               >
                 <Plus className="w-4 h-4" /> Add Task
               </button>
             </div>
           ) : (
-            <div className="divide-y divide-orange-500/10">
+            <div className={`divide-y ${themeClasses.border.primary}`}>
               {filteredTasks.map((task) => (
                 <div
                   key={task.id}
-                  className="p-4 flex items-start gap-3 active:bg-[#2C2C2E] cursor-pointer"
+                  className={`p-4 flex items-start gap-3 ${themeClasses.hover.bg} cursor-pointer`}
                   onClick={() => handleOpenEditTask(task)}
                 >
                   <button
@@ -653,7 +683,7 @@ const TodoHub: React.FC = () => {
                     {getStatusIcon(task.status)}
                   </button>
                   <div className="flex-1 min-w-0">
-                    <p className={`font-medium ${task.status === 'done' ? 'text-zinc-500 line-through' : 'text-white'}`}>
+                    <p className={`font-medium ${task.status === 'done' ? `${themeClasses.text.muted} line-through` : themeClasses.text.primary}`}>
                       {task.title}
                     </p>
                     <div className="flex flex-wrap items-center gap-2 mt-1">
@@ -661,7 +691,7 @@ const TodoHub: React.FC = () => {
                         <span className={`text-xs ${
                           task.status !== 'done' && isPast(parseISO(task.due_date)) && !isToday(parseISO(task.due_date))
                             ? 'text-red-400'
-                            : 'text-zinc-500'
+                            : themeClasses.text.muted
                         }`}>
                           {formatDueDate(task.due_date)}
                         </span>
@@ -670,14 +700,14 @@ const TodoHub: React.FC = () => {
                         {task.priority}
                       </span>
                       {task.project_name && (
-                        <span className="text-xs text-zinc-500 flex items-center gap-1">
+                        <span className={`text-xs ${themeClasses.text.muted} flex items-center gap-1`}>
                           <Briefcase className="w-3 h-3" />
                           {task.project_name}
                         </span>
                       )}
                     </div>
                   </div>
-                  <Pencil className="w-4 h-4 text-zinc-500 flex-shrink-0 mt-1" />
+                  <Pencil className={`w-4 h-4 ${themeClasses.text.muted} flex-shrink-0 mt-1`} />
                 </div>
               ))}
             </div>
@@ -696,23 +726,23 @@ const TodoHub: React.FC = () => {
               setQuickProjectName('');
             }}
           />
-          <div className="relative bg-[#1C1C1E] rounded-t-3xl w-full max-h-[90vh] overflow-y-auto animate-slide-up mb-20">
-            <div className="sticky top-0 bg-[#1C1C1E] px-4 py-4 border-b border-orange-500/30 flex items-center justify-between z-10">
+          <div className={`relative ${themeClasses.bg.secondary} rounded-t-3xl w-full max-h-[90vh] overflow-y-auto animate-slide-up mb-20`}>
+            <div className={`sticky top-0 ${themeClasses.bg.secondary} px-4 py-4 border-b ${themeClasses.border.primary} flex items-center justify-between z-10`}>
               <button
                 onClick={() => {
                   setShowAddTask(false);
                   setShowQuickAddProject(false);
                   setQuickProjectName('');
                 }}
-                className="text-zinc-400 text-base font-medium active:text-zinc-300"
+                className={`${themeClasses.text.secondary} text-base font-medium active:opacity-70`}
               >
                 Cancel
               </button>
-              <h2 className="text-lg font-semibold text-white">New Task</h2>
+              <h2 className={`text-lg font-semibold ${themeClasses.text.primary}`}>New Task</h2>
               <button
                 onClick={handleAddTask}
                 disabled={!newTask.title.trim()}
-                className="text-orange-500 text-base font-semibold active:text-orange-400 disabled:text-zinc-600"
+                className={`text-orange-500 text-base font-semibold active:text-orange-400 disabled:${themeClasses.text.muted}`}
               >
                 Save
               </button>
@@ -902,15 +932,15 @@ const TodoHub: React.FC = () => {
             className="absolute inset-0 bg-black/50"
             onClick={() => { setShowEditTask(false); setSelectedTask(null); }}
           />
-          <div className="relative bg-[#1C1C1E] rounded-t-3xl w-full max-h-[90vh] overflow-y-auto animate-slide-up mb-20">
-            <div className="sticky top-0 bg-[#1C1C1E] px-4 py-4 border-b border-orange-500/30 flex items-center justify-between z-10">
+          <div className={`relative ${themeClasses.bg.secondary} rounded-t-3xl w-full max-h-[90vh] overflow-y-auto animate-slide-up mb-20`}>
+            <div className={`sticky top-0 ${themeClasses.bg.secondary} px-4 py-4 border-b ${themeClasses.border.primary} flex items-center justify-between z-10`}>
               <button
                 onClick={() => { setShowEditTask(false); setSelectedTask(null); }}
-                className="text-zinc-400 text-base font-medium active:text-zinc-300"
+                className={`${themeClasses.text.secondary} text-base font-medium active:opacity-70`}
               >
                 Cancel
               </button>
-              <h2 className="text-lg font-semibold text-white">Edit Task</h2>
+              <h2 className={`text-lg font-semibold ${themeClasses.text.primary}`}>Edit Task</h2>
               <div className="flex items-center gap-3">
                 <button
                   onClick={handleDeleteTask}
@@ -921,7 +951,7 @@ const TodoHub: React.FC = () => {
                 <button
                   onClick={handleUpdateTask}
                   disabled={!editTask.title.trim()}
-                  className="text-orange-500 text-base font-semibold active:text-orange-400 disabled:text-zinc-600"
+                  className={`text-orange-500 text-base font-semibold active:text-orange-400 disabled:${themeClasses.text.muted}`}
                 >
                   Save
                 </button>
@@ -1029,13 +1059,6 @@ const TodoHub: React.FC = () => {
         onClose={() => setShowAIChat(false)}
         mode="general"
       />
-
-      {/* Enhanced AI Chat Button */}
-      <FloatingAIChatButton
-        onClick={handleAIChat}
-        mode="general"
-      />
-      </div>
     </div>
   );
 };

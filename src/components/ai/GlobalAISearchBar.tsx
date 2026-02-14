@@ -16,6 +16,7 @@ import {
 import { useAuthStore } from '../../stores/authStore';
 import { detectMode, ContractorMode } from '../../lib/ai/contractor-config';
 import ChatMessageContent from './ChatMessageContent';
+import { useTheme, getThemeClasses } from '../../contexts/ThemeContext';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || import.meta.env.NEXT_PUBLIC_SUPABASE_URL;
 
@@ -49,6 +50,8 @@ const GlobalAISearchBar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { session } = useAuthStore();
+  const { theme } = useTheme();
+  const themeClasses = getThemeClasses(theme);
   const [isExpanded, setIsExpanded] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
@@ -237,44 +240,44 @@ const GlobalAISearchBar: React.FC = () => {
 
   if (shouldHide) return null;
 
+  if (!isExpanded) return null;
+
   return (
     <div
       ref={containerRef}
-      className={`fixed left-0 right-0 transition-all duration-300 ease-out ${
-        isExpanded ? 'top-0 bottom-0 z-[150] bg-[#0F0F0F]' : 'bottom-0 z-[99]'
-      }`}
+      className={`fixed left-0 right-0 top-0 bottom-0 z-[150] ${themeClasses.bg.primary} transition-all duration-300 ease-out`}
     >
       {/* Expanded Chat View */}
       {isExpanded && (
         <div className="flex flex-col h-full pt-[env(safe-area-inset-top)]">
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 bg-[#1C1C1E] border-b border-orange-500/30">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                <Sparkles className="w-4 h-4 text-orange-500" />
+          <div className={`flex items-center justify-between px-4 py-5 ${themeClasses.bg.secondary} border-b ${theme === 'light' ? 'border-orange-300' : 'border-orange-500/30'}`}>
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-xl flex items-center justify-center overflow-hidden">
+                <img src="/logo.png" alt="ContractorAI" className="w-14 h-14 object-cover" />
               </div>
               <div>
-                <h2 className="font-semibold text-white text-sm">Contractor AI</h2>
-                <div className="flex items-center gap-1 text-xs text-zinc-400">
+                <h2 className={`font-bold ${themeClasses.text.primary} text-2xl`}>Contractor AI</h2>
+                <div className={`flex items-center gap-1 text-base ${themeClasses.text.secondary}`}>
                   <span className={modeConfig[currentMode].color}>{modeConfig[currentMode].label}</span>
                   <span>Mode</span>
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               {messages.length > 0 && (
                 <button
                   onClick={handleClear}
-                  className="px-3 py-1.5 text-xs text-zinc-400 hover:text-white bg-zinc-800 rounded-lg transition-colors"
+                  className={`px-4 py-2 text-sm font-medium ${themeClasses.text.secondary} ${theme === 'light' ? 'bg-gray-200 hover:bg-gray-300' : 'bg-zinc-800 hover:text-white'} rounded-xl transition-colors`}
                 >
                   Clear
                 </button>
               )}
               <button
                 onClick={() => setIsExpanded(false)}
-                className="p-2 text-zinc-400 hover:text-white transition-colors"
+                className={`w-14 h-14 ${themeClasses.bg.tertiary} rounded-xl flex items-center justify-center ${themeClasses.text.secondary} hover:opacity-70 transition-colors`}
               >
-                <ChevronUp className="w-5 h-5" />
+                <ChevronUp className="w-7 h-7" />
               </button>
             </div>
           </div>
@@ -286,8 +289,8 @@ const GlobalAISearchBar: React.FC = () => {
                 <div className="w-16 h-16 bg-orange-500/20 rounded-2xl flex items-center justify-center mb-4">
                   <Sparkles className="w-8 h-8 text-orange-500" />
                 </div>
-                <h3 className="text-lg font-semibold text-white mb-2">How can I help?</h3>
-                <p className="text-sm text-zinc-400 max-w-xs">
+                <h3 className={`text-lg font-semibold ${themeClasses.text.primary} mb-2`}>How can I help?</h3>
+                <p className={`text-sm ${themeClasses.text.secondary} max-w-xs`}>
                   Ask me anything about estimates, projects, clients, or finances.
                 </p>
 
@@ -305,7 +308,7 @@ const GlobalAISearchBar: React.FC = () => {
                         setInput(suggestion.text);
                         setCurrentMode(suggestion.mode);
                       }}
-                      className="p-3 text-left text-sm text-zinc-300 bg-[#2C2C2E] rounded-lg border border-orange-500/20 hover:border-orange-500/50 active:scale-[0.98] transition-all"
+                      className={`p-3 text-left text-sm ${themeClasses.text.primary} ${themeClasses.bg.card} rounded-lg border ${theme === 'light' ? 'border-orange-300 hover:border-orange-400' : 'border-orange-500/20 hover:border-orange-500/50'} active:scale-[0.98] transition-all`}
                     >
                       {suggestion.text}
                     </button>
@@ -322,7 +325,7 @@ const GlobalAISearchBar: React.FC = () => {
                     className={`max-w-[85%] rounded-2xl px-4 py-3 ${
                       message.role === 'user'
                         ? 'bg-orange-500 text-white'
-                        : 'bg-[#2C2C2E] text-white'
+                        : `${themeClasses.bg.card} ${themeClasses.text.primary}`
                     }`}
                   >
                     {message.role === 'assistant' ? (
@@ -337,10 +340,10 @@ const GlobalAISearchBar: React.FC = () => {
 
             {isLoading && (
               <div className="flex justify-start">
-                <div className="bg-[#2C2C2E] rounded-2xl px-4 py-3">
+                <div className={`${themeClasses.bg.card} rounded-2xl px-4 py-3`}>
                   <div className="flex items-center gap-2">
                     <Loader2 className="w-4 h-4 animate-spin text-orange-500" />
-                    <span className="text-sm text-zinc-400">Thinking...</span>
+                    <span className={`text-sm ${themeClasses.text.secondary}`}>Thinking...</span>
                   </div>
                 </div>
               </div>
@@ -351,25 +354,25 @@ const GlobalAISearchBar: React.FC = () => {
 
           {/* Estimate Panel - Shows when estimate items exist */}
           {currentEstimate.length > 0 && (
-            <div className="border-t border-white/10 bg-[#141414] px-4 py-3">
+            <div className={`border-t ${themeClasses.border.primary} ${themeClasses.bg.secondary} px-4 py-3`}>
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <FileText className="w-4 h-4 text-orange-500" />
-                  <span className="font-semibold text-white text-sm">Current Estimate</span>
-                  <span className="text-xs text-zinc-400">({currentEstimate.length} items)</span>
+                  <span className={`font-semibold ${themeClasses.text.primary} text-sm`}>Current Estimate</span>
+                  <span className={`text-xs ${themeClasses.text.secondary}`}>({currentEstimate.length} items)</span>
                 </div>
                 <span className="font-bold text-orange-500">{formatCurrency(totalEstimate)}</span>
               </div>
 
               <div className="max-h-32 overflow-y-auto space-y-1 mb-3">
                 {currentEstimate.map((item) => (
-                  <div key={item.id} className="flex items-center justify-between bg-[#242424] rounded-lg px-3 py-2 text-xs">
+                  <div key={item.id} className={`flex items-center justify-between ${themeClasses.bg.card} rounded-lg px-3 py-2 text-xs`}>
                     <div className="flex-1 truncate">
-                      <span className="font-medium text-white">{item.name}</span>
-                      <span className="text-zinc-400 ml-1">({item.quantity} {item.unit})</span>
+                      <span className={`font-medium ${themeClasses.text.primary}`}>{item.name}</span>
+                      <span className={`${themeClasses.text.secondary} ml-1`}>({item.quantity} {item.unit})</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold text-white">{formatCurrency(item.totalPrice)}</span>
+                      <span className={`font-semibold ${themeClasses.text.primary}`}>{formatCurrency(item.totalPrice)}</span>
                       <button
                         onClick={() => handleRemoveEstimateItem(item.id)}
                         className="p-1 text-red-400 hover:text-red-500 hover:bg-red-500/10 rounded"
@@ -393,7 +396,7 @@ const GlobalAISearchBar: React.FC = () => {
           )}
 
           {/* Input */}
-          <div className="px-4 pb-4 pt-2 bg-[#0F0F0F] border-t border-zinc-800">
+          <div className={`px-4 pb-4 pt-2 ${themeClasses.bg.primary} border-t ${themeClasses.border.primary}`}>
             <form onSubmit={handleSubmit} className="flex items-center gap-2">
               <div className="flex-1 relative">
                 <input
@@ -402,7 +405,7 @@ const GlobalAISearchBar: React.FC = () => {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Ask anything..."
-                  className="w-full px-4 py-3 bg-[#2C2C2E] text-white placeholder-zinc-500 rounded-xl border border-orange-500/30 focus:border-orange-500 focus:outline-none text-sm"
+                  className={`w-full px-4 py-3 ${themeClasses.bg.card} ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} rounded-xl border ${theme === 'light' ? 'border-orange-300 focus:border-orange-500' : 'border-orange-500/30 focus:border-orange-500'} focus:outline-none text-sm`}
                 />
               </div>
               <button
@@ -422,25 +425,7 @@ const GlobalAISearchBar: React.FC = () => {
         </div>
       )}
 
-      {/* Collapsed Search Bar - Fixed at very bottom, flush with safe area */}
-      {!isExpanded && (
-        <div className="bg-[#1C1C1E] pb-safe">
-          <div className="px-4 py-2">
-            <button
-              onClick={() => setIsExpanded(true)}
-              className="w-full flex items-center gap-3 px-4 py-2.5 bg-[#2C2C2E] rounded-xl border border-orange-500/30 active:scale-[0.98] transition-transform"
-            >
-              <div className="w-7 h-7 bg-orange-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Sparkles className="w-4 h-4 text-orange-500" />
-              </div>
-              <span className="flex-1 text-left text-sm text-zinc-500">Ask Contractor AI anything...</span>
-              <div className={`flex items-center gap-1 px-2 py-0.5 rounded-md bg-zinc-800 ${modeConfig[currentMode].color}`}>
-                {modeConfig[currentMode].icon}
-              </div>
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Collapsed state is now handled by MobileBottomNav */}
     </div>
   );
 };

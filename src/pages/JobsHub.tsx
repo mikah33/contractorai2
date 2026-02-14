@@ -12,12 +12,14 @@ import {
   AlertCircle,
   TrendingUp,
   Users,
-  Settings
+  Settings,
+  UserCheck
 } from 'lucide-react';
 import useEstimateStore from '../stores/estimateStore';
 import useProjectStore from '../stores/projectStore';
 import useClientsStore from '../stores/clientsStore';
 import { useCalendarStoreSupabase } from '../stores/calendarStoreSupabase';
+import useEmployeesStore from '../stores/employeesStore';
 import { useTheme, getThemeClasses } from '../contexts/ThemeContext';
 
 const JobsHub: React.FC = () => {
@@ -30,6 +32,7 @@ const JobsHub: React.FC = () => {
   const { projects, fetchProjects, loading: projectsLoading } = useProjectStore();
   const { clients, fetchClients, loading: clientsLoading } = useClientsStore();
   const { events, fetchEvents, loading: calendarLoading } = useCalendarStoreSupabase();
+  const { employees, fetchEmployees, loading: employeesLoading } = useEmployeesStore();
 
   // Fetch data on component mount
   useEffect(() => {
@@ -37,7 +40,8 @@ const JobsHub: React.FC = () => {
     fetchProjects();
     fetchClients();
     fetchEvents();
-  }, [fetchEstimates, fetchProjects, fetchClients, fetchEvents]);
+    fetchEmployees();
+  }, [fetchEstimates, fetchProjects, fetchClients, fetchEvents, fetchEmployees]);
 
   // Calculate dashboard stats
   const getEstimateStats = () => {
@@ -91,9 +95,16 @@ const JobsHub: React.FC = () => {
     return { upcoming, overdue, completed };
   };
 
+  const getTeamStats = () => {
+    const total = employees.length;
+    const active = employees.filter(e => e.status === 'active').length;
+    const onLeave = employees.filter(e => e.status === 'on_leave').length;
+    return { total, active, onLeave };
+  };
+
   // Render preview stats for each module
   const renderModulePreview = (moduleId: string) => {
-    const isLoading = estimatesLoading || projectsLoading || clientsLoading || calendarLoading;
+    const isLoading = estimatesLoading || projectsLoading || clientsLoading || calendarLoading || employeesLoading;
 
     if (isLoading) {
       return (
@@ -178,6 +189,27 @@ const JobsHub: React.FC = () => {
           </div>
         );
 
+      case 'team':
+        const teamStats = getTeamStats();
+        return (
+          <div className="mt-3 flex flex-wrap gap-3">
+            <div className="flex items-center gap-1.5 bg-orange-100 border border-orange-300 px-2.5 py-1 rounded-lg">
+              <Users className="w-3.5 h-3.5 text-orange-600" />
+              <span className="text-xs font-medium text-orange-700">{teamStats.total} Total</span>
+            </div>
+            <div className="flex items-center gap-1.5 bg-orange-100 border border-orange-300 px-2.5 py-1 rounded-lg">
+              <UserCheck className="w-3.5 h-3.5 text-orange-600" />
+              <span className="text-xs font-medium text-orange-700">{teamStats.active} Active</span>
+            </div>
+            {teamStats.onLeave > 0 && (
+              <div className="flex items-center gap-1.5 bg-orange-100 border border-orange-300 px-2.5 py-1 rounded-lg">
+                <Clock className="w-3.5 h-3.5 text-orange-600" />
+                <span className="text-xs font-medium text-orange-700">{teamStats.onLeave} On Leave</span>
+              </div>
+            )}
+          </div>
+        );
+
       default:
         return null;
     }
@@ -219,14 +251,23 @@ const JobsHub: React.FC = () => {
       href: '/todo-hub',
       color: 'orange',
       stats: 'Time management'
+    },
+    {
+      id: 'team',
+      title: 'Team',
+      description: 'Manage employees & crews',
+      icon: UserCheck,
+      href: '/employees-hub',
+      color: 'orange',
+      stats: 'Team management'
     }
   ];
 
 
   const getColorClasses = (color: string) => {
-    // Always use orange theme
+    // Always use orange theme with dark mode support
     return {
-      bg: 'bg-white',
+      bg: themeClasses.bg.secondary,
       border: 'border-orange-400',
       hoverBorder: 'hover:border-orange-500',
       iconBg: 'bg-orange-500',
@@ -238,27 +279,31 @@ const JobsHub: React.FC = () => {
   return (
     <div className={`min-h-full ${themeClasses.bg.primary} pb-24`}>
       {/* Header */}
-      <div className={`${themeClasses.bg.secondary} border-b ${themeClasses.border.primary} px-4 pb-4 pt-[calc(env(safe-area-inset-top)+24px)] sticky top-0 z-10`} style={{ paddingTop: 'calc(env(safe-area-inset-top) + 24px)' }}>
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                <Briefcase className="w-5 h-5 text-orange-500" />
+      <div className={`fixed top-0 left-0 right-0 z-50 ${themeClasses.bg.secondary} border-b ${themeClasses.border.primary}`}>
+        <div className="pt-[env(safe-area-inset-top)]">
+          <div className="px-4 pb-5 pt-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-orange-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Briefcase className="w-7 h-7 text-orange-500" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h1 className={`text-2xl font-bold ${themeClasses.text.primary}`}>Jobs</h1>
+                  <p className={`text-base ${themeClasses.text.secondary}`}>Manage your projects & clients</p>
+                </div>
               </div>
-              <div>
-                <h1 className={`text-xl font-bold ${themeClasses.text.primary}`}>Jobs</h1>
-                <p className={`text-sm ${themeClasses.text.secondary}`}>Manage your projects & clients</p>
-              </div>
+              <button
+                onClick={() => navigate('/settings')}
+                className={`w-14 h-14 ${themeClasses.bg.tertiary} rounded-xl flex items-center justify-center hover:opacity-80 transition-colors`}
+              >
+                <Settings className={`w-7 h-7 ${themeClasses.text.secondary}`} />
+              </button>
             </div>
           </div>
-          <button
-            onClick={() => navigate('/settings')}
-            className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center hover:bg-orange-500/30 transition-colors border border-orange-500/40"
-          >
-            <Settings className="w-5 h-5 text-orange-500" />
-          </button>
         </div>
       </div>
+      {/* Spacer for fixed header */}
+      <div className="pt-[calc(env(safe-area-inset-top)+100px)]" />
 
       <div className="px-4 py-4">
         {/* Job Modules */}
@@ -279,16 +324,16 @@ const JobsHub: React.FC = () => {
                       <module.icon className={`w-7 h-7 ${colors.iconText}`} />
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-bold text-black text-lg">{module.title}</h3>
-                      <p className="text-zinc-600 text-sm">{module.description}</p>
+                      <h3 className={`font-bold ${themeClasses.text.primary} text-lg`}>{module.title}</h3>
+                      <p className={`${themeClasses.text.secondary} text-sm`}>{module.description}</p>
                     </div>
                     <ChevronRight className="w-6 h-6 text-orange-500" />
                   </div>
 
                   {/* Dashboard Preview */}
-                  <div className="border-t border-orange-200 pt-4">
+                  <div className={`border-t border-orange-200/50 pt-4`}>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-zinc-700">Quick Overview</span>
+                      <span className={`text-sm font-medium ${themeClasses.text.secondary}`}>Quick Overview</span>
                       <span className={`text-xs font-medium ${colors.accent}`}>Live Data</span>
                     </div>
                     {renderModulePreview(module.id)}

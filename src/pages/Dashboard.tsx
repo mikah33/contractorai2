@@ -172,39 +172,43 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-full bg-white pb-60">
-
+    <div className={`min-h-full ${themeClasses.bg.primary} pb-60`}>
       {/* Dashboard Tutorial Modal */}
       <DashboardTutorialModal
         isOpen={showTutorial}
         onComplete={handleTutorialComplete}
       />
 
-      {/* Header - background extends into safe area, content pushed down */}
-      <div className={`${themeClasses.bg.secondary} ${themeClasses.border.primary} border-b sticky top-0 z-10 pt-[env(safe-area-inset-top)]`}>
-        <div className="px-2 pb-2 pt-1 max-w-5xl mx-auto">
-          <div className="flex items-start gap-2">
-            <div className="w-8 h-8 bg-orange-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Home className="w-4 h-4 text-orange-500" />
+      {/* Fixed Header with safe area background */}
+      <div className={`fixed top-0 left-0 right-0 z-50 ${themeClasses.bg.secondary} border-b ${themeClasses.border.primary}`}>
+        <div className="pt-[env(safe-area-inset-top)]">
+          <div className="px-4 pb-5 pt-4 max-w-5xl mx-auto">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-orange-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                <Home className="w-7 h-7 text-orange-500" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h1 className={`text-2xl font-bold ${themeClasses.text.primary}`}>Home</h1>
+                <p className={`text-base ${themeClasses.text.secondary}`}>Welcome back, {displayName}!</p>
+              </div>
+              <button
+                onClick={() => navigate('/settings')}
+                className="w-14 h-14 bg-orange-500/20 rounded-xl flex items-center justify-center hover:bg-orange-500/30 transition-colors border border-orange-500/40"
+              >
+                <Settings className="w-7 h-7 text-orange-500" />
+              </button>
             </div>
-            <div className="flex-1 min-w-0">
-              <h1 className={`text-base font-bold ${themeClasses.text.primary}`}>Dashboard</h1>
-              <p className={`text-xs ${themeClasses.text.secondary} leading-tight`}>Welcome back, {displayName}!</p>
-            </div>
-            <button
-              onClick={() => navigate('/settings')}
-              className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center hover:bg-orange-500/30 transition-colors border border-orange-500/40"
-            >
-              <Settings className="w-5 h-5 text-orange-500" />
-            </button>
           </div>
         </div>
       </div>
 
+      {/* Spacer for fixed header */}
+      <div className="pt-[calc(env(safe-area-inset-top)+100px)]" />
+
       <div className="px-2 py-2 space-y-2 max-w-5xl mx-auto">
         {/* Create Estimate Card - Standalone */}
         <div
-          className={`${themeClasses.bg.card} rounded-xl border border-zinc-300 p-8 text-left transition-colors w-full min-h-[320px] flex flex-col relative overflow-hidden`}
+          className={`${themeClasses.bg.card} rounded-xl border-2 ${theme === 'light' ? 'border-gray-300' : 'border-zinc-600'} p-8 text-left transition-colors w-full min-h-[320px] flex flex-col relative overflow-hidden`}
         >
           {/* Background payment card visual */}
           <div className="absolute top-6 right-6 w-44 h-28 bg-gradient-to-br from-orange-400 to-orange-600 rounded-xl shadow-lg transform rotate-6 opacity-20">
@@ -243,7 +247,7 @@ const Dashboard: React.FC = () => {
 
         {/* Vision Cam Card */}
         <div
-          className={`${themeClasses.bg.card} rounded-xl border border-zinc-300 p-8 text-left transition-colors w-full min-h-[320px] flex flex-col relative overflow-hidden`}
+          className={`${themeClasses.bg.card} rounded-xl border-2 ${theme === 'light' ? 'border-gray-300' : 'border-zinc-600'} p-8 text-left transition-colors w-full min-h-[320px] flex flex-col relative overflow-hidden`}
         >
           {/* Background camera visuals */}
           <div className="absolute top-4 right-4 opacity-25">
@@ -391,7 +395,7 @@ const Dashboard: React.FC = () => {
               {/* Finance Card */}
               <button
                 onClick={() => navigate('/finance-hub')}
-                className={`${themeClasses.bg.card} rounded-lg border border-zinc-300 p-5 text-left ${themeClasses.hover.bg} transition-colors w-full flex-shrink-0 min-h-[220px] flex flex-col`}
+                className={`${themeClasses.bg.card} rounded-lg border-2 ${theme === 'light' ? 'border-gray-300' : 'border-zinc-600'} p-5 text-left ${themeClasses.hover.bg} transition-colors w-full flex-shrink-0 min-h-[220px] flex flex-col`}
               >
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-14 h-14 bg-orange-500/20 rounded-xl flex items-center justify-center">
@@ -420,7 +424,7 @@ const Dashboard: React.FC = () => {
               {/* Projects Card */}
               <button
                 onClick={() => navigate('/projects-hub')}
-                className={`${themeClasses.bg.card} rounded-lg border border-zinc-300 p-5 text-left ${themeClasses.hover.bg} transition-colors w-full flex-shrink-0 min-h-[220px] flex flex-col`}
+                className={`${themeClasses.bg.card} rounded-lg border-2 ${theme === 'light' ? 'border-gray-300' : 'border-zinc-600'} p-5 text-left ${themeClasses.hover.bg} transition-colors w-full flex-shrink-0 min-h-[220px] flex flex-col`}
               >
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-14 h-14 bg-orange-500/20 rounded-xl flex items-center justify-center">
@@ -447,7 +451,7 @@ const Dashboard: React.FC = () => {
               {/* Jobs Card */}
               <button
                 onClick={() => navigate('/jobs-hub')}
-                className={`${themeClasses.bg.card} rounded-lg border border-zinc-300 p-5 text-left ${themeClasses.hover.bg} transition-colors w-full flex-shrink-0 min-h-[220px] flex flex-col`}
+                className={`${themeClasses.bg.card} rounded-lg border-2 ${theme === 'light' ? 'border-gray-300' : 'border-zinc-600'} p-5 text-left ${themeClasses.hover.bg} transition-colors w-full flex-shrink-0 min-h-[220px] flex flex-col`}
               >
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-14 h-14 bg-orange-500/20 rounded-xl flex items-center justify-center">
@@ -482,7 +486,7 @@ const Dashboard: React.FC = () => {
               {/* Goals Card */}
               <button
                 onClick={() => navigate('/business-hub')}
-                className={`${themeClasses.bg.card} rounded-lg border border-zinc-300 p-5 text-left ${themeClasses.hover.bg} transition-colors w-full flex-shrink-0 min-h-[220px] flex flex-col`}
+                className={`${themeClasses.bg.card} rounded-lg border-2 ${theme === 'light' ? 'border-gray-300' : 'border-zinc-600'} p-5 text-left ${themeClasses.hover.bg} transition-colors w-full flex-shrink-0 min-h-[220px] flex flex-col`}
               >
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-14 h-14 bg-orange-500/20 rounded-xl flex items-center justify-center">
@@ -559,7 +563,7 @@ const Dashboard: React.FC = () => {
         <AIChatPopup
           isOpen={showAIChat}
           onClose={() => setShowAIChat(false)}
-          mode="estimates"
+          mode="estimating"
         />
       )}
 

@@ -232,8 +232,9 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
 
   return (
     <>
-      {/* Bottom Navigation Bar - Sits above the AI search bar */}
-      <nav className={`fixed bottom-[calc(52px+env(safe-area-inset-bottom))] left-0 right-0 ${themeClasses.bg.secondary} border-t ${themeClasses.border.primary} z-[100] ${className} ${showAIModal || showEventPicker || showNotificationModal || showPhotoModal || showVisionCamModal || showLiDARScanner || showPlanCreation || showChatHistory || showSendEmailModal || showEmailOptions || location.pathname === '/ai-team' ? 'hidden' : ''}`}>
+      {/* Unified Bottom Navigation Bar with AI Search */}
+      <nav className={`fixed bottom-0 left-0 right-0 ${themeClasses.bg.secondary} border-t ${themeClasses.border.primary} z-[100] pb-safe ${className} ${showAIModal || showEventPicker || showNotificationModal || showPhotoModal || showVisionCamModal || showLiDARScanner || showPlanCreation || showChatHistory || showSendEmailModal || showEmailOptions || location.pathname === '/ai-team' ? 'hidden' : ''}`}>
+        {/* Nav Icons Row */}
         <div className={`flex items-center justify-around h-16 ${themeClasses.bg.secondary}`}>
           {navItems.map((item) => {
             const isActive = location.pathname === item.href;
@@ -243,9 +244,9 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
                 <button
                   key={item.name}
                   onClick={handleAIClick}
-                  className="relative -mt-6 w-14 h-14 bg-orange-500 rounded-full flex items-center justify-center shadow-lg shadow-orange-500/30 active:scale-95 transition-transform"
+                  className="relative -mt-10 w-[72px] h-[72px] bg-orange-500 rounded-full flex items-center justify-center shadow-lg shadow-orange-500/30 active:scale-95 transition-transform"
                 >
-                  <Plus className="w-7 h-7 text-white" />
+                  <Plus className="w-9 h-9 text-white" />
                 </button>
               );
             }
@@ -264,11 +265,27 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
             );
           })}
         </div>
+
+        {/* AI Search Bar Row */}
+        <div className="px-4 pb-2">
+          <button
+            onClick={handleAIClick}
+            className={`w-full flex items-center gap-3 px-4 py-2.5 ${themeClasses.bg.card} rounded-xl border ${theme === 'light' ? 'border-orange-300' : 'border-orange-500/30'} active:scale-[0.98] transition-transform`}
+          >
+            <div className="w-7 h-7 bg-orange-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Sparkles className="w-4 h-4 text-orange-500" />
+            </div>
+            <span className={`flex-1 text-left text-sm ${themeClasses.text.secondary}`}>Ask Contractor AI anything...</span>
+            <div className={`flex items-center gap-1 px-2 py-0.5 rounded-md ${theme === 'light' ? 'bg-gray-200' : 'bg-zinc-800'} text-orange-500`}>
+              <Sparkles className="w-4 h-4" />
+            </div>
+          </button>
+        </div>
       </nav>
 
       {/* AI Mode Selection Modal */}
       {showAIModal && (
-        <div className="fixed inset-0 z-[200] flex items-end md:items-center justify-center">
+        <div className="fixed inset-0 z-[200] flex items-end justify-center">
           {/* Backdrop */}
           <div
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
@@ -276,96 +293,96 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
           />
 
           {/* Modal Content */}
-          <div className={`relative w-full max-w-md md:max-w-lg ${themeClasses.bg.modal} rounded-t-2xl md:rounded-2xl pb-safe md:pb-6 md:mx-4 animate-slide-up`}>
+          <div className={`relative w-full max-w-lg ${themeClasses.bg.modal} rounded-t-2xl pb-safe animate-slide-up`}>
             {/* Handle */}
             <div className="flex justify-center pt-3 pb-2">
               <div className={`w-10 h-1 ${themeClasses.bg.tertiary} rounded-full`} />
             </div>
 
             {/* Header */}
-            <div className="flex items-center justify-between px-4 md:px-6 pb-3 md:pb-4">
+            <div className="flex items-center justify-between px-5 pb-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                <div className="w-11 h-11 bg-orange-500/20 rounded-xl flex items-center justify-center">
                   <Sparkles className="w-6 h-6 text-orange-500" />
                 </div>
                 <div>
-                  <h2 className={`text-base md:text-lg font-bold ${themeClasses.text.primary}`}>Contractor AI</h2>
+                  <h2 className={`text-lg font-bold ${themeClasses.text.primary}`}>Contractor AI</h2>
                   <p className={`text-sm ${themeClasses.text.secondary}`}>What would you like help with?</p>
                 </div>
               </div>
               <button
                 onClick={() => setShowAIModal(false)}
-                className="p-2 text-zinc-400 hover:text-white rounded-lg transition-colors"
+                className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
               >
                 <X className="w-6 h-6" />
               </button>
             </div>
 
             {/* Mode Options */}
-            <div className="px-4 md:px-6 pb-4 grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
+            <div className="px-5 pb-4 grid grid-cols-2 gap-2.5">
               {aiModes.map((mode) => (
                 <button
                   key={mode.id}
                   onClick={() => handleModeSelect(mode.id)}
-                  className={`flex flex-col items-center p-3 md:p-4 ${theme === 'light' ? 'bg-white' : 'bg-[#1C1C1E]'} rounded-lg border border-orange-500/30 hover:border-orange-500/60 active:scale-[0.98] transition-all`}
+                  className={`flex flex-col items-center p-3.5 ${theme === 'light' ? 'bg-white' : 'bg-[#1C1C1E]'} rounded-xl border border-gray-200 hover:border-gray-300 active:scale-[0.98] transition-all`}
                 >
-                  <div className="w-12 h-12 bg-orange-500/20 rounded-lg flex items-center justify-center mb-3">
-                    <mode.icon className="w-7 h-7 text-orange-500" />
+                  <div className="w-11 h-11 bg-orange-500/20 rounded-xl flex items-center justify-center mb-2">
+                    <mode.icon className="w-6 h-6 text-orange-500" />
                   </div>
-                  <span className={`font-semibold ${themeClasses.text.primary}`}>{mode.name}</span>
-                  <span className={`text-xs ${themeClasses.text.secondary} text-center mt-1`}>{mode.description}</span>
+                  <span className={`font-semibold text-sm ${themeClasses.text.primary}`}>{mode.name}</span>
+                  <span className={`text-xs ${themeClasses.text.secondary} text-center mt-0.5`}>{mode.description}</span>
                 </button>
               ))}
             </div>
 
             {/* Plan Creation Button - LiDAR */}
-            <div className="px-4 pb-2">
+            <div className="px-5 pb-2.5">
               <button
                 onClick={() => handleModeSelect('lidar-scan')}
-                className={`w-full flex items-center gap-4 p-3 md:p-4 ${theme === 'light' ? 'bg-white' : 'bg-[#1C1C1E]'} rounded-lg border border-cyan-500/50 hover:border-cyan-500 active:scale-[0.98] transition-all mb-2`}
+                className={`w-full flex items-center gap-4 p-3.5 ${theme === 'light' ? 'bg-white' : 'bg-[#1C1C1E]'} rounded-xl border border-gray-200 hover:border-gray-300 active:scale-[0.98] transition-all`}
               >
-                <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg flex items-center justify-center">
-                  <Scan className="w-7 h-7 text-white" />
+                <div className="w-11 h-11 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center">
+                  <Scan className="w-6 h-6 text-white" />
                 </div>
                 <div className="flex-1 text-left">
-                  <span className={`font-semibold ${themeClasses.text.primary} text-lg`}>Plan Creation</span>
-                  <p className={`text-sm ${themeClasses.text.secondary}`}>Scan rooms or draw floor plans</p>
+                  <span className={`font-semibold ${themeClasses.text.primary}`}>Plan Creation</span>
+                  <p className={`text-xs ${themeClasses.text.secondary}`}>Scan rooms or draw floor plans</p>
                 </div>
-                <ChevronRight className="w-6 h-6 text-cyan-400" />
+                <ChevronRight className="w-5 h-5 text-gray-400" />
               </button>
             </div>
 
             {/* Vision Cam Button - Above Photos */}
-            <div className="px-4 pb-2">
+            <div className="px-5 pb-2.5">
               <button
                 onClick={() => handleModeSelect('vision-cam')}
-                className={`w-full flex items-center gap-4 p-3 md:p-4 ${theme === 'light' ? 'bg-white' : 'bg-[#1C1C1E]'} rounded-lg border border-purple-500/50 hover:border-purple-500 active:scale-[0.98] transition-all mb-2`}
+                className={`w-full flex items-center gap-4 p-3.5 ${theme === 'light' ? 'bg-white' : 'bg-[#1C1C1E]'} rounded-xl border border-gray-200 hover:border-gray-300 active:scale-[0.98] transition-all`}
               >
-                <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg flex items-center justify-center">
-                  <Eye className="w-7 h-7 text-white" />
+                <div className="w-11 h-11 bg-gradient-to-r from-purple-500 to-blue-500 rounded-xl flex items-center justify-center">
+                  <Eye className="w-6 h-6 text-white" />
                 </div>
                 <div className="flex-1 text-left">
-                  <span className={`font-semibold ${themeClasses.text.primary} text-base md:text-lg`}>Vision Cam</span>
-                  <p className={`text-sm ${themeClasses.text.secondary}`}>AI-powered project visualization</p>
+                  <span className={`font-semibold ${themeClasses.text.primary}`}>Vision Cam</span>
+                  <p className={`text-xs ${themeClasses.text.secondary}`}>AI-powered project visualization</p>
                 </div>
-                <ChevronRight className="w-6 h-6 text-purple-400" />
+                <ChevronRight className="w-5 h-5 text-gray-400" />
               </button>
             </div>
 
             {/* Photos Button - Full Width */}
-            <div className="px-4 pb-2">
+            <div className="px-5 pb-2.5">
               <button
                 onClick={() => handleModeSelect('photos')}
-                className={`w-full flex items-center gap-4 p-3 md:p-4 ${theme === 'light' ? 'bg-white' : 'bg-[#1C1C1E]'} rounded-t-lg border border-orange-500/50 border-b-0 hover:border-orange-500 active:scale-[0.98] transition-all`}
+                className={`w-full flex items-center gap-4 p-3.5 ${theme === 'light' ? 'bg-white' : 'bg-[#1C1C1E]'} rounded-t-xl border border-gray-200 border-b-0 hover:border-gray-300 active:scale-[0.98] transition-all`}
               >
-                <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center">
-                  <Camera className="w-7 h-7 text-white" />
+                <div className="w-11 h-11 bg-orange-500 rounded-xl flex items-center justify-center">
+                  <Camera className="w-6 h-6 text-white" />
                 </div>
                 <div className="flex-1 text-left">
-                  <span className={`font-semibold ${themeClasses.text.primary} text-base md:text-lg`}>Photos</span>
-                  <p className={`text-sm ${themeClasses.text.secondary}`}>Capture & organize project photos</p>
+                  <span className={`font-semibold ${themeClasses.text.primary}`}>Photos</span>
+                  <p className={`text-xs ${themeClasses.text.secondary}`}>Capture & organize project photos</p>
                 </div>
-                <ChevronRight className="w-6 h-6 text-orange-500" />
+                <ChevronRight className="w-5 h-5 text-gray-400" />
               </button>
               {/* Gallery Button - Attached below Photos */}
               <button
@@ -373,9 +390,9 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
                   setShowAIModal(false);
                   navigate('/photos-gallery');
                 }}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 ${theme === 'light' ? 'bg-white' : 'bg-[#1C1C1E]'} rounded-b-lg border border-orange-500/30 hover:border-orange-500/50 active:scale-[0.98] transition-all`}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 ${theme === 'light' ? 'bg-white' : 'bg-[#1C1C1E]'} rounded-b-xl border border-gray-200 border-t-0 hover:border-gray-300 active:scale-[0.98] transition-all`}
               >
-                <div className="w-8 h-8 bg-orange-500/20 rounded-md flex items-center justify-center">
+                <div className="w-8 h-8 bg-orange-500/20 rounded-lg flex items-center justify-center">
                   <Camera className="w-4 h-4 text-orange-400" />
                 </div>
                 <span className={`text-sm font-medium ${themeClasses.text.primary}`}>Gallery</span>
@@ -384,18 +401,18 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
             </div>
 
             {/* Chat History Button - Full Width */}
-            <div className="px-4 pb-2">
+            <div className="px-5 pb-2.5">
               <button
                 onClick={() => {
                   setShowAIModal(false);
                   setShowChatHistory(true);
                 }}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 ${theme === 'light' ? 'bg-white' : 'bg-[#1C1C1E]'} rounded-lg border ${themeClasses.border.primary} ${themeClasses.hover.bg} active:scale-[0.98] transition-all`}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 ${theme === 'light' ? 'bg-white' : 'bg-[#1C1C1E]'} rounded-xl border ${themeClasses.border.primary} ${themeClasses.hover.bg} active:scale-[0.98] transition-all`}
               >
-                <div className={`w-8 h-8 ${themeClasses.bg.tertiary} rounded-md flex items-center justify-center`}>
+                <div className={`w-8 h-8 ${themeClasses.bg.tertiary} rounded-lg flex items-center justify-center`}>
                   <History className={`w-4 h-4 ${themeClasses.text.secondary}`} />
                 </div>
-                <span className={`text-sm font-medium ${themeClasses.text.primary}`}>Chat History</span>
+                <span className={`text-sm font-medium ${themeClasses.text.primary}`}>AI Chat History</span>
                 <ChevronRight className={`w-4 h-4 ${themeClasses.text.secondary} ml-auto`} />
               </button>
             </div>
@@ -422,7 +439,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
 
       {/* Email Options Modal */}
       {showEmailOptions && (
-        <div className="fixed inset-0 z-[200] flex items-end md:items-center justify-center">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center px-4">
           {/* Backdrop */}
           <div
             className="absolute inset-0 bg-black/80"
@@ -430,59 +447,59 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
           />
 
           {/* Modal */}
-          <div className={`relative w-full max-w-lg md:max-w-xl ${themeClasses.bg.modal} rounded-t-2xl md:rounded-2xl md:mx-4 overflow-hidden animate-slide-up`}>
+          <div className={`relative w-full max-w-lg ${themeClasses.bg.modal} rounded-2xl overflow-hidden animate-slide-up`}>
             {/* Handle */}
-            <div className="flex justify-center pt-3 pb-2">
-              <div className={`w-10 h-1 ${themeClasses.bg.tertiary} rounded-full`} />
+            <div className="flex justify-center pt-4 pb-3">
+              <div className={`w-12 h-1.5 ${themeClasses.bg.tertiary} rounded-full`} />
             </div>
 
             {/* Header */}
-            <div className={`flex items-center justify-between px-4 pb-4 border-b border-blue-500/30`}>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                  <Mail className="w-5 h-5 text-blue-400" />
+            <div className={`flex items-center justify-between px-6 pb-5 border-b border-blue-500/30`}>
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-blue-500/20 rounded-xl flex items-center justify-center">
+                  <Mail className="w-7 h-7 text-blue-500" />
                 </div>
                 <div>
-                  <h2 className={`text-base md:text-lg font-bold ${themeClasses.text.primary}`}>Email</h2>
-                  <p className={`text-sm ${themeClasses.text.secondary}`}>Choose what to send</p>
+                  <h2 className={`text-2xl font-bold ${themeClasses.text.primary}`}>Email</h2>
+                  <p className={`text-base ${themeClasses.text.secondary}`}>Choose what to send</p>
                 </div>
               </div>
               <button
                 onClick={() => setShowEmailOptions(false)}
-                className={`p-2 ${themeClasses.text.secondary} ${themeClasses.hover.text} rounded-lg`}
+                className={`p-3 ${themeClasses.text.secondary} ${themeClasses.hover.text} rounded-xl bg-gray-100`}
               >
-                <X className="w-6 h-6" />
+                <X className="w-7 h-7" />
               </button>
             </div>
 
             {/* Email Options */}
-            <div className="p-4 pb-8 space-y-3">
+            <div className="p-6 pb-10 space-y-4">
               <button
                 onClick={() => handleModeSelect('send-email')}
-                className={`w-full flex items-center gap-4 p-3 md:p-4 ${themeClasses.bg.card} rounded-xl border border-blue-500/30 hover:border-blue-500 active:scale-[0.98] transition-all`}
+                className={`w-full flex items-center gap-5 p-5 ${themeClasses.bg.card} rounded-2xl border-2 border-blue-500/30 hover:border-blue-500 active:scale-[0.98] transition-all`}
               >
-                <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
-                  <Mail className="w-6 h-6 text-white" />
+                <div className="w-16 h-16 bg-blue-500 rounded-xl flex items-center justify-center shadow-lg">
+                  <Mail className="w-8 h-8 text-white" />
                 </div>
                 <div className="flex-1 text-left">
-                  <h3 className={`font-semibold ${themeClasses.text.primary}`}>Send Email</h3>
-                  <p className={`text-sm ${themeClasses.text.secondary}`}>Compose a new email to clients or team</p>
+                  <h3 className={`text-xl font-bold ${themeClasses.text.primary}`}>Send Email</h3>
+                  <p className={`text-base ${themeClasses.text.secondary}`}>Compose a new email to clients or team</p>
                 </div>
-                <ChevronRight className="w-5 h-5 text-blue-400" />
+                <ChevronRight className="w-7 h-7 text-blue-500" />
               </button>
 
               <button
                 onClick={() => handleModeSelect('email-notification')}
-                className={`w-full flex items-center gap-4 p-3 md:p-4 ${themeClasses.bg.card} rounded-xl border border-blue-500/30 hover:border-blue-500 active:scale-[0.98] transition-all`}
+                className={`w-full flex items-center gap-5 p-5 ${themeClasses.bg.card} rounded-2xl border-2 border-blue-500/30 hover:border-blue-500 active:scale-[0.98] transition-all`}
               >
-                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
-                  <CalendarIcon className="w-6 h-6 text-white" />
+                <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg">
+                  <CalendarIcon className="w-8 h-8 text-white" />
                 </div>
                 <div className="flex-1 text-left">
-                  <h3 className={`font-semibold ${themeClasses.text.primary}`}>Email About Event</h3>
-                  <p className={`text-sm ${themeClasses.text.secondary}`}>Notify about a calendar event</p>
+                  <h3 className={`text-xl font-bold ${themeClasses.text.primary}`}>Email About Event</h3>
+                  <p className={`text-base ${themeClasses.text.secondary}`}>Notify about a calendar event</p>
                 </div>
-                <ChevronRight className="w-5 h-5 text-blue-400" />
+                <ChevronRight className="w-7 h-7 text-blue-500" />
               </button>
             </div>
           </div>
