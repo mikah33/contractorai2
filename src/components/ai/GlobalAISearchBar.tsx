@@ -83,6 +83,15 @@ const GlobalAISearchBar: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Listen for expand event from MobileBottomNav
+  useEffect(() => {
+    const handleExpandEvent = () => {
+      setIsExpanded(true);
+    };
+    window.addEventListener('openAIChat', handleExpandEvent);
+    return () => window.removeEventListener('openAIChat', handleExpandEvent);
+  }, []);
+
   // Focus input when expanded
   useEffect(() => {
     if (isExpanded && inputRef.current) {

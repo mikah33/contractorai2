@@ -269,7 +269,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
         {/* AI Search Bar Row */}
         <div className="px-4 pb-2">
           <button
-            onClick={handleAIClick}
+            onClick={() => window.dispatchEvent(new CustomEvent('openAIChat'))}
             className={`w-full flex items-center gap-3 px-4 py-2.5 ${themeClasses.bg.card} rounded-xl border ${theme === 'light' ? 'border-orange-300' : 'border-orange-500/30'} active:scale-[0.98] transition-transform`}
           >
             <div className="w-7 h-7 bg-orange-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
