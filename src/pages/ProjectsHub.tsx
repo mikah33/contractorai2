@@ -34,7 +34,12 @@ import VisionCamModal from '../components/vision/VisionCamModal';
 import { estimateService } from '../services/estimateService';
 import { supabase } from '../lib/supabase';
 
-const ProjectsHub: React.FC = () => {
+interface ProjectsHubProps {
+  embedded?: boolean;
+  searchQuery?: string;
+}
+
+const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery: externalSearchQuery }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -60,8 +65,12 @@ const ProjectsHub: React.FC = () => {
   const [showAddChoice, setShowAddChoice] = useState(false);
   const [showAIChat, setShowAIChat] = useState(false);
   const [showVisionCam, setShowVisionCam] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [internalSearchQuery, setInternalSearchQuery] = useState('');
   const [showTutorial, setShowTutorial] = useState(false);
+
+  // Use external search query if provided (embedded mode)
+  const searchQuery = externalSearchQuery !== undefined ? externalSearchQuery : internalSearchQuery;
+  const setSearchQuery = externalSearchQuery !== undefined ? () => {} : setInternalSearchQuery;
   const [userId, setUserId] = useState<string | null>(null);
   const [showPhotoGallery, setShowPhotoGallery] = useState(false);
   const [selectedProject, setSelectedProject] = useState<any>(null);
@@ -416,70 +425,98 @@ const ProjectsHub: React.FC = () => {
   };
 
   return (
-    <div className={`min-h-full ${themeClasses.bg.primary} pb-24`}>
+    <div className={`${embedded ? '' : 'min-h-screen'} ${themeClasses.bg.primary} ${embedded ? '' : 'pb-40'}`}>
       {/* Projects Tutorial Modal */}
       <ProjectsTutorialModal
         isOpen={showTutorial}
         onComplete={handleTutorialComplete}
       />
 
-      {/* Header */}
-      <div className={`${themeClasses.bg.secondary} ${themeClasses.border.primary} border-b px-4 pb-4 pt-[calc(env(safe-area-inset-top)+16px)] sticky top-0 z-10`}>
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-              <Briefcase className="w-5 h-5 text-orange-500" />
-            </div>
-            <div>
-              <h1 className={`text-xl font-bold ${themeClasses.text.primary}`}>Projects</h1>
-              <p className={`text-sm ${themeClasses.text.secondary}`}>{projects.length} total</p>
+      {/* Header - hidden when embedded */}
+      {!embedded && (
+        <>
+          <div className={`fixed top-0 left-0 right-0 z-50 ${themeClasses.bg.secondary} border-b ${themeClasses.border.primary}`}>
+            <div className="pt-[env(safe-area-inset-top)]">
+              <div className="px-4 pb-5 pt-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-blue-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <Briefcase className="w-7 h-7 text-blue-500" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h1 className={`text-2xl font-bold ${themeClasses.text.primary}`}>Projects</h1>
+                      <p className={`text-base ${themeClasses.text.secondary}`}>{projects.length} total</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => navigate('/settings')}
+                      className={`w-14 h-14 ${themeClasses.bg.tertiary} rounded-xl flex items-center justify-center hover:opacity-80 transition-colors`}
+                    >
+                      <Settings className={`w-7 h-7 ${themeClasses.text.secondary}`} />
+                    </button>
+                    <button
+                      onClick={() => setShowAddChoice(true)}
+                      className="flex items-center gap-2 px-4 py-2.5 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 active:scale-95 transition-all"
+                    >
+                      <Plus className="w-5 h-5" />
+                      <span>Add</span>
+                    </button>
+                  </div>
+                </div>
+                {/* Search */}
+                <div className="relative">
+                  <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 ${themeClasses.text.muted}`} />
+                  <input
+                    type="text"
+                    placeholder="Search projects..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className={`w-full pl-10 pr-4 py-2.5 ${themeClasses.bg.input} rounded-lg border ${themeClasses.border.input} ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} ${themeClasses.focus.ring} ${themeClasses.focus.border} outline-none transition-all`}
+                  />
+                </div>
+              </div>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate('/settings')}
-              className={`w-10 h-10 ${themeClasses.bg.tertiary} rounded-lg flex items-center justify-center ${themeClasses.hover.bg} transition-colors`}
-            >
-              <Settings className={`w-5 h-5 ${themeClasses.text.secondary}`} />
-            </button>
-            <button
-              onClick={() => setShowAddChoice(true)}
-              className={`flex items-center gap-2 px-4 py-2.5 ${themeClasses.button.primary} rounded-md font-medium ${themeClasses.button.primaryHover} active:scale-95 transition-all`}
-            >
-              <Plus className="w-5 h-5" />
-              <span>Add</span>
-            </button>
+
+          {/* Spacer for fixed header */}
+          <div className="pt-[calc(env(safe-area-inset-top)+135px)]" />
+        </>
+      )}
+
+      {/* Add Project Card */}
+      <div className="px-4 pb-4 -mt-1">
+        <div className={`${themeClasses.bg.card} rounded-2xl border-2 ${theme === 'light' ? 'border-gray-300' : 'border-zinc-600'} p-6 relative overflow-hidden`}>
+          {/* Background decorations */}
+          <div className="absolute -right-6 -top-6 w-44 h-44 bg-blue-500/10 rounded-full" />
+          <div className="absolute right-16 top-20 w-28 h-28 bg-blue-500/5 rounded-full" />
+
+          <div className="relative min-h-[240px] flex flex-col">
+            <div className="flex items-center gap-4 mb-5">
+              <div className="w-16 h-16 bg-blue-500/20 rounded-2xl flex items-center justify-center">
+                <Briefcase className="w-8 h-8 text-blue-500" />
+              </div>
+              <div>
+                <h3 className={`font-bold ${themeClasses.text.primary} text-xl`}>Add Project</h3>
+                <p className={`${themeClasses.text.secondary} text-base`}>Manage your work</p>
+              </div>
+            </div>
+
+            <p className={`${themeClasses.text.secondary} italic text-base flex-1`}>
+              Add new projects manually or use AI to check availability, assign teams, and manage schedules.
+            </p>
+
+            <div className="space-y-3 mt-auto">
+              <button
+                onClick={() => setShowAddChoice(true)}
+                className="w-full flex items-center justify-center gap-2 px-5 py-4 bg-blue-500 text-white rounded-xl font-semibold text-lg hover:bg-blue-600 active:scale-[0.98] transition-all"
+              >
+                <Plus className="w-6 h-6" />
+                Add Project
+              </button>
+            </div>
           </div>
         </div>
-
-        {/* Search */}
-        <div className="relative">
-          <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 ${themeClasses.text.muted}`} />
-          <input
-            type="text"
-            placeholder="Search projects..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className={`w-full pl-10 pr-4 py-2.5 ${themeClasses.bg.input} rounded-lg border ${themeClasses.border.input} ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} ${themeClasses.focus.ring} ${themeClasses.focus.border} outline-none transition-all`}
-          />
-        </div>
-      </div>
-
-      {/* AI Chat Quick Access */}
-      <div className="px-4 py-3">
-        <button
-          onClick={handleAIChat}
-          className={`w-full flex items-center gap-3 p-4 ${themeClasses.bg.card} rounded-lg border border-orange-500/30 active:scale-[0.98] transition-transform hover:border-orange-500/50`}
-        >
-          <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-            <Sparkles className="w-5 h-5 text-orange-500" />
-          </div>
-          <div className="flex-1 text-left">
-            <p className={`font-semibold ${themeClasses.text.primary}`}>AI Project Manager</p>
-            <p className={`text-sm ${themeClasses.text.secondary}`}>Check availability, assign teams, manage schedules</p>
-          </div>
-          <ChevronRight className={`w-5 h-5 ${themeClasses.text.muted}`} />
-        </button>
       </div>
 
       {/* Projects List */}
@@ -499,7 +536,7 @@ const ProjectsHub: React.FC = () => {
             <button
               key={project.id}
               onClick={() => handleProjectClick(project.id)}
-              className={`w-full text-left ${themeClasses.bg.card} rounded-2xl border-2 border-gray-300 shadow-sm overflow-hidden active:scale-[0.98] transition-transform hover:border-gray-400`}
+              className={`w-full text-left ${themeClasses.bg.card} rounded-2xl border-2 ${theme === 'light' ? 'border-gray-300 hover:border-gray-400' : 'border-zinc-600 hover:border-zinc-500'} shadow-sm overflow-hidden active:scale-[0.98] transition-transform`}
             >
               <div className="p-6">
                 {/* Header: Name + Status */}
@@ -534,7 +571,7 @@ const ProjectsHub: React.FC = () => {
                     </div>
                     <div className={`h-3 ${theme === 'light' ? 'bg-gray-200' : 'bg-zinc-800'} rounded-full overflow-hidden`}>
                       <div
-                        className="h-full bg-orange-500 rounded-full transition-all"
+                        className="h-full bg-blue-500 rounded-full transition-all"
                         style={{ width: `${project.progress}%` }}
                       />
                     </div>
@@ -562,7 +599,7 @@ const ProjectsHub: React.FC = () => {
                     </div>
                   )}
                   <div className="flex-1" />
-                  <ChevronRight className={`w-6 h-6 text-orange-500`} />
+                  <ChevronRight className={`w-6 h-6 text-blue-500`} />
                 </div>
               </div>
             </button>
@@ -635,7 +672,7 @@ const ProjectsHub: React.FC = () => {
                 <div className="flex items-center gap-1">
                   <button
                     onClick={openEditProjectModal}
-                    className="p-2 text-orange-500 active:text-orange-600 active:bg-orange-50 rounded-xl"
+                    className="p-2 text-blue-500 active:text-blue-600 active:bg-blue-50 rounded-xl"
                   >
                     <Pencil className="w-5 h-5" />
                   </button>
@@ -672,7 +709,7 @@ const ProjectsHub: React.FC = () => {
                         }
                       });
                     }}
-                    className="text-sm text-orange-500 active:text-orange-600 flex items-center gap-1"
+                    className="text-sm text-blue-500 active:text-blue-600 flex items-center gap-1"
                   >
                     {selectedProject.client_name || selectedProject.client}
                     <Pencil className="w-3 h-3" />
@@ -688,19 +725,19 @@ const ProjectsHub: React.FC = () => {
             <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 pb-24">
 
               {/* Vision Cam Card */}
-              <div className="bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-400 rounded-3xl p-8 shadow-md">
+              <div className="bg-gradient-to-r from-blue-50 to-amber-50 border-2 border-blue-400 rounded-3xl p-8 shadow-md">
                 <button
                   onClick={() => setShowVisionCam(true)}
                   className="w-full flex items-center gap-6 active:scale-[0.98] transition-transform"
                 >
-                  <div className="w-20 h-20 bg-gradient-to-r from-orange-500 to-amber-500 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg">
+                  <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-amber-500 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg">
                     <Camera className="w-10 h-10 text-white" />
                   </div>
                   <div className="flex-1 text-left">
                     <p className="font-bold text-2xl text-gray-900">Vision Cam</p>
                     <p className="text-lg text-gray-600 mt-1">Show your customer their vision before you build it</p>
                   </div>
-                  <ChevronRight className="w-8 h-8 text-orange-400" />
+                  <ChevronRight className="w-8 h-8 text-blue-400" />
                 </button>
               </div>
 
@@ -713,7 +750,7 @@ const ProjectsHub: React.FC = () => {
                       setEditBudget({ budget: selectedProject.budget || 0, spent: selectedProject.spent || 0 });
                       setShowEditBudgetModal(true);
                     }}
-                    className="text-lg text-orange-500 font-bold"
+                    className="text-lg text-blue-500 font-bold"
                   >
                     Edit
                   </button>
@@ -752,7 +789,7 @@ const ProjectsHub: React.FC = () => {
                       setSelectedEmployeeId('');
                       setShowEditTeamModal(true);
                     }}
-                    className="text-lg text-orange-500 font-bold"
+                    className="text-lg text-blue-500 font-bold"
                   >
                     Add Member
                   </button>
@@ -763,7 +800,7 @@ const ProjectsHub: React.FC = () => {
                   <div className="flex flex-wrap gap-4">
                     {(selectedProject.team_members || selectedProject.team || []).map((member: any, index: number) => (
                       <div key={index} className="flex items-center gap-4 bg-gray-50 rounded-full px-5 py-3">
-                        <div className="w-14 h-14 bg-orange-500 rounded-full flex items-center justify-center text-lg text-white font-bold">
+                        <div className="w-14 h-14 bg-blue-500 rounded-full flex items-center justify-center text-lg text-white font-bold">
                           {(typeof member === 'string' ? member : member.name || '').split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                         </div>
                         <span className="text-xl text-gray-700 font-semibold">{typeof member === 'string' ? member : member.name}</span>
@@ -792,7 +829,7 @@ const ProjectsHub: React.FC = () => {
                   <label className="text-lg font-semibold text-gray-600">Tasks</label>
                   <button
                     onClick={() => setShowTaskModal(true)}
-                    className="text-lg text-orange-500 font-bold"
+                    className="text-lg text-blue-500 font-bold"
                   >
                     Add Task
                   </button>
@@ -857,12 +894,12 @@ const ProjectsHub: React.FC = () => {
                     placeholder="Add a comment..."
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
-                    className="flex-1 px-6 py-4 text-lg border border-gray-200 rounded-2xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="flex-1 px-6 py-4 text-lg border border-gray-200 rounded-2xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     onKeyPress={(e) => e.key === 'Enter' && handleAddComment()}
                   />
                   <button
                     onClick={handleAddComment}
-                    className="px-6 py-4 bg-orange-500 text-white rounded-2xl active:bg-orange-600"
+                    className="px-6 py-4 bg-blue-500 text-white rounded-2xl active:bg-blue-600"
                   >
                     <Send className="w-6 h-6" />
                   </button>
@@ -875,7 +912,7 @@ const ProjectsHub: React.FC = () => {
                   <label className="text-lg font-semibold text-gray-600">Estimates</label>
                   <button
                     onClick={() => navigate('/pricing')}
-                    className="text-lg text-orange-500 font-bold"
+                    className="text-lg text-blue-500 font-bold"
                   >
                     Create New
                   </button>
@@ -919,7 +956,7 @@ const ProjectsHub: React.FC = () => {
                   <label className="text-lg font-semibold text-gray-600">Project Photos ({projectPhotos.length})</label>
                   <button
                     onClick={() => setShowPhotoGallery(true)}
-                    className="text-lg text-orange-500 font-bold"
+                    className="text-lg text-blue-500 font-bold"
                   >
                     View All
                   </button>
@@ -970,7 +1007,7 @@ const ProjectsHub: React.FC = () => {
                   type="text"
                   value={newTask.title}
                   onChange={(e) => setNewTask({...newTask, title: e.target.value})}
-                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Enter task title"
                 />
               </div>
@@ -980,7 +1017,7 @@ const ProjectsHub: React.FC = () => {
                   type="date"
                   value={newTask.dueDate}
                   onChange={(e) => setNewTask({...newTask, dueDate: e.target.value})}
-                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
               <div>
@@ -988,7 +1025,7 @@ const ProjectsHub: React.FC = () => {
                 <select
                   value={newTask.priority}
                   onChange={(e) => setNewTask({...newTask, priority: e.target.value as 'low' | 'medium' | 'high'})}
-                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
@@ -1023,7 +1060,7 @@ const ProjectsHub: React.FC = () => {
                     }
                   }
                 }}
-                className="flex-1 px-4 py-2.5 bg-orange-500 text-white rounded-xl active:bg-orange-600"
+                className="flex-1 px-4 py-2.5 bg-blue-500 text-white rounded-xl active:bg-blue-600"
               >
                 Add Task
               </button>
@@ -1051,7 +1088,7 @@ const ProjectsHub: React.FC = () => {
                 <textarea
                   value={uploadDescription}
                   onChange={(e) => setUploadDescription(e.target.value)}
-                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   rows={3}
                   placeholder="Describe the progress update"
                 ></textarea>
@@ -1142,7 +1179,7 @@ const ProjectsHub: React.FC = () => {
                   setUploadImages([]);
                   setUploadPreviewUrls([]);
                 }}
-                className="flex-1 px-4 py-2.5 bg-orange-500 text-white rounded-xl active:bg-orange-600"
+                className="flex-1 px-4 py-2.5 bg-blue-500 text-white rounded-xl active:bg-blue-600"
               >
                 Upload
               </button>
@@ -1173,7 +1210,7 @@ const ProjectsHub: React.FC = () => {
                     type="number"
                     value={editBudget.budget || ''}
                     onChange={(e) => setEditBudget({...editBudget, budget: parseFloat(e.target.value) || 0})}
-                    className="w-full pl-8 pr-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full pl-8 pr-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="0"
                   />
                 </div>
@@ -1186,7 +1223,7 @@ const ProjectsHub: React.FC = () => {
                     type="number"
                     value={editBudget.spent || ''}
                     onChange={(e) => setEditBudget({...editBudget, spent: parseFloat(e.target.value) || 0})}
-                    className="w-full pl-8 pr-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full pl-8 pr-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="0"
                   />
                 </div>
@@ -1216,7 +1253,7 @@ const ProjectsHub: React.FC = () => {
                     }
                   }
                 }}
-                className="flex-1 px-4 py-2.5 bg-orange-500 text-white rounded-xl active:bg-orange-600"
+                className="flex-1 px-4 py-2.5 bg-blue-500 text-white rounded-xl active:bg-blue-600"
               >
                 Save
               </button>
@@ -1249,7 +1286,7 @@ const ProjectsHub: React.FC = () => {
                         setShowEditTeamModal(false);
                         navigate('/employees');
                       }}
-                      className="text-sm text-orange-500 font-medium"
+                      className="text-sm text-blue-500 font-medium"
                     >
                       Add Employees
                     </button>
@@ -1258,7 +1295,7 @@ const ProjectsHub: React.FC = () => {
                   <select
                     value={selectedEmployeeId}
                     onChange={(e) => setSelectedEmployeeId(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="">Select an employee...</option>
                     {employees
@@ -1307,7 +1344,7 @@ const ProjectsHub: React.FC = () => {
                 disabled={!selectedEmployeeId}
                 className={`flex-1 px-4 py-2.5 rounded-xl ${
                   selectedEmployeeId
-                    ? 'bg-orange-500 text-white active:bg-orange-600'
+                    ? 'bg-blue-500 text-white active:bg-blue-600'
                     : 'bg-gray-200 text-gray-400'
                 }`}
               >
@@ -1326,7 +1363,7 @@ const ProjectsHub: React.FC = () => {
             onClick={() => setShowManualForm(false)}
           />
           <div className={`relative ${themeClasses.bg.modal} rounded-t-3xl w-full max-h-[90vh] overflow-y-auto animate-slide-up pb-safe`}>
-            <div className={`sticky top-0 ${themeClasses.bg.modal} px-4 py-4 border-b border-orange-500/30 flex items-center justify-between z-10`}>
+            <div className={`sticky top-0 ${themeClasses.bg.modal} px-4 py-4 border-b border-blue-500/30 flex items-center justify-between z-10`}>
               <button
                 onClick={() => setShowManualForm(false)}
                 className={`${themeClasses.text.secondary} text-base font-medium ${themeClasses.hover.text}`}
@@ -1337,7 +1374,7 @@ const ProjectsHub: React.FC = () => {
               <button
                 onClick={handleCreateProject}
                 disabled={!newProjectForm.name.trim() || isCreatingProject}
-                className={`text-orange-500 text-base font-semibold active:text-orange-400 disabled:${themeClasses.text.muted} disabled:cursor-not-allowed`}
+                className={`text-blue-500 text-base font-semibold active:text-blue-400 disabled:${themeClasses.text.muted} disabled:cursor-not-allowed`}
               >
                 {isCreatingProject ? 'Saving...' : 'Save'}
               </button>
@@ -1351,7 +1388,7 @@ const ProjectsHub: React.FC = () => {
                   value={newProjectForm.name}
                   onChange={(e) => setNewProjectForm({ ...newProjectForm, name: e.target.value })}
                   placeholder="e.g., Kitchen Renovation"
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} ${themeClasses.focus.border} focus:ring-2 focus:ring-orange-500/20 outline-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} ${themeClasses.focus.border} focus:ring-2 focus:ring-blue-500/20 outline-none`}
                 />
               </div>
 
@@ -1363,7 +1400,7 @@ const ProjectsHub: React.FC = () => {
                   value={newProjectForm.client}
                   onChange={(e) => setNewProjectForm({ ...newProjectForm, client: e.target.value })}
                   placeholder="e.g., John Smith"
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} ${themeClasses.focus.border} focus:ring-2 focus:ring-orange-500/20 outline-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} ${themeClasses.focus.border} focus:ring-2 focus:ring-blue-500/20 outline-none`}
                 />
               </div>
 
@@ -1375,7 +1412,7 @@ const ProjectsHub: React.FC = () => {
                   onChange={(e) => setNewProjectForm({ ...newProjectForm, description: e.target.value })}
                   placeholder="Brief description of the project..."
                   rows={3}
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} ${themeClasses.focus.border} focus:ring-2 focus:ring-orange-500/20 outline-none resize-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} ${themeClasses.focus.border} focus:ring-2 focus:ring-blue-500/20 outline-none resize-none`}
                 />
               </div>
 
@@ -1389,7 +1426,7 @@ const ProjectsHub: React.FC = () => {
                     value={newProjectForm.budget}
                     onChange={(e) => setNewProjectForm({ ...newProjectForm, budget: e.target.value })}
                     placeholder="0"
-                    className={`w-full pl-8 pr-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} ${themeClasses.focus.border} focus:ring-2 focus:ring-orange-500/20 outline-none`}
+                    className={`w-full pl-8 pr-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} ${themeClasses.focus.border} focus:ring-2 focus:ring-blue-500/20 outline-none`}
                   />
                 </div>
               </div>
@@ -1402,7 +1439,7 @@ const ProjectsHub: React.FC = () => {
                     type="date"
                     value={newProjectForm.startDate}
                     onChange={(e) => setNewProjectForm({ ...newProjectForm, startDate: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${themeClasses.focus.border} focus:ring-2 focus:ring-orange-500/20 outline-none`}
+                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${themeClasses.focus.border} focus:ring-2 focus:ring-blue-500/20 outline-none`}
                   />
                 </div>
                 <div>
@@ -1411,7 +1448,7 @@ const ProjectsHub: React.FC = () => {
                     type="date"
                     value={newProjectForm.endDate}
                     onChange={(e) => setNewProjectForm({ ...newProjectForm, endDate: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${themeClasses.focus.border} focus:ring-2 focus:ring-orange-500/20 outline-none`}
+                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${themeClasses.focus.border} focus:ring-2 focus:ring-blue-500/20 outline-none`}
                   />
                 </div>
               </div>
@@ -1422,7 +1459,7 @@ const ProjectsHub: React.FC = () => {
                 <select
                   value={newProjectForm.priority}
                   onChange={(e) => setNewProjectForm({ ...newProjectForm, priority: e.target.value as 'low' | 'medium' | 'high' })}
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${themeClasses.focus.border} focus:ring-2 focus:ring-orange-500/20 outline-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${themeClasses.focus.border} focus:ring-2 focus:ring-blue-500/20 outline-none`}
                 >
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
@@ -1436,7 +1473,7 @@ const ProjectsHub: React.FC = () => {
                 <select
                   value={newProjectForm.status}
                   onChange={(e) => setNewProjectForm({ ...newProjectForm, status: e.target.value as 'active' | 'completed' | 'on-hold' })}
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${themeClasses.focus.border} focus:ring-2 focus:ring-orange-500/20 outline-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${themeClasses.focus.border} focus:ring-2 focus:ring-blue-500/20 outline-none`}
                 >
                   <option value="active">Active</option>
                   <option value="on-hold">On Hold</option>
@@ -1456,7 +1493,7 @@ const ProjectsHub: React.FC = () => {
             onClick={() => setShowEditProjectModal(false)}
           />
           <div className="relative bg-[#1C1C1E] rounded-t-3xl w-full max-h-[90vh] overflow-y-auto animate-slide-up pb-safe">
-            <div className="sticky top-0 bg-[#1C1C1E] px-4 py-4 border-b border-orange-500/30 flex items-center justify-between z-10">
+            <div className="sticky top-0 bg-[#1C1C1E] px-4 py-4 border-b border-blue-500/30 flex items-center justify-between z-10">
               <button
                 onClick={() => setShowEditProjectModal(false)}
                 className="text-zinc-400 text-base font-medium active:text-zinc-300"
@@ -1467,7 +1504,7 @@ const ProjectsHub: React.FC = () => {
               <button
                 onClick={handleUpdateProject}
                 disabled={!editProjectForm.name.trim()}
-                className="text-orange-500 text-base font-semibold active:text-orange-400 disabled:text-zinc-600 disabled:cursor-not-allowed"
+                className="text-blue-500 text-base font-semibold active:text-blue-400 disabled:text-zinc-600 disabled:cursor-not-allowed"
               >
                 Save
               </button>
@@ -1481,7 +1518,7 @@ const ProjectsHub: React.FC = () => {
                   value={editProjectForm.name}
                   onChange={(e) => setEditProjectForm({ ...editProjectForm, name: e.target.value })}
                   placeholder="e.g., Kitchen Renovation"
-                  className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
+                  className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
                 />
               </div>
 
@@ -1493,7 +1530,7 @@ const ProjectsHub: React.FC = () => {
                   value={editProjectForm.client}
                   onChange={(e) => setEditProjectForm({ ...editProjectForm, client: e.target.value })}
                   placeholder="e.g., John Smith"
-                  className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
+                  className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
                 />
               </div>
 
@@ -1505,7 +1542,7 @@ const ProjectsHub: React.FC = () => {
                   onChange={(e) => setEditProjectForm({ ...editProjectForm, description: e.target.value })}
                   placeholder="Brief description of the project..."
                   rows={3}
-                  className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none resize-none"
+                  className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none resize-none"
                 />
               </div>
 
@@ -1519,7 +1556,7 @@ const ProjectsHub: React.FC = () => {
                     value={editProjectForm.budget}
                     onChange={(e) => setEditProjectForm({ ...editProjectForm, budget: e.target.value })}
                     placeholder="0"
-                    className="w-full pl-8 pr-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
+                    className="w-full pl-8 pr-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
                   />
                 </div>
               </div>
@@ -1532,7 +1569,7 @@ const ProjectsHub: React.FC = () => {
                     type="date"
                     value={editProjectForm.startDate}
                     onChange={(e) => setEditProjectForm({ ...editProjectForm, startDate: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
+                    className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
                   />
                 </div>
                 <div>
@@ -1541,7 +1578,7 @@ const ProjectsHub: React.FC = () => {
                     type="date"
                     value={editProjectForm.endDate}
                     onChange={(e) => setEditProjectForm({ ...editProjectForm, endDate: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
+                    className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
                   />
                 </div>
               </div>
@@ -1552,7 +1589,7 @@ const ProjectsHub: React.FC = () => {
                 <select
                   value={editProjectForm.priority}
                   onChange={(e) => setEditProjectForm({ ...editProjectForm, priority: e.target.value as 'low' | 'medium' | 'high' })}
-                  className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
+                  className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
                 >
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
@@ -1566,7 +1603,7 @@ const ProjectsHub: React.FC = () => {
                 <select
                   value={editProjectForm.status}
                   onChange={(e) => setEditProjectForm({ ...editProjectForm, status: e.target.value as 'active' | 'completed' | 'on-hold' })}
-                  className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none"
+                  className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
                 >
                   <option value="active">Active</option>
                   <option value="on-hold">On Hold</option>
@@ -1582,7 +1619,7 @@ const ProjectsHub: React.FC = () => {
       {showPhotoGallery && selectedProject && (
         <div className="fixed inset-0 z-50 bg-[#0F0F0F] overflow-y-auto">
           {/* Header */}
-          <div className="sticky top-0 z-10 bg-[#1C1C1E] border-b border-orange-500/30 px-4 py-4 flex items-center gap-3">
+          <div className="sticky top-0 z-10 bg-[#1C1C1E] border-b border-blue-500/30 px-4 py-4 flex items-center gap-3">
             <button
               onClick={() => setShowPhotoGallery(false)}
               className="p-2 text-white hover:bg-white/10 rounded-lg"

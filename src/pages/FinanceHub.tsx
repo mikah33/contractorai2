@@ -33,7 +33,9 @@ import {
   Upload,
   RefreshCw,
   Edit,
-  Check
+  Check,
+  ClipboardList,
+  PenLine
 } from 'lucide-react';
 import { useFinanceStore, type Invoice, type Receipt as ReceiptType, type RecurringExpense } from '../stores/financeStoreSupabase';
 import { useClientsStore } from '../stores/clientsStore';
@@ -50,7 +52,12 @@ type ExpenseSubTab = 'upload' | 'recurring' | 'manual';
 
 type ActiveSection = 'dashboard' | 'invoices' | 'revenue' | 'expenses' | 'reports';
 
-const FinanceHub: React.FC = () => {
+interface FinanceHubProps {
+  embedded?: boolean;
+  searchQuery?: string;
+}
+
+const FinanceHub: React.FC<FinanceHubProps> = ({ embedded = false, searchQuery: externalSearchQuery }) => {
   const location = useLocation();
   const {
     invoices,
@@ -96,8 +103,12 @@ const FinanceHub: React.FC = () => {
   const [showPaymentsTutorial, setShowPaymentsTutorial] = useState(false);
   const [tutorialUserId, setTutorialUserId] = useState<string | null>(null);
   const [showAIChat, setShowAIChat] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [internalSearchQuery, setInternalSearchQuery] = useState('');
   const [activeSection, setActiveSection] = useState<ActiveSection>('dashboard');
+
+  // Use external search query if provided (embedded mode)
+  const searchQuery = externalSearchQuery !== undefined ? externalSearchQuery : internalSearchQuery;
+  const setSearchQuery = externalSearchQuery !== undefined ? () => {} : setInternalSearchQuery;
   const [expenseSubTab, setExpenseSubTab] = useState<ExpenseSubTab>('upload');
 
   // Receipt upload state
@@ -160,8 +171,11 @@ const FinanceHub: React.FC = () => {
     amount: '',
     date: new Date().toISOString().split('T')[0],
     category: 'Materials',
-    notes: ''
+    notes: '',
+    imageUrl: ''
   });
+  const [expenseImagePreview, setExpenseImagePreview] = useState<string | null>(null);
+  const expenseImageInputRef = useRef<HTMLInputElement>(null);
 
   // Revenue form state
   const [revenueForm, setRevenueForm] = useState({
@@ -347,6 +361,28 @@ const FinanceHub: React.FC = () => {
     }
   };
 
+  // Handle expense form image upload
+  const handleExpenseImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setExpenseImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    // Upload to storage
+    try {
+      const { uploadReceiptImage } = await import('../services/supabaseStorage');
+      const imageUrl = await uploadReceiptImage(file);
+      setExpenseForm(prev => ({ ...prev, imageUrl }));
+    } catch (error) {
+      console.error('Failed to upload image:', error);
+    }
+  };
+
   // Submit expense
   const handleSubmitExpense = async () => {
     if (!expenseForm.vendor || !expenseForm.amount) {
@@ -360,6 +396,7 @@ const FinanceHub: React.FC = () => {
       date: expenseForm.date,
       category: expenseForm.category,
       notes: expenseForm.notes,
+      imageUrl: expenseForm.imageUrl || undefined,
       status: 'processed'
     });
 
@@ -368,8 +405,10 @@ const FinanceHub: React.FC = () => {
       amount: '',
       date: new Date().toISOString().split('T')[0],
       category: 'Materials',
-      notes: ''
+      notes: '',
+      imageUrl: ''
     });
+    setExpenseImagePreview(null);
     setShowExpenseForm(false);
   };
 
@@ -706,7 +745,7 @@ const FinanceHub: React.FC = () => {
       draft: { bg: 'bg-zinc-800', text: '${themeClasses.text.secondary}', icon: FileText },
       sent: { bg: 'bg-blue-900/30', text: 'text-blue-400', icon: Send },
       outstanding: { bg: 'bg-yellow-900/30', text: 'text-yellow-400', icon: Clock },
-      partial: { bg: 'bg-orange-900/30', text: 'text-orange-400', icon: DollarSign },
+      partial: { bg: 'bg-orange-900/30', text: 'text-blue-400', icon: DollarSign },
       paid: { bg: 'bg-green-900/30', text: 'text-green-400', icon: CheckCircle },
       overdue: { bg: 'bg-red-900/30', text: 'text-red-400', icon: AlertCircle }
     };
@@ -722,10 +761,10 @@ const FinanceHub: React.FC = () => {
 
   // Quick action cards for dashboard
   const quickActions = [
-    { id: 'invoices', label: 'Invoices', icon: FileText, color: 'bg-orange-500/20', count: (invoices || []).filter(i => i.status !== 'paid').length },
-    { id: 'revenue', label: 'Revenue', icon: ArrowUpRight, color: 'bg-orange-500/20', count: (payments || []).length },
-    { id: 'expenses', label: 'Expenses', icon: ArrowDownRight, color: 'bg-orange-500/20', count: (receipts || []).length },
-    { id: 'reports', label: 'Reports', icon: BarChart3, color: 'bg-orange-500/20', count: null }
+    { id: 'invoices', label: 'Invoices', icon: FileText, color: 'bg-blue-500/20', count: (invoices || []).filter(i => i.status !== 'paid').length },
+    { id: 'revenue', label: 'Revenue', icon: ArrowUpRight, color: 'bg-blue-500/20', count: (payments || []).length },
+    { id: 'expenses', label: 'Expenses', icon: ArrowDownRight, color: 'bg-blue-500/20', count: (receipts || []).length },
+    { id: 'reports', label: 'Reports', icon: BarChart3, color: 'bg-blue-500/20', count: null }
   ];
 
   const expenseCategories = [
@@ -734,87 +773,226 @@ const FinanceHub: React.FC = () => {
   ];
 
   return (
-    <div className={`min-h-full ${themeClasses.bg.primary} pb-24`}>
-      {/* Header */}
-      <div className={`${themeClasses.bg.secondary} border-b border-orange-500/30 px-4 pb-4 pt-[calc(env(safe-area-inset-top)+16px)] sticky top-0 z-10`}>
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-              <DollarSign className="w-5 h-5 text-orange-500" />
+    <div className={`${embedded ? '' : 'min-h-screen'} ${themeClasses.bg.primary} ${embedded ? '' : 'pb-40'}`}>
+      {/* Fixed Header with safe area background - hidden when embedded */}
+      {!embedded && (
+        <>
+          <div className={`fixed top-0 left-0 right-0 z-50 ${themeClasses.bg.secondary} border-b ${themeClasses.border.primary}`}>
+            <div className="pt-[env(safe-area-inset-top)]">
+              <div className="px-4 pb-5 pt-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-blue-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <DollarSign className="w-7 h-7 text-blue-500" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h1 className={`text-2xl font-bold ${themeClasses.text.primary}`}>Finance</h1>
+                      <p className={`text-base ${themeClasses.text.secondary}`}>Track money in & out</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Summary Cards */}
+                <div className="grid grid-cols-3 gap-3 mb-4">
+                  <div className="bg-red-100 border-2 border-red-200 rounded-2xl p-4 text-center">
+                    <div className="flex items-center justify-center gap-1.5 text-red-500 mb-2">
+                      <ArrowDownRight className="w-5 h-5" />
+                      <span className="text-sm font-semibold">Expenses</span>
+                    </div>
+                    <p className={`font-bold text-xl ${themeClasses.text.primary}`}>{formatCurrency(totalExpenses)}</p>
+                  </div>
+                  <div className="bg-green-100 border-2 border-green-200 rounded-2xl p-4 text-center">
+                    <div className="flex items-center justify-center gap-1.5 text-green-500 mb-2">
+                      <ArrowUpRight className="w-5 h-5" />
+                      <span className="text-sm font-semibold">Revenue</span>
+                    </div>
+                    <p className={`font-bold text-xl ${themeClasses.text.primary}`}>{formatCurrency(totalRevenue)}</p>
+                  </div>
+                  <div className={`${profit >= 0 ? 'bg-emerald-100 border-2 border-emerald-200' : 'bg-blue-100 border-2 border-blue-200'} rounded-2xl p-4 text-center`}>
+                    <div className={`flex items-center justify-center gap-1.5 ${profit >= 0 ? 'text-emerald-500' : 'text-blue-500'} mb-2`}>
+                      {profit >= 0 ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
+                      <span className="text-sm font-semibold">Profit</span>
+                    </div>
+                    <p className={`font-bold text-xl ${themeClasses.text.primary}`}>{formatCurrency(profit)}</p>
+                  </div>
+                </div>
+
+                {/* Section Tabs */}
+                <div className="flex gap-1 overflow-x-auto pb-1 -mx-1 px-1">
+                  {['dashboard', 'invoices', 'revenue', 'expenses', 'reports'].map((section) => (
+                    <button
+                      key={section}
+                      onClick={() => setActiveSection(section as ActiveSection)}
+                      className={`px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-all ${
+                        activeSection === section
+                          ? 'bg-blue-500/20 text-blue-600'
+                          : `${themeClasses.text.secondary} hover:${themeClasses.bg.tertiary}`
+                      }`}
+                    >
+                      {section.charAt(0).toUpperCase() + section.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Spacer for fixed header */}
+          <div className="pt-[calc(env(safe-area-inset-top)+195px)]" />
+        </>
+      )}
+
+      {/* Embedded Mode Header - Show summary and tabs */}
+      {embedded && (
+        <div className="px-4 pb-4">
+          {/* Title Row */}
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
+              <DollarSign className="w-6 h-6 text-blue-500" />
             </div>
             <div>
-              <h1 className={`text-xl font-bold ${themeClasses.text.primary}`}>Finance</h1>
+              <h2 className={`text-xl font-bold ${themeClasses.text.primary}`}>Finance</h2>
               <p className={`text-sm ${themeClasses.text.secondary}`}>Track money in & out</p>
             </div>
           </div>
-          <button
-            onClick={() => setShowAddChoice(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white text-black rounded-md font-medium hover:bg-zinc-200 active:scale-95 transition-all"
-          >
-            <Plus className="w-5 h-5" />
-            <span>Add</span>
-          </button>
-        </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-3 gap-2 mb-4">
-          <div className="bg-red-900/20 rounded-xl p-3 text-center">
-            <div className="flex items-center justify-center gap-1 text-red-400 mb-1">
-              <ArrowDownRight className="w-4 h-4" />
-              <span className="text-xs font-medium">Expenses</span>
+          {/* Summary Cards */}
+          <div className="grid grid-cols-3 gap-2 mb-4">
+            <div className="bg-red-100 border-2 border-red-200 rounded-xl p-3 text-center">
+              <div className="flex items-center justify-center gap-1 text-red-500 mb-1">
+                <ArrowDownRight className="w-4 h-4" />
+                <span className="text-xs font-semibold">Expenses</span>
+              </div>
+              <p className={`font-bold text-lg ${themeClasses.text.primary}`}>{formatCurrency(totalExpenses)}</p>
             </div>
-            <p className={`font-bold ${themeClasses.text.primary}`}>{formatCurrency(totalExpenses)}</p>
+            <div className="bg-green-100 border-2 border-green-200 rounded-xl p-3 text-center">
+              <div className="flex items-center justify-center gap-1 text-green-500 mb-1">
+                <ArrowUpRight className="w-4 h-4" />
+                <span className="text-xs font-semibold">Revenue</span>
+              </div>
+              <p className={`font-bold text-lg ${themeClasses.text.primary}`}>{formatCurrency(totalRevenue)}</p>
+            </div>
+            <div className={`${profit >= 0 ? 'bg-emerald-100 border-2 border-emerald-200' : 'bg-blue-100 border-2 border-blue-200'} rounded-xl p-3 text-center`}>
+              <div className={`flex items-center justify-center gap-1 ${profit >= 0 ? 'text-emerald-500' : 'text-blue-500'} mb-1`}>
+                {profit >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                <span className="text-xs font-semibold">Profit</span>
+              </div>
+              <p className={`font-bold text-lg ${themeClasses.text.primary}`}>{formatCurrency(profit)}</p>
+            </div>
           </div>
-          <div className="bg-green-900/20 rounded-xl p-3 text-center">
-            <div className="flex items-center justify-center gap-1 text-green-400 mb-1">
-              <ArrowUpRight className="w-4 h-4" />
-              <span className="text-xs font-medium">Revenue</span>
-            </div>
-            <p className={`font-bold ${themeClasses.text.primary}`}>{formatCurrency(totalRevenue)}</p>
-          </div>
-          <div className={`${profit >= 0 ? 'bg-emerald-900/20' : 'bg-orange-900/20'} rounded-xl p-3 text-center`}>
-            <div className={`flex items-center justify-center gap-1 ${profit >= 0 ? 'text-emerald-400' : 'text-orange-400'} mb-1`}>
-              {profit >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
-              <span className="text-xs font-medium">Profit</span>
-            </div>
-            <p className={`font-bold ${themeClasses.text.primary}`}>{formatCurrency(profit)}</p>
+
+          {/* Section Tabs */}
+          <div className="flex gap-1 overflow-x-auto pb-1 -mx-1 px-1">
+            {['dashboard', 'invoices', 'revenue', 'expenses', 'reports'].map((section) => (
+              <button
+                key={section}
+                onClick={() => setActiveSection(section as ActiveSection)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-semibold whitespace-nowrap transition-all ${
+                  activeSection === section
+                    ? 'bg-blue-500/20 text-blue-600'
+                    : `${themeClasses.text.secondary} hover:${themeClasses.bg.tertiary}`
+                }`}
+              >
+                {section.charAt(0).toUpperCase() + section.slice(1)}
+              </button>
+            ))}
           </div>
         </div>
+      )}
 
-        {/* Section Tabs */}
-        <div className="flex gap-1 overflow-x-auto pb-1 -mx-1 px-1">
-          {['dashboard', 'invoices', 'revenue', 'expenses', 'reports'].map((section) => (
-            <button
-              key={section}
-              onClick={() => setActiveSection(section as ActiveSection)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
-                activeSection === section
-                  ? 'bg-orange-500/20 text-orange-500'
-                  : 'text-zinc-500 hover:bg-zinc-800'
-              }`}
-            >
-              {section.charAt(0).toUpperCase() + section.slice(1)}
-            </button>
-          ))}
+      {/* Dynamic CTA Card - Changes based on active tab and sub-tab */}
+      {(activeSection === 'invoices' || activeSection === 'revenue' || activeSection === 'expenses') && (
+        <div className="px-4 py-4">
+          <div className={`${themeClasses.bg.secondary} rounded-2xl border-2 ${themeClasses.border.primary} p-8 text-left relative overflow-hidden min-h-[280px] flex flex-col`}>
+            {/* Background icon visual */}
+            <div className="absolute top-4 right-4 opacity-20">
+              {activeSection === 'invoices' && <ClipboardList className="w-40 h-40 text-blue-500 transform rotate-12" />}
+              {activeSection === 'revenue' && <TrendingUp className="w-40 h-40 text-green-500 transform rotate-12" />}
+              {activeSection === 'expenses' && expenseSubTab === 'upload' && <Camera className="w-40 h-40 text-red-500 transform rotate-12" />}
+              {activeSection === 'expenses' && expenseSubTab === 'recurring' && <RefreshCw className="w-40 h-40 text-red-500 transform rotate-12" />}
+              {activeSection === 'expenses' && expenseSubTab === 'manual' && <Receipt className="w-40 h-40 text-red-500 transform rotate-12" />}
+            </div>
+
+            {/* Header */}
+            <div className="flex items-center gap-5 mb-5 relative z-10">
+              <div className={`w-20 h-20 rounded-2xl flex items-center justify-center shadow-lg ${
+                activeSection === 'invoices' ? 'bg-blue-500' :
+                activeSection === 'revenue' ? 'bg-green-500' : 'bg-red-500'
+              }`}>
+                {activeSection === 'invoices' && <ClipboardList className="w-10 h-10 text-white" />}
+                {activeSection === 'revenue' && <TrendingUp className="w-10 h-10 text-white" />}
+                {activeSection === 'expenses' && expenseSubTab === 'upload' && <Camera className="w-10 h-10 text-white" />}
+                {activeSection === 'expenses' && expenseSubTab === 'recurring' && <RefreshCw className="w-10 h-10 text-white" />}
+                {activeSection === 'expenses' && expenseSubTab === 'manual' && <Receipt className="w-10 h-10 text-white" />}
+              </div>
+              <div>
+                <h3 className={`font-bold text-2xl ${themeClasses.text.primary}`}>
+                  {activeSection === 'invoices' && 'Create Invoice'}
+                  {activeSection === 'revenue' && 'Add Revenue'}
+                  {activeSection === 'expenses' && expenseSubTab === 'upload' && 'Add Receipt'}
+                  {activeSection === 'expenses' && expenseSubTab === 'recurring' && 'Add Recurring Expense'}
+                  {activeSection === 'expenses' && expenseSubTab === 'manual' && 'Add Expense'}
+                </h3>
+                <p className={`text-lg ${themeClasses.text.secondary}`}>
+                  {activeSection === 'invoices' && 'Bill your clients'}
+                  {activeSection === 'revenue' && 'Track your income'}
+                  {activeSection === 'expenses' && expenseSubTab === 'upload' && 'Scan your receipts'}
+                  {activeSection === 'expenses' && expenseSubTab === 'recurring' && 'Set up auto-tracking'}
+                  {activeSection === 'expenses' && expenseSubTab === 'manual' && 'Log your costs'}
+                </p>
+              </div>
+            </div>
+
+            {/* Description */}
+            <p className={`text-lg ${themeClasses.text.secondary} mb-6 relative z-10 leading-relaxed font-medium italic flex-grow`}>
+              {activeSection === 'invoices' && 'Create professional invoices and get paid faster.'}
+              {activeSection === 'revenue' && 'Record payments and income to track your earnings.'}
+              {activeSection === 'expenses' && expenseSubTab === 'upload' && 'Take a photo or upload a receipt to automatically extract expense details.'}
+              {activeSection === 'expenses' && expenseSubTab === 'recurring' && 'Set up recurring expenses to automatically track regular costs.'}
+              {activeSection === 'expenses' && expenseSubTab === 'manual' && 'Manually enter expense details for better budgeting.'}
+            </p>
+
+            {/* CTA Button(s) */}
+            {activeSection === 'expenses' && expenseSubTab === 'upload' ? (
+              <div className="flex gap-3 relative z-10">
+                <button
+                  onClick={handleCameraCapture}
+                  className="flex-1 py-5 px-6 bg-red-500 hover:bg-red-600 text-white text-lg font-semibold rounded-xl shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-3"
+                >
+                  <Camera className="w-6 h-6" />
+                  Take Photo
+                </button>
+                <button
+                  onClick={handleFileUpload}
+                  className={`flex-1 py-5 px-6 ${themeClasses.bg.tertiary} hover:opacity-80 ${themeClasses.text.secondary} text-lg font-semibold rounded-xl border-2 ${themeClasses.border.primary} active:scale-[0.98] transition-all flex items-center justify-center gap-3`}
+                >
+                  <Upload className="w-6 h-6" />
+                  Upload
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => {
+                  if (activeSection === 'invoices') setShowInvoiceForm(true);
+                  else if (activeSection === 'revenue') setShowRevenueForm(true);
+                  else if (activeSection === 'expenses' && expenseSubTab === 'recurring') setShowRecurringForm(true);
+                  else if (activeSection === 'expenses' && expenseSubTab === 'manual') setShowExpenseForm(true);
+                }}
+                className={`w-full py-5 px-6 text-white text-xl font-semibold rounded-xl shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-3 ${
+                  activeSection === 'invoices' ? 'bg-blue-500 hover:bg-blue-600' :
+                  activeSection === 'revenue' ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'
+                }`}
+              >
+                <Plus className="w-7 h-7" />
+                {activeSection === 'invoices' && 'Create Invoice'}
+                {activeSection === 'revenue' && 'Add Revenue'}
+                {activeSection === 'expenses' && expenseSubTab === 'recurring' && 'Add Recurring Expense'}
+                {activeSection === 'expenses' && expenseSubTab === 'manual' && 'Add Expense'}
+              </button>
+            )}
+          </div>
         </div>
-      </div>
-
-      {/* AI Chat Quick Access */}
-      <div className="px-4 py-3">
-        <button
-          onClick={handleAIChat}
-          className={`w-full flex items-center gap-3 p-4 ${themeClasses.bg.secondary} rounded-lg border border-orange-500/30 active:scale-[0.98] transition-transform hover:border-orange-500/50`}
-        >
-          <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-            <Sparkles className="w-5 h-5 text-orange-500" />
-          </div>
-          <div className="flex-1 text-left">
-            <p className={`font-semibold ${themeClasses.text.primary}`}>AI Finance Assistant</p>
-            <p className={`text-sm ${themeClasses.text.secondary}`}>Track expenses, analyze profits, generate reports</p>
-          </div>
-          <ChevronRight className="w-5 h-5 text-zinc-500" />
-        </button>
-      </div>
+      )}
 
       {/* Content based on active section */}
       <div className="px-4 space-y-4">
@@ -822,21 +1000,22 @@ const FinanceHub: React.FC = () => {
         {activeSection === 'dashboard' && (
           <>
             {/* Quick Actions Grid */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-4">
               {quickActions.map((action) => {
                 const Icon = action.icon;
                 return (
                   <button
                     key={action.id}
                     onClick={() => setActiveSection(action.id as ActiveSection)}
-                    className={`${themeClasses.bg.secondary} rounded-xl p-4 border border-orange-500/30 text-left active:scale-[0.98] transition-transform`}
+                    className={`${themeClasses.bg.secondary} rounded-2xl p-5 border-2 ${themeClasses.border.primary} shadow-sm text-left active:scale-[0.98] transition-transform hover:opacity-90 relative`}
                   >
-                    <div className={`w-10 h-10 ${action.color} rounded-lg flex items-center justify-center mb-3`}>
-                      <Icon className="w-5 h-5 text-orange-500" />
+                    <ChevronRight className="w-5 h-5 text-gray-400 absolute top-4 right-4" />
+                    <div className={`w-12 h-12 ${action.color} rounded-xl flex items-center justify-center mb-4`}>
+                      <Icon className="w-6 h-6 text-blue-500" />
                     </div>
-                    <p className={`font-semibold ${themeClasses.text.primary}`}>{action.label}</p>
+                    <p className={`font-bold text-lg ${themeClasses.text.primary}`}>{action.label}</p>
                     {action.count !== null && (
-                      <p className={`text-sm ${themeClasses.text.secondary}`}>{action.count} items</p>
+                      <p className={`text-base ${themeClasses.text.secondary}`}>{action.count} items</p>
                     )}
                   </button>
                 );
@@ -844,13 +1023,13 @@ const FinanceHub: React.FC = () => {
             </div>
 
             {/* Recent Transactions */}
-            <div className={`${themeClasses.bg.secondary} rounded-2xl border-2 border-gray-300`}>
-              <div className="p-5 border-b-2 border-gray-200">
+            <div className={`${themeClasses.bg.secondary} rounded-2xl border-2 ${themeClasses.border.primary}`}>
+              <div className={`p-5 border-b-2 ${themeClasses.border.primary}`}>
                 <h3 className={`font-bold text-lg ${themeClasses.text.primary}`}>Recent Transactions</h3>
               </div>
               <div className="p-4 space-y-3">
                 {(financialSummary?.recentTransactions || []).slice(0, 5).map((tx) => (
-                  <div key={tx.id} className="p-5 flex items-center justify-between bg-white rounded-2xl border-2 border-gray-300 shadow-sm">
+                  <div key={tx.id} className={`p-5 flex items-center justify-between ${themeClasses.bg.secondary} rounded-2xl border-2 ${themeClasses.border.primary} shadow-sm`}>
                     <div className="flex items-center gap-4">
                       <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${
                         tx.type === 'income' ? 'bg-green-100' : 'bg-red-100'
@@ -863,7 +1042,7 @@ const FinanceHub: React.FC = () => {
                       </div>
                       <div>
                         <p className={`font-semibold text-lg ${themeClasses.text.primary}`}>{tx.description}</p>
-                        <p className="text-base text-gray-500">{new Date(tx.date).toLocaleDateString()}</p>
+                        <p className={`text-base ${themeClasses.text.secondary}`}>{new Date(tx.date).toLocaleDateString()}</p>
                       </div>
                     </div>
                     <span className={`font-bold text-xl ${tx.type === 'income' ? 'text-green-500' : 'text-red-500'}`}>
@@ -872,7 +1051,7 @@ const FinanceHub: React.FC = () => {
                   </div>
                 ))}
                 {(financialSummary?.recentTransactions || []).length === 0 && (
-                  <div className="p-8 text-center text-gray-500">
+                  <div className={`p-8 text-center ${themeClasses.text.secondary}`}>
                     No transactions yet
                   </div>
                 )}
@@ -884,28 +1063,19 @@ const FinanceHub: React.FC = () => {
         {/* Invoices Section */}
         {activeSection === 'invoices' && (
           <div className="space-y-3">
-            {/* Add Invoice Button */}
-            <button
-              onClick={() => setShowInvoiceForm(true)}
-              className={`w-full flex items-center justify-center gap-2 p-4 bg-orange-500 ${themeClasses.text.primary} rounded-xl font-semibold active:bg-orange-600`}
-            >
-              <Plus className="w-5 h-5" />
-              Create Invoice
-            </button>
-
             {isLoading ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="w-8 h-8 text-green-500 animate-spin" />
               </div>
             ) : (invoices || []).length === 0 ? (
-              <div className={`text-center py-12 ${themeClasses.bg.secondary} rounded-xl border border-orange-500/30`}>
+              <div className={`text-center py-12 ${themeClasses.bg.secondary} rounded-xl border border-blue-500/30`}>
                 <FileText className="w-12 h-12 text-zinc-600 mx-auto mb-3" />
                 <p className={`${themeClasses.text.secondary} font-medium`}>No invoices yet</p>
                 <p className="text-sm text-zinc-500 mt-1">Create an invoice or convert estimates to invoices</p>
               </div>
             ) : (
               (invoices || []).map((invoice) => (
-                <div key={invoice.id} className={`${themeClasses.bg.secondary} rounded-xl border border-orange-500/30 overflow-hidden`}>
+                <div key={invoice.id} className={`${themeClasses.bg.secondary} rounded-xl border border-blue-500/30 overflow-hidden`}>
                   <div className="p-4">
                     <div className="flex items-start justify-between mb-3">
                       <div>
@@ -926,7 +1096,7 @@ const FinanceHub: React.FC = () => {
                       </div>
                       <div className="text-right">
                         <p className="text-sm text-zinc-500">Balance</p>
-                        <p className="font-bold text-orange-400">{formatCurrency(invoice.balance)}</p>
+                        <p className="font-bold text-blue-400">{formatCurrency(invoice.balance)}</p>
                       </div>
                     </div>
 
@@ -935,7 +1105,7 @@ const FinanceHub: React.FC = () => {
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleGeneratePaymentLink(invoice)}
-                          className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-orange-500 ${themeClasses.text.primary} rounded-lg text-sm font-medium shadow-lg shadow-orange-500/20 active:bg-orange-600 transition-colors`}
+                          className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-500 ${themeClasses.text.primary} rounded-lg text-sm font-medium shadow-lg shadow-blue-500/20 active:bg-blue-600 transition-colors`}
                         >
                           <Link2 className="w-4 h-4" />
                           Payment Link
@@ -963,16 +1133,8 @@ const FinanceHub: React.FC = () => {
         {/* Revenue Section */}
         {activeSection === 'revenue' && (
           <div className="space-y-3">
-            <button
-              onClick={() => setShowRevenueForm(true)}
-              className={`w-full flex items-center justify-center gap-2 px-4 py-3 ${themeClasses.bg.secondary} border-2 border-dashed border-green-500/50 text-green-400 rounded-xl font-medium`}
-            >
-              <Plus className="w-5 h-5" />
-              Add Revenue
-            </button>
-
             {(payments || []).length === 0 ? (
-              <div className={`text-center py-12 ${themeClasses.bg.secondary} rounded-xl border border-orange-500/30`}>
+              <div className={`text-center py-12 ${themeClasses.bg.secondary} rounded-xl border border-blue-500/30`}>
                 <Wallet className="w-12 h-12 text-zinc-600 mx-auto mb-3" />
                 <p className={`${themeClasses.text.secondary} font-medium`}>No revenue recorded</p>
                 <p className="text-sm text-zinc-500 mt-1">Add payments you've received</p>
@@ -985,7 +1147,7 @@ const FinanceHub: React.FC = () => {
                   (payment.clientId && !payment.clientId.includes('-') ? payment.clientId : 'Payment');
 
                 return (
-                  <div key={payment.id} className={`${themeClasses.bg.secondary} rounded-xl border border-orange-500/30 p-4`}>
+                  <div key={payment.id} className={`${themeClasses.bg.secondary} rounded-xl border border-blue-500/30 p-4`}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-green-900/30 rounded-xl flex items-center justify-center">
@@ -1009,13 +1171,13 @@ const FinanceHub: React.FC = () => {
         {activeSection === 'expenses' && (
           <div className="space-y-4">
             {/* Expense Sub-Tabs */}
-            <div className={`flex gap-2 ${themeClasses.bg.secondary} rounded-xl p-1.5 border border-orange-500/30`}>
+            <div className={`flex gap-2 ${themeClasses.bg.secondary} rounded-xl p-1.5 border border-blue-500/30`}>
               <button
                 onClick={() => setExpenseSubTab('upload')}
                 className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                   expenseSubTab === 'upload'
-                    ? 'bg-orange-500 text-black'
-                    : 'text-zinc-600 hover:text-black'
+                    ? 'bg-blue-500 text-white'
+                    : `${themeClasses.text.secondary} hover:${themeClasses.text.primary}`
                 }`}
               >
                 <Receipt className="w-4 h-4" />
@@ -1025,8 +1187,8 @@ const FinanceHub: React.FC = () => {
                 onClick={() => setExpenseSubTab('recurring')}
                 className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                   expenseSubTab === 'recurring'
-                    ? 'bg-orange-500 text-black'
-                    : 'text-zinc-600 hover:text-black'
+                    ? 'bg-blue-500 text-white'
+                    : `${themeClasses.text.secondary} hover:${themeClasses.text.primary}`
                 }`}
               >
                 <RefreshCw className="w-4 h-4" />
@@ -1036,8 +1198,8 @@ const FinanceHub: React.FC = () => {
                 onClick={() => setExpenseSubTab('manual')}
                 className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                   expenseSubTab === 'manual'
-                    ? 'bg-orange-500 text-black'
-                    : 'text-zinc-600 hover:text-black'
+                    ? 'bg-blue-500 text-white'
+                    : `${themeClasses.text.secondary} hover:${themeClasses.text.primary}`
                 }`}
               >
                 <Edit2 className="w-4 h-4" />
@@ -1048,27 +1210,8 @@ const FinanceHub: React.FC = () => {
             {/* Upload Receipt Sub-Tab */}
             {expenseSubTab === 'upload' && (
               <div className="space-y-4">
-                {!receiptPreviewUrl ? (
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      onClick={handleCameraCapture}
-                      className={`flex flex-col items-center justify-center p-6 ${themeClasses.bg.secondary} border-2 border-dashed border-orange-500/50 rounded-xl hover:border-orange-500 active:scale-[0.98] transition-all`}
-                    >
-                      <Camera className="w-10 h-10 text-orange-500 mb-2" />
-                      <span className={`text-sm font-medium ${themeClasses.text.primary}`}>Take Photo</span>
-                      <span className="text-xs text-zinc-500">Use camera</span>
-                    </button>
-                    <button
-                      onClick={handleFileUpload}
-                      className={`flex flex-col items-center justify-center p-6 ${themeClasses.bg.secondary} border-2 border-dashed border-orange-500/50 rounded-xl hover:border-orange-500 active:scale-[0.98] transition-all`}
-                    >
-                      <Upload className="w-10 h-10 text-orange-500 mb-2" />
-                      <span className={`text-sm font-medium ${themeClasses.text.primary}`}>Upload</span>
-                      <span className="text-xs text-zinc-500">From device</span>
-                    </button>
-                  </div>
-                ) : (
-                  <div className={`${themeClasses.bg.secondary} rounded-xl border border-orange-500/30 p-4 space-y-4`}>
+                {receiptPreviewUrl && (
+                  <div className={`${themeClasses.bg.secondary} rounded-xl border border-blue-500/30 p-4 space-y-4`}>
                     {/* OCR Status Banner */}
                     {ocrStatus !== 'idle' && (
                       <div className={`rounded-lg p-3 ${
@@ -1108,7 +1251,7 @@ const FinanceHub: React.FC = () => {
                             type="text"
                             value={receiptFormData.vendor}
                             onChange={(e) => setReceiptFormData(prev => ({ ...prev, vendor: e.target.value }))}
-                            className={`w-full px-3 py-2 ${themeClasses.bg.input} border ${themeClasses.border.primary} rounded-lg ${themeClasses.text.primary} text-sm placeholder-zinc-500 focus:ring-2 focus:ring-orange-500 focus:border-transparent`}
+                            className={`w-full px-3 py-2 ${themeClasses.bg.input} border ${themeClasses.border.primary} rounded-lg ${themeClasses.text.primary} text-sm placeholder-zinc-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                             placeholder="Store name"
                           />
                         </div>
@@ -1120,7 +1263,7 @@ const FinanceHub: React.FC = () => {
                               step="0.01"
                               value={receiptFormData.amount || ''}
                               onChange={(e) => setReceiptFormData(prev => ({ ...prev, amount: parseFloat(e.target.value) || 0 }))}
-                              className={`w-full px-3 py-2 ${themeClasses.bg.input} border ${themeClasses.border.primary} rounded-lg ${themeClasses.text.primary} text-sm placeholder-zinc-500 focus:ring-2 focus:ring-orange-500 focus:border-transparent`}
+                              className={`w-full px-3 py-2 ${themeClasses.bg.input} border ${themeClasses.border.primary} rounded-lg ${themeClasses.text.primary} text-sm placeholder-zinc-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                               placeholder="0.00"
                             />
                           </div>
@@ -1130,7 +1273,7 @@ const FinanceHub: React.FC = () => {
                               type="date"
                               value={receiptFormData.date}
                               onChange={(e) => setReceiptFormData(prev => ({ ...prev, date: e.target.value }))}
-                              className={`w-full px-3 py-2 ${themeClasses.bg.input} border ${themeClasses.border.primary} rounded-lg ${themeClasses.text.primary} text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent`}
+                              className={`w-full px-3 py-2 ${themeClasses.bg.input} border ${themeClasses.border.primary} rounded-lg ${themeClasses.text.primary} text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                             />
                           </div>
                         </div>
@@ -1143,7 +1286,7 @@ const FinanceHub: React.FC = () => {
                         <select
                           value={receiptFormData.category}
                           onChange={(e) => setReceiptFormData(prev => ({ ...prev, category: e.target.value }))}
-                          className={`w-full px-3 py-2 ${themeClasses.bg.input} border ${themeClasses.border.primary} rounded-lg ${themeClasses.text.primary} text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent`}
+                          className={`w-full px-3 py-2 ${themeClasses.bg.input} border ${themeClasses.border.primary} rounded-lg ${themeClasses.text.primary} text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                         >
                           <option value="">Select</option>
                           {expenseCategories.map(cat => (
@@ -1156,7 +1299,7 @@ const FinanceHub: React.FC = () => {
                         <select
                           value={receiptFormData.projectId}
                           onChange={(e) => setReceiptFormData(prev => ({ ...prev, projectId: e.target.value }))}
-                          className={`w-full px-3 py-2 ${themeClasses.bg.input} border ${themeClasses.border.primary} rounded-lg ${themeClasses.text.primary} text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent`}
+                          className={`w-full px-3 py-2 ${themeClasses.bg.input} border ${themeClasses.border.primary} rounded-lg ${themeClasses.text.primary} text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                         >
                           <option value="">None</option>
                           {(projects || []).map(p => (
@@ -1176,7 +1319,7 @@ const FinanceHub: React.FC = () => {
                       <button
                         onClick={handleSaveReceipt}
                         disabled={!receiptFormData.vendor || !receiptFormData.amount || !receiptFormData.category}
-                        className={`flex-1 px-4 py-2.5 bg-orange-500 ${themeClasses.text.primary} rounded-lg font-medium disabled:bg-zinc-600 disabled:${themeClasses.text.secondary}`}
+                        className={`flex-1 px-4 py-2.5 bg-blue-500 ${themeClasses.text.primary} rounded-lg font-medium disabled:bg-zinc-600 disabled:${themeClasses.text.secondary}`}
                       >
                         Save Receipt
                       </button>
@@ -1202,7 +1345,7 @@ const FinanceHub: React.FC = () => {
                 />
 
                 {/* All Receipts/Expenses */}
-                <div className={`${themeClasses.bg.secondary} rounded-xl border border-orange-500/30 p-4`}>
+                <div className={`${themeClasses.bg.secondary} rounded-xl border border-blue-500/30 p-4`}>
                   <h4 className={`font-semibold ${themeClasses.text.primary} mb-3`}>All Receipts ({(receipts || []).length})</h4>
                   {(receipts || []).length === 0 ? (
                     <div className="text-center py-6">
@@ -1242,13 +1385,13 @@ const FinanceHub: React.FC = () => {
                 {!showRecurringForm ? (
                   <button
                     onClick={() => setShowRecurringForm(true)}
-                    className={`w-full flex items-center justify-center gap-2 px-4 py-3 ${themeClasses.bg.secondary} border-2 border-dashed border-orange-500/50 text-orange-400 rounded-xl font-medium`}
+                    className={`w-full flex items-center justify-center gap-2 px-4 py-3 ${themeClasses.bg.secondary} border-2 border-dashed border-blue-500/50 text-blue-400 rounded-xl font-medium`}
                   >
                     <Plus className="w-5 h-5" />
                     Add Recurring Expense
                   </button>
                 ) : (
-                  <div className={`${themeClasses.bg.secondary} rounded-xl border border-orange-500/30 p-4 space-y-4`}>
+                  <div className={`${themeClasses.bg.secondary} rounded-xl border border-blue-500/30 p-4 space-y-4`}>
                     <div className="flex items-center justify-between">
                       <h4 className={`font-semibold ${themeClasses.text.primary}`}>
                         {editingRecurring ? 'Edit Recurring Expense' : 'New Recurring Expense'}
@@ -1265,7 +1408,7 @@ const FinanceHub: React.FC = () => {
                           type="text"
                           value={recurringFormData.name}
                           onChange={(e) => setRecurringFormData(prev => ({ ...prev, name: e.target.value }))}
-                          className={`w-full px-3 py-2.5 ${themeClasses.bg.input} border ${themeClasses.border.primary} rounded-lg ${themeClasses.text.primary} text-sm placeholder-zinc-500 focus:ring-2 focus:ring-orange-500 focus:border-transparent`}
+                          className={`w-full px-3 py-2.5 ${themeClasses.bg.input} border ${themeClasses.border.primary} rounded-lg ${themeClasses.text.primary} text-sm placeholder-zinc-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                           placeholder="e.g., Software Subscription"
                         />
                       </div>
@@ -1275,7 +1418,7 @@ const FinanceHub: React.FC = () => {
                           type="text"
                           value={recurringFormData.vendor}
                           onChange={(e) => setRecurringFormData(prev => ({ ...prev, vendor: e.target.value }))}
-                          className={`w-full px-3 py-2.5 ${themeClasses.bg.input} border ${themeClasses.border.primary} rounded-lg ${themeClasses.text.primary} text-sm placeholder-zinc-500 focus:ring-2 focus:ring-orange-500 focus:border-transparent`}
+                          className={`w-full px-3 py-2.5 ${themeClasses.bg.input} border ${themeClasses.border.primary} rounded-lg ${themeClasses.text.primary} text-sm placeholder-zinc-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                           placeholder="e.g., Adobe, QuickBooks"
                         />
                       </div>
@@ -1288,7 +1431,7 @@ const FinanceHub: React.FC = () => {
                             step="0.01"
                             value={recurringFormData.amount || ''}
                             onChange={(e) => setRecurringFormData(prev => ({ ...prev, amount: parseFloat(e.target.value) || 0 }))}
-                            className={`w-full pl-9 pr-3 py-2.5 ${themeClasses.bg.input} border ${themeClasses.border.primary} rounded-lg ${themeClasses.text.primary} text-sm placeholder-zinc-500 focus:ring-2 focus:ring-orange-500 focus:border-transparent`}
+                            className={`w-full pl-9 pr-3 py-2.5 ${themeClasses.bg.input} border ${themeClasses.border.primary} rounded-lg ${themeClasses.text.primary} text-sm placeholder-zinc-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                             placeholder="0.00"
                           />
                         </div>
@@ -1298,7 +1441,7 @@ const FinanceHub: React.FC = () => {
                         <select
                           value={recurringFormData.frequency}
                           onChange={(e) => setRecurringFormData(prev => ({ ...prev, frequency: e.target.value as any }))}
-                          className={`w-full px-3 py-2.5 ${themeClasses.bg.input} border ${themeClasses.border.primary} rounded-lg ${themeClasses.text.primary} text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent`}
+                          className={`w-full px-3 py-2.5 ${themeClasses.bg.input} border ${themeClasses.border.primary} rounded-lg ${themeClasses.text.primary} text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                         >
                           <option value="weekly">Weekly</option>
                           <option value="monthly">Monthly</option>
@@ -1311,7 +1454,7 @@ const FinanceHub: React.FC = () => {
                         <select
                           value={recurringFormData.category}
                           onChange={(e) => setRecurringFormData(prev => ({ ...prev, category: e.target.value }))}
-                          className={`w-full px-3 py-2.5 ${themeClasses.bg.input} border ${themeClasses.border.primary} rounded-lg ${themeClasses.text.primary} text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent`}
+                          className={`w-full px-3 py-2.5 ${themeClasses.bg.input} border ${themeClasses.border.primary} rounded-lg ${themeClasses.text.primary} text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                         >
                           <option value="">Select</option>
                           {expenseCategories.map(cat => (
@@ -1325,7 +1468,7 @@ const FinanceHub: React.FC = () => {
                           type="date"
                           value={recurringFormData.nextDueDate}
                           onChange={(e) => setRecurringFormData(prev => ({ ...prev, nextDueDate: e.target.value }))}
-                          className={`w-full px-3 py-2.5 ${themeClasses.bg.input} border ${themeClasses.border.primary} rounded-lg ${themeClasses.text.primary} text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent`}
+                          className={`w-full px-3 py-2.5 ${themeClasses.bg.input} border ${themeClasses.border.primary} rounded-lg ${themeClasses.text.primary} text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                         />
                       </div>
                     </div>
@@ -1336,7 +1479,7 @@ const FinanceHub: React.FC = () => {
                         id="isActive"
                         checked={recurringFormData.isActive}
                         onChange={(e) => setRecurringFormData(prev => ({ ...prev, isActive: e.target.checked }))}
-                        className="w-4 h-4 text-orange-500 bg-zinc-700 border-zinc-600 rounded focus:ring-orange-500"
+                        className="w-4 h-4 text-blue-500 bg-zinc-700 border-zinc-600 rounded focus:ring-blue-500"
                       />
                       <label htmlFor="isActive" className="text-sm text-zinc-300">Active</label>
                     </div>
@@ -1350,7 +1493,7 @@ const FinanceHub: React.FC = () => {
                       </button>
                       <button
                         onClick={handleSaveRecurringExpense}
-                        className={`flex-1 px-4 py-2.5 bg-orange-500 ${themeClasses.text.primary} rounded-lg font-medium`}
+                        className={`flex-1 px-4 py-2.5 bg-blue-500 ${themeClasses.text.primary} rounded-lg font-medium`}
                       >
                         {editingRecurring ? 'Update' : 'Save'}
                       </button>
@@ -1360,7 +1503,7 @@ const FinanceHub: React.FC = () => {
 
                 {/* Recurring Expenses List */}
                 {(recurringExpenses || []).length === 0 ? (
-                  <div className={`text-center py-12 ${themeClasses.bg.secondary} rounded-xl border border-orange-500/30`}>
+                  <div className={`text-center py-12 ${themeClasses.bg.secondary} rounded-xl border border-blue-500/30`}>
                     <RefreshCw className="w-12 h-12 text-zinc-600 mx-auto mb-3" />
                     <p className={`${themeClasses.text.secondary} font-medium`}>No recurring expenses</p>
                     <p className="text-sm text-zinc-500 mt-1">Add subscriptions & regular bills</p>
@@ -1368,11 +1511,11 @@ const FinanceHub: React.FC = () => {
                 ) : (
                   <div className="space-y-2">
                     {(recurringExpenses || []).map((expense) => (
-                      <div key={expense.id} className={`${themeClasses.bg.secondary} rounded-xl border border-orange-500/30 p-4`}>
+                      <div key={expense.id} className={`${themeClasses.bg.secondary} rounded-xl border border-blue-500/30 p-4`}>
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-3">
-                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${expense.isActive ? 'bg-orange-500/20' : 'bg-zinc-700'}`}>
-                              <RefreshCw className={`w-5 h-5 ${expense.isActive ? 'text-orange-500' : 'text-zinc-500'}`} />
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${expense.isActive ? 'bg-blue-500/20' : 'bg-zinc-700'}`}>
+                              <RefreshCw className={`w-5 h-5 ${expense.isActive ? 'text-blue-500' : 'text-zinc-500'}`} />
                             </div>
                             <div>
                               <p className={`font-semibold ${themeClasses.text.primary}`}>{expense.name}</p>
@@ -1384,7 +1527,7 @@ const FinanceHub: React.FC = () => {
                             <p className="text-xs text-zinc-500">{getFrequencyLabel(expense.frequency)}</p>
                           </div>
                         </div>
-                        <div className="flex items-center justify-between pt-2 border-t border-orange-500/20">
+                        <div className="flex items-center justify-between pt-2 border-t border-blue-500/20">
                           <div className="flex items-center gap-2">
                             <span className={`px-2 py-0.5 rounded text-xs font-medium ${expense.isActive ? 'bg-green-900/30 text-green-400' : 'bg-zinc-700 ${themeClasses.text.secondary}'}`}>
                               {expense.isActive ? 'Active' : 'Paused'}
@@ -1396,7 +1539,7 @@ const FinanceHub: React.FC = () => {
                           <div className="flex items-center gap-1">
                             <button
                               onClick={() => toggleRecurringExpense(expense.id, !expense.isActive)}
-                              className="p-2 text-zinc-500 hover:text-orange-400 rounded-lg"
+                              className="p-2 text-zinc-500 hover:text-blue-400 rounded-lg"
                             >
                               {expense.isActive ? <Clock className="w-4 h-4" /> : <Check className="w-4 h-4" />}
                             </button>
@@ -1424,23 +1567,15 @@ const FinanceHub: React.FC = () => {
             {/* Manual Entry Sub-Tab */}
             {expenseSubTab === 'manual' && (
               <div className="space-y-3">
-                <button
-                  onClick={() => setShowExpenseForm(true)}
-                  className={`w-full flex items-center justify-center gap-2 px-4 py-3 ${themeClasses.bg.secondary} border-2 border-dashed border-red-500/50 text-red-400 rounded-xl font-medium`}
-                >
-                  <Plus className="w-5 h-5" />
-                  Add Expense
-                </button>
-
                 {(receipts || []).length === 0 ? (
-                  <div className={`text-center py-12 ${themeClasses.bg.secondary} rounded-xl border border-orange-500/30`}>
+                  <div className={`text-center py-12 ${themeClasses.bg.secondary} rounded-xl border border-blue-500/30`}>
                     <Receipt className="w-12 h-12 text-zinc-600 mx-auto mb-3" />
                     <p className={`${themeClasses.text.secondary} font-medium`}>No expenses recorded</p>
                     <p className="text-sm text-zinc-500 mt-1">Track your business expenses</p>
                   </div>
                 ) : (
                   (receipts || []).map((expense) => (
-                    <div key={expense.id} className={`${themeClasses.bg.secondary} rounded-xl border border-orange-500/30 p-4`}>
+                    <div key={expense.id} className={`${themeClasses.bg.secondary} rounded-xl border border-blue-500/30 p-4`}>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-red-900/30 rounded-xl flex items-center justify-center">
@@ -1472,18 +1607,18 @@ const FinanceHub: React.FC = () => {
         {/* Reports Section */}
         {activeSection === 'reports' && (
           <div className="space-y-4">
-            <div className={`${themeClasses.bg.secondary} rounded-xl border border-orange-500/30 p-4`}>
+            <div className={`${themeClasses.bg.secondary} rounded-xl border border-blue-500/30 p-4`}>
               <h3 className={`font-semibold ${themeClasses.text.primary} mb-4`}>Financial Summary</h3>
               <div className="space-y-3">
-                <div className="flex justify-between py-2 border-b border-orange-500/20">
+                <div className="flex justify-between py-2 border-b border-blue-500/20">
                   <span className={`${themeClasses.text.secondary}`}>Total Revenue</span>
                   <span className="font-semibold text-green-400">{formatCurrency(financialSummary?.totalRevenue || 0)}</span>
                 </div>
-                <div className="flex justify-between py-2 border-b border-orange-500/20">
+                <div className="flex justify-between py-2 border-b border-blue-500/20">
                   <span className={`${themeClasses.text.secondary}`}>Total Expenses</span>
                   <span className="font-semibold text-red-400">{formatCurrency(financialSummary?.totalExpenses || 0)}</span>
                 </div>
-                <div className="flex justify-between py-2 border-b border-orange-500/20">
+                <div className="flex justify-between py-2 border-b border-blue-500/20">
                   <span className={`${themeClasses.text.secondary}`}>Net Profit</span>
                   <span className={`font-semibold ${(financialSummary?.profit || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                     {formatCurrency(financialSummary?.profit || 0)}
@@ -1498,7 +1633,7 @@ const FinanceHub: React.FC = () => {
 
             {/* Expenses by Category */}
             {(financialSummary?.expensesByCategory || []).length > 0 && (
-              <div className={`${themeClasses.bg.secondary} rounded-xl border border-orange-500/30 p-4`}>
+              <div className={`${themeClasses.bg.secondary} rounded-xl border border-blue-500/30 p-4`}>
                 <h3 className={`font-semibold ${themeClasses.text.primary} mb-4`}>Expenses by Category</h3>
                 <div className="space-y-2">
                   {(financialSummary?.expensesByCategory || []).map((cat) => (
@@ -1549,7 +1684,7 @@ const FinanceHub: React.FC = () => {
       {showPaymentLinkModal && selectedInvoice && (
         <div className="fixed inset-0 bg-black/70 z-[200] flex items-end sm:items-center justify-center">
           <div className={`${themeClasses.bg.secondary} w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl max-h-[90vh] overflow-auto`}>
-            <div className={`sticky top-0 ${themeClasses.bg.secondary} p-4 border-b border-orange-500/30 flex items-center justify-between z-10`}>
+            <div className={`sticky top-0 ${themeClasses.bg.secondary} p-4 border-b border-blue-500/30 flex items-center justify-between z-10`}>
               <button
                 onClick={() => {
                   setShowPaymentLinkModal(false);
@@ -1616,7 +1751,7 @@ const FinanceHub: React.FC = () => {
       {showRecordPaymentModal && selectedInvoice && (
         <div className="fixed inset-0 bg-black/70 z-[200] flex items-end sm:items-center justify-center">
           <div className={`${themeClasses.bg.secondary} w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl max-h-[90vh] overflow-auto`}>
-            <div className={`sticky top-0 ${themeClasses.bg.secondary} p-4 border-b border-orange-500/30 flex items-center justify-between z-10`}>
+            <div className={`sticky top-0 ${themeClasses.bg.secondary} p-4 border-b border-blue-500/30 flex items-center justify-between z-10`}>
               <button
                 onClick={() => {
                   setShowRecordPaymentModal(false);
@@ -1629,7 +1764,7 @@ const FinanceHub: React.FC = () => {
               <h3 className={`font-semibold ${themeClasses.text.primary}`}>Record Payment</h3>
               <button
                 onClick={handleRecordPayment}
-                className="text-orange-500 text-base font-semibold active:text-orange-400"
+                className="text-blue-500 text-base font-semibold active:text-blue-400"
               >
                 Save
               </button>
@@ -1698,7 +1833,7 @@ const FinanceHub: React.FC = () => {
       {showExpenseForm && (
         <div className="fixed inset-0 bg-black/70 z-[200] flex items-end sm:items-center justify-center">
           <div className={`${themeClasses.bg.secondary} w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl max-h-[90vh] overflow-auto`}>
-            <div className={`sticky top-0 ${themeClasses.bg.secondary} p-4 border-b border-orange-500/30 flex items-center justify-between z-10`}>
+            <div className={`sticky top-0 ${themeClasses.bg.secondary} p-4 border-b border-blue-500/30 flex items-center justify-between z-10`}>
               <button
                 onClick={() => setShowExpenseForm(false)}
                 className={`${themeClasses.text.secondary} text-base font-medium active:text-zinc-300`}
@@ -1708,7 +1843,7 @@ const FinanceHub: React.FC = () => {
               <h3 className={`font-semibold ${themeClasses.text.primary}`}>Add Expense</h3>
               <button
                 onClick={handleSubmitExpense}
-                className="text-orange-500 text-base font-semibold active:text-orange-400"
+                className="text-blue-500 text-base font-semibold active:text-blue-400"
               >
                 Save
               </button>
@@ -1762,6 +1897,44 @@ const FinanceHub: React.FC = () => {
                 </select>
               </div>
 
+              {/* Receipt Image Upload */}
+              <div>
+                <label className="block text-sm font-medium text-zinc-300 mb-2">Receipt Image (Optional)</label>
+                <input
+                  ref={expenseImageInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleExpenseImageUpload}
+                  className="hidden"
+                />
+                {expenseImagePreview ? (
+                  <div className="relative">
+                    <img
+                      src={expenseImagePreview}
+                      alt="Receipt preview"
+                      className="w-full h-40 object-cover rounded-xl border border-blue-500/30"
+                    />
+                    <button
+                      onClick={() => {
+                        setExpenseImagePreview(null);
+                        setExpenseForm(prev => ({ ...prev, imageUrl: '' }));
+                      }}
+                      className="absolute top-2 right-2 p-2 bg-red-500 rounded-full text-white"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => expenseImageInputRef.current?.click()}
+                    className={`w-full flex items-center justify-center gap-3 p-4 ${themeClasses.bg.input} border-2 border-dashed border-blue-500/50 rounded-xl hover:border-blue-500 active:scale-[0.98] transition-all`}
+                  >
+                    <Camera className="w-6 h-6 text-blue-500" />
+                    <span className={`font-medium ${themeClasses.text.secondary}`}>Add Receipt Photo</span>
+                  </button>
+                )}
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-zinc-300 mb-2">Notes (Optional)</label>
                 <textarea
@@ -1781,7 +1954,7 @@ const FinanceHub: React.FC = () => {
       {showRevenueForm && (
         <div className="fixed inset-0 bg-black/70 z-[200] flex items-end sm:items-center justify-center">
           <div className={`${themeClasses.bg.secondary} w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl max-h-[90vh] overflow-auto`}>
-            <div className={`sticky top-0 ${themeClasses.bg.secondary} p-4 border-b border-orange-500/30 flex items-center justify-between z-10`}>
+            <div className={`sticky top-0 ${themeClasses.bg.secondary} p-4 border-b border-blue-500/30 flex items-center justify-between z-10`}>
               <button
                 onClick={() => {
                   setShowRevenueForm(false);
@@ -1795,7 +1968,7 @@ const FinanceHub: React.FC = () => {
               <h3 className={`font-semibold ${themeClasses.text.primary}`}>Add Revenue</h3>
               <button
                 onClick={handleSubmitRevenue}
-                className="text-orange-500 text-base font-semibold active:text-orange-400"
+                className="text-blue-500 text-base font-semibold active:text-blue-400"
               >
                 Save
               </button>
@@ -1818,7 +1991,7 @@ const FinanceHub: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setShowQuickAddClient(true)}
-                      className="flex items-center gap-2 text-orange-500 text-sm font-medium"
+                      className="flex items-center gap-2 text-blue-500 text-sm font-medium"
                     >
                       <Plus className="w-4 h-4" />
                       Add New Client
@@ -1831,7 +2004,7 @@ const FinanceHub: React.FC = () => {
                         type="text"
                         value={quickClientName}
                         onChange={(e) => setQuickClientName(e.target.value)}
-                        className={`flex-1 px-4 py-3 ${themeClasses.bg.input} border ${themeClasses.border.primary} rounded-xl ${themeClasses.text.primary} placeholder-zinc-500 focus:ring-2 focus:ring-orange-500 focus:border-transparent`}
+                        className={`flex-1 px-4 py-3 ${themeClasses.bg.input} border ${themeClasses.border.primary} rounded-xl ${themeClasses.text.primary} placeholder-zinc-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                         placeholder="Enter client name..."
                         autoFocus
                       />
@@ -1856,7 +2029,7 @@ const FinanceHub: React.FC = () => {
                             }
                           }
                         }}
-                        className={`px-4 py-3 bg-orange-500 ${themeClasses.text.primary} rounded-xl font-medium active:bg-orange-600`}
+                        className={`px-4 py-3 bg-blue-500 ${themeClasses.text.primary} rounded-xl font-medium active:bg-blue-600`}
                       >
                         <Check className="w-5 h-5" />
                       </button>
@@ -1945,7 +2118,7 @@ const FinanceHub: React.FC = () => {
       {showInvoiceForm && (
         <div className="fixed inset-0 bg-black/70 z-[200] flex items-end sm:items-center justify-center">
           <div className={`${themeClasses.bg.secondary} w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl max-h-[90vh] overflow-auto`}>
-            <div className={`sticky top-0 ${themeClasses.bg.secondary} p-4 border-b border-orange-500/30 flex items-center justify-between z-10`}>
+            <div className={`sticky top-0 ${themeClasses.bg.secondary} p-4 border-b border-blue-500/30 flex items-center justify-between z-10`}>
               <button
                 onClick={() => setShowInvoiceForm(false)}
                 className={`${themeClasses.text.secondary} text-base font-medium active:text-zinc-300`}
@@ -1955,7 +2128,7 @@ const FinanceHub: React.FC = () => {
               <h3 className={`font-semibold ${themeClasses.text.primary}`}>Create Invoice</h3>
               <button
                 onClick={handleSubmitInvoice}
-                className="text-orange-500 text-base font-semibold active:text-orange-400"
+                className="text-blue-500 text-base font-semibold active:text-blue-400"
               >
                 Save
               </button>
@@ -1966,7 +2139,7 @@ const FinanceHub: React.FC = () => {
                 <select
                   value={invoiceForm.clientName}
                   onChange={(e) => setInvoiceForm(prev => ({ ...prev, clientName: e.target.value }))}
-                  className={`w-full px-4 py-3 ${themeClasses.bg.input} border ${themeClasses.border.primary} rounded-xl ${themeClasses.text.primary} focus:ring-2 focus:ring-orange-500 focus:border-transparent`}
+                  className={`w-full px-4 py-3 ${themeClasses.bg.input} border ${themeClasses.border.primary} rounded-xl ${themeClasses.text.primary} focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                 >
                   <option value="">Select a client...</option>
                   {(clients || []).map(client => (
@@ -1981,7 +2154,7 @@ const FinanceHub: React.FC = () => {
                   type="text"
                   value={invoiceForm.description}
                   onChange={(e) => setInvoiceForm(prev => ({ ...prev, description: e.target.value }))}
-                  className={`w-full px-4 py-3 ${themeClasses.bg.input} border ${themeClasses.border.primary} rounded-xl ${themeClasses.text.primary} placeholder-zinc-500 focus:ring-2 focus:ring-orange-500 focus:border-transparent`}
+                  className={`w-full px-4 py-3 ${themeClasses.bg.input} border ${themeClasses.border.primary} rounded-xl ${themeClasses.text.primary} placeholder-zinc-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                   placeholder="Services rendered..."
                 />
               </div>
@@ -1994,7 +2167,7 @@ const FinanceHub: React.FC = () => {
                     type="number"
                     value={invoiceForm.amount}
                     onChange={(e) => setInvoiceForm(prev => ({ ...prev, amount: e.target.value }))}
-                    className={`w-full pl-10 pr-4 py-3 ${themeClasses.bg.input} border ${themeClasses.border.primary} rounded-xl ${themeClasses.text.primary} placeholder-zinc-500 focus:ring-2 focus:ring-orange-500 focus:border-transparent`}
+                    className={`w-full pl-10 pr-4 py-3 ${themeClasses.bg.input} border ${themeClasses.border.primary} rounded-xl ${themeClasses.text.primary} placeholder-zinc-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                     placeholder="0.00"
                   />
                 </div>
@@ -2006,7 +2179,7 @@ const FinanceHub: React.FC = () => {
                   type="date"
                   value={invoiceForm.dueDate}
                   onChange={(e) => setInvoiceForm(prev => ({ ...prev, dueDate: e.target.value }))}
-                  className={`w-full px-4 py-3 ${themeClasses.bg.input} border ${themeClasses.border.primary} rounded-xl ${themeClasses.text.primary} focus:ring-2 focus:ring-orange-500 focus:border-transparent`}
+                  className={`w-full px-4 py-3 ${themeClasses.bg.input} border ${themeClasses.border.primary} rounded-xl ${themeClasses.text.primary} focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                 />
               </div>
             </div>
