@@ -311,7 +311,7 @@ const Dashboard: React.FC = () => {
                 <Calendar className={`w-10 h-10 ${themeClasses.text.muted} mx-auto mb-3`} />
                 <p className={`${themeClasses.text.secondary} mb-4`}>No tasks scheduled</p>
                 <button
-                  onClick={() => navigate('/jobs-hub')}
+                  onClick={() => navigate('/todo-hub')}
                   className="flex items-center gap-2 px-4 py-2.5 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 active:scale-95 transition-all mx-auto"
                 >
                   <Plus className="w-4 h-4" /> Add Task
@@ -325,7 +325,7 @@ const Dashboard: React.FC = () => {
                   return (
                     <button
                       key={job.id}
-                      onClick={() => navigate('/jobs-hub')}
+                      onClick={() => navigate('/todo-hub')}
                       className={`w-full flex items-center gap-4 p-4 ${theme === 'light' ? 'hover:bg-gray-50 active:bg-gray-100' : 'hover:bg-zinc-800 active:bg-zinc-700'} transition-colors text-left`}
                     >
                       <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
@@ -352,7 +352,7 @@ const Dashboard: React.FC = () => {
 
             {upcomingJobs.length > 0 && (
               <button
-                onClick={() => navigate('/jobs-hub')}
+                onClick={() => navigate('/todo-hub')}
                 className={`w-full p-4 text-center text-sm font-medium ${theme === 'light' ? 'text-blue-600 bg-blue-50 hover:bg-blue-100' : 'text-blue-400 bg-blue-500/10 hover:bg-blue-500/20'} transition-colors border-t ${themeClasses.border.primary}`}
               >
                 View all tasks <ArrowRight className="w-4 h-4 inline ml-1" />
