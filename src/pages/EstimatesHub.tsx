@@ -91,10 +91,12 @@ const EstimatesHub: React.FC<EstimatesHubProps> = ({ embedded = false, searchQue
   useEffect(() => {
     const state = location.state as { openCreate?: boolean } | null;
     if (state?.openCreate) {
-      // Navigate to estimate generator to create new
-      navigate('/estimates', { replace: true });
+      // Open the Create Estimate modal
+      setShowAddChoice(true);
+      // Clear the state so it doesn't persist on refresh
+      window.history.replaceState({}, document.title);
     }
-  }, [location.state, navigate]);
+  }, [location.state]);
 
   useEffect(() => {
     fetchEstimates();
