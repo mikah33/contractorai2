@@ -312,9 +312,9 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
       {/* Quick Action FAB Menu */}
       {showAIModal && (
         <div className="fixed inset-0 z-[150]">
-          {/* Backdrop - more opaque */}
+          {/* Backdrop - theme aware */}
           <div
-            className={`absolute inset-0 bg-black/70 backdrop-blur-sm transition-all duration-500 ease-out ${isAIModalVisible ? 'opacity-100' : 'opacity-0'}`}
+            className={`absolute inset-0 ${theme === 'light' ? 'bg-black/50' : 'bg-black/70'} backdrop-blur-sm transition-all duration-500 ease-out ${isAIModalVisible ? 'opacity-100' : 'opacity-0'}`}
             onClick={handleCloseAIModal}
           />
 
@@ -324,14 +324,14 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
             style={{ bottom: 'calc(160px + env(safe-area-inset-bottom))' }}
           >
             {[
-              { id: 'client', label: 'Client', icon: UserPlus, color: 'bg-[#043d6b]', delay: 0 },
-              { id: 'picture', label: 'Picture', icon: Camera, color: 'bg-sky-600', delay: 1 },
-              { id: 'plan', label: 'Plan', icon: Scan, color: 'bg-cyan-600', delay: 2 },
-              { id: 'email', label: 'Email', icon: Mail, color: 'bg-violet-600', delay: 3 },
+              { id: 'plan', label: '3D Plan', icon: Scan, color: 'bg-cyan-600', delay: 0 },
+              { id: 'email', label: 'Email', icon: Mail, color: 'bg-violet-600', delay: 1 },
+              { id: 'picture', label: 'Camera', icon: Camera, color: 'bg-sky-600', delay: 2 },
+              { id: 'estimate', label: 'Estimate', icon: Calculator, color: 'bg-orange-600', delay: 3 },
               { id: 'invoice', label: 'Invoice', icon: CreditCard, color: 'bg-amber-600', delay: 4 },
-              { id: 'estimate', label: 'Estimate', icon: Calculator, color: 'bg-orange-600', delay: 5 },
-              { id: 'expense', label: 'Expense', icon: DollarSign, color: 'bg-emerald-600', delay: 6 },
-              { id: 'task', label: 'Task', icon: ClipboardList, color: 'bg-teal-600', delay: 7 },
+              { id: 'expense', label: 'Expense', icon: DollarSign, color: 'bg-emerald-600', delay: 5 },
+              { id: 'task', label: 'Task', icon: ClipboardList, color: 'bg-teal-600', delay: 6 },
+              { id: 'client', label: 'Client', icon: UserPlus, color: 'bg-[#043d6b]', delay: 7 },
             ].map((item) => (
               <button
                 key={item.id}
@@ -339,16 +339,16 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
                   handleCloseAIModal();
                   switch (item.id) {
                     case 'task':
-                      navigate('/search', { state: { initialCategory: 'tasks', openAddTask: true } });
+                      navigate('/search', { state: { initialCategory: 'tasks', openCreateTask: true } });
                       break;
                     case 'expense':
-                      navigate('/tracker', { state: { openExpense: true } });
+                      navigate('/tracker', { state: { activeTab: 'finance', openExpense: true } });
                       break;
                     case 'estimate':
                       navigate('/estimates-hub', { state: { openCreate: true } });
                       break;
                     case 'invoice':
-                      navigate('/tracker', { state: { openInvoice: true } });
+                      navigate('/tracker', { state: { activeTab: 'finance', openInvoice: true } });
                       break;
                     case 'email':
                       setShowSendEmailModal(true);
@@ -371,7 +371,11 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
                 }`}
                 style={{ transitionDelay: isAIModalVisible ? `${item.delay * 50}ms` : '0ms' }}
               >
-                <span className="px-3 py-1.5 bg-white rounded-full text-sm font-bold text-zinc-800 shadow-lg">
+                <span className={`px-3 py-1.5 rounded-full text-sm font-bold shadow-lg ${
+                  theme === 'light'
+                    ? 'bg-white text-zinc-800'
+                    : 'bg-zinc-800 text-white'
+                }`}>
                   {item.label}
                 </span>
                 <div className={`w-14 h-14 ${item.color} rounded-full flex items-center justify-center shadow-xl active:scale-90 transition-transform`}>

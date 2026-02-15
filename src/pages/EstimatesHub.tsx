@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   FileText,
   Plus,
@@ -64,6 +64,7 @@ interface EstimatesHubProps {
 
 const EstimatesHub: React.FC<EstimatesHubProps> = ({ embedded = false, searchQuery: externalSearchQuery }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { theme } = useTheme();
   const themeClasses = getThemeClasses(theme);
   const { profile } = useData();
@@ -85,6 +86,15 @@ const EstimatesHub: React.FC<EstimatesHubProps> = ({ embedded = false, searchQue
 
   // Set up real-time subscription for estimate updates
   useEstimateRealtime(userId);
+
+  // Handle navigation state to open create form
+  useEffect(() => {
+    const state = location.state as { openCreate?: boolean } | null;
+    if (state?.openCreate) {
+      // Navigate to estimate generator to create new
+      navigate('/estimate-generator', { replace: true });
+    }
+  }, [location.state]);
 
   useEffect(() => {
     fetchEstimates();

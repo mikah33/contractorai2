@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import {
   Users,
   Plus,
@@ -33,6 +33,7 @@ interface ClientsHubProps {
 
 const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: externalSearchQuery }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const { theme } = useTheme();
   const themeClasses = getThemeClasses(theme);
@@ -75,6 +76,16 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
     notes: '',
     status: 'prospect' as 'active' | 'inactive' | 'prospect'
   });
+
+  // Handle navigation state to open create form
+  useEffect(() => {
+    const state = location.state as { openCreate?: boolean } | null;
+    if (state?.openCreate) {
+      setShowManualForm(true);
+      // Clear the state so it doesn't re-trigger
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location.state]);
 
   useEffect(() => {
     fetchClients();
@@ -546,15 +557,15 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
       {showManualForm && (
         <div className="fixed inset-0 z-[200] flex items-end justify-center">
           <div
-            className="absolute inset-0 bg-black/70"
+            className={`absolute inset-0 ${theme === 'light' ? 'bg-black/50' : 'bg-black/70'}`}
             onClick={() => setShowManualForm(false)}
           />
-          <div className="relative bg-[#1C1C1E] rounded-t-3xl w-full max-h-[90vh] overflow-y-auto animate-slide-up">
-            <div className="sticky top-0 bg-[#1C1C1E] px-4 py-4 border-b border-[#043d6b]/30 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-white">New Client</h2>
+          <div className={`relative ${theme === 'light' ? 'bg-white' : 'bg-[#1C1C1E]'} rounded-t-3xl w-full max-h-[90vh] overflow-y-auto animate-slide-up`}>
+            <div className={`sticky top-0 ${theme === 'light' ? 'bg-white border-gray-200' : 'bg-[#1C1C1E] border-[#043d6b]/30'} px-4 py-4 border-b flex items-center justify-between`}>
+              <h2 className={`text-lg font-semibold ${themeClasses.text.primary}`}>New Client</h2>
               <button
                 onClick={() => setShowManualForm(false)}
-                className="p-2 text-zinc-400 active:text-white"
+                className={`p-2 ${themeClasses.text.secondary} active:${themeClasses.text.primary}`}
               >
                 <X className="w-5 h-5" />
               </button>
@@ -563,26 +574,26 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
             <div className="p-3 md:p-4 space-y-3 md:space-y-4">
               {/* Name */}
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-1">
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>
                   Name <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="text"
                   value={newClientForm.name}
                   onChange={(e) => setNewClientForm({ ...newClientForm, name: e.target.value })}
-                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none"
+                  className={`w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl ${theme === 'light' ? 'bg-gray-100 border-gray-300 text-gray-900 placeholder-gray-400' : 'bg-[#262626] border-[#3A3A3C] text-white placeholder-zinc-500'} border focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                   placeholder="Client name"
                 />
               </div>
 
               {/* Company */}
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-1">Company</label>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Company</label>
                 <input
                   type="text"
                   value={newClientForm.company}
                   onChange={(e) => setNewClientForm({ ...newClientForm, company: e.target.value })}
-                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none"
+                  className={`w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl ${theme === 'light' ? 'bg-gray-100 border-gray-300 text-gray-900 placeholder-gray-400' : 'bg-[#262626] border-[#3A3A3C] text-white placeholder-zinc-500'} border focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                   placeholder="Company name"
                 />
               </div>
@@ -590,22 +601,22 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
               {/* Email & Phone */}
               <div className="grid grid-cols-2 gap-2 md:gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-zinc-400 mb-1">Email</label>
+                  <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Email</label>
                   <input
                     type="email"
                     value={newClientForm.email}
                     onChange={(e) => setNewClientForm({ ...newClientForm, email: e.target.value })}
-                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none"
+                    className={`w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl ${theme === 'light' ? 'bg-gray-100 border-gray-300 text-gray-900 placeholder-gray-400' : 'bg-[#262626] border-[#3A3A3C] text-white placeholder-zinc-500'} border focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                     placeholder="email@example.com"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-zinc-400 mb-1">Phone</label>
+                  <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Phone</label>
                   <input
                     type="tel"
                     value={newClientForm.phone}
                     onChange={(e) => setNewClientForm({ ...newClientForm, phone: e.target.value })}
-                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none"
+                    className={`w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl ${theme === 'light' ? 'bg-gray-100 border-gray-300 text-gray-900 placeholder-gray-400' : 'bg-[#262626] border-[#3A3A3C] text-white placeholder-zinc-500'} border focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                     placeholder="(555) 123-4567"
                   />
                 </div>
@@ -613,12 +624,12 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
 
               {/* Address */}
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-1">Address</label>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Address</label>
                 <input
                   type="text"
                   value={newClientForm.address}
                   onChange={(e) => setNewClientForm({ ...newClientForm, address: e.target.value })}
-                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none"
+                  className={`w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl ${theme === 'light' ? 'bg-gray-100 border-gray-300 text-gray-900 placeholder-gray-400' : 'bg-[#262626] border-[#3A3A3C] text-white placeholder-zinc-500'} border focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                   placeholder="123 Main St"
                 />
               </div>
@@ -626,33 +637,33 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
               {/* City, State, Zip */}
               <div className="grid grid-cols-6 gap-2 md:gap-3">
                 <div className="col-span-3">
-                  <label className="block text-sm font-medium text-zinc-400 mb-1">City</label>
+                  <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>City</label>
                   <input
                     type="text"
                     value={newClientForm.city}
                     onChange={(e) => setNewClientForm({ ...newClientForm, city: e.target.value })}
-                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none"
+                    className={`w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl ${theme === 'light' ? 'bg-gray-100 border-gray-300 text-gray-900 placeholder-gray-400' : 'bg-[#262626] border-[#3A3A3C] text-white placeholder-zinc-500'} border focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                     placeholder="City"
                   />
                 </div>
                 <div className="col-span-1">
-                  <label className="block text-sm font-medium text-zinc-400 mb-1">State</label>
+                  <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>State</label>
                   <input
                     type="text"
                     value={newClientForm.state}
                     onChange={(e) => setNewClientForm({ ...newClientForm, state: e.target.value })}
-                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none"
+                    className={`w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl ${theme === 'light' ? 'bg-gray-100 border-gray-300 text-gray-900 placeholder-gray-400' : 'bg-[#262626] border-[#3A3A3C] text-white placeholder-zinc-500'} border focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                     placeholder="SC"
                     maxLength={2}
                   />
                 </div>
                 <div className="col-span-2">
-                  <label className="block text-sm font-medium text-zinc-400 mb-1">Zip</label>
+                  <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Zip</label>
                   <input
                     type="text"
                     value={newClientForm.zip}
                     onChange={(e) => setNewClientForm({ ...newClientForm, zip: e.target.value })}
-                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none"
+                    className={`w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl ${theme === 'light' ? 'bg-gray-100 border-gray-300 text-gray-900 placeholder-gray-400' : 'bg-[#262626] border-[#3A3A3C] text-white placeholder-zinc-500'} border focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                     placeholder="29401"
                     maxLength={10}
                   />
@@ -661,11 +672,11 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
 
               {/* Status */}
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-1">Status</label>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Status</label>
                 <select
                   value={newClientForm.status}
                   onChange={(e) => setNewClientForm({ ...newClientForm, status: e.target.value as 'active' | 'inactive' | 'prospect' })}
-                  className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none"
+                  className={`w-full px-4 py-3 rounded-xl ${theme === 'light' ? 'bg-gray-100 border-gray-300 text-gray-900' : 'bg-[#262626] border-[#3A3A3C] text-white'} border focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                 >
                   <option value="prospect">Prospect</option>
                   <option value="active">Active</option>
@@ -675,19 +686,19 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
 
               {/* Notes */}
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-1">Notes</label>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Notes</label>
                 <textarea
                   value={newClientForm.notes}
                   onChange={(e) => setNewClientForm({ ...newClientForm, notes: e.target.value })}
                   rows={3}
-                  className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none resize-none"
+                  className={`w-full px-4 py-3 rounded-xl ${theme === 'light' ? 'bg-gray-100 border-gray-300 text-gray-900 placeholder-gray-400' : 'bg-[#262626] border-[#3A3A3C] text-white placeholder-zinc-500'} border focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none resize-none`}
                   placeholder="Additional notes about this client..."
                 />
               </div>
             </div>
 
             {/* Create Button */}
-            <div className="sticky bottom-0 bg-[#1C1C1E] p-3 md:p-4 border-t border-[#043d6b]/30">
+            <div className={`sticky bottom-0 ${theme === 'light' ? 'bg-white border-gray-200' : 'bg-[#1C1C1E] border-[#043d6b]/30'} p-3 md:p-4 border-t`}>
               <button
                 onClick={handleCreateClient}
                 disabled={!newClientForm.name.trim() || isCreatingClient}

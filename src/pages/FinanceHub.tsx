@@ -142,12 +142,25 @@ const FinanceHub: React.FC<FinanceHubProps> = ({ embedded = false, searchQuery: 
     isActive: true
   });
 
-  // Handle navigation state for collect payment
+  // Handle navigation state for collect payment, expense, and invoice
   useEffect(() => {
-    const state = location.state as { openPaymentCollection?: boolean } | null;
+    const state = location.state as {
+      openPaymentCollection?: boolean;
+      openExpense?: boolean;
+      openInvoice?: boolean;
+    } | null;
     if (state?.openPaymentCollection) {
       setActiveSection('invoices');
-      // Clear the state so it doesn't persist on refresh
+      window.history.replaceState({}, document.title);
+    }
+    if (state?.openExpense) {
+      setActiveSection('expenses');
+      setShowExpenseForm(true);
+      window.history.replaceState({}, document.title);
+    }
+    if (state?.openInvoice) {
+      setActiveSection('invoices');
+      setShowInvoiceForm(true);
       window.history.replaceState({}, document.title);
     }
   }, [location.state]);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Timer,
   Play,
@@ -98,11 +98,20 @@ const IRS_MILEAGE_RATE = 0.67; // 2024 IRS standard mileage rate
 
 const TrackerHub: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { theme } = useTheme();
   const themeClasses = getThemeClasses(theme);
   const { projects, fetchProjects } = useProjectStore();
 
   const [activeTab, setActiveTab] = useState<'timesheets' | 'mileage' | 'finance'>('timesheets');
+
+  // Handle navigation state for opening specific tabs
+  React.useEffect(() => {
+    const state = location.state as { activeTab?: 'timesheets' | 'mileage' | 'finance' } | null;
+    if (state?.activeTab) {
+      setActiveTab(state.activeTab);
+    }
+  }, [location.state]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [timeEntries, setTimeEntries] = useState<TimeEntry[]>([]);
   const [loading, setLoading] = useState(true);
