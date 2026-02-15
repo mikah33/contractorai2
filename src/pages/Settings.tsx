@@ -602,37 +602,37 @@ const Settings = () => {
     {
       title: 'Account',
       items: [
-        { id: 'profile' as SettingsSection, icon: User, label: 'Profile & Business', description: 'Name, company, logo, terms', bgColor: 'bg-[#043d6b]/20', iconColor: 'text-[#043d6b]' },
-        { id: 'security' as SettingsSection, icon: Lock, label: 'Security', description: 'Password, authentication', bgColor: 'bg-[#043d6b]/20', iconColor: 'text-[#043d6b]' },
-        { id: 'team' as SettingsSection, icon: Users, label: 'Team', description: 'Manage your employees', bgColor: 'bg-[#043d6b]/20', iconColor: 'text-[#043d6b]', navigateTo: '/employees-hub' },
+        { id: 'profile' as SettingsSection, icon: User, label: 'Profile & Business', description: 'Name, company, logo, terms', iconColor: 'text-[#043d6b]' },
+        { id: 'security' as SettingsSection, icon: Lock, label: 'Security', description: 'Password, authentication', iconColor: 'text-[#043d6b]' },
+        { id: 'team' as SettingsSection, icon: Users, label: 'Team', description: 'Manage your employees', iconColor: 'text-[#043d6b]', navigateTo: '/employees-hub' },
       ]
     },
     {
       title: 'Integrations',
       items: [
-        { id: 'payments' as SettingsSection, icon: CreditCard, label: 'Payments', description: stripeStatus.connected ? 'Stripe connected' : 'Connect Stripe', bgColor: 'bg-[#043d6b]/20', iconColor: 'text-[#043d6b]' },
-        { id: 'email' as SettingsSection, icon: Mail, label: 'Business Email', description: 'Professional email address', bgColor: 'bg-[#043d6b]/20', iconColor: 'text-[#043d6b]' },
+        { id: 'payments' as SettingsSection, icon: CreditCard, label: 'Payments', description: stripeStatus.connected ? 'Stripe connected' : 'Connect Stripe', iconColor: 'text-[#043d6b]' },
+        { id: 'email' as SettingsSection, icon: Mail, label: 'Business Email', description: 'Professional email address', iconColor: 'text-[#043d6b]' },
       ]
     },
     {
       title: 'Preferences',
       items: [
-        { id: 'notifications' as SettingsSection, icon: Bell, label: 'Notifications', description: 'Calendar reminders, alerts', bgColor: 'bg-[#043d6b]/20', iconColor: 'text-[#043d6b]' },
-        { id: 'theme' as SettingsSection, icon: Moon, label: 'Appearance', description: theme === 'light' ? 'Light mode' : 'Dark mode', bgColor: 'bg-[#043d6b]/20', iconColor: 'text-[#043d6b]', hasToggle: true },
-        { id: 'tutorials' as SettingsSection, icon: BookOpen, label: 'Tutorials', description: 'Reset onboarding guides', bgColor: 'bg-[#043d6b]/20', iconColor: 'text-[#043d6b]' },
+        { id: 'notifications' as SettingsSection, icon: Bell, label: 'Notifications', description: 'Calendar reminders, alerts', iconColor: 'text-[#043d6b]' },
+        { id: 'theme' as SettingsSection, icon: Moon, label: 'Appearance', description: theme === 'light' ? 'Light mode' : 'Dark mode', iconColor: 'text-[#043d6b]', hasToggle: true },
+        { id: 'tutorials' as SettingsSection, icon: BookOpen, label: 'Tutorials', description: 'Reset onboarding guides', iconColor: 'text-[#043d6b]' },
       ]
     },
     {
       title: 'More',
       items: [
-        { id: 'marketing' as SettingsSection, icon: Megaphone, label: 'Marketing', description: 'Grow your business', bgColor: 'bg-[#043d6b]/20', iconColor: 'text-[#043d6b]', navigateTo: '/ad-analyzer' },
-        { id: 'chatHistory' as SettingsSection, icon: History, label: 'AI Chat History', description: 'View past conversations', bgColor: 'bg-[#043d6b]/20', iconColor: 'text-[#043d6b]' },
+        { id: 'marketing' as SettingsSection, icon: Megaphone, label: 'Marketing', description: 'Grow your business', iconColor: 'text-[#043d6b]', navigateTo: '/ad-analyzer' },
+        { id: 'chatHistory' as SettingsSection, icon: History, label: 'AI Chat History', description: 'View past conversations', iconColor: 'text-[#043d6b]' },
       ]
     },
   ];
 
   // Danger zone item (separate)
-  const dangerItem = { id: 'danger' as SettingsSection, icon: Trash2, label: 'Delete Account', description: 'Permanently remove data', bgColor: 'bg-red-500/10', iconColor: 'text-red-500' };
+  const dangerItem = { id: 'danger' as SettingsSection, icon: Trash2, label: 'Delete Account', description: 'Permanently remove data', iconColor: 'text-red-500' };
 
   // Render section content
   const renderSection = () => {
@@ -1584,9 +1584,7 @@ const Settings = () => {
                   <ChevronRight className={`w-7 h-7 ${themeClasses.text.secondary} rotate-180`} />
                 </button>
               ) : (
-                <div className="w-14 h-14 bg-[#043d6b]/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <SettingsIcon className="w-7 h-7 text-[#043d6b]" />
-                </div>
+                <SettingsIcon className="w-8 h-8 text-[#043d6b]" />
               )}
               <div className="flex-1 min-w-0">
                 <h1 className={`text-2xl font-bold ${themeClasses.text.primary}`}>
@@ -1637,9 +1635,7 @@ const Settings = () => {
                       className="card-interactive w-full p-4"
                     >
                       <div className="flex items-center gap-3">
-                        <div className={`icon-container-md ${item.bgColor}`}>
-                          <item.icon className={`w-5 h-5 ${item.iconColor}`} />
-                        </div>
+                        <item.icon className={`w-6 h-6 ${item.iconColor}`} />
                         <div className="flex-1 text-left">
                           <p className={`font-semibold ${themeClasses.text.primary}`}>{item.label}</p>
                           <p className={`text-sm ${themeClasses.text.secondary}`}>{item.description}</p>
@@ -1677,9 +1673,7 @@ const Settings = () => {
                 className="card-interactive w-full p-4"
               >
                 <div className="flex items-center gap-3">
-                  <div className={`icon-container-md ${dangerItem.bgColor}`}>
-                    <dangerItem.icon className={`w-5 h-5 ${dangerItem.iconColor}`} />
-                  </div>
+                  <dangerItem.icon className={`w-6 h-6 ${dangerItem.iconColor}`} />
                   <div className="flex-1 text-left">
                     <p className={`font-semibold ${dangerItem.iconColor}`}>{dangerItem.label}</p>
                     <p className={`text-sm ${themeClasses.text.secondary}`}>{dangerItem.description}</p>
@@ -1696,9 +1690,7 @@ const Settings = () => {
               className="card-interactive w-full p-4 mt-2"
             >
               <div className="flex items-center gap-3">
-                <div className="icon-container-md bg-status-red-100">
-                  <LogOut className="w-5 h-5 text-status-red-700" />
-                </div>
+                <LogOut className="w-6 h-6 text-red-500" />
                 <div className="flex-1 text-left">
                   <p className="font-semibold text-status-red-700">
                     {loggingOut ? 'Logging out...' : 'Log Out'}
