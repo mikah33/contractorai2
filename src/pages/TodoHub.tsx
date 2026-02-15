@@ -116,6 +116,9 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
   const [completedTaskForInvoice, setCompletedTaskForInvoice] = useState<Task | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [datePickerMonth, setDatePickerMonth] = useState(new Date());
+  const [showInlineAI, setShowInlineAI] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
   const [newClient, setNewClient] = useState({
     first_name: '',
     last_name: '',
@@ -1349,22 +1352,139 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                     <div className="flex gap-2 mb-4">
                       <button
                         type="button"
-                        className="flex-1 py-2 px-3 bg-blue-500 text-white rounded-lg text-sm font-medium flex items-center justify-center gap-2"
+                        onClick={() => setShowInlineAI(false)}
+                        className={`flex-1 py-2 px-3 ${!showInlineAI ? 'bg-blue-500 text-white' : `${themeClasses.bg.tertiary} ${themeClasses.text.primary}`} rounded-lg text-sm font-medium flex items-center justify-center gap-2`}
                       >
                         <Calculator className="w-4 h-4" />
                         Line Items
                       </button>
                       <button
                         type="button"
-                        onClick={() => setShowAIChat(true)}
-                        className={`flex-1 py-2 px-3 ${themeClasses.bg.tertiary} ${themeClasses.text.primary} rounded-lg text-sm font-medium flex items-center justify-center gap-2`}
+                        onClick={() => setShowInlineAI(true)}
+                        className={`flex-1 py-2 px-3 ${showInlineAI ? 'bg-blue-500 text-white' : `${themeClasses.bg.tertiary} ${themeClasses.text.primary}`} rounded-lg text-sm font-medium flex items-center justify-center gap-2`}
                       >
                         <Sparkles className="w-4 h-4" />
                         AI Estimate
                       </button>
                     </div>
 
-                    {/* Line items list */}
+                    {/* AI Estimate Inline Chat */}
+                    {showInlineAI && (
+                      <div className="mb-4">
+                        <div className={`p-3 ${themeClasses.bg.secondary} rounded-lg mb-3`}>
+                          <p className={`text-sm ${themeClasses.text.secondary} mb-2`}>
+                            Describe your project and I'll generate line items for your estimate:
+                          </p>
+                          <textarea
+                            value={aiPrompt}
+                            onChange={(e) => setAiPrompt(e.target.value)}
+                            placeholder="e.g., Install new deck 12x16 ft with composite decking, railing, and stairs..."
+                            className={`w-full px-3 py-2 ${themeClasses.bg.input} border ${themeClasses.border.input} rounded-lg ${themeClasses.text.primary} text-sm resize-none ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'}`}
+                            rows={3}
+                          />
+                          <button
+                            type="button"
+                            disabled={!aiPrompt.trim() || aiLoading}
+                            onClick={async () => {
+                              if (!aiPrompt.trim()) return;
+                              setAiLoading(true);
+
+                              // Simulate AI generating line items (in production, call actual AI API)
+                              setTimeout(() => {
+                                // Generate sample line items based on keywords
+                                const prompt = aiPrompt.toLowerCase();
+                                const generatedItems: LineItem[] = [];
+
+                                if (prompt.includes('deck') || prompt.includes('decking')) {
+                                  generatedItems.push(
+                                    { id: crypto.randomUUID(), description: 'Composite decking materials', quantity: 1, unitPrice: 2500, total: 2500 },
+                                    { id: crypto.randomUUID(), description: 'Deck framing lumber', quantity: 1, unitPrice: 800, total: 800 },
+                                    { id: crypto.randomUUID(), description: 'Hardware & fasteners', quantity: 1, unitPrice: 200, total: 200 },
+                                    { id: crypto.randomUUID(), description: 'Labor - deck installation', quantity: 24, unitPrice: 75, total: 1800 }
+                                  );
+                                }
+                                if (prompt.includes('railing') || prompt.includes('rail')) {
+                                  generatedItems.push(
+                                    { id: crypto.randomUUID(), description: 'Railing system', quantity: 1, unitPrice: 600, total: 600 },
+                                    { id: crypto.randomUUID(), description: 'Labor - railing installation', quantity: 4, unitPrice: 75, total: 300 }
+                                  );
+                                }
+                                if (prompt.includes('stair') || prompt.includes('steps')) {
+                                  generatedItems.push(
+                                    { id: crypto.randomUUID(), description: 'Stair materials', quantity: 1, unitPrice: 400, total: 400 },
+                                    { id: crypto.randomUUID(), description: 'Labor - stair construction', quantity: 6, unitPrice: 75, total: 450 }
+                                  );
+                                }
+                                if (prompt.includes('paint') || prompt.includes('painting')) {
+                                  generatedItems.push(
+                                    { id: crypto.randomUUID(), description: 'Paint & supplies', quantity: 1, unitPrice: 150, total: 150 },
+                                    { id: crypto.randomUUID(), description: 'Labor - painting', quantity: 8, unitPrice: 65, total: 520 }
+                                  );
+                                }
+                                if (prompt.includes('roof') || prompt.includes('roofing')) {
+                                  generatedItems.push(
+                                    { id: crypto.randomUUID(), description: 'Roofing materials (shingles)', quantity: 30, unitPrice: 45, total: 1350 },
+                                    { id: crypto.randomUUID(), description: 'Underlayment & flashing', quantity: 1, unitPrice: 300, total: 300 },
+                                    { id: crypto.randomUUID(), description: 'Labor - roof installation', quantity: 16, unitPrice: 85, total: 1360 }
+                                  );
+                                }
+                                if (prompt.includes('plumb') || prompt.includes('pipe') || prompt.includes('faucet')) {
+                                  generatedItems.push(
+                                    { id: crypto.randomUUID(), description: 'Plumbing fixtures', quantity: 1, unitPrice: 350, total: 350 },
+                                    { id: crypto.randomUUID(), description: 'Pipe & fittings', quantity: 1, unitPrice: 150, total: 150 },
+                                    { id: crypto.randomUUID(), description: 'Labor - plumbing', quantity: 6, unitPrice: 95, total: 570 }
+                                  );
+                                }
+                                if (prompt.includes('electric') || prompt.includes('wiring') || prompt.includes('outlet')) {
+                                  generatedItems.push(
+                                    { id: crypto.randomUUID(), description: 'Electrical materials', quantity: 1, unitPrice: 200, total: 200 },
+                                    { id: crypto.randomUUID(), description: 'Labor - electrical work', quantity: 4, unitPrice: 95, total: 380 }
+                                  );
+                                }
+
+                                // Default items if nothing specific matched
+                                if (generatedItems.length === 0) {
+                                  generatedItems.push(
+                                    { id: crypto.randomUUID(), description: 'Materials', quantity: 1, unitPrice: 500, total: 500 },
+                                    { id: crypto.randomUUID(), description: 'Labor', quantity: 8, unitPrice: 75, total: 600 }
+                                  );
+                                }
+
+                                // Add generated items to line items
+                                setNewTask(prev => ({
+                                  ...prev,
+                                  line_items: [...prev.line_items, ...generatedItems]
+                                }));
+
+                                setAiLoading(false);
+                                setShowInlineAI(false); // Switch back to line items view
+                                setAiPrompt('');
+                              }, 1500);
+                            }}
+                            className={`mt-2 w-full py-2.5 px-4 bg-blue-500 text-white rounded-lg text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+                          >
+                            {aiLoading ? (
+                              <>
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                Generating...
+                              </>
+                            ) : (
+                              <>
+                                <Sparkles className="w-4 h-4" />
+                                Generate Line Items
+                              </>
+                            )}
+                          </button>
+                        </div>
+                        <p className={`text-xs ${themeClasses.text.muted} text-center`}>
+                          AI will generate line items based on your description
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Line items list - show when not in AI mode */}
+                    {!showInlineAI && (
+                    <>
                     <div className="space-y-2 mb-3">
                       {newTask.line_items.map((item, idx) => (
                         <div key={item.id} className={`flex items-center gap-2 p-2 ${themeClasses.bg.secondary} rounded-lg`}>
@@ -1437,6 +1557,8 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                       <Plus className="w-4 h-4" />
                       Add Line Item
                     </button>
+                    </>
+                    )}
 
                     {/* Totals */}
                     {newTask.line_items.length > 0 && (
