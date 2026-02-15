@@ -217,7 +217,7 @@ const Dashboard: React.FC = () => {
           <div className="flex gap-4 px-4" style={{ width: 'max-content' }}>
             {/* Create Estimate Card */}
             <div
-              className={`${themeClasses.bg.card} rounded-xl border-2 ${theme === 'light' ? 'border-gray-200 shadow-lg' : 'border-zinc-600 shadow-xl shadow-black/20'} p-5 text-left transition-colors flex-shrink-0 flex flex-col relative overflow-hidden snap-center`}
+              className={`${themeClasses.bg.card} rounded-xl border ${theme === 'light' ? 'border-gray-200 shadow-[0_4px_20px_rgba(0,0,0,0.12)]' : 'border-zinc-600 shadow-xl shadow-black/30'} p-5 text-left transition-colors flex-shrink-0 flex flex-col relative overflow-hidden snap-center`}
               style={{ width: 'calc(100vw - 48px)', maxWidth: '380px', minHeight: '240px' }}
             >
               {/* Background payment card visual */}
@@ -257,7 +257,7 @@ const Dashboard: React.FC = () => {
 
             {/* Vision Cam Card */}
             <div
-              className={`${themeClasses.bg.card} rounded-xl border-2 ${theme === 'light' ? 'border-gray-200 shadow-lg' : 'border-zinc-600 shadow-xl shadow-black/20'} p-5 text-left transition-colors flex-shrink-0 flex flex-col relative overflow-hidden snap-center`}
+              className={`${themeClasses.bg.card} rounded-xl border ${theme === 'light' ? 'border-gray-200 shadow-[0_4px_20px_rgba(0,0,0,0.12)]' : 'border-zinc-600 shadow-xl shadow-black/30'} p-5 text-left transition-colors flex-shrink-0 flex flex-col relative overflow-hidden snap-center`}
               style={{ width: 'calc(100vw - 48px)', maxWidth: '380px', minHeight: '240px' }}
             >
               {/* Background camera visuals */}
