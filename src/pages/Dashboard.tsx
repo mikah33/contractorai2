@@ -347,7 +347,7 @@ const Dashboard: React.FC = () => {
               <TileLayer
                 url={theme === 'light'
                   ? "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-                  : "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
+                  : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
                 }
               />
               {taskLocations.map((location, index) => (
@@ -380,7 +380,7 @@ const Dashboard: React.FC = () => {
               <TileLayer
                 url={theme === 'light'
                   ? "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-                  : "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
+                  : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
                 }
               />
             </MapContainer>
