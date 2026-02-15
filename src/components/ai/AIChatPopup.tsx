@@ -21,6 +21,7 @@ import { useAuthStore } from '../../stores/authStore';
 import ChatMessageContent from './ChatMessageContent';
 import { contractorChatHistoryManager, ContractorChatSession } from '../../lib/ai/contractorChatHistory';
 import { supabase } from '../../lib/supabase';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface EstimateLineItem {
   id: string;
@@ -88,6 +89,7 @@ const modeConfig: Record<ContractorMode, { color: string; bgColor: string; icon:
 const AIChatPopup: React.FC<AIChatPopupProps> = ({ isOpen, onClose, mode, onEstimateCreated, onProjectUpdate, initialSession, initialContext, projectContext }) => {
   const { session } = useAuthStore();
   const navigate = useNavigate();
+  const { theme } = useTheme();
   const [sessionId] = useState(() => initialSession?.sessionId || `popup-session-${Date.now()}`);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -616,37 +618,37 @@ const AIChatPopup: React.FC<AIChatPopupProps> = ({ isOpen, onClose, mode, onEsti
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[200] bg-[#1A1A1A]" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+    <div className={`fixed inset-0 z-[200] ${theme === 'light' ? 'bg-gray-50' : 'bg-[#1A1A1A]'}`} style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
       {/* Full Screen Chat Container */}
       <div className="h-full w-full flex flex-col">
 
         {/* Header */}
-        <div className={`flex items-center justify-between px-4 py-3 border-b border-white/10`}>
+        <div className={`flex items-center justify-between px-4 py-3 border-b ${theme === 'light' ? 'border-gray-200 bg-white' : 'border-white/10'}`}>
           <div className="flex items-center gap-3">
             <div className={`w-10 h-10 bg-gradient-to-r ${config.bgColor} rounded-full flex items-center justify-center text-white`}>
               {config.icon}
             </div>
             <div>
-              <h3 className="font-bold text-white">{config.label} Assistant</h3>
-              <p className="text-xs text-zinc-400">AI-powered help</p>
+              <h3 className={`font-bold ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>{config.label} Assistant</h3>
+              <p className={`text-xs ${theme === 'light' ? 'text-gray-500' : 'text-zinc-400'}`}>AI-powered help</p>
             </div>
           </div>
           <div className="flex items-center gap-1">
             <button
               onClick={() => setShowHistory(!showHistory)}
-              className={`p-2 rounded-full hover:bg-white/10 ${showHistory ? 'text-blue-500' : 'text-zinc-400 hover:text-white'}`}
+              className={`p-2 rounded-full ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-white/10'} ${showHistory ? 'text-blue-500' : theme === 'light' ? 'text-gray-500 hover:text-gray-700' : 'text-zinc-400 hover:text-white'}`}
             >
               <History className="w-5 h-5" />
             </button>
             <button
               onClick={() => setIsMinimized(!isMinimized)}
-              className="p-2 text-zinc-400 hover:text-white rounded-full hover:bg-white/10"
+              className={`p-2 rounded-full ${theme === 'light' ? 'text-gray-500 hover:text-gray-700 hover:bg-gray-100' : 'text-zinc-400 hover:text-white hover:bg-white/10'}`}
             >
               <Minus className="w-5 h-5" />
             </button>
             <button
               onClick={onClose}
-              className="p-2 text-zinc-400 hover:text-white rounded-full hover:bg-white/10"
+              className={`p-2 rounded-full ${theme === 'light' ? 'text-gray-500 hover:text-gray-700 hover:bg-gray-100' : 'text-zinc-400 hover:text-white hover:bg-white/10'}`}
             >
               <X className="w-5 h-5" />
             </button>
@@ -655,10 +657,10 @@ const AIChatPopup: React.FC<AIChatPopupProps> = ({ isOpen, onClose, mode, onEsti
 
         {/* History Panel - overlays messages when showHistory is true */}
         {!isMinimized && showHistory && (
-          <div className="absolute inset-x-0 top-[72px] bottom-0 bg-[#1A1A1A] z-10 flex flex-col">
+          <div className={`absolute inset-x-0 top-[72px] bottom-0 z-10 flex flex-col ${theme === 'light' ? 'bg-gray-50' : 'bg-[#1A1A1A]'}`}>
             {/* History Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
-              <h4 className="font-semibold text-white">Chat History</h4>
+            <div className={`flex items-center justify-between px-4 py-3 border-b ${theme === 'light' ? 'border-gray-200 bg-white' : 'border-white/10'}`}>
+              <h4 className={`font-semibold ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>Chat History</h4>
               <button
                 onClick={handleNewChat}
                 className="flex items-center gap-2 px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors"
@@ -672,31 +674,33 @@ const AIChatPopup: React.FC<AIChatPopupProps> = ({ isOpen, onClose, mode, onEsti
             <div className="flex-1 overflow-y-auto p-4 space-y-2">
               {chatHistory.length === 0 ? (
                 <div className="text-center py-12">
-                  <History className="w-12 h-12 text-zinc-600 mx-auto mb-3" />
-                  <p className="text-zinc-400 font-medium">No chat history yet</p>
-                  <p className="text-sm text-zinc-500 mt-1">Start a conversation to save it here</p>
+                  <History className={`w-12 h-12 mx-auto mb-3 ${theme === 'light' ? 'text-gray-400' : 'text-zinc-600'}`} />
+                  <p className={`font-medium ${theme === 'light' ? 'text-gray-600' : 'text-zinc-400'}`}>No chat history yet</p>
+                  <p className={`text-sm mt-1 ${theme === 'light' ? 'text-gray-500' : 'text-zinc-500'}`}>Start a conversation to save it here</p>
                 </div>
               ) : (
                 chatHistory.map((chatSession) => (
                   <button
                     key={chatSession.id}
                     onClick={() => handleLoadSession(chatSession)}
-                    className="w-full flex items-center gap-3 p-3 bg-[#242424] rounded-xl border border-white/10 hover:border-blue-500/50 active:scale-[0.98] transition-all text-left"
+                    className={`w-full flex items-center gap-3 p-3 rounded-xl border hover:border-blue-500/50 active:scale-[0.98] transition-all text-left ${
+                      theme === 'light' ? 'bg-white border-gray-200' : 'bg-[#242424] border-white/10'
+                    }`}
                   >
                     <div className={`w-10 h-10 bg-gradient-to-r ${config.bgColor} rounded-lg flex items-center justify-center text-white flex-shrink-0`}>
                       {config.icon}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-white truncate">
+                      <p className={`font-medium truncate ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>
                         {chatSession.messages[1]?.content?.slice(0, 40) || 'New conversation'}...
                       </p>
-                      <p className="text-xs text-zinc-400 mt-0.5">
+                      <p className={`text-xs mt-0.5 ${theme === 'light' ? 'text-gray-500' : 'text-zinc-400'}`}>
                         {chatSession.messages.length} messages • {new Date(chatSession.updatedAt).toLocaleDateString()}
                       </p>
                     </div>
                     <button
                       onClick={(e) => handleDeleteSession(e, chatSession.id)}
-                      className="p-2 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                      className={`p-2 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors ${theme === 'light' ? 'text-gray-400' : 'text-zinc-500'}`}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -710,7 +714,7 @@ const AIChatPopup: React.FC<AIChatPopupProps> = ({ isOpen, onClose, mode, onEsti
         {/* Messages - hidden when minimized */}
         {!isMinimized && (
           <>
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#1A1A1A]">
+            <div className={`flex-1 overflow-y-auto p-4 space-y-3 ${theme === 'light' ? 'bg-gray-50' : 'bg-[#1A1A1A]'}`}>
               {messages.map((message) => (
                 <div
                   key={message.id}
@@ -719,15 +723,23 @@ const AIChatPopup: React.FC<AIChatPopupProps> = ({ isOpen, onClose, mode, onEsti
                   <div
                     className={`max-w-[85%] px-4 py-2.5 rounded-2xl text-sm ${
                       message.role === 'user'
-                        ? 'bg-[#3A3A3A] text-white rounded-br-md'
-                        : 'bg-[#242424] text-white rounded-bl-md border border-white/10'
+                        ? theme === 'light'
+                          ? 'bg-[#043d6b] text-white rounded-br-md'
+                          : 'bg-[#3A3A3A] text-white rounded-br-md'
+                        : theme === 'light'
+                          ? 'bg-white text-gray-900 rounded-bl-md border border-gray-200 shadow-sm'
+                          : 'bg-[#242424] text-white rounded-bl-md border border-white/10'
                     }`}
                   >
                     <ChatMessageContent
                       content={message.content}
                       isUser={message.role === 'user'}
                     />
-                    <div className={`text-xs mt-1 ${message.role === 'user' ? 'text-zinc-400' : 'text-zinc-500'}`}>
+                    <div className={`text-xs mt-1 ${
+                      message.role === 'user'
+                        ? theme === 'light' ? 'text-white/70' : 'text-zinc-400'
+                        : theme === 'light' ? 'text-gray-400' : 'text-zinc-500'
+                    }`}>
                       {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </div>
                   </div>
@@ -736,8 +748,10 @@ const AIChatPopup: React.FC<AIChatPopupProps> = ({ isOpen, onClose, mode, onEsti
 
               {isLoading && (
                 <div className="flex justify-start">
-                  <div className="bg-[#242424] px-4 py-3 rounded-2xl rounded-bl-md border border-white/10">
-                    <Loader2 className="w-5 h-5 animate-spin text-zinc-400" />
+                  <div className={`px-4 py-3 rounded-2xl rounded-bl-md border ${
+                    theme === 'light' ? 'bg-white border-gray-200' : 'bg-[#242424] border-white/10'
+                  }`}>
+                    <Loader2 className={`w-5 h-5 animate-spin ${theme === 'light' ? 'text-gray-400' : 'text-zinc-400'}`} />
                   </div>
                 </div>
               )}
@@ -747,25 +761,27 @@ const AIChatPopup: React.FC<AIChatPopupProps> = ({ isOpen, onClose, mode, onEsti
 
             {/* Estimate Panel - Shows when estimate items exist */}
             {currentEstimate.length > 0 && (
-              <div className="border-t border-white/10 bg-[#141414] px-4 py-3">
+              <div className={`border-t px-4 py-3 ${theme === 'light' ? 'border-gray-200 bg-white' : 'border-white/10 bg-[#141414]'}`}>
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <FileText className="w-4 h-4 text-blue-500" />
-                    <span className="font-semibold text-white text-sm">Current Estimate</span>
-                    <span className="text-xs text-zinc-400">({currentEstimate.length} items)</span>
+                    <span className={`font-semibold text-sm ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>Current Estimate</span>
+                    <span className={`text-xs ${theme === 'light' ? 'text-gray-500' : 'text-zinc-400'}`}>({currentEstimate.length} items)</span>
                   </div>
                   <span className="font-bold text-blue-500">{formatCurrency(totalEstimate)}</span>
                 </div>
 
                 <div className="max-h-20 overflow-y-auto space-y-1 mb-2">
                   {currentEstimate.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between bg-[#242424] rounded-lg px-2 py-1.5 text-xs">
+                    <div key={item.id} className={`flex items-center justify-between rounded-lg px-2 py-1.5 text-xs ${
+                      theme === 'light' ? 'bg-gray-100' : 'bg-[#242424]'
+                    }`}>
                       <div className="flex-1 truncate">
-                        <span className="font-medium text-white">{item.name}</span>
-                        <span className="text-zinc-400 ml-1">({item.quantity} {item.unit})</span>
+                        <span className={`font-medium ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>{item.name}</span>
+                        <span className={`ml-1 ${theme === 'light' ? 'text-gray-500' : 'text-zinc-400'}`}>({item.quantity} {item.unit})</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold text-white">{formatCurrency(item.totalPrice)}</span>
+                        <span className={`font-semibold ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>{formatCurrency(item.totalPrice)}</span>
                         <button
                           onClick={() => handleRemoveEstimateItem(item.id)}
                           className="p-1 text-red-400 hover:text-red-500 hover:bg-red-500/10 rounded"
@@ -790,12 +806,12 @@ const AIChatPopup: React.FC<AIChatPopupProps> = ({ isOpen, onClose, mode, onEsti
 
             {/* Image Preview for Finance Mode */}
             {attachedImage && mode === 'finance' && (
-              <div className="p-3 border-t border-white/10 bg-[#1A1A1A]">
+              <div className={`p-3 border-t ${theme === 'light' ? 'border-gray-200 bg-white' : 'border-white/10 bg-[#1A1A1A]'}`}>
                 <div className="relative">
                   <img
                     src={attachedImage.url}
                     alt="Uploaded receipt"
-                    className="w-full max-w-xs mx-auto h-32 object-cover rounded-lg border border-zinc-700"
+                    className={`w-full max-w-xs mx-auto h-32 object-cover rounded-lg border ${theme === 'light' ? 'border-gray-300' : 'border-zinc-700'}`}
                   />
                   <button
                     onClick={removeAttachedImage}
@@ -813,7 +829,7 @@ const AIChatPopup: React.FC<AIChatPopupProps> = ({ isOpen, onClose, mode, onEsti
             )}
 
             {/* Input */}
-            <div className="p-3 border-t border-white/10 bg-[#1A1A1A]">
+            <div className={`p-3 border-t ${theme === 'light' ? 'border-gray-200 bg-white' : 'border-white/10 bg-[#1A1A1A]'}`}>
               <div className="flex gap-2">
                 <input
                   ref={inputRef}
@@ -822,7 +838,11 @@ const AIChatPopup: React.FC<AIChatPopupProps> = ({ isOpen, onClose, mode, onEsti
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder={`Ask about ${config.label.toLowerCase()}...`}
-                  className="flex-1 px-4 py-3 text-base bg-[#141414] border border-white/10 rounded-full text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className={`flex-1 px-4 py-3 text-base rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    theme === 'light'
+                      ? 'bg-gray-100 border border-gray-300 text-gray-900 placeholder-gray-500'
+                      : 'bg-[#141414] border border-white/10 text-white placeholder-zinc-500'
+                  }`}
                   disabled={isLoading}
                 />
 
@@ -834,7 +854,11 @@ const AIChatPopup: React.FC<AIChatPopupProps> = ({ isOpen, onClose, mode, onEsti
                       handleCameraCapture();
                     }}
                     disabled={isLoading || uploadingPhoto}
-                    className="px-4 py-3 bg-[#2C2C2E] hover:bg-[#3C3C3E] text-white rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    className={`px-4 py-3 rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-all ${
+                      theme === 'light'
+                        ? 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                        : 'bg-[#2C2C2E] hover:bg-[#3C3C3E] text-white'
+                    }`}
                     title="Upload receipt photo"
                   >
                     {uploadingPhoto ? (
