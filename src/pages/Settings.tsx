@@ -3,7 +3,7 @@ import {
   Save, Bell, Lock, User, Loader2, Calendar, Upload, X, Globe, Code,
   Trash2, AlertTriangle, CreditCard, CheckCircle, ExternalLink, XCircle,
   Clock, RefreshCw, ChevronRight, Mail, Building2, Phone, MapPin, FileText,
-  Settings as SettingsIcon, LogOut, Eye, BookOpen, Home, ClipboardList, Moon, Megaphone
+  Settings as SettingsIcon, LogOut, Eye, BookOpen, Home, ClipboardList, Moon, Megaphone, Users
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -577,6 +577,7 @@ const Settings = () => {
       items: [
         { id: 'profile' as SettingsSection, icon: User, label: 'Profile & Business', description: 'Name, company, logo, terms', bgColor: 'bg-blue-500/20', iconColor: 'text-blue-500' },
         { id: 'security' as SettingsSection, icon: Lock, label: 'Security', description: 'Password, authentication', bgColor: 'bg-blue-500/20', iconColor: 'text-blue-500' },
+        { id: 'profile' as SettingsSection, icon: Users, label: 'Team', description: 'Manage your employees', bgColor: 'bg-blue-500/20', iconColor: 'text-blue-500', navigateTo: '/employees-hub' },
       ]
     },
     {

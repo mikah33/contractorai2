@@ -18,17 +18,37 @@ import {
   Pencil,
   Trash2,
   Settings,
-  Sparkles
+  Sparkles,
+  User,
+  Users,
+  FileText,
+  DollarSign,
+  ChevronDown,
+  ChevronUp,
+  Send,
+  Calculator
 } from 'lucide-react';
 import { format, startOfWeek, addDays, isSameDay, parseISO, isToday, isTomorrow, isPast, addMonths, subMonths, startOfMonth, endOfMonth, endOfWeek } from 'date-fns';
 import { useCalendarStoreSupabase } from '../stores/calendarStoreSupabase';
 import useProjectStore from '../stores/projectStore';
 import { useOnboardingStore } from '../stores/onboardingStore';
+import { useClientsStore } from '../stores/clientsStore';
+import { useEmployeesStore } from '../stores/employeesStore';
+// Finance store for future invoice creation
+// import { useFinanceStore } from '../stores/financeStoreSupabase';
 import { supabase } from '../lib/supabase';
 import { notificationService } from '../services/notifications/notificationService';
 import AIChatPopup from '../components/ai/AIChatPopup';
 import TasksTutorialModal from '../components/tasks/TasksTutorialModal';
 import { useTheme, getThemeClasses } from '../contexts/ThemeContext';
+
+interface LineItem {
+  id: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+}
 
 interface Task {
   id: string;
@@ -38,6 +58,13 @@ interface Task {
   priority: 'low' | 'medium' | 'high';
   project_id: string | null;
   project_name?: string;
+  client_id?: string | null;
+  client_name?: string;
+  assigned_employees?: string[];
+  estimate_id?: string | null;
+  invoice_id?: string | null;
+  send_invoice_on_complete?: boolean;
+  line_items?: LineItem[];
 }
 
 interface TodoHubProps {
@@ -52,6 +79,8 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
   const { events, fetchEvents } = useCalendarStoreSupabase();
   const { projects, fetchProjects, addProject } = useProjectStore();
   const { tasksTutorialCompleted, checkTasksTutorial, setTasksTutorialCompleted } = useOnboardingStore();
+  const { clients, fetchClients, addClient } = useClientsStore();
+  const { employees, fetchEmployees } = useEmployeesStore();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [showTutorial, setShowTutorial] = useState(false);
@@ -68,12 +97,30 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
     priority: 'medium' as 'low' | 'medium' | 'high',
     project_id: '',
     reminder_enabled: true,
-    reminder_minutes: 60 // 1 hour before by default
+    reminder_minutes: 60,
+    // New fields
+    client_id: '',
+    assigned_employees: [] as string[],
+    line_items: [] as LineItem[],
+    send_invoice_on_complete: false
   });
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showEditTask, setShowEditTask] = useState(false);
   const [showQuickAddProject, setShowQuickAddProject] = useState(false);
   const [quickProjectName, setQuickProjectName] = useState('');
+  // New state for enhanced form
+  const [showAddClient, setShowAddClient] = useState(false);
+  const [showEmployeeSelect, setShowEmployeeSelect] = useState(false);
+  const [showLineItems, setShowLineItems] = useState(false);
+  const [showInvoicePrompt, setShowInvoicePrompt] = useState(false);
+  const [completedTaskForInvoice, setCompletedTaskForInvoice] = useState<Task | null>(null);
+  const [newClient, setNewClient] = useState({
+    first_name: '',
+    last_name: '',
+    email: '',
+    phone: '',
+    address: ''
+  });
   const [editTask, setEditTask] = useState({
     title: '',
     due_date: '',
@@ -87,6 +134,8 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
     fetchTasks();
     fetchEvents();
     fetchProjects();
+    fetchClients();
+    fetchEmployees();
   }, []);
 
   // Check tutorial status on mount
@@ -179,7 +228,12 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
           due_date: dueDateTime,
           priority: newTask.priority,
           project_id: newTask.project_id,
-          status: 'todo'
+          status: 'todo',
+          // New enhanced fields
+          client_id: newTask.client_id || null,
+          assigned_employees: newTask.assigned_employees,
+          line_items: newTask.line_items,
+          send_invoice_on_complete: newTask.send_invoice_on_complete
         })
         .select()
         .single();
@@ -213,6 +267,9 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
 
       await fetchTasks();
       setShowAddTask(false);
+      setShowAddClient(false);
+      setShowEmployeeSelect(false);
+      setShowLineItems(false);
       setNewTask({
         title: '',
         due_date: '',
@@ -220,7 +277,11 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
         priority: 'medium',
         project_id: '',
         reminder_enabled: true,
-        reminder_minutes: 60
+        reminder_minutes: 60,
+        client_id: '',
+        assigned_employees: [],
+        line_items: [],
+        send_invoice_on_complete: false
       });
     } catch (error: any) {
       console.error('Error adding task:', error);
@@ -939,6 +1000,352 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                   </div>
                 )}
               </div>
+
+              {/* Client Section */}
+              <div>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Client</label>
+                {!showAddClient ? (
+                  <div className="space-y-2">
+                    <select
+                      value={newTask.client_id}
+                      onChange={(e) => setNewTask({ ...newTask, client_id: e.target.value })}
+                      className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                    >
+                      <option value="">Select a client (optional)...</option>
+                      {clients.map((c) => (
+                        <option key={c.id} value={c.id}>{c.first_name} {c.last_name}</option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      onClick={() => setShowAddClient(true)}
+                      className="flex items-center gap-2 text-blue-500 text-sm font-medium"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add New Client
+                    </button>
+                  </div>
+                ) : (
+                  <div className={`space-y-3 p-4 ${themeClasses.bg.input} rounded-xl border ${themeClasses.border.input}`}>
+                    <div className="grid grid-cols-2 gap-3">
+                      <input
+                        type="text"
+                        value={newClient.first_name}
+                        onChange={(e) => setNewClient({ ...newClient, first_name: e.target.value })}
+                        className={`px-3 py-2 ${themeClasses.bg.secondary} border ${themeClasses.border.input} rounded-lg ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} text-sm`}
+                        placeholder="First Name"
+                      />
+                      <input
+                        type="text"
+                        value={newClient.last_name}
+                        onChange={(e) => setNewClient({ ...newClient, last_name: e.target.value })}
+                        className={`px-3 py-2 ${themeClasses.bg.secondary} border ${themeClasses.border.input} rounded-lg ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} text-sm`}
+                        placeholder="Last Name"
+                      />
+                    </div>
+                    <input
+                      type="email"
+                      value={newClient.email}
+                      onChange={(e) => setNewClient({ ...newClient, email: e.target.value })}
+                      className={`w-full px-3 py-2 ${themeClasses.bg.secondary} border ${themeClasses.border.input} rounded-lg ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} text-sm`}
+                      placeholder="Email"
+                    />
+                    <input
+                      type="tel"
+                      value={newClient.phone}
+                      onChange={(e) => setNewClient({ ...newClient, phone: e.target.value })}
+                      className={`w-full px-3 py-2 ${themeClasses.bg.secondary} border ${themeClasses.border.input} rounded-lg ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} text-sm`}
+                      placeholder="Phone"
+                    />
+                    <input
+                      type="text"
+                      value={newClient.address}
+                      onChange={(e) => setNewClient({ ...newClient, address: e.target.value })}
+                      className={`w-full px-3 py-2 ${themeClasses.bg.secondary} border ${themeClasses.border.input} rounded-lg ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} text-sm`}
+                      placeholder="Property Address"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (newClient.first_name.trim() && newClient.last_name.trim()) {
+                            try {
+                              await addClient({
+                                first_name: newClient.first_name.trim(),
+                                last_name: newClient.last_name.trim(),
+                                email: newClient.email.trim(),
+                                phone: newClient.phone.trim(),
+                                address: newClient.address.trim(),
+                                company: '',
+                                notes: '',
+                                source: 'task_form'
+                              });
+                              await fetchClients();
+                              const newClients = useClientsStore.getState().clients;
+                              const createdClient = newClients.find(c =>
+                                c.first_name === newClient.first_name.trim() &&
+                                c.last_name === newClient.last_name.trim()
+                              );
+                              if (createdClient) {
+                                setNewTask(prev => ({ ...prev, client_id: createdClient.id }));
+                              }
+                              setNewClient({ first_name: '', last_name: '', email: '', phone: '', address: '' });
+                              setShowAddClient(false);
+                            } catch (error) {
+                              console.error('Error adding client:', error);
+                              alert('Failed to create client');
+                            }
+                          }
+                        }}
+                        className="flex-1 py-2 bg-blue-500 text-white rounded-lg font-medium text-sm"
+                      >
+                        Create Client
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNewClient({ first_name: '', last_name: '', email: '', phone: '', address: '' });
+                          setShowAddClient(false);
+                        }}
+                        className={`px-4 py-2 ${themeClasses.bg.tertiary} ${themeClasses.text.secondary} rounded-lg font-medium text-sm`}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Assigned Employees Section */}
+              <div>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Assigned Employees</label>
+                <button
+                  type="button"
+                  onClick={() => setShowEmployeeSelect(!showEmployeeSelect)}
+                  className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} flex items-center justify-between`}
+                >
+                  <span className={newTask.assigned_employees.length === 0 ? themeClasses.text.muted : ''}>
+                    {newTask.assigned_employees.length === 0
+                      ? 'Select employees...'
+                      : `${newTask.assigned_employees.length} employee(s) selected`}
+                  </span>
+                  {showEmployeeSelect ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                </button>
+
+                {showEmployeeSelect && (
+                  <div className={`mt-2 p-2 ${themeClasses.bg.input} rounded-xl border ${themeClasses.border.input} max-h-40 overflow-y-auto`}>
+                    {employees.length === 0 ? (
+                      <p className={`text-sm ${themeClasses.text.muted} text-center py-2`}>No employees found. Add employees in Settings → Team.</p>
+                    ) : (
+                      employees.map((emp) => (
+                        <label key={emp.id} className={`flex items-center gap-3 p-2 rounded-lg ${themeClasses.hover.bg} cursor-pointer`}>
+                          <input
+                            type="checkbox"
+                            checked={newTask.assigned_employees.includes(emp.name)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setNewTask(prev => ({ ...prev, assigned_employees: [...prev.assigned_employees, emp.name] }));
+                              } else {
+                                setNewTask(prev => ({ ...prev, assigned_employees: prev.assigned_employees.filter(n => n !== emp.name) }));
+                              }
+                            }}
+                            className="w-4 h-4 rounded border-gray-300 text-blue-500 focus:ring-blue-500"
+                          />
+                          <span className={`text-sm ${themeClasses.text.primary}`}>{emp.name}</span>
+                          {emp.job_title && <span className={`text-xs ${themeClasses.text.muted}`}>({emp.job_title})</span>}
+                        </label>
+                      ))
+                    )}
+                  </div>
+                )}
+
+                {/* Selected employees chips */}
+                {newTask.assigned_employees.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {newTask.assigned_employees.map((name) => (
+                      <span key={name} className="inline-flex items-center gap-1 px-3 py-1 bg-blue-500/20 text-blue-500 rounded-full text-sm">
+                        {name}
+                        <button
+                          type="button"
+                          onClick={() => setNewTask(prev => ({ ...prev, assigned_employees: prev.assigned_employees.filter(n => n !== name) }))}
+                          className="hover:text-blue-400"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Estimate & Line Items Section */}
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setShowLineItems(!showLineItems)}
+                  className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} flex items-center justify-between`}
+                >
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-blue-500" />
+                    <span>Estimate & Line Items</span>
+                    {newTask.line_items.length > 0 && (
+                      <span className="px-2 py-0.5 bg-blue-500 text-white rounded-full text-xs">{newTask.line_items.length}</span>
+                    )}
+                  </div>
+                  {showLineItems ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                </button>
+
+                {showLineItems && (
+                  <div className={`mt-2 p-4 ${themeClasses.bg.input} rounded-xl border ${themeClasses.border.input}`}>
+                    {/* Tab buttons */}
+                    <div className="flex gap-2 mb-4">
+                      <button
+                        type="button"
+                        className="flex-1 py-2 px-3 bg-blue-500 text-white rounded-lg text-sm font-medium flex items-center justify-center gap-2"
+                      >
+                        <Calculator className="w-4 h-4" />
+                        Line Items
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowAIChat(true)}
+                        className={`flex-1 py-2 px-3 ${themeClasses.bg.tertiary} ${themeClasses.text.primary} rounded-lg text-sm font-medium flex items-center justify-center gap-2`}
+                      >
+                        <Sparkles className="w-4 h-4" />
+                        AI Estimate
+                      </button>
+                    </div>
+
+                    {/* Line items list */}
+                    <div className="space-y-2 mb-3">
+                      {newTask.line_items.map((item, idx) => (
+                        <div key={item.id} className={`flex items-center gap-2 p-2 ${themeClasses.bg.secondary} rounded-lg`}>
+                          <input
+                            type="text"
+                            value={item.description}
+                            onChange={(e) => {
+                              const updated = [...newTask.line_items];
+                              updated[idx] = { ...updated[idx], description: e.target.value };
+                              setNewTask(prev => ({ ...prev, line_items: updated }));
+                            }}
+                            className={`flex-1 px-2 py-1 ${themeClasses.bg.input} rounded text-sm ${themeClasses.text.primary}`}
+                            placeholder="Description"
+                          />
+                          <input
+                            type="number"
+                            value={item.quantity}
+                            onChange={(e) => {
+                              const updated = [...newTask.line_items];
+                              const qty = parseFloat(e.target.value) || 0;
+                              updated[idx] = { ...updated[idx], quantity: qty, total: qty * updated[idx].unitPrice };
+                              setNewTask(prev => ({ ...prev, line_items: updated }));
+                            }}
+                            className={`w-16 px-2 py-1 ${themeClasses.bg.input} rounded text-sm text-center ${themeClasses.text.primary}`}
+                            placeholder="Qty"
+                          />
+                          <input
+                            type="number"
+                            value={item.unitPrice}
+                            onChange={(e) => {
+                              const updated = [...newTask.line_items];
+                              const price = parseFloat(e.target.value) || 0;
+                              updated[idx] = { ...updated[idx], unitPrice: price, total: updated[idx].quantity * price };
+                              setNewTask(prev => ({ ...prev, line_items: updated }));
+                            }}
+                            className={`w-20 px-2 py-1 ${themeClasses.bg.input} rounded text-sm text-center ${themeClasses.text.primary}`}
+                            placeholder="Price"
+                          />
+                          <span className={`w-20 text-sm text-right ${themeClasses.text.primary}`}>
+                            ${item.total.toFixed(2)}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setNewTask(prev => ({ ...prev, line_items: prev.line_items.filter((_, i) => i !== idx) }));
+                            }}
+                            className="text-red-400 hover:text-red-500"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Add line item button */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newItem: LineItem = {
+                          id: crypto.randomUUID(),
+                          description: '',
+                          quantity: 1,
+                          unitPrice: 0,
+                          total: 0
+                        };
+                        setNewTask(prev => ({ ...prev, line_items: [...prev.line_items, newItem] }));
+                      }}
+                      className="flex items-center gap-2 text-blue-500 text-sm font-medium"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add Line Item
+                    </button>
+
+                    {/* Totals */}
+                    {newTask.line_items.length > 0 && (
+                      <div className={`mt-4 pt-3 border-t ${themeClasses.border.primary}`}>
+                        <div className="flex justify-between text-sm">
+                          <span className={themeClasses.text.secondary}>Subtotal</span>
+                          <span className={themeClasses.text.primary}>
+                            ${newTask.line_items.reduce((sum, item) => sum + item.total, 0).toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-sm mt-1">
+                          <span className={themeClasses.text.secondary}>Tax (8%)</span>
+                          <span className={themeClasses.text.primary}>
+                            ${(newTask.line_items.reduce((sum, item) => sum + item.total, 0) * 0.08).toFixed(2)}
+                          </span>
+                        </div>
+                        <div className={`flex justify-between font-semibold mt-2 pt-2 border-t ${themeClasses.border.primary}`}>
+                          <span className={themeClasses.text.primary}>Total</span>
+                          <span className="text-blue-500">
+                            ${(newTask.line_items.reduce((sum, item) => sum + item.total, 0) * 1.08).toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Invoice Section - only show if line items exist */}
+              {newTask.line_items.length > 0 && (
+                <div className={`p-4 ${themeClasses.bg.input} rounded-xl border ${themeClasses.border.input}`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <DollarSign className={`w-5 h-5 ${newTask.send_invoice_on_complete ? 'text-green-500' : themeClasses.text.muted}`} />
+                      <div>
+                        <p className={`font-medium ${themeClasses.text.primary}`}>Invoice on Completion</p>
+                        <p className={`text-xs ${themeClasses.text.muted}`}>
+                          {newTask.send_invoice_on_complete ? 'Will prompt to send invoice when job is done' : 'No automatic invoice'}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setNewTask(prev => ({ ...prev, send_invoice_on_complete: !prev.send_invoice_on_complete }))}
+                      className={`w-12 h-7 rounded-full transition-colors ${
+                        newTask.send_invoice_on_complete ? 'bg-green-500' : theme === 'light' ? 'bg-gray-300' : 'bg-zinc-600'
+                      }`}
+                    >
+                      <div
+                        className={`w-5 h-5 rounded-full shadow transition-transform ${
+                          newTask.send_invoice_on_complete ? 'translate-x-6 bg-white' : theme === 'light' ? 'translate-x-1 bg-white' : 'translate-x-1 bg-zinc-400'
+                        }`}
+                      />
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
