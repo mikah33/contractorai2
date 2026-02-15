@@ -44,7 +44,8 @@ const Dashboard: React.FC = () => {
   const [showAddChoice, setShowAddChoice] = useState(false);
   const [showAIChat, setShowAIChat] = useState(false);
   const [showVisionCam, setShowVisionCam] = useState(false);
-  const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const [topCardIndex, setTopCardIndex] = useState(0);
+  const [bottomCardIndex, setBottomCardIndex] = useState(0);
   const carouselRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
@@ -201,11 +202,22 @@ const Dashboard: React.FC = () => {
 
       <div className="py-2 space-y-2 max-w-5xl mx-auto">
         {/* Feature Cards Carousel */}
-        <div className="overflow-x-auto scrollbar-hide snap-x snap-mandatory">
-          <div className="flex gap-4 px-4 pb-2" style={{ width: 'max-content' }}>
+        <div
+          className="overflow-x-auto scrollbar-hide snap-x snap-mandatory py-2"
+          onScroll={(e) => {
+            const container = e.currentTarget;
+            const scrollLeft = container.scrollLeft;
+            const cardWidth = container.offsetWidth;
+            const newIndex = Math.round(scrollLeft / cardWidth);
+            if (newIndex !== topCardIndex) {
+              setTopCardIndex(newIndex);
+            }
+          }}
+        >
+          <div className="flex gap-4 px-4" style={{ width: 'max-content' }}>
             {/* Create Estimate Card */}
             <div
-              className={`${themeClasses.bg.card} rounded-xl border-2 ${theme === 'light' ? 'border-gray-300' : 'border-zinc-600'} p-5 text-left transition-colors flex-shrink-0 flex flex-col relative overflow-hidden snap-center`}
+              className={`${themeClasses.bg.card} rounded-xl border-2 ${theme === 'light' ? 'border-gray-200 shadow-lg' : 'border-zinc-600 shadow-xl shadow-black/20'} p-5 text-left transition-colors flex-shrink-0 flex flex-col relative overflow-hidden snap-center`}
               style={{ width: 'calc(100vw - 48px)', maxWidth: '380px', minHeight: '240px' }}
             >
               {/* Background payment card visual */}
@@ -245,7 +257,7 @@ const Dashboard: React.FC = () => {
 
             {/* Vision Cam Card */}
             <div
-              className={`${themeClasses.bg.card} rounded-xl border-2 ${theme === 'light' ? 'border-gray-300' : 'border-zinc-600'} p-5 text-left transition-colors flex-shrink-0 flex flex-col relative overflow-hidden snap-center`}
+              className={`${themeClasses.bg.card} rounded-xl border-2 ${theme === 'light' ? 'border-gray-200 shadow-lg' : 'border-zinc-600 shadow-xl shadow-black/20'} p-5 text-left transition-colors flex-shrink-0 flex flex-col relative overflow-hidden snap-center`}
               style={{ width: 'calc(100vw - 48px)', maxWidth: '380px', minHeight: '240px' }}
             >
               {/* Background camera visuals */}
@@ -285,96 +297,68 @@ const Dashboard: React.FC = () => {
 
         {/* Carousel Dots Indicator */}
         <div className="flex justify-center gap-2 pb-2">
-          <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-          <div className={`w-2 h-2 rounded-full ${theme === 'light' ? 'bg-gray-300' : 'bg-zinc-600'}`}></div>
+          <div className={`w-2 h-2 rounded-full transition-colors ${topCardIndex === 0 ? 'bg-blue-500' : theme === 'light' ? 'bg-gray-300' : 'bg-zinc-600'}`}></div>
+          <div className={`w-2 h-2 rounded-full transition-colors ${topCardIndex === 1 ? 'bg-blue-500' : theme === 'light' ? 'bg-gray-300' : 'bg-zinc-600'}`}></div>
         </div>
 
-        {/* Upcoming Jobs Section */}
-        <div className={`mx-2 ${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} overflow-hidden`}>
-          <div className={`flex items-center justify-between p-2 border-b ${themeClasses.border.primary}`}>
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                <Calendar className="w-3 h-3 text-blue-500" />
-              </div>
-              <div>
-                <h2 className={`font-semibold ${themeClasses.text.primary}`}>Upcoming Jobs</h2>
-                <p className="text-xs text-zinc-500">Next 7 days</p>
-              </div>
-            </div>
-            <button
-              onClick={() => navigate('/jobs-hub')}
-              className="flex items-center gap-1 text-sm text-blue-500 font-medium"
-            >
-              View All <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
+        {/* Tasks Section */}
+        <div className="mx-2">
+          <h2 className={`text-xl font-bold ${themeClasses.text.primary} mb-4`}>To do</h2>
 
-          {upcomingJobs.length === 0 ? (
-            <div className="p-3 text-center">
-              <Calendar className="w-6 h-6 text-zinc-600 mx-auto mb-2" />
-              <p className="text-zinc-400 text-sm">No upcoming jobs scheduled</p>
+          <div className={`${themeClasses.bg.card} rounded-xl border ${themeClasses.border.secondary} overflow-hidden`}>
+            {upcomingJobs.length === 0 ? (
+              <div className="p-6 text-center">
+                <Calendar className={`w-10 h-10 ${themeClasses.text.muted} mx-auto mb-3`} />
+                <p className={`${themeClasses.text.secondary} mb-4`}>No tasks scheduled</p>
+                <button
+                  onClick={() => navigate('/jobs-hub')}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 active:scale-95 transition-all mx-auto"
+                >
+                  <Plus className="w-4 h-4" /> Add Task
+                </button>
+              </div>
+            ) : (
+              <div className={`divide-y ${themeClasses.border.primary}`}>
+                {upcomingJobs.slice(0, 5).map((job) => {
+                  const isCompleted = job.status === 'completed';
+
+                  return (
+                    <button
+                      key={job.id}
+                      onClick={() => navigate('/jobs-hub')}
+                      className={`w-full flex items-center gap-4 p-4 ${theme === 'light' ? 'hover:bg-gray-50 active:bg-gray-100' : 'hover:bg-zinc-800 active:bg-zinc-700'} transition-colors text-left`}
+                    >
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                        isCompleted
+                          ? 'bg-green-100 text-green-600'
+                          : theme === 'light' ? 'bg-gray-100 text-gray-500' : 'bg-zinc-700 text-zinc-400'
+                      }`}>
+                        <Calendar className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`font-semibold ${isCompleted ? 'line-through text-gray-400' : themeClasses.text.primary}`}>
+                          {job.title}
+                        </p>
+                        <p className={`text-sm ${themeClasses.text.secondary} mt-0.5`}>
+                          {formatJobDate(job.start_date)} {job.location ? `• ${job.location}` : ''}
+                        </p>
+                      </div>
+                      <ArrowRight className="w-5 h-5 text-green-500 flex-shrink-0" />
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {upcomingJobs.length > 0 && (
               <button
                 onClick={() => navigate('/jobs-hub')}
-                className={`mt-3 flex items-center gap-2 px-4 py-2.5 ${themeClasses.button.primary} rounded-md font-medium ${themeClasses.button.primaryHover} active:scale-95 transition-all mx-auto`}
+                className={`w-full p-4 text-center text-sm font-medium ${theme === 'light' ? 'text-blue-600 bg-blue-50 hover:bg-blue-100' : 'text-blue-400 bg-blue-500/10 hover:bg-blue-500/20'} transition-colors border-t ${themeClasses.border.primary}`}
               >
-                <Plus className="w-4 h-4" /> Add Job
+                View all tasks <ArrowRight className="w-4 h-4 inline ml-1" />
               </button>
-            </div>
-          ) : (
-            <div className="divide-y divide-blue-500/10">
-              {upcomingJobs.map((job) => {
-                const priorityInfo = getPriorityInfo(job);
-                const isCompleted = job.status === 'completed';
-
-                return (
-                  <div key={job.id} className="flex items-center gap-3 p-2 hover:bg-[#2C2C2E] active:bg-[#3A3A3C] transition-colors">
-                    <button
-                      onClick={() => handleJobToggle(job.id, job.status)}
-                      className={`w-5 h-5 rounded-full border-2 transition-colors flex items-center justify-center ${
-                        isCompleted
-                          ? 'border-green-500 bg-green-500/20'
-                          : 'border-zinc-600 hover:border-blue-500 hover:bg-blue-500/20'
-                      }`}
-                    >
-                      <CheckCircle2 className={`w-3 h-3 transition-colors ${
-                        isCompleted
-                          ? 'text-green-500'
-                          : 'text-zinc-600 hover:text-blue-500'
-                      }`} />
-                    </button>
-                    <div className="w-6 h-6 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                      <Calendar className="w-3 h-3 text-blue-500" />
-                    </div>
-                    <div className="flex-1 text-left min-w-0">
-                      <p className={`font-medium truncate ${isCompleted ? 'text-zinc-400 line-through' : 'text-white'}`}>
-                        {job.title}
-                      </p>
-                      <div className="flex items-center gap-2 text-xs text-zinc-500">
-                        <Clock className="w-3 h-3" />
-                        <span>{formatJobDate(job.start_date)}</span>
-                        <span className={`px-1.5 py-0.5 rounded font-semibold ${priorityInfo.color}`}>
-                          {priorityInfo.label}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <p className={`text-sm font-bold ${isCompleted ? 'text-green-400' : 'text-white'}`}>
-                        {isCompleted ? 'Done' : job.event_type.charAt(0).toUpperCase() + job.event_type.slice(1)}
-                      </p>
-                      <p className="text-xs text-zinc-500">{job.location || 'No location'}</p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          <button
-            onClick={() => navigate('/jobs-hub')}
-            className="w-full p-3 text-center text-sm text-blue-500 font-medium bg-blue-500/10 hover:bg-blue-500/20 transition-colors"
-          >
-            See all upcoming jobs <ArrowRight className="w-4 h-4 inline ml-1" />
-          </button>
+            )}
+          </div>
         </div>
 
         {/* Quick Preview Cards - Carousel */}
@@ -387,22 +371,22 @@ const Dashboard: React.FC = () => {
             onTouchEnd={() => {
               const diff = touchStartX.current - touchEndX.current;
               if (Math.abs(diff) > 50) {
-                if (diff > 0 && currentCardIndex < 3) {
-                  setCurrentCardIndex(prev => prev + 1);
-                } else if (diff < 0 && currentCardIndex > 0) {
-                  setCurrentCardIndex(prev => prev - 1);
+                if (diff > 0 && bottomCardIndex < 3) {
+                  setBottomCardIndex(prev => prev + 1);
+                } else if (diff < 0 && bottomCardIndex > 0) {
+                  setBottomCardIndex(prev => prev - 1);
                 }
               }
             }}
           >
             <div
               className="flex transition-transform duration-300 ease-out"
-              style={{ transform: `translateX(-${currentCardIndex * 100}%)` }}
+              style={{ transform: `translateX(-${bottomCardIndex * 100}%)` }}
             >
               {/* Finance Card */}
               <button
                 onClick={() => navigate('/finance-hub')}
-                className={`${themeClasses.bg.card} rounded-lg border-2 ${theme === 'light' ? 'border-gray-300' : 'border-zinc-600'} p-5 text-left ${themeClasses.hover.bg} transition-colors w-full flex-shrink-0 min-h-[220px] flex flex-col`}
+                className={`${themeClasses.bg.card} rounded-lg border-2 ${theme === 'light' ? 'border-gray-300 shadow-lg' : 'border-zinc-600 shadow-xl shadow-black/20'} p-5 text-left ${themeClasses.hover.bg} transition-colors w-full flex-shrink-0 min-h-[220px] flex flex-col`}
               >
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-14 h-14 bg-blue-500/20 rounded-xl flex items-center justify-center">
@@ -431,7 +415,7 @@ const Dashboard: React.FC = () => {
               {/* Projects Card */}
               <button
                 onClick={() => navigate('/projects-hub')}
-                className={`${themeClasses.bg.card} rounded-lg border-2 ${theme === 'light' ? 'border-gray-300' : 'border-zinc-600'} p-5 text-left ${themeClasses.hover.bg} transition-colors w-full flex-shrink-0 min-h-[220px] flex flex-col`}
+                className={`${themeClasses.bg.card} rounded-lg border-2 ${theme === 'light' ? 'border-gray-300 shadow-lg' : 'border-zinc-600 shadow-xl shadow-black/20'} p-5 text-left ${themeClasses.hover.bg} transition-colors w-full flex-shrink-0 min-h-[220px] flex flex-col`}
               >
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-14 h-14 bg-blue-500/20 rounded-xl flex items-center justify-center">
@@ -458,7 +442,7 @@ const Dashboard: React.FC = () => {
               {/* Jobs Card */}
               <button
                 onClick={() => navigate('/jobs-hub')}
-                className={`${themeClasses.bg.card} rounded-lg border-2 ${theme === 'light' ? 'border-gray-300' : 'border-zinc-600'} p-5 text-left ${themeClasses.hover.bg} transition-colors w-full flex-shrink-0 min-h-[220px] flex flex-col`}
+                className={`${themeClasses.bg.card} rounded-lg border-2 ${theme === 'light' ? 'border-gray-300 shadow-lg' : 'border-zinc-600 shadow-xl shadow-black/20'} p-5 text-left ${themeClasses.hover.bg} transition-colors w-full flex-shrink-0 min-h-[220px] flex flex-col`}
               >
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-14 h-14 bg-blue-500/20 rounded-xl flex items-center justify-center">
@@ -493,7 +477,7 @@ const Dashboard: React.FC = () => {
               {/* Goals Card */}
               <button
                 onClick={() => navigate('/business-hub')}
-                className={`${themeClasses.bg.card} rounded-lg border-2 ${theme === 'light' ? 'border-gray-300' : 'border-zinc-600'} p-5 text-left ${themeClasses.hover.bg} transition-colors w-full flex-shrink-0 min-h-[220px] flex flex-col`}
+                className={`${themeClasses.bg.card} rounded-lg border-2 ${theme === 'light' ? 'border-gray-300 shadow-lg' : 'border-zinc-600 shadow-xl shadow-black/20'} p-5 text-left ${themeClasses.hover.bg} transition-colors w-full flex-shrink-0 min-h-[220px] flex flex-col`}
               >
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-14 h-14 bg-blue-500/20 rounded-xl flex items-center justify-center">
@@ -521,16 +505,16 @@ const Dashboard: React.FC = () => {
 
           {/* Navigation Arrows */}
           <button
-            onClick={() => setCurrentCardIndex(prev => Math.max(0, prev - 1))}
-            className={`absolute left-1 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 flex items-center justify-center transition-opacity ${currentCardIndex === 0 ? 'opacity-30' : 'opacity-100'}`}
-            disabled={currentCardIndex === 0}
+            onClick={() => setBottomCardIndex(prev => Math.max(0, prev - 1))}
+            className={`absolute left-1 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 flex items-center justify-center transition-opacity ${bottomCardIndex === 0 ? 'opacity-30' : 'opacity-100'}`}
+            disabled={bottomCardIndex === 0}
           >
             <ChevronLeft className="w-5 h-5 text-white" />
           </button>
           <button
-            onClick={() => setCurrentCardIndex(prev => Math.min(3, prev + 1))}
-            className={`absolute right-1 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 flex items-center justify-center transition-opacity ${currentCardIndex === 3 ? 'opacity-30' : 'opacity-100'}`}
-            disabled={currentCardIndex === 3}
+            onClick={() => setBottomCardIndex(prev => Math.min(3, prev + 1))}
+            className={`absolute right-1 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 flex items-center justify-center transition-opacity ${bottomCardIndex === 3 ? 'opacity-30' : 'opacity-100'}`}
+            disabled={bottomCardIndex === 3}
           >
             <ChevronRight className="w-5 h-5 text-white" />
           </button>
@@ -540,9 +524,9 @@ const Dashboard: React.FC = () => {
             {[0, 1, 2, 3].map((index) => (
               <button
                 key={index}
-                onClick={() => setCurrentCardIndex(index)}
+                onClick={() => setBottomCardIndex(index)}
                 className={`w-2 h-2 rounded-full transition-all ${
-                  currentCardIndex === index
+                  bottomCardIndex === index
                     ? 'bg-blue-500 w-4'
                     : 'bg-zinc-400'
                 }`}
