@@ -114,6 +114,8 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
   const [showLineItems, setShowLineItems] = useState(false);
   const [showInvoicePrompt, setShowInvoicePrompt] = useState(false);
   const [completedTaskForInvoice, setCompletedTaskForInvoice] = useState<Task | null>(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [datePickerMonth, setDatePickerMonth] = useState(new Date());
   const [newClient, setNewClient] = useState({
     first_name: '',
     last_name: '',
@@ -842,25 +844,171 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Due Date</label>
-                  <input
-                    type="date"
-                    value={newTask.due_date}
-                    onChange={(e) => setNewTask({ ...newTask, due_date: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
-                  />
-                </div>
-                <div>
-                  <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Time</label>
-                  <input
-                    type="time"
-                    value={newTask.due_time}
-                    onChange={(e) => setNewTask({ ...newTask, due_time: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
-                  />
-                </div>
+              {/* Date & Time Picker */}
+              <div>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Due Date & Time</label>
+                <button
+                  type="button"
+                  onClick={() => setShowDatePicker(!showDatePicker)}
+                  className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} flex items-center justify-between`}
+                >
+                  <div className="flex items-center gap-2">
+                    <CalendarIcon className="w-5 h-5 text-blue-500" />
+                    <span className={newTask.due_date ? themeClasses.text.primary : themeClasses.text.muted}>
+                      {newTask.due_date
+                        ? `${format(parseISO(newTask.due_date), 'MMM d, yyyy')} at ${newTask.due_time}`
+                        : 'Select date and time...'}
+                    </span>
+                  </div>
+                  {showDatePicker ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                </button>
+
+                {showDatePicker && (
+                  <div className={`mt-2 p-4 ${themeClasses.bg.input} rounded-xl border ${themeClasses.border.input}`}>
+                    {/* Month Navigation */}
+                    <div className="flex items-center justify-between mb-4">
+                      <button
+                        type="button"
+                        onClick={() => setDatePickerMonth(subMonths(datePickerMonth, 1))}
+                        className={`p-2 rounded-lg ${themeClasses.hover.bg}`}
+                      >
+                        <ChevronLeft className="w-5 h-5" />
+                      </button>
+                      <span className={`font-semibold ${themeClasses.text.primary}`}>
+                        {format(datePickerMonth, 'MMMM yyyy')}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setDatePickerMonth(addMonths(datePickerMonth, 1))}
+                        className={`p-2 rounded-lg ${themeClasses.hover.bg}`}
+                      >
+                        <ChevronRight className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    {/* Weekday Headers */}
+                    <div className="grid grid-cols-7 gap-1 mb-2">
+                      {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+                        <div key={i} className={`text-center text-xs font-medium ${themeClasses.text.muted} py-1`}>
+                          {day}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Calendar Days */}
+                    <div className="grid grid-cols-7 gap-1">
+                      {(() => {
+                        const monthStart = startOfMonth(datePickerMonth);
+                        const monthEnd = endOfMonth(datePickerMonth);
+                        const startDate = startOfWeek(monthStart);
+                        const endDate = endOfWeek(monthEnd);
+                        const days = [];
+                        let day = startDate;
+
+                        while (day <= endDate) {
+                          const currentDay = day;
+                          const isCurrentMonth = currentDay.getMonth() === datePickerMonth.getMonth();
+                          const isSelected = newTask.due_date && isSameDay(currentDay, parseISO(newTask.due_date));
+                          const isTodays = isToday(currentDay);
+                          const dayStr = format(currentDay, 'yyyy-MM-dd');
+
+                          days.push(
+                            <button
+                              key={dayStr}
+                              type="button"
+                              onClick={() => {
+                                setNewTask(prev => ({ ...prev, due_date: dayStr }));
+                              }}
+                              className={`aspect-square flex items-center justify-center text-sm rounded-lg transition-colors ${
+                                isSelected
+                                  ? 'bg-blue-500 text-white font-semibold'
+                                  : isTodays
+                                    ? `${themeClasses.bg.tertiary} ${themeClasses.text.primary} font-semibold`
+                                    : isCurrentMonth
+                                      ? `${themeClasses.text.primary} ${themeClasses.hover.bg}`
+                                      : `${themeClasses.text.muted} opacity-50`
+                              }`}
+                            >
+                              {format(currentDay, 'd')}
+                            </button>
+                          );
+                          day = addDays(day, 1);
+                        }
+                        return days;
+                      })()}
+                    </div>
+
+                    {/* Quick Date Options */}
+                    <div className="flex gap-2 mt-4 pt-3 border-t border-dashed" style={{ borderColor: theme === 'light' ? '#e5e7eb' : '#3f3f46' }}>
+                      <button
+                        type="button"
+                        onClick={() => setNewTask(prev => ({ ...prev, due_date: format(new Date(), 'yyyy-MM-dd') }))}
+                        className={`flex-1 py-2 text-xs font-medium rounded-lg ${
+                          newTask.due_date === format(new Date(), 'yyyy-MM-dd')
+                            ? 'bg-blue-500 text-white'
+                            : `${themeClasses.bg.tertiary} ${themeClasses.text.secondary}`
+                        }`}
+                      >
+                        Today
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setNewTask(prev => ({ ...prev, due_date: format(addDays(new Date(), 1), 'yyyy-MM-dd') }))}
+                        className={`flex-1 py-2 text-xs font-medium rounded-lg ${
+                          newTask.due_date === format(addDays(new Date(), 1), 'yyyy-MM-dd')
+                            ? 'bg-blue-500 text-white'
+                            : `${themeClasses.bg.tertiary} ${themeClasses.text.secondary}`
+                        }`}
+                      >
+                        Tomorrow
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setNewTask(prev => ({ ...prev, due_date: format(addDays(new Date(), 7), 'yyyy-MM-dd') }))}
+                        className={`flex-1 py-2 text-xs font-medium rounded-lg ${
+                          newTask.due_date === format(addDays(new Date(), 7), 'yyyy-MM-dd')
+                            ? 'bg-blue-500 text-white'
+                            : `${themeClasses.bg.tertiary} ${themeClasses.text.secondary}`
+                        }`}
+                      >
+                        Next Week
+                      </button>
+                    </div>
+
+                    {/* Time Picker */}
+                    {newTask.due_date && (
+                      <div className="mt-4 pt-3 border-t border-dashed" style={{ borderColor: theme === 'light' ? '#e5e7eb' : '#3f3f46' }}>
+                        <label className={`block text-xs font-medium ${themeClasses.text.muted} mb-2`}>Select Time</label>
+                        <div className="grid grid-cols-4 gap-2">
+                          {['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00'].map((time) => (
+                            <button
+                              key={time}
+                              type="button"
+                              onClick={() => setNewTask(prev => ({ ...prev, due_time: time }))}
+                              className={`py-2 text-xs font-medium rounded-lg transition-colors ${
+                                newTask.due_time === time
+                                  ? 'bg-blue-500 text-white'
+                                  : `${themeClasses.bg.tertiary} ${themeClasses.text.secondary} ${themeClasses.hover.bg}`
+                              }`}
+                            >
+                              {format(new Date(`2000-01-01T${time}`), 'h:mm a')}
+                            </button>
+                          ))}
+                        </div>
+                        {/* Custom time input */}
+                        <div className="mt-3 flex items-center gap-2">
+                          <span className={`text-xs ${themeClasses.text.muted}`}>Custom:</span>
+                          <input
+                            type="time"
+                            value={newTask.due_time}
+                            onChange={(e) => setNewTask({ ...newTask, due_time: e.target.value })}
+                            className={`flex-1 px-3 py-2 rounded-lg border ${themeClasses.border.input} ${themeClasses.bg.secondary} ${themeClasses.text.primary} text-sm`}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Reminder Toggle */}
