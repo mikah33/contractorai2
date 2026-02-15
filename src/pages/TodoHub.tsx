@@ -806,7 +806,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
               setQuickProjectName('');
             }}
           />
-          <div className={`relative ${themeClasses.bg.secondary} rounded-t-3xl w-full max-h-[90vh] overflow-y-auto animate-slide-up mb-20`}>
+          <div className={`relative ${themeClasses.bg.secondary} rounded-t-3xl w-full max-h-[85vh] overflow-y-auto animate-slide-up pb-32`}>
             <div className={`sticky top-0 ${themeClasses.bg.secondary} px-4 py-4 border-b ${themeClasses.border.primary} flex items-center justify-between z-10`}>
               <button
                 onClick={() => {
@@ -906,7 +906,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                       className={`flex-1 py-2 rounded-xl font-medium text-sm transition-colors ${
                         newTask.priority === p
                           ? p === 'high' ? 'bg-red-500 text-white'
-                            : p === 'medium' ? 'bg-yellow-500 text-white'
+                            : p === 'medium' ? 'bg-blue-500 text-white'
                             : 'bg-green-500 text-white'
                           : `${themeClasses.bg.input} ${themeClasses.text.secondary}`
                       }`}
@@ -1450,7 +1450,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                       className={`flex-1 py-2 rounded-xl font-medium text-sm transition-colors ${
                         editTask.priority === p
                           ? p === 'high' ? 'bg-red-500 text-white'
-                            : p === 'medium' ? 'bg-yellow-500 text-white'
+                            : p === 'medium' ? 'bg-blue-500 text-white'
                             : 'bg-green-500 text-white'
                           : `${themeClasses.bg.input} ${themeClasses.text.secondary}`
                       }`}
