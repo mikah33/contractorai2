@@ -769,52 +769,52 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
 
             <div className="p-4 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1">
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>
                   Task Name <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="text"
                   value={newTask.title}
                   onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl border border-[#3A3A3C] bg-[#262626] text-white placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
+                  className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
                   placeholder="What needs to be done?"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-1">Due Date</label>
+                  <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Due Date</label>
                   <input
                     type="date"
                     value={newTask.due_date}
                     onChange={(e) => setNewTask({ ...newTask, due_date: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border border-[#3A3A3C] bg-[#262626] text-white focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/20 outline-none"
+                    className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-1">Time</label>
+                  <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Time</label>
                   <input
                     type="time"
                     value={newTask.due_time}
                     onChange={(e) => setNewTask({ ...newTask, due_time: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border border-[#3A3A3C] bg-[#262626] text-white focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/20 outline-none"
+                    className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
                   />
                 </div>
               </div>
 
               {/* Reminder Toggle */}
               {newTask.due_date && (
-                <div className="bg-[#262626] rounded-xl p-4">
+                <div className={`${themeClasses.bg.input} rounded-xl p-4`}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       {newTask.reminder_enabled ? (
-                        <Bell className="w-5 h-5 text-white" />
+                        <Bell className={`w-5 h-5 ${themeClasses.text.primary}`} />
                       ) : (
-                        <BellOff className="w-5 h-5 text-zinc-500" />
+                        <BellOff className={`w-5 h-5 ${themeClasses.text.muted}`} />
                       )}
                       <div>
-                        <p className="font-medium text-white">Reminder</p>
-                        <p className="text-xs text-zinc-500">
+                        <p className={`font-medium ${themeClasses.text.primary}`}>Reminder</p>
+                        <p className={`text-xs ${themeClasses.text.muted}`}>
                           {newTask.reminder_enabled ? '1 hour before due time' : 'No notification'}
                         </p>
                       </div>
@@ -822,12 +822,12 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                     <button
                       onClick={() => setNewTask({ ...newTask, reminder_enabled: !newTask.reminder_enabled })}
                       className={`w-12 h-7 rounded-full transition-colors ${
-                        newTask.reminder_enabled ? 'bg-blue-500' : 'bg-zinc-600'
+                        newTask.reminder_enabled ? 'bg-blue-500' : theme === 'light' ? 'bg-gray-300' : 'bg-zinc-600'
                       }`}
                     >
                       <div
                         className={`w-5 h-5 rounded-full shadow transition-transform ${
-                          newTask.reminder_enabled ? 'translate-x-6 bg-white' : 'translate-x-1 bg-zinc-400'
+                          newTask.reminder_enabled ? 'translate-x-6 bg-white' : theme === 'light' ? 'translate-x-1 bg-white' : 'translate-x-1 bg-zinc-400'
                         }`}
                       />
                     </button>
@@ -836,7 +836,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
               )}
 
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1">Priority</label>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Priority</label>
                 <div className="flex gap-2">
                   {(['low', 'medium', 'high'] as const).map((p) => (
                     <button
@@ -847,7 +847,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                           ? p === 'high' ? 'bg-red-500 text-white'
                             : p === 'medium' ? 'bg-yellow-500 text-white'
                             : 'bg-green-500 text-white'
-                          : 'bg-[#262626] text-zinc-400'
+                          : `${themeClasses.bg.input} ${themeClasses.text.secondary}`
                       }`}
                     >
                       {p.charAt(0).toUpperCase() + p.slice(1)}
@@ -857,13 +857,13 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1">Project <span className="text-red-400">*</span></label>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Project <span className="text-red-400">*</span></label>
                 {!showQuickAddProject ? (
                   <div className="space-y-2">
                     <select
                       value={newTask.project_id}
                       onChange={(e) => setNewTask({ ...newTask, project_id: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl border border-[#3A3A3C] bg-[#262626] text-white focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/20 outline-none"
+                      className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
                     >
                       <option value="">Select a project...</option>
                       {projects.map((p) => (
@@ -886,7 +886,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                         type="text"
                         value={quickProjectName}
                         onChange={(e) => setQuickProjectName(e.target.value)}
-                        className="flex-1 px-4 py-3 bg-[#262626] border border-[#3A3A3C] rounded-xl text-white placeholder-zinc-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className={`flex-1 px-4 py-3 ${themeClasses.bg.input} border ${themeClasses.border.input} rounded-xl ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                         placeholder="Enter project name..."
                         autoFocus
                       />
@@ -979,41 +979,41 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
 
             <div className="p-4 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1">
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>
                   Task Name <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="text"
                   value={editTask.title}
                   onChange={(e) => setEditTask({ ...editTask, title: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl border border-[#3A3A3C] bg-[#262626] text-white placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
+                  className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
                   placeholder="What needs to be done?"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-1">Due Date</label>
+                  <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Due Date</label>
                   <input
                     type="date"
                     value={editTask.due_date}
                     onChange={(e) => setEditTask({ ...editTask, due_date: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border border-[#3A3A3C] bg-[#262626] text-white focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/20 outline-none"
+                    className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-1">Time</label>
+                  <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Time</label>
                   <input
                     type="time"
                     value={editTask.due_time}
                     onChange={(e) => setEditTask({ ...editTask, due_time: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border border-[#3A3A3C] bg-[#262626] text-white focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/20 outline-none"
+                    className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1">Status</label>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Status</label>
                 <div className="flex gap-2">
                   {(['todo', 'in-progress', 'done'] as const).map((s) => (
                     <button
@@ -1024,7 +1024,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                           ? s === 'done' ? 'bg-green-500 text-white'
                             : s === 'in-progress' ? 'bg-blue-500 text-white'
                             : 'bg-zinc-500 text-white'
-                          : 'bg-[#262626] text-zinc-400'
+                          : `${themeClasses.bg.input} ${themeClasses.text.secondary}`
                       }`}
                     >
                       {s === 'todo' ? 'To Do' : s === 'in-progress' ? 'In Progress' : 'Done'}
@@ -1034,7 +1034,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1">Priority</label>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Priority</label>
                 <div className="flex gap-2">
                   {(['low', 'medium', 'high'] as const).map((p) => (
                     <button
@@ -1045,7 +1045,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                           ? p === 'high' ? 'bg-red-500 text-white'
                             : p === 'medium' ? 'bg-yellow-500 text-white'
                             : 'bg-green-500 text-white'
-                          : 'bg-[#262626] text-zinc-400'
+                          : `${themeClasses.bg.input} ${themeClasses.text.secondary}`
                       }`}
                     >
                       {p.charAt(0).toUpperCase() + p.slice(1)}
