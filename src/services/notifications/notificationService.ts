@@ -204,14 +204,17 @@ class NotificationService {
    */
   async scheduleTaskDeadline(options: TaskDeadlineNotification): Promise<void> {
     try {
-      // Notify 1 hour before deadline
+      // Use custom reminder minutes or default to 60 (1 hour)
+      const reminderMinutes = options.reminderMinutes || 60;
       const notificationTime = new Date(options.dueDate);
-      notificationTime.setHours(notificationTime.getHours() - 1);
+      notificationTime.setMinutes(notificationTime.getMinutes() - reminderMinutes);
 
       if (notificationTime <= new Date()) {
         console.warn('Task deadline notification time is in the past');
         return;
       }
+
+      console.log(`Scheduling task reminder for ${reminderMinutes} minutes before due date:`, notificationTime);
 
       await LocalNotifications.schedule({
         notifications: [

@@ -43,6 +43,7 @@ export interface TaskDeadlineNotification {
   body: string;
   dueDate: Date;
   priority?: 'low' | 'medium' | 'high';
+  reminderMinutes?: number; // How many minutes before due date to send reminder (default: 60)
 }
 
 export interface InvoiceReminderNotification {

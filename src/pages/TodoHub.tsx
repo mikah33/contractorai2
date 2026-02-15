@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   ClipboardList,
   Plus,
@@ -26,7 +26,11 @@ import {
   ChevronDown,
   ChevronUp,
   Send,
-  Calculator
+  Calculator,
+  Mail,
+  Smartphone,
+  MapPin,
+  ExternalLink
 } from 'lucide-react';
 import { format, startOfWeek, addDays, isSameDay, parseISO, isToday, isTomorrow, isPast, addMonths, subMonths, startOfMonth, endOfMonth, endOfWeek } from 'date-fns';
 import { useCalendarStoreSupabase } from '../stores/calendarStoreSupabase';
@@ -41,6 +45,7 @@ import { notificationService } from '../services/notifications/notificationServi
 import AIChatPopup from '../components/ai/AIChatPopup';
 import TasksTutorialModal from '../components/tasks/TasksTutorialModal';
 import { useTheme, getThemeClasses } from '../contexts/ThemeContext';
+import { estimateService } from '../services/estimateService';
 
 interface LineItem {
   id: string;
@@ -55,12 +60,19 @@ interface Task {
   title: string;
   status: 'todo' | 'in-progress' | 'done';
   due_date: string | null;
+  due_time?: string | null;
   priority: 'low' | 'medium' | 'high';
   project_id: string | null;
   project_name?: string;
+  project_address?: string;
   client_id?: string | null;
   client_name?: string;
   assigned_employees?: string[];
+  reminder_enabled?: boolean;
+  reminder_minutes?: number;
+  reminder_recipients?: 'self' | 'client' | 'employees' | 'all';
+  reminder_email?: boolean;
+  reminder_push?: boolean;
   estimate_id?: string | null;
   invoice_id?: string | null;
   send_invoice_on_complete?: boolean;
@@ -74,6 +86,7 @@ interface TodoHubProps {
 
 const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: externalSearchQuery }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { theme } = useTheme();
   const themeClasses = getThemeClasses(theme);
   const { events, fetchEvents } = useCalendarStoreSupabase();
@@ -98,6 +111,9 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
     project_id: '',
     reminder_enabled: true,
     reminder_minutes: 60,
+    reminder_recipients: 'self' as 'self' | 'client' | 'employees' | 'all',
+    reminder_email: false,
+    reminder_push: true,
     // New fields
     client_id: '',
     assigned_employees: [] as string[],
@@ -111,7 +127,10 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
   // New state for enhanced form
   const [showAddClient, setShowAddClient] = useState(false);
   const [showEmployeeSelect, setShowEmployeeSelect] = useState(false);
+  const [showClientSelect, setShowClientSelect] = useState(false);
+  const [showProjectSelect, setShowProjectSelect] = useState(false);
   const [showLineItems, setShowLineItems] = useState(false);
+  const [showReminderOptions, setShowReminderOptions] = useState(false);
   const [showInvoicePrompt, setShowInvoicePrompt] = useState(false);
   const [completedTaskForInvoice, setCompletedTaskForInvoice] = useState<Task | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -132,8 +151,21 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
     due_time: '09:00',
     priority: 'medium' as 'low' | 'medium' | 'high',
     project_id: '',
-    status: 'todo' as 'todo' | 'in-progress' | 'done'
+    status: 'todo' as 'todo' | 'in-progress' | 'done',
+    reminder_enabled: false,
+    reminder_minutes: 60,
+    reminder_recipients: 'self' as 'self' | 'client' | 'employees' | 'all',
+    reminder_email: false,
+    reminder_push: true,
+    client_id: '',
+    assigned_employees: [] as string[],
+    line_items: [] as LineItem[],
+    send_invoice_on_complete: false
   });
+  const [showEditLineItems, setShowEditLineItems] = useState(false);
+  const [editAiPrompt, setEditAiPrompt] = useState('');
+  const [editAiLoading, setEditAiLoading] = useState(false);
+  const [showEditInlineAI, setShowEditInlineAI] = useState(false);
 
   useEffect(() => {
     fetchTasks();
@@ -158,6 +190,33 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
     checkTutorial();
   }, []);
 
+  // Handle navigation from Projects to create task with project pre-selected
+  useEffect(() => {
+    const state = location.state as {
+      openCreateTask?: boolean;
+      preselectedProjectId?: string;
+      preselectedProjectName?: string;
+      returnTo?: string;
+      returnProjectId?: string;
+    } | null;
+
+    if (state?.openCreateTask) {
+      // Open the create task form
+      setShowAddTask(true);
+
+      // Pre-select the project if provided
+      if (state.preselectedProjectId) {
+        setNewTask(prev => ({
+          ...prev,
+          project_id: state.preselectedProjectId || ''
+        }));
+      }
+
+      // Clear the navigation state so refreshing doesn't re-open
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+
   const handleTutorialComplete = async (dontShowAgain: boolean) => {
     setShowTutorial(false);
     if (dontShowAgain && userId) {
@@ -177,7 +236,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
 
       const { data, error } = await supabase
         .from('tasks')
-        .select('*, projects(name)')
+        .select('*, projects(name, address)')
         .eq('user_id', user.id)
         .order('due_date', { ascending: true });
 
@@ -188,9 +247,20 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
         title: t.title,
         status: t.status as 'todo' | 'in-progress' | 'done',
         due_date: t.due_date,
+        due_time: t.due_time,
         priority: (t.priority || 'medium') as 'low' | 'medium' | 'high',
         project_id: t.project_id,
-        project_name: t.projects?.name
+        project_name: t.projects?.name,
+        project_address: t.projects?.address,
+        client_id: t.client_id,
+        assigned_employees: t.assigned_employees || [],
+        reminder_enabled: t.reminder_enabled || false,
+        reminder_minutes: t.reminder_minutes || 60,
+        reminder_recipients: t.reminder_recipients || 'self',
+        reminder_email: t.reminder_email || false,
+        reminder_push: t.reminder_push !== false,
+        line_items: t.line_items || [],
+        send_invoice_on_complete: t.send_invoice_on_complete || false
       }));
 
       setTasks(mappedTasks);
@@ -231,14 +301,18 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
           user_id: user.id,
           title: newTask.title.trim(),
           due_date: dueDateTime,
+          due_time: newTask.due_time || null,
           priority: newTask.priority,
-          project_id: newTask.project_id,
+          project_id: newTask.project_id || null,
           status: 'todo',
-          // New enhanced fields
           client_id: newTask.client_id || null,
-          assigned_employees: newTask.assigned_employees,
-          line_items: newTask.line_items,
-          send_invoice_on_complete: newTask.send_invoice_on_complete
+          assigned_employees: newTask.assigned_employees || [],
+          reminder_enabled: newTask.reminder_enabled,
+          reminder_minutes: newTask.reminder_minutes,
+          reminder_recipients: newTask.reminder_recipients,
+          reminder_email: newTask.reminder_email,
+          reminder_push: newTask.reminder_push,
+          line_items: newTask.line_items || []
         })
         .select()
         .single();
@@ -249,8 +323,8 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
         throw error;
       }
 
-      // Schedule notification if reminder is enabled and there's a due date
-      if (task && newTask.reminder_enabled && dueDateTime) {
+      // Schedule push notification if enabled and there's a due date
+      if (task && newTask.reminder_enabled && newTask.reminder_push && dueDateTime) {
         try {
           const dueDate = new Date(dueDateTime);
 
@@ -261,12 +335,62 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
               title: `Task Reminder: ${task.title}`,
               body: newTask.priority === 'high' ? '⚠️ High priority task due soon!' : 'Task due soon',
               dueDate,
-              priority: newTask.priority
+              priority: newTask.priority,
+              reminderMinutes: newTask.reminder_minutes
             });
-            console.log('Task notification scheduled');
+            console.log('Task push notification scheduled for', newTask.reminder_minutes, 'minutes before');
           }
         } catch (notifError) {
           console.warn('Failed to schedule task notification:', notifError);
+        }
+      }
+
+      // TODO: Schedule email notification if enabled
+      // Email reminders will be handled by a backend cron job that checks
+      // tasks with reminder_email=true and sends at the appropriate time
+
+      // If task has line items and a project, also save as an estimate for that project
+      if (task && newTask.line_items && newTask.line_items.length > 0 && newTask.project_id) {
+        try {
+          const project = projects.find(p => p.id === newTask.project_id);
+          const subtotal = newTask.line_items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
+          const taxRate = 0;
+          const taxAmount = subtotal * (taxRate / 100);
+          const total = subtotal + taxAmount;
+
+          // Generate a UUID for the estimate
+          const estimateId = crypto.randomUUID();
+
+          await estimateService.saveEstimate({
+            id: estimateId,
+            title: `Estimate for: ${task.title}`,
+            projectId: newTask.project_id,
+            projectName: project?.name || '',
+            status: 'draft',
+            items: newTask.line_items.map(item => ({
+              id: item.id,
+              description: item.description,
+              quantity: item.quantity,
+              unit: item.unit || 'each',
+              unitPrice: item.unit_price,
+              total: item.quantity * item.unit_price
+            })),
+            subtotal,
+            taxRate,
+            taxAmount,
+            total,
+            createdAt: new Date().toISOString()
+          });
+
+          // Link the estimate to the task
+          await supabase
+            .from('tasks')
+            .update({ estimate_id: estimateId })
+            .eq('id', task.id);
+
+          console.log('Estimate saved to project and linked to task:', estimateId);
+        } catch (estError) {
+          console.warn('Failed to save estimate to project:', estError);
         }
       }
 
@@ -283,6 +407,9 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
         project_id: '',
         reminder_enabled: true,
         reminder_minutes: 60,
+        reminder_recipients: 'self',
+        reminder_email: false,
+        reminder_push: true,
         client_id: '',
         assigned_employees: [],
         line_items: [],
@@ -311,22 +438,44 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
 
   const handleOpenEditTask = (task: Task) => {
     setSelectedTask(task);
-    // Parse date and time from due_date
+    // Parse date and time
     let dateStr = '';
     let timeStr = '09:00';
     if (task.due_date) {
       const d = parseISO(task.due_date);
       dateStr = format(d, 'yyyy-MM-dd');
-      timeStr = format(d, 'HH:mm');
+      // Use saved due_time if available, otherwise extract from due_date
+      timeStr = task.due_time || format(d, 'HH:mm');
     }
+
+    console.log('Loading task for edit:', {
+      title: task.title,
+      project_id: task.project_id,
+      client_id: task.client_id,
+      assigned_employees: task.assigned_employees,
+      reminder_enabled: task.reminder_enabled,
+      due_time: task.due_time
+    });
+
     setEditTask({
       title: task.title,
       due_date: dateStr,
       due_time: timeStr,
       priority: task.priority,
       project_id: task.project_id || '',
-      status: task.status
+      status: task.status,
+      reminder_enabled: task.reminder_enabled || false,
+      reminder_minutes: task.reminder_minutes || 60,
+      reminder_recipients: task.reminder_recipients || 'self',
+      reminder_email: task.reminder_email || false,
+      reminder_push: task.reminder_push !== false,
+      client_id: task.client_id || '',
+      assigned_employees: task.assigned_employees || [],
+      line_items: task.line_items || [],
+      send_invoice_on_complete: task.send_invoice_on_complete || false
     });
+    setShowEditLineItems(false);
+    setShowEditInlineAI(false);
     setShowEditTask(true);
   };
 
@@ -340,7 +489,9 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
       // Combine date and time
       let dueDateTime = null;
       if (editTask.due_date) {
-        dueDateTime = `${editTask.due_date}T${editTask.due_time}:00`;
+        // Ensure time is in HH:mm format (no extra seconds)
+        const timeStr = editTask.due_time.substring(0, 5);
+        dueDateTime = `${editTask.due_date}T${timeStr}:00`;
       }
 
       const { error } = await supabase
@@ -348,15 +499,72 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
         .update({
           title: editTask.title,
           due_date: dueDateTime,
+          due_time: editTask.due_time || null,
           priority: editTask.priority,
           project_id: editTask.project_id || null,
-          status: editTask.status
+          status: editTask.status,
+          client_id: editTask.client_id || null,
+          assigned_employees: editTask.assigned_employees || [],
+          reminder_enabled: editTask.reminder_enabled,
+          reminder_minutes: editTask.reminder_minutes,
+          reminder_recipients: editTask.reminder_recipients,
+          reminder_email: editTask.reminder_email,
+          reminder_push: editTask.reminder_push,
+          line_items: editTask.line_items || [],
+          send_invoice_on_complete: editTask.send_invoice_on_complete
         })
         .eq('id', selectedTask.id);
 
       if (error) {
         alert('Error updating task: ' + error.message);
         throw error;
+      }
+
+      // If task has line items and a project, also save/update estimate for that project
+      if (editTask.line_items && editTask.line_items.length > 0 && editTask.project_id) {
+        try {
+          const project = projects.find(p => p.id === editTask.project_id);
+          const subtotal = editTask.line_items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
+          const taxRate = 0;
+          const taxAmount = subtotal * (taxRate / 100);
+          const total = subtotal + taxAmount;
+
+          // Use existing estimate_id if task already has one, otherwise create new
+          const estimateId = selectedTask.estimate_id || crypto.randomUUID();
+
+          await estimateService.saveEstimate({
+            id: estimateId,
+            title: `Estimate for: ${editTask.title}`,
+            projectId: editTask.project_id,
+            projectName: project?.name || '',
+            status: 'draft',
+            items: editTask.line_items.map(item => ({
+              id: item.id,
+              description: item.description,
+              quantity: item.quantity,
+              unit: item.unit || 'each',
+              unitPrice: item.unit_price,
+              total: item.quantity * item.unit_price
+            })),
+            subtotal,
+            taxRate,
+            taxAmount,
+            total,
+            createdAt: new Date().toISOString()
+          });
+
+          // Link the estimate to the task if not already linked
+          if (!selectedTask.estimate_id) {
+            await supabase
+              .from('tasks')
+              .update({ estimate_id: estimateId })
+              .eq('id', selectedTask.id);
+          }
+
+          console.log('Estimate saved/updated for project:', editTask.project_id);
+        } catch (estError) {
+          console.warn('Failed to update estimate for project:', estError);
+        }
       }
 
       setShowEditTask(false);
@@ -565,7 +773,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
       )}
 
       {/* Content */}
-      <div className="px-4 pb-4 space-y-4 -mt-1">
+      <div className={`px-4 pb-4 space-y-4 ${embedded ? 'pt-0' : 'pt-4'}`}>
         {/* Add Task Card */}
         <div className={`${themeClasses.bg.card} rounded-2xl border-2 ${theme === 'light' ? 'border-gray-300' : 'border-zinc-600'} p-6 relative overflow-hidden`}>
           {/* Background decorations */}
@@ -604,79 +812,6 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
               </button>
             </div>
           </div>
-        </div>
-
-        {/* Mini Calendar */}
-        <div className={`${themeClasses.bg.card} rounded-2xl border-2 ${theme === 'light' ? 'border-gray-300' : 'border-zinc-600'} p-4`}>
-          <div className="flex items-center justify-between mb-4">
-            <button
-              onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-              className={`p-2 rounded-lg ${themeClasses.hover.bg}`}
-            >
-              <ChevronLeft className={`w-5 h-5 ${themeClasses.text.secondary}`} />
-            </button>
-            <h3 className={`font-semibold ${themeClasses.text.primary}`}>
-              {format(currentMonth, 'MMMM yyyy')}
-            </h3>
-            <button
-              onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-              className={`p-2 rounded-lg ${themeClasses.hover.bg}`}
-            >
-              <ChevronRight className={`w-5 h-5 ${themeClasses.text.secondary}`} />
-            </button>
-          </div>
-
-          {/* Day headers */}
-          <div className="grid grid-cols-7 gap-1 mb-2">
-            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
-              <div key={i} className={`text-center text-xs font-medium ${themeClasses.text.muted} py-1`}>
-                {day}
-              </div>
-            ))}
-          </div>
-
-          {/* Calendar grid */}
-          <div className="grid grid-cols-7 gap-1">
-            {calendarDays.map((day, i) => {
-              const isCurrentMonth = day.getMonth() === currentMonth.getMonth();
-              const isSelected = selectedDate && isSameDay(day, selectedDate);
-              const { taskCount, eventCount } = getItemsForDate(day);
-              const hasItems = taskCount > 0 || eventCount > 0;
-
-              return (
-                <button
-                  key={i}
-                  onClick={() => setSelectedDate(isSelected ? null : day)}
-                  className={`relative aspect-square flex flex-col items-center justify-center rounded-lg text-sm transition-colors ${
-                    isSelected
-                      ? 'bg-blue-500 text-white'
-                      : isToday(day)
-                      ? 'bg-blue-500/20 text-blue-500 font-semibold'
-                      : isCurrentMonth
-                      ? `${themeClasses.text.primary} ${themeClasses.hover.bg}`
-                      : themeClasses.text.muted
-                  }`}
-                >
-                  {format(day, 'd')}
-                  {hasItems && !isSelected && (
-                    <div className="absolute bottom-1 flex gap-0.5">
-                      {taskCount > 0 && <div className="w-1 h-1 rounded-full bg-blue-500" />}
-                      {eventCount > 0 && <div className={`w-1 h-1 rounded-full ${theme === 'light' ? 'bg-gray-400' : 'bg-zinc-400'}`} />}
-                    </div>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-
-          {selectedDate && (
-            <button
-              onClick={() => setSelectedDate(null)}
-              className={`w-full mt-3 py-2 text-sm ${themeClasses.text.secondary} font-medium`}
-            >
-              Clear selection
-            </button>
-          )}
         </div>
 
         {/* Today's Events */}
@@ -781,9 +916,6 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                           {formatDueDate(task.due_date)}
                         </span>
                       )}
-                      <span className={`text-xs px-1.5 py-0.5 rounded ${getPriorityColor(task.priority)}`}>
-                        {task.priority}
-                      </span>
                       {task.project_name && (
                         <span className={`text-xs ${themeClasses.text.muted} flex items-center gap-1`}>
                           <Briefcase className="w-3 h-3" />
@@ -791,11 +923,103 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                         </span>
                       )}
                     </div>
+                    {/* Clickable Address Box - below the Today/medium line */}
+                    {task.project_address && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const encodedAddress = encodeURIComponent(task.project_address || '');
+                          const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                          const mapsUrl = isIOS
+                            ? `maps://maps.apple.com/?q=${encodedAddress}`
+                            : `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
+                          window.open(mapsUrl, '_blank');
+                        }}
+                        className={`mt-2 flex items-center gap-2 text-xs px-3 py-2 rounded-lg ${theme === 'light' ? 'bg-blue-50 text-blue-600 border border-blue-200' : 'bg-blue-500/15 text-blue-400 border border-blue-500/30'} active:scale-[0.98] transition-transform`}
+                      >
+                        <MapPin className="w-4 h-4" />
+                        <span>{task.project_address}</span>
+                        <ExternalLink className="w-3 h-3 opacity-50" />
+                      </button>
+                    )}
                   </div>
                   <Pencil className={`w-4 h-4 ${themeClasses.text.muted} flex-shrink-0 mt-1`} />
                 </div>
               ))}
             </div>
+          )}
+        </div>
+
+        {/* Mini Calendar */}
+        <div className={`${themeClasses.bg.card} rounded-2xl border-2 ${theme === 'light' ? 'border-gray-300' : 'border-zinc-600'} p-4`}>
+          <div className="flex items-center justify-between mb-4">
+            <button
+              onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+              className={`p-2 rounded-lg ${themeClasses.hover.bg}`}
+            >
+              <ChevronLeft className={`w-5 h-5 ${themeClasses.text.secondary}`} />
+            </button>
+            <h3 className={`font-semibold ${themeClasses.text.primary}`}>
+              {format(currentMonth, 'MMMM yyyy')}
+            </h3>
+            <button
+              onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+              className={`p-2 rounded-lg ${themeClasses.hover.bg}`}
+            >
+              <ChevronRight className={`w-5 h-5 ${themeClasses.text.secondary}`} />
+            </button>
+          </div>
+
+          {/* Day headers */}
+          <div className="grid grid-cols-7 gap-1 mb-2">
+            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+              <div key={i} className={`text-center text-xs font-medium ${themeClasses.text.muted} py-1`}>
+                {day}
+              </div>
+            ))}
+          </div>
+
+          {/* Calendar grid */}
+          <div className="grid grid-cols-7 gap-1">
+            {calendarDays.map((day, i) => {
+              const isCurrentMonth = day.getMonth() === currentMonth.getMonth();
+              const isSelected = selectedDate && isSameDay(day, selectedDate);
+              const { taskCount, eventCount } = getItemsForDate(day);
+              const hasItems = taskCount > 0 || eventCount > 0;
+
+              return (
+                <button
+                  key={i}
+                  onClick={() => setSelectedDate(isSelected ? null : day)}
+                  className={`relative aspect-square flex flex-col items-center justify-center rounded-lg text-sm transition-colors ${
+                    isSelected
+                      ? 'bg-blue-500 text-white'
+                      : isToday(day)
+                      ? 'bg-blue-500/20 text-blue-500 font-semibold'
+                      : isCurrentMonth
+                      ? `${themeClasses.text.primary} ${themeClasses.hover.bg}`
+                      : themeClasses.text.muted
+                  }`}
+                >
+                  {format(day, 'd')}
+                  {hasItems && !isSelected && (
+                    <div className="absolute bottom-1 flex gap-0.5">
+                      {taskCount > 0 && <div className="w-1 h-1 rounded-full bg-blue-500" />}
+                      {eventCount > 0 && <div className={`w-1 h-1 rounded-full ${theme === 'light' ? 'bg-gray-400' : 'bg-zinc-400'}`} />}
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {selectedDate && (
+            <button
+              onClick={() => setSelectedDate(null)}
+              className={`w-full mt-3 py-2 text-sm ${themeClasses.text.secondary} font-medium`}
+            >
+              Clear selection
+            </button>
           )}
         </div>
       </div>
@@ -1014,9 +1238,10 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                 )}
               </div>
 
-              {/* Reminder Toggle */}
+              {/* Reminder Section */}
               {newTask.due_date && (
-                <div className={`${themeClasses.bg.input} rounded-xl p-4`}>
+                <div className={`${themeClasses.bg.input} rounded-xl p-4 space-y-4`}>
+                  {/* Toggle Row */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       {newTask.reminder_enabled ? (
@@ -1027,12 +1252,18 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                       <div>
                         <p className={`font-medium ${themeClasses.text.primary}`}>Reminder</p>
                         <p className={`text-xs ${themeClasses.text.muted}`}>
-                          {newTask.reminder_enabled ? '1 hour before due time' : 'No notification'}
+                          {newTask.reminder_enabled
+                            ? `${newTask.reminder_minutes >= 1440 ? `${Math.floor(newTask.reminder_minutes / 1440)} day${newTask.reminder_minutes >= 2880 ? 's' : ''}` : `${newTask.reminder_minutes} min`} before • ${newTask.reminder_recipients === 'self' ? 'Just me' : newTask.reminder_recipients === 'client' ? 'Client' : newTask.reminder_recipients === 'employees' ? 'Team' : 'Everyone'}`
+                            : 'No notification'}
                         </p>
                       </div>
                     </div>
                     <button
-                      onClick={() => setNewTask({ ...newTask, reminder_enabled: !newTask.reminder_enabled })}
+                      onClick={() => {
+                        const newEnabled = !newTask.reminder_enabled;
+                        setNewTask({ ...newTask, reminder_enabled: newEnabled });
+                        if (newEnabled) setShowReminderOptions(true);
+                      }}
                       className={`w-12 h-7 rounded-full transition-colors ${
                         newTask.reminder_enabled ? 'bg-blue-500' : theme === 'light' ? 'bg-gray-300' : 'bg-zinc-600'
                       }`}
@@ -1044,44 +1275,143 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                       />
                     </button>
                   </div>
+
+                  {/* Expanded Options */}
+                  {newTask.reminder_enabled && (
+                    <div className="space-y-4 pt-2 border-t border-zinc-700/30">
+                      {/* When to remind */}
+                      <div>
+                        <label className={`block text-xs font-medium ${themeClasses.text.muted} mb-2`}>When to remind</label>
+                        <div className="flex flex-wrap gap-2">
+                          {[
+                            { label: '15 min', value: 15 },
+                            { label: '30 min', value: 30 },
+                            { label: '1 hour', value: 60 },
+                            { label: '1 day', value: 1440 },
+                          ].map((opt) => (
+                            <button
+                              key={opt.value}
+                              type="button"
+                              onClick={() => setNewTask({ ...newTask, reminder_minutes: opt.value })}
+                              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                                newTask.reminder_minutes === opt.value
+                                  ? 'bg-blue-500 text-white'
+                                  : `${themeClasses.bg.secondary} ${themeClasses.text.secondary}`
+                              }`}
+                            >
+                              {opt.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Who to notify */}
+                      <div>
+                        <label className={`block text-xs font-medium ${themeClasses.text.muted} mb-2`}>Who to notify</label>
+                        <div className="flex flex-wrap gap-2">
+                          {[
+                            { label: 'Just me', value: 'self' as const },
+                            { label: 'Client', value: 'client' as const, disabled: !newTask.client_id },
+                            { label: 'Team', value: 'employees' as const, disabled: newTask.assigned_employees.length === 0 },
+                            { label: 'Everyone', value: 'all' as const, disabled: !newTask.client_id && newTask.assigned_employees.length === 0 },
+                          ].map((opt) => (
+                            <button
+                              key={opt.value}
+                              type="button"
+                              onClick={() => !opt.disabled && setNewTask({ ...newTask, reminder_recipients: opt.value })}
+                              disabled={opt.disabled}
+                              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                                opt.disabled
+                                  ? `${themeClasses.bg.secondary} ${themeClasses.text.muted} opacity-50 cursor-not-allowed`
+                                  : newTask.reminder_recipients === opt.value
+                                    ? 'bg-blue-500 text-white'
+                                    : `${themeClasses.bg.secondary} ${themeClasses.text.secondary}`
+                              }`}
+                            >
+                              {opt.label}
+                            </button>
+                          ))}
+                        </div>
+                        {(newTask.reminder_recipients !== 'self' && !newTask.client_id && newTask.assigned_employees.length === 0) && (
+                          <p className={`text-xs ${themeClasses.text.muted} mt-1`}>Add a client or employees above to notify them</p>
+                        )}
+                      </div>
+
+                      {/* How to notify */}
+                      <div>
+                        <label className={`block text-xs font-medium ${themeClasses.text.muted} mb-2`}>How to notify</label>
+                        <div className="flex gap-3">
+                          <button
+                            type="button"
+                            onClick={() => setNewTask({ ...newTask, reminder_push: !newTask.reminder_push })}
+                            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                              newTask.reminder_push
+                                ? 'bg-blue-500/20 text-blue-500 border border-blue-500/50'
+                                : `${themeClasses.bg.secondary} ${themeClasses.text.secondary} border ${themeClasses.border.input}`
+                            }`}
+                          >
+                            <Smartphone className="w-4 h-4" />
+                            Push
+                            {newTask.reminder_push && <Check className="w-3 h-3" />}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setNewTask({ ...newTask, reminder_email: !newTask.reminder_email })}
+                            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                              newTask.reminder_email
+                                ? 'bg-blue-500/20 text-blue-500 border border-blue-500/50'
+                                : `${themeClasses.bg.secondary} ${themeClasses.text.secondary} border ${themeClasses.border.input}`
+                            }`}
+                          >
+                            <Mail className="w-4 h-4" />
+                            Email
+                            {newTask.reminder_email && <Check className="w-3 h-3" />}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
-              <div>
-                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Priority</label>
-                <div className="flex gap-2">
-                  {(['low', 'medium', 'high'] as const).map((p) => (
-                    <button
-                      key={p}
-                      onClick={() => setNewTask({ ...newTask, priority: p })}
-                      className={`flex-1 py-2 rounded-xl font-medium text-sm transition-colors ${
-                        newTask.priority === p
-                          ? p === 'high' ? 'bg-red-500 text-white'
-                            : p === 'medium' ? 'bg-blue-500 text-white'
-                            : 'bg-green-500 text-white'
-                          : `${themeClasses.bg.input} ${themeClasses.text.secondary}`
-                      }`}
-                    >
-                      {p.charAt(0).toUpperCase() + p.slice(1)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
+              <div className="relative">
                 <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Project <span className="text-red-400">*</span></label>
                 {!showQuickAddProject ? (
                   <div className="space-y-2">
-                    <select
-                      value={newTask.project_id}
-                      onChange={(e) => setNewTask({ ...newTask, project_id: e.target.value })}
-                      className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                    <button
+                      type="button"
+                      onClick={() => setShowProjectSelect(!showProjectSelect)}
+                      className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} flex items-center justify-between`}
                     >
-                      <option value="">Select a project...</option>
-                      {projects.map((p) => (
-                        <option key={p.id} value={p.id}>{p.name}</option>
-                      ))}
-                    </select>
+                      <span className={!newTask.project_id ? themeClasses.text.muted : ''}>
+                        {newTask.project_id
+                          ? projects.find(p => p.id === newTask.project_id)?.name
+                          : 'Select a project...'}
+                      </span>
+                      {showProjectSelect ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                    </button>
+
+                    {showProjectSelect && (
+                      <div className={`absolute z-50 left-0 right-0 mt-1 ${themeClasses.bg.secondary} rounded-xl border ${themeClasses.border.input} shadow-lg max-h-48 overflow-y-auto`}>
+                        {projects.map((p) => (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => {
+                              setNewTask({ ...newTask, project_id: p.id });
+                              setShowProjectSelect(false);
+                            }}
+                            className={`w-full px-4 py-3 text-left ${themeClasses.text.primary} ${themeClasses.hover.bg} ${newTask.project_id === p.id ? 'bg-blue-500/20' : ''}`}
+                          >
+                            {p.name}
+                          </button>
+                        ))}
+                        {projects.length === 0 && (
+                          <div className={`px-4 py-3 text-sm ${themeClasses.text.muted}`}>No projects found. Create one below.</div>
+                        )}
+                      </div>
+                    )}
+
                     <button
                       type="button"
                       onClick={() => setShowQuickAddProject(true)}
@@ -1152,21 +1482,110 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                 )}
               </div>
 
+              {/* Project Address Map */}
+              {newTask.project_id && (() => {
+                const selectedProject = projects.find(p => p.id === newTask.project_id);
+                if (selectedProject?.address) {
+                  return (
+                    <div className={`${themeClasses.bg.secondary} border ${themeClasses.border.primary} rounded-xl overflow-hidden`}>
+                      <div className="p-3 border-b border-zinc-700/50 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <MapPin className="w-4 h-4 text-red-500" />
+                          <span className={`text-sm font-medium ${themeClasses.text.primary}`}>Job Location</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedProject.address)}`;
+                            window.open(url, '_blank');
+                          }}
+                          className="flex items-center gap-1 px-2 py-1 bg-blue-500/20 text-blue-500 rounded-lg text-xs font-medium"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          Open
+                        </button>
+                      </div>
+                      <p className={`px-3 py-2 text-xs ${themeClasses.text.muted}`}>{selectedProject.address}</p>
+                      <div className="h-32 bg-gray-100">
+                        <iframe
+                          src={`https://www.google.com/maps?q=${encodeURIComponent(selectedProject.address)}&output=embed&z=15`}
+                          width="100%"
+                          height="100%"
+                          style={{ border: 0 }}
+                          allowFullScreen
+                          loading="lazy"
+                          referrerPolicy="no-referrer-when-downgrade"
+                        />
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
+
               {/* Client Section */}
-              <div>
+              <div className="relative">
                 <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Client</label>
                 {!showAddClient ? (
                   <div className="space-y-2">
-                    <select
-                      value={newTask.client_id}
-                      onChange={(e) => setNewTask({ ...newTask, client_id: e.target.value })}
-                      className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                    <button
+                      type="button"
+                      onClick={() => setShowClientSelect(!showClientSelect)}
+                      className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} flex items-center justify-between`}
                     >
-                      <option value="">Select a client (optional)...</option>
-                      {clients.map((c) => (
-                        <option key={c.id} value={c.id}>{c.first_name} {c.last_name}</option>
-                      ))}
-                    </select>
+                      <span className={!newTask.client_id ? themeClasses.text.muted : ''}>
+                        {newTask.client_id
+                          ? (() => {
+                              const client = clients.find(c => c.id === newTask.client_id);
+                              if (!client) return 'Select a client (optional)...';
+                              return client.name || (client.first_name || client.last_name)
+                                ? (client.name || `${client.first_name || ''} ${client.last_name || ''}`.trim())
+                                : client.email || 'Unnamed Client';
+                            })()
+                          : 'Select a client (optional)...'}
+                      </span>
+                      {showClientSelect ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                    </button>
+
+                    {showClientSelect && (
+                      <div className={`absolute z-50 left-0 right-0 mt-1 ${themeClasses.bg.secondary} rounded-xl border ${themeClasses.border.input} shadow-lg max-h-60 overflow-y-auto`}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setNewTask({ ...newTask, client_id: '' });
+                            setShowClientSelect(false);
+                          }}
+                          className={`w-full px-4 py-4 text-left text-base ${themeClasses.text.muted} ${themeClasses.hover.bg} ${!newTask.client_id ? 'bg-blue-500/20' : ''}`}
+                        >
+                          No client selected
+                        </button>
+                        {clients.map((c) => {
+                          const displayName = c.name || (c.first_name || c.last_name)
+                            ? (c.name || `${c.first_name || ''} ${c.last_name || ''}`.trim())
+                            : c.email || 'Unnamed Client';
+                          return (
+                            <button
+                              key={c.id}
+                              type="button"
+                              onClick={() => {
+                                setNewTask({ ...newTask, client_id: c.id });
+                                setShowClientSelect(false);
+                              }}
+                              className={`w-full px-4 py-4 text-left ${themeClasses.text.primary} ${themeClasses.hover.bg} ${newTask.client_id === c.id ? 'bg-blue-500/20' : ''}`}
+                            >
+                              <span className="text-base font-medium">{displayName}</span>
+                              {displayName !== c.email && c.email && (
+                                <span className={`block text-sm ${themeClasses.text.muted}`}>{c.email}</span>
+                              )}
+                            </button>
+                          );
+                        })}
+                        {clients.length === 0 && (
+                          <div className={`px-4 py-4 text-base ${themeClasses.text.muted}`}>No clients found</div>
+                        )}
+                      </div>
+                    )}
+
                     <button
                       type="button"
                       onClick={() => setShowAddClient(true)}
@@ -1389,65 +1808,34 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                               if (!aiPrompt.trim()) return;
                               setAiLoading(true);
 
-                              // Simulate AI generating line items (in production, call actual AI API)
-                              setTimeout(() => {
-                                // Generate sample line items based on keywords
-                                const prompt = aiPrompt.toLowerCase();
-                                const generatedItems: LineItem[] = [];
+                              try {
+                                // Call the real contractor-chat AI for accurate estimates
+                                const { data, error } = await supabase.functions.invoke('contractor-chat', {
+                                  body: {
+                                    messages: [
+                                      { role: 'user', content: `Generate a detailed estimate for: ${aiPrompt}. Include all materials, labor, and any other costs with accurate quantities and prices.` }
+                                    ],
+                                    currentEstimate: [],
+                                    mode: 'estimating'
+                                  }
+                                });
 
-                                if (prompt.includes('deck') || prompt.includes('decking')) {
-                                  generatedItems.push(
-                                    { id: crypto.randomUUID(), description: 'Composite decking materials', quantity: 1, unitPrice: 2500, total: 2500 },
-                                    { id: crypto.randomUUID(), description: 'Deck framing lumber', quantity: 1, unitPrice: 800, total: 800 },
-                                    { id: crypto.randomUUID(), description: 'Hardware & fasteners', quantity: 1, unitPrice: 200, total: 200 },
-                                    { id: crypto.randomUUID(), description: 'Labor - deck installation', quantity: 24, unitPrice: 75, total: 1800 }
-                                  );
-                                }
-                                if (prompt.includes('railing') || prompt.includes('rail')) {
-                                  generatedItems.push(
-                                    { id: crypto.randomUUID(), description: 'Railing system', quantity: 1, unitPrice: 600, total: 600 },
-                                    { id: crypto.randomUUID(), description: 'Labor - railing installation', quantity: 4, unitPrice: 75, total: 300 }
-                                  );
-                                }
-                                if (prompt.includes('stair') || prompt.includes('steps')) {
-                                  generatedItems.push(
-                                    { id: crypto.randomUUID(), description: 'Stair materials', quantity: 1, unitPrice: 400, total: 400 },
-                                    { id: crypto.randomUUID(), description: 'Labor - stair construction', quantity: 6, unitPrice: 75, total: 450 }
-                                  );
-                                }
-                                if (prompt.includes('paint') || prompt.includes('painting')) {
-                                  generatedItems.push(
-                                    { id: crypto.randomUUID(), description: 'Paint & supplies', quantity: 1, unitPrice: 150, total: 150 },
-                                    { id: crypto.randomUUID(), description: 'Labor - painting', quantity: 8, unitPrice: 65, total: 520 }
-                                  );
-                                }
-                                if (prompt.includes('roof') || prompt.includes('roofing')) {
-                                  generatedItems.push(
-                                    { id: crypto.randomUUID(), description: 'Roofing materials (shingles)', quantity: 30, unitPrice: 45, total: 1350 },
-                                    { id: crypto.randomUUID(), description: 'Underlayment & flashing', quantity: 1, unitPrice: 300, total: 300 },
-                                    { id: crypto.randomUUID(), description: 'Labor - roof installation', quantity: 16, unitPrice: 85, total: 1360 }
-                                  );
-                                }
-                                if (prompt.includes('plumb') || prompt.includes('pipe') || prompt.includes('faucet')) {
-                                  generatedItems.push(
-                                    { id: crypto.randomUUID(), description: 'Plumbing fixtures', quantity: 1, unitPrice: 350, total: 350 },
-                                    { id: crypto.randomUUID(), description: 'Pipe & fittings', quantity: 1, unitPrice: 150, total: 150 },
-                                    { id: crypto.randomUUID(), description: 'Labor - plumbing', quantity: 6, unitPrice: 95, total: 570 }
-                                  );
-                                }
-                                if (prompt.includes('electric') || prompt.includes('wiring') || prompt.includes('outlet')) {
-                                  generatedItems.push(
-                                    { id: crypto.randomUUID(), description: 'Electrical materials', quantity: 1, unitPrice: 200, total: 200 },
-                                    { id: crypto.randomUUID(), description: 'Labor - electrical work', quantity: 4, unitPrice: 95, total: 380 }
-                                  );
-                                }
+                                if (error) throw error;
 
-                                // Default items if nothing specific matched
+                                // Convert the AI response to our LineItem format
+                                const generatedItems: LineItem[] = (data?.updatedEstimate || []).map((item: any) => ({
+                                  id: crypto.randomUUID(),
+                                  description: item.name || item.description,
+                                  quantity: item.quantity || 1,
+                                  unitPrice: item.unitPrice || 0,
+                                  total: item.totalPrice || (item.quantity * item.unitPrice) || 0
+                                }));
+
                                 if (generatedItems.length === 0) {
-                                  generatedItems.push(
-                                    { id: crypto.randomUUID(), description: 'Materials', quantity: 1, unitPrice: 500, total: 500 },
-                                    { id: crypto.randomUUID(), description: 'Labor', quantity: 8, unitPrice: 75, total: 600 }
-                                  );
+                                  // Fallback if no items generated
+                                  alert('Could not generate estimate. Please try a more specific description.');
+                                  setAiLoading(false);
+                                  return;
                                 }
 
                                 // Add generated items to line items
@@ -1456,10 +1844,14 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                                   line_items: [...prev.line_items, ...generatedItems]
                                 }));
 
-                                setAiLoading(false);
                                 setShowInlineAI(false); // Switch back to line items view
                                 setAiPrompt('');
-                              }, 1500);
+                              } catch (err: any) {
+                                console.error('AI estimate error:', err);
+                                alert('Failed to generate estimate: ' + (err.message || 'Unknown error'));
+                              } finally {
+                                setAiLoading(false);
+                              }
                             }}
                             className={`mt-2 w-full py-2.5 px-4 bg-blue-500 text-white rounded-lg text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed`}
                           >
@@ -1654,7 +2046,8 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
               </div>
             </div>
 
-            <div className="p-4 space-y-4">
+            <div className="p-4 pb-32 space-y-4">
+              {/* Task Name */}
               <div>
                 <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>
                   Task Name <span className="text-red-400">*</span>
@@ -1668,27 +2061,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Due Date</label>
-                  <input
-                    type="date"
-                    value={editTask.due_date}
-                    onChange={(e) => setEditTask({ ...editTask, due_date: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
-                  />
-                </div>
-                <div>
-                  <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Time</label>
-                  <input
-                    type="time"
-                    value={editTask.due_time}
-                    onChange={(e) => setEditTask({ ...editTask, due_time: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
-                  />
-                </div>
-              </div>
-
+              {/* Status */}
               <div>
                 <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Status</label>
                 <div className="flex gap-2">
@@ -1710,40 +2083,532 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                 </div>
               </div>
 
-              <div>
-                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Priority</label>
-                <div className="flex gap-2">
-                  {(['low', 'medium', 'high'] as const).map((p) => (
-                    <button
-                      key={p}
-                      onClick={() => setEditTask({ ...editTask, priority: p })}
-                      className={`flex-1 py-2 rounded-xl font-medium text-sm transition-colors ${
-                        editTask.priority === p
-                          ? p === 'high' ? 'bg-red-500 text-white'
-                            : p === 'medium' ? 'bg-blue-500 text-white'
-                            : 'bg-green-500 text-white'
-                          : `${themeClasses.bg.input} ${themeClasses.text.secondary}`
-                      }`}
-                    >
-                      {p.charAt(0).toUpperCase() + p.slice(1)}
-                    </button>
-                  ))}
+              {/* Due Date & Time - Simple inputs for edit */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Due Date</label>
+                  <input
+                    type="date"
+                    value={editTask.due_date}
+                    onChange={(e) => setEditTask({ ...editTask, due_date: e.target.value })}
+                    className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                  />
+                </div>
+                <div>
+                  <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Time</label>
+                  <input
+                    type="time"
+                    value={editTask.due_time}
+                    onChange={(e) => setEditTask({ ...editTask, due_time: e.target.value })}
+                    className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                  />
                 </div>
               </div>
 
+              {/* Project */}
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1">Project (Optional)</label>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Project</label>
                 <select
                   value={editTask.project_id}
                   onChange={(e) => setEditTask({ ...editTask, project_id: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl border border-[#3A3A3C] bg-[#262626] text-white focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/20 outline-none"
+                  className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
                 >
-                  <option value="">No project</option>
+                  <option value="">Select a project...</option>
                   {projects.map((p) => (
                     <option key={p.id} value={p.id}>{p.name}</option>
                   ))}
                 </select>
               </div>
+
+              {/* Project Address Map */}
+              {editTask.project_id && (() => {
+                const selectedProject = projects.find(p => p.id === editTask.project_id);
+                if (selectedProject?.address) {
+                  return (
+                    <div className={`${themeClasses.bg.secondary} border ${themeClasses.border.primary} rounded-xl overflow-hidden`}>
+                      <div className="p-3 border-b border-zinc-700/50 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <MapPin className="w-4 h-4 text-red-500" />
+                          <span className={`text-sm font-medium ${themeClasses.text.primary}`}>Job Location</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedProject.address)}`;
+                            window.open(url, '_blank');
+                          }}
+                          className="flex items-center gap-1 px-2 py-1 bg-blue-500/20 text-blue-500 rounded-lg text-xs font-medium"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          Open
+                        </button>
+                      </div>
+                      <p className={`px-3 py-2 text-xs ${themeClasses.text.muted}`}>{selectedProject.address}</p>
+                      <div className="h-32 bg-gray-100">
+                        <iframe
+                          src={`https://www.google.com/maps?q=${encodeURIComponent(selectedProject.address)}&output=embed&z=15`}
+                          width="100%"
+                          height="100%"
+                          style={{ border: 0 }}
+                          allowFullScreen
+                          loading="lazy"
+                          referrerPolicy="no-referrer-when-downgrade"
+                        />
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
+
+              {/* Client */}
+              <div>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Client</label>
+                <select
+                  value={editTask.client_id}
+                  onChange={(e) => setEditTask({ ...editTask, client_id: e.target.value })}
+                  className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                >
+                  <option value="">Select a client (optional)...</option>
+                  {clients.map((c) => {
+                    const displayName = c.name || (c.first_name || c.last_name)
+                      ? (c.name || `${c.first_name || ''} ${c.last_name || ''}`.trim())
+                      : c.email || 'Unnamed Client';
+                    return (
+                      <option key={c.id} value={c.id}>{displayName}</option>
+                    );
+                  })}
+                </select>
+              </div>
+
+              {/* Assigned Employees */}
+              <div>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Assigned Employees</label>
+                <select
+                  value=""
+                  onChange={(e) => {
+                    if (e.target.value && !editTask.assigned_employees?.includes(e.target.value)) {
+                      setEditTask({
+                        ...editTask,
+                        assigned_employees: [...(editTask.assigned_employees || []), e.target.value]
+                      });
+                    }
+                  }}
+                  className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                >
+                  <option value="">Select employees...</option>
+                  {employees.map((emp) => (
+                    <option key={emp.id} value={emp.name} disabled={editTask.assigned_employees?.includes(emp.name)}>
+                      {emp.name}
+                    </option>
+                  ))}
+                </select>
+                {editTask.assigned_employees && editTask.assigned_employees.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {editTask.assigned_employees.map((name) => (
+                      <span key={name} className="inline-flex items-center gap-1 px-3 py-1 bg-blue-500/20 text-blue-500 rounded-full text-sm">
+                        {name}
+                        <button
+                          type="button"
+                          onClick={() => setEditTask({
+                            ...editTask,
+                            assigned_employees: editTask.assigned_employees?.filter(n => n !== name) || []
+                          })}
+                          className="hover:text-blue-300"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Reminder Section */}
+              {editTask.due_date && (
+                <div className={`${themeClasses.bg.input} rounded-xl p-4 space-y-4`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {editTask.reminder_enabled ? (
+                        <Bell className={`w-5 h-5 ${themeClasses.text.primary}`} />
+                      ) : (
+                        <BellOff className={`w-5 h-5 ${themeClasses.text.muted}`} />
+                      )}
+                      <div>
+                        <p className={`font-medium ${themeClasses.text.primary}`}>Reminder</p>
+                        <p className={`text-xs ${themeClasses.text.muted}`}>
+                          {editTask.reminder_enabled
+                            ? `${editTask.reminder_minutes >= 1440 ? `${Math.floor(editTask.reminder_minutes / 1440)} day` : `${editTask.reminder_minutes} min`} before • ${editTask.reminder_recipients === 'self' ? 'Just me' : editTask.reminder_recipients === 'client' ? 'Client' : 'Everyone'}`
+                            : 'No notification'}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setEditTask({ ...editTask, reminder_enabled: !editTask.reminder_enabled })}
+                      className={`w-12 h-7 rounded-full transition-colors ${
+                        editTask.reminder_enabled ? 'bg-blue-500' : theme === 'light' ? 'bg-gray-300' : 'bg-zinc-600'
+                      }`}
+                    >
+                      <div className={`w-5 h-5 rounded-full shadow transition-transform ${
+                        editTask.reminder_enabled ? 'translate-x-6 bg-white' : theme === 'light' ? 'translate-x-1 bg-white' : 'translate-x-1 bg-zinc-400'
+                      }`} />
+                    </button>
+                  </div>
+
+                  {editTask.reminder_enabled && (
+                    <div className="space-y-4 pt-2 border-t border-zinc-700/30">
+                      {/* When to remind */}
+                      <div>
+                        <label className={`block text-xs font-medium ${themeClasses.text.muted} mb-2`}>When to remind</label>
+                        <div className="flex flex-wrap gap-2">
+                          {[
+                            { label: '15 min', value: 15 },
+                            { label: '30 min', value: 30 },
+                            { label: '1 hour', value: 60 },
+                            { label: '1 day', value: 1440 },
+                          ].map((opt) => (
+                            <button
+                              key={opt.value}
+                              type="button"
+                              onClick={() => setEditTask({ ...editTask, reminder_minutes: opt.value })}
+                              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                                editTask.reminder_minutes === opt.value
+                                  ? 'bg-blue-500 text-white'
+                                  : `${themeClasses.bg.secondary} ${themeClasses.text.secondary}`
+                              }`}
+                            >
+                              {opt.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Who to notify */}
+                      <div>
+                        <label className={`block text-xs font-medium ${themeClasses.text.muted} mb-2`}>Who to notify</label>
+                        <div className="flex flex-wrap gap-2">
+                          {[
+                            { label: 'Just me', value: 'self' as const },
+                            { label: 'Client', value: 'client' as const, disabled: !editTask.client_id },
+                            { label: 'Team', value: 'employees' as const, disabled: !editTask.assigned_employees?.length },
+                            { label: 'Everyone', value: 'all' as const, disabled: !editTask.client_id && !editTask.assigned_employees?.length },
+                          ].map((opt) => (
+                            <button
+                              key={opt.value}
+                              type="button"
+                              onClick={() => !opt.disabled && setEditTask({ ...editTask, reminder_recipients: opt.value })}
+                              disabled={opt.disabled}
+                              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                                opt.disabled
+                                  ? `${themeClasses.bg.secondary} ${themeClasses.text.muted} opacity-50 cursor-not-allowed`
+                                  : editTask.reminder_recipients === opt.value
+                                    ? 'bg-blue-500 text-white'
+                                    : `${themeClasses.bg.secondary} ${themeClasses.text.secondary}`
+                              }`}
+                            >
+                              {opt.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* How to notify */}
+                      <div>
+                        <label className={`block text-xs font-medium ${themeClasses.text.muted} mb-2`}>How to notify</label>
+                        <div className="flex gap-3">
+                          <button
+                            type="button"
+                            onClick={() => setEditTask({ ...editTask, reminder_push: !editTask.reminder_push })}
+                            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                              editTask.reminder_push
+                                ? 'bg-blue-500/20 text-blue-500 border border-blue-500/50'
+                                : `${themeClasses.bg.secondary} ${themeClasses.text.secondary} border ${themeClasses.border.input}`
+                            }`}
+                          >
+                            <Smartphone className="w-4 h-4" />
+                            Push
+                            {editTask.reminder_push && <Check className="w-3 h-3" />}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setEditTask({ ...editTask, reminder_email: !editTask.reminder_email })}
+                            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                              editTask.reminder_email
+                                ? 'bg-blue-500/20 text-blue-500 border border-blue-500/50'
+                                : `${themeClasses.bg.secondary} ${themeClasses.text.secondary} border ${themeClasses.border.input}`
+                            }`}
+                          >
+                            <Mail className="w-4 h-4" />
+                            Email
+                            {editTask.reminder_email && <Check className="w-3 h-3" />}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Estimate & Line Items Section */}
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setShowEditLineItems(!showEditLineItems)}
+                  className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} flex items-center justify-between`}
+                >
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-blue-500" />
+                    <span>Estimate & Line Items</span>
+                    {editTask.line_items && editTask.line_items.length > 0 && (
+                      <span className="px-2 py-0.5 bg-blue-500 text-white rounded-full text-xs">{editTask.line_items.length}</span>
+                    )}
+                  </div>
+                  {showEditLineItems ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                </button>
+
+                {showEditLineItems && (
+                  <div className={`mt-2 p-4 ${themeClasses.bg.input} rounded-xl border ${themeClasses.border.input}`}>
+                    {/* Tab buttons */}
+                    <div className="flex gap-2 mb-4">
+                      <button
+                        type="button"
+                        onClick={() => setShowEditInlineAI(false)}
+                        className={`flex-1 py-2 px-3 ${!showEditInlineAI ? 'bg-blue-500 text-white' : `${themeClasses.bg.tertiary} ${themeClasses.text.primary}`} rounded-lg text-sm font-medium flex items-center justify-center gap-2`}
+                      >
+                        <Calculator className="w-4 h-4" />
+                        Line Items
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowEditInlineAI(true)}
+                        className={`flex-1 py-2 px-3 ${showEditInlineAI ? 'bg-blue-500 text-white' : `${themeClasses.bg.tertiary} ${themeClasses.text.primary}`} rounded-lg text-sm font-medium flex items-center justify-center gap-2`}
+                      >
+                        <Sparkles className="w-4 h-4" />
+                        AI Estimate
+                      </button>
+                    </div>
+
+                    {/* AI Estimate Inline Chat */}
+                    {showEditInlineAI && (
+                      <div className="mb-4">
+                        <div className={`p-3 ${themeClasses.bg.secondary} rounded-lg mb-3`}>
+                          <p className={`text-sm ${themeClasses.text.secondary} mb-2`}>
+                            Describe your project and I'll generate line items for your estimate:
+                          </p>
+                          <textarea
+                            value={editAiPrompt}
+                            onChange={(e) => setEditAiPrompt(e.target.value)}
+                            placeholder="e.g., Install new deck 12x16 ft with composite decking, railing, and stairs..."
+                            className={`w-full px-3 py-2 ${themeClasses.bg.input} border ${themeClasses.border.input} rounded-lg ${themeClasses.text.primary} text-sm resize-none ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'}`}
+                            rows={3}
+                          />
+                          <button
+                            type="button"
+                            disabled={!editAiPrompt.trim() || editAiLoading}
+                            onClick={async () => {
+                              if (!editAiPrompt.trim()) return;
+                              setEditAiLoading(true);
+
+                              try {
+                                // Call the real contractor-chat AI for accurate estimates
+                                const { data, error } = await supabase.functions.invoke('contractor-chat', {
+                                  body: {
+                                    messages: [
+                                      { role: 'user', content: `Generate a detailed estimate for: ${editAiPrompt}. Include all materials, labor, and any other costs with accurate quantities and prices.` }
+                                    ],
+                                    currentEstimate: [],
+                                    mode: 'estimating'
+                                  }
+                                });
+
+                                if (error) throw error;
+
+                                // Convert the AI response to our LineItem format
+                                const generatedItems: LineItem[] = (data?.updatedEstimate || []).map((item: any) => ({
+                                  id: crypto.randomUUID(),
+                                  description: item.name || item.description,
+                                  quantity: item.quantity || 1,
+                                  unitPrice: item.unitPrice || 0,
+                                  total: item.totalPrice || (item.quantity * item.unitPrice) || 0
+                                }));
+
+                                if (generatedItems.length === 0) {
+                                  alert('Could not generate estimate. Please try a more specific description.');
+                                  setEditAiLoading(false);
+                                  return;
+                                }
+
+                                // Add generated items to line items
+                                setEditTask(prev => ({
+                                  ...prev,
+                                  line_items: [...(prev.line_items || []), ...generatedItems]
+                                }));
+
+                                setShowEditInlineAI(false); // Switch back to line items view
+                                setEditAiPrompt('');
+                              } catch (err: any) {
+                                console.error('AI estimate error:', err);
+                                alert('Failed to generate estimate: ' + (err.message || 'Unknown error'));
+                              } finally {
+                                setEditAiLoading(false);
+                              }
+                            }}
+                            className={`mt-2 w-full py-2.5 px-4 bg-blue-500 text-white rounded-lg text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+                          >
+                            {editAiLoading ? (
+                              <>
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                Generating...
+                              </>
+                            ) : (
+                              <>
+                                <Sparkles className="w-4 h-4" />
+                                Generate Line Items
+                              </>
+                            )}
+                          </button>
+                        </div>
+                        <p className={`text-xs ${themeClasses.text.muted} text-center`}>
+                          AI will generate line items based on your description
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Line items list - show when not in AI mode */}
+                    {!showEditInlineAI && (
+                    <>
+                    <div className="space-y-2 mb-3">
+                      {(editTask.line_items || []).map((item, idx) => (
+                        <div key={item.id} className={`flex items-center gap-2 p-2 ${themeClasses.bg.secondary} rounded-lg`}>
+                          <input
+                            type="text"
+                            value={item.description}
+                            onChange={(e) => {
+                              const updated = [...(editTask.line_items || [])];
+                              updated[idx] = { ...updated[idx], description: e.target.value };
+                              setEditTask(prev => ({ ...prev, line_items: updated }));
+                            }}
+                            className={`flex-1 px-2 py-1 ${themeClasses.bg.input} rounded text-sm ${themeClasses.text.primary}`}
+                            placeholder="Description"
+                          />
+                          <input
+                            type="number"
+                            value={item.quantity}
+                            onChange={(e) => {
+                              const updated = [...(editTask.line_items || [])];
+                              const qty = parseFloat(e.target.value) || 0;
+                              updated[idx] = { ...updated[idx], quantity: qty, total: qty * updated[idx].unitPrice };
+                              setEditTask(prev => ({ ...prev, line_items: updated }));
+                            }}
+                            className={`w-16 px-2 py-1 ${themeClasses.bg.input} rounded text-sm text-center ${themeClasses.text.primary}`}
+                            placeholder="Qty"
+                          />
+                          <input
+                            type="number"
+                            value={item.unitPrice}
+                            onChange={(e) => {
+                              const updated = [...(editTask.line_items || [])];
+                              const price = parseFloat(e.target.value) || 0;
+                              updated[idx] = { ...updated[idx], unitPrice: price, total: updated[idx].quantity * price };
+                              setEditTask(prev => ({ ...prev, line_items: updated }));
+                            }}
+                            className={`w-20 px-2 py-1 ${themeClasses.bg.input} rounded text-sm text-center ${themeClasses.text.primary}`}
+                            placeholder="Price"
+                          />
+                          <span className={`w-20 text-sm text-right ${themeClasses.text.primary}`}>
+                            ${item.total.toFixed(2)}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditTask(prev => ({ ...prev, line_items: (prev.line_items || []).filter((_, i) => i !== idx) }));
+                            }}
+                            className="text-red-400 hover:text-red-500"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Add line item button */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newItem: LineItem = {
+                          id: crypto.randomUUID(),
+                          description: '',
+                          quantity: 1,
+                          unitPrice: 0,
+                          total: 0
+                        };
+                        setEditTask(prev => ({ ...prev, line_items: [...(prev.line_items || []), newItem] }));
+                      }}
+                      className="flex items-center gap-2 text-blue-500 text-sm font-medium"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add Line Item
+                    </button>
+                    </>
+                    )}
+
+                    {/* Totals */}
+                    {editTask.line_items && editTask.line_items.length > 0 && (
+                      <div className={`mt-4 pt-3 border-t ${themeClasses.border.primary}`}>
+                        <div className="flex justify-between text-sm">
+                          <span className={themeClasses.text.secondary}>Subtotal</span>
+                          <span className={themeClasses.text.primary}>
+                            ${editTask.line_items.reduce((sum, item) => sum + item.total, 0).toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-sm mt-1">
+                          <span className={themeClasses.text.secondary}>Tax (8%)</span>
+                          <span className={themeClasses.text.primary}>
+                            ${(editTask.line_items.reduce((sum, item) => sum + item.total, 0) * 0.08).toFixed(2)}
+                          </span>
+                        </div>
+                        <div className={`flex justify-between font-semibold mt-2 pt-2 border-t ${themeClasses.border.primary}`}>
+                          <span className={themeClasses.text.primary}>Total</span>
+                          <span className="text-blue-500">
+                            ${(editTask.line_items.reduce((sum, item) => sum + item.total, 0) * 1.08).toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Invoice Section - only show if line items exist */}
+              {editTask.line_items && editTask.line_items.length > 0 && (
+                <div className={`p-4 ${themeClasses.bg.input} rounded-xl border ${themeClasses.border.input}`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <DollarSign className={`w-5 h-5 ${editTask.send_invoice_on_complete ? 'text-green-500' : themeClasses.text.muted}`} />
+                      <div>
+                        <p className={`font-medium ${themeClasses.text.primary}`}>Invoice on Completion</p>
+                        <p className={`text-xs ${themeClasses.text.muted}`}>
+                          {editTask.send_invoice_on_complete ? 'Will prompt to send invoice when job is done' : 'No automatic invoice'}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setEditTask(prev => ({ ...prev, send_invoice_on_complete: !prev.send_invoice_on_complete }))}
+                      className={`w-12 h-7 rounded-full transition-colors ${
+                        editTask.send_invoice_on_complete ? 'bg-green-500' : theme === 'light' ? 'bg-gray-300' : 'bg-zinc-600'
+                      }`}
+                    >
+                      <div
+                        className={`w-5 h-5 rounded-full shadow transition-transform ${
+                          editTask.send_invoice_on_complete ? 'translate-x-6 bg-white' : theme === 'light' ? 'translate-x-1 bg-white' : 'translate-x-1 bg-zinc-400'
+                        }`}
+                      />
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -16,13 +16,17 @@ import {
   ChevronLeft,
   ChevronRight,
   MoreVertical,
-  Calendar
+  Calendar,
+  Eye,
+  Wand2,
+  Info
 } from 'lucide-react';
 import usePhotosStore, { ProjectPhoto } from '../stores/photosStore';
 import useProjectStore from '../stores/projectStore';
 import { useOnboardingStore } from '../stores/onboardingStore';
 import SendEmailModal from '../components/email/SendEmailModal';
 import PhotosTutorialModal from '../components/photos/PhotosTutorialModal';
+import VisionCamModal from '../components/vision/VisionCamModal';
 import { supabase } from '../lib/supabase';
 import { useTheme, getThemeClasses } from '../contexts/ThemeContext';
 
@@ -44,6 +48,8 @@ const PhotosGallery: React.FC = () => {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [showTutorial, setShowTutorial] = useState(false);
   const [tutorialUserId, setTutorialUserId] = useState<string | null>(null);
+  const [showVisionCam, setShowVisionCam] = useState(false);
+  const [visionCamImage, setVisionCamImage] = useState<string | null>(null);
 
   useEffect(() => {
     fetchAllPhotos();
@@ -246,6 +252,21 @@ const PhotosGallery: React.FC = () => {
         )}
       </div>
 
+      {/* Vision Cam Announcement Card */}
+      <div className="px-4 pt-4">
+        <div className={`flex items-start gap-3 p-4 rounded-xl ${theme === 'light' ? 'bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200' : 'bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/30'}`}>
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${theme === 'light' ? 'bg-purple-100' : 'bg-purple-500/20'}`}>
+            <Wand2 className="w-5 h-5 text-purple-500" />
+          </div>
+          <div className="flex-1">
+            <p className={`font-semibold ${themeClasses.text.primary} mb-1`}>Vision Cam Feature</p>
+            <p className={`text-sm ${themeClasses.text.secondary}`}>
+              Click on any photo and use the Vision Cam feature to convey your customer's project to them!
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Content */}
       <div className="p-4">
         {isLoading ? (
@@ -400,8 +421,21 @@ const PhotosGallery: React.FC = () => {
           {showActionMenu && (
             <div className={`absolute top-16 right-4 ${themeClasses.bg.secondary} rounded-xl overflow-hidden shadow-2xl z-10 border ${themeClasses.border.primary}`}>
               <button
+                onClick={() => {
+                  if (selectedPhoto) {
+                    setVisionCamImage(selectedPhoto.imageUrl);
+                    setShowVisionCam(true);
+                    setShowActionMenu(false);
+                  }
+                }}
+                className={`w-full flex items-center gap-3 px-4 py-3 ${themeClasses.text.primary} hover:bg-purple-500/10 transition-colors`}
+              >
+                <Wand2 className="w-5 h-5 text-purple-500" />
+                <span>Use Vision Cam</span>
+              </button>
+              <button
                 onClick={handleDownload}
-                className={`w-full flex items-center gap-3 px-4 py-3 ${themeClasses.text.primary} ${themeClasses.hover.bg} transition-colors`}
+                className={`w-full flex items-center gap-3 px-4 py-3 ${themeClasses.text.primary} ${themeClasses.hover.bg} transition-colors border-t ${themeClasses.border.primary}`}
               >
                 <Download className="w-5 h-5 text-blue-400" />
                 <span>Download</span>
@@ -517,6 +551,16 @@ const PhotosGallery: React.FC = () => {
             setPhotosTutorialCompleted(tutorialUserId, true);
           }
         }}
+      />
+
+      {/* Vision Cam Modal */}
+      <VisionCamModal
+        isOpen={showVisionCam}
+        onClose={() => {
+          setShowVisionCam(false);
+          setVisionCamImage(null);
+        }}
+        initialImage={visionCamImage || undefined}
       />
     </div>
   );

@@ -469,8 +469,8 @@ const EmployeesHub: React.FC = () => {
                   <div className="flex items-center gap-4">
                     {/* Hourly Rate */}
                     <div className="flex items-center gap-1.5">
-                      <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-green-900/30">
-                        <DollarSign className="w-4 h-4 text-green-400" />
+                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${theme === 'light' ? 'bg-emerald-100' : 'bg-emerald-900/30'}`}>
+                        <DollarSign className={`w-4 h-4 ${theme === 'light' ? 'text-emerald-600' : 'text-emerald-400'}`} />
                       </div>
                       <div>
                         <p className={`text-sm font-semibold ${themeClasses.text.primary}`}>
@@ -482,8 +482,8 @@ const EmployeesHub: React.FC = () => {
 
                     {/* Projects */}
                     <div className="flex items-center gap-1.5">
-                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${employeeProjects.length > 0 ? 'bg-purple-900/30' : theme === 'light' ? 'bg-gray-200' : 'bg-zinc-800'}`}>
-                        <Briefcase className={`w-4 h-4 ${employeeProjects.length > 0 ? 'text-purple-400' : themeClasses.text.muted.includes('text-zinc-500') ? 'text-zinc-500' : 'text-gray-500'}`} />
+                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${employeeProjects.length > 0 ? 'bg-blue-900/30' : theme === 'light' ? 'bg-gray-200' : 'bg-zinc-800'}`}>
+                        <Briefcase className={`w-4 h-4 ${employeeProjects.length > 0 ? 'text-blue-400' : themeClasses.text.muted.includes('text-zinc-500') ? 'text-zinc-500' : 'text-gray-500'}`} />
                       </div>
                       <div>
                         <p className={`text-sm font-semibold ${employeeProjects.length > 0 ? themeClasses.text.primary : themeClasses.text.muted}`}>
@@ -776,7 +776,7 @@ const EmployeesHub: React.FC = () => {
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => handleEditEmployee(selectedEmployee)}
-                    className="p-2 text-purple-400 active:text-purple-300 active:bg-purple-500/10 rounded-xl"
+                    className="p-2 text-blue-400 active:text-blue-300 active:bg-blue-500/10 rounded-xl"
                   >
                     <Pencil className="w-5 h-5" />
                   </button>
@@ -795,7 +795,7 @@ const EmployeesHub: React.FC = () => {
 
               {/* Employee Title */}
               <div className="mt-3 flex items-center gap-3">
-                <div className="w-14 h-14 bg-gradient-to-br from-purple-400 to-purple-600 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-purple-500/20">
+                <div className="w-14 h-14 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-blue-500/20">
                   {getInitials(selectedEmployee.name || 'NA')}
                 </div>
                 <div>
@@ -820,9 +820,9 @@ const EmployeesHub: React.FC = () => {
                 <label className={`text-xs ${themeClasses.text.muted} mb-3 block`}>Contact Information</label>
                 <div className="space-y-3">
                   {selectedEmployee.email && (
-                    <a href={`mailto:${selectedEmployee.email}`} className={`flex items-center gap-3 ${themeClasses.text.secondary} active:text-purple-400`}>
-                      <div className="w-10 h-10 bg-purple-900/30 rounded-xl flex items-center justify-center">
-                        <Mail className="w-5 h-5 text-purple-400" />
+                    <a href={`mailto:${selectedEmployee.email}`} className={`flex items-center gap-3 ${themeClasses.text.secondary} active:text-blue-400`}>
+                      <div className="w-10 h-10 bg-blue-900/30 rounded-xl flex items-center justify-center">
+                        <Mail className="w-5 h-5 text-blue-400" />
                       </div>
                       <div>
                         <p className={`text-xs ${themeClasses.text.muted}`}>Email</p>
@@ -831,9 +831,9 @@ const EmployeesHub: React.FC = () => {
                     </a>
                   )}
                   {selectedEmployee.phone && (
-                    <a href={`tel:${selectedEmployee.phone}`} className={`flex items-center gap-3 ${themeClasses.text.secondary} active:text-green-400`}>
-                      <div className="w-10 h-10 bg-green-900/30 rounded-xl flex items-center justify-center">
-                        <Phone className="w-5 h-5 text-green-400" />
+                    <a href={`tel:${selectedEmployee.phone}`} className={`flex items-center gap-3 ${themeClasses.text.secondary} active:text-blue-400`}>
+                      <div className="w-10 h-10 bg-blue-900/30 rounded-xl flex items-center justify-center">
+                        <Phone className="w-5 h-5 text-blue-400" />
                       </div>
                       <div>
                         <p className={`text-xs ${themeClasses.text.muted}`}>Phone</p>
@@ -848,14 +848,14 @@ const EmployeesHub: React.FC = () => {
               <div className={`${themeClasses.bg.card} border ${themeClasses.border.secondary} rounded-2xl p-4`}>
                 <label className={`text-xs ${themeClasses.text.muted} mb-3 block`}>Compensation</label>
                 <div className="flex items-center gap-4">
-                  <div className="flex-1 text-center p-3 bg-green-900/20 rounded-xl">
-                    <p className="text-2xl font-bold text-green-400">
+                  <div className={`flex-1 text-center p-3 rounded-xl ${theme === 'light' ? 'bg-emerald-100' : 'bg-emerald-900/30'}`}>
+                    <p className={`text-2xl font-bold ${theme === 'light' ? 'text-emerald-700' : 'text-emerald-400'}`}>
                       ${selectedEmployee.hourly_rate || 0}
                     </p>
                     <p className={`text-xs ${themeClasses.text.muted} mt-1`}>Hourly Rate</p>
                   </div>
-                  <div className="flex-1 text-center p-3 bg-purple-900/20 rounded-xl">
-                    <p className="text-2xl font-bold text-purple-400">
+                  <div className={`flex-1 text-center p-3 rounded-xl ${theme === 'light' ? 'bg-blue-100' : 'bg-blue-900/20'}`}>
+                    <p className={`text-2xl font-bold ${theme === 'light' ? 'text-blue-700' : 'text-blue-400'}`}>
                       {getEmployeeProjects(selectedEmployee.name).length}
                     </p>
                     <p className={`text-xs ${themeClasses.text.muted} mt-1`}>Active Projects</p>
@@ -872,7 +872,7 @@ const EmployeesHub: React.FC = () => {
                       setSelectedEmployee(null);
                       navigate('/projects-hub');
                     }}
-                    className="text-xs text-purple-400 font-medium"
+                    className="text-xs text-blue-400 font-medium"
                   >
                     View All
                   </button>
@@ -898,8 +898,8 @@ const EmployeesHub: React.FC = () => {
                           }}
                           className={`flex items-center gap-3 p-3 ${themeClasses.bg.tertiary} rounded-xl ${themeClasses.hover.bg}`}
                         >
-                          <div className="w-10 h-10 bg-purple-900/30 rounded-xl flex items-center justify-center">
-                            <Briefcase className="w-5 h-5 text-purple-400" />
+                          <div className="w-10 h-10 bg-blue-900/30 rounded-xl flex items-center justify-center">
+                            <Briefcase className="w-5 h-5 text-blue-400" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className={`font-medium ${themeClasses.text.primary} truncate`}>{project.name}</p>

@@ -794,26 +794,26 @@ const FinanceHub: React.FC<FinanceHubProps> = ({ embedded = false, searchQuery: 
 
                 {/* Summary Cards */}
                 <div className="grid grid-cols-3 gap-3 mb-4">
-                  <div className="bg-red-100 border-2 border-red-200 rounded-2xl p-4 text-center">
-                    <div className="flex items-center justify-center gap-1.5 text-red-500 mb-2">
+                  <div className="bg-red-600 rounded-2xl p-4 text-center">
+                    <div className="flex items-center justify-center gap-1.5 text-red-100 mb-2">
                       <ArrowDownRight className="w-5 h-5" />
                       <span className="text-sm font-semibold">Expenses</span>
                     </div>
-                    <p className={`font-bold text-xl ${themeClasses.text.primary}`}>{formatCurrency(totalExpenses)}</p>
+                    <p className="font-bold text-xl text-white">{formatCurrency(totalExpenses)}</p>
                   </div>
-                  <div className="bg-green-100 border-2 border-green-200 rounded-2xl p-4 text-center">
-                    <div className="flex items-center justify-center gap-1.5 text-green-500 mb-2">
+                  <div className="bg-emerald-600 rounded-2xl p-4 text-center">
+                    <div className="flex items-center justify-center gap-1.5 text-emerald-100 mb-2">
                       <ArrowUpRight className="w-5 h-5" />
                       <span className="text-sm font-semibold">Revenue</span>
                     </div>
-                    <p className={`font-bold text-xl ${themeClasses.text.primary}`}>{formatCurrency(totalRevenue)}</p>
+                    <p className="font-bold text-xl text-white">{formatCurrency(totalRevenue)}</p>
                   </div>
-                  <div className={`${profit >= 0 ? 'bg-emerald-100 border-2 border-emerald-200' : 'bg-blue-100 border-2 border-blue-200'} rounded-2xl p-4 text-center`}>
-                    <div className={`flex items-center justify-center gap-1.5 ${profit >= 0 ? 'text-emerald-500' : 'text-blue-500'} mb-2`}>
+                  <div className={`${profit >= 0 ? 'bg-teal-600' : 'bg-blue-600'} rounded-2xl p-4 text-center`}>
+                    <div className={`flex items-center justify-center gap-1.5 ${profit >= 0 ? 'text-teal-100' : 'text-blue-100'} mb-2`}>
                       {profit >= 0 ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
                       <span className="text-sm font-semibold">Profit</span>
                     </div>
-                    <p className={`font-bold text-xl ${themeClasses.text.primary}`}>{formatCurrency(profit)}</p>
+                    <p className="font-bold text-xl text-white">{formatCurrency(profit)}</p>
                   </div>
                 </div>
 
@@ -858,26 +858,26 @@ const FinanceHub: React.FC<FinanceHubProps> = ({ embedded = false, searchQuery: 
 
           {/* Summary Cards */}
           <div className="grid grid-cols-3 gap-2 mb-4">
-            <div className="bg-red-100 border-2 border-red-200 rounded-xl p-3 text-center">
-              <div className="flex items-center justify-center gap-1 text-red-500 mb-1">
+            <div className="bg-red-600 rounded-xl p-3 text-center">
+              <div className="flex items-center justify-center gap-1 text-red-100 mb-1">
                 <ArrowDownRight className="w-4 h-4" />
                 <span className="text-xs font-semibold">Expenses</span>
               </div>
-              <p className={`font-bold text-lg ${themeClasses.text.primary}`}>{formatCurrency(totalExpenses)}</p>
+              <p className="font-bold text-lg text-white">{formatCurrency(totalExpenses)}</p>
             </div>
-            <div className="bg-green-100 border-2 border-green-200 rounded-xl p-3 text-center">
-              <div className="flex items-center justify-center gap-1 text-green-500 mb-1">
+            <div className="bg-emerald-600 rounded-xl p-3 text-center">
+              <div className="flex items-center justify-center gap-1 text-emerald-100 mb-1">
                 <ArrowUpRight className="w-4 h-4" />
                 <span className="text-xs font-semibold">Revenue</span>
               </div>
-              <p className={`font-bold text-lg ${themeClasses.text.primary}`}>{formatCurrency(totalRevenue)}</p>
+              <p className="font-bold text-lg text-white">{formatCurrency(totalRevenue)}</p>
             </div>
-            <div className={`${profit >= 0 ? 'bg-emerald-100 border-2 border-emerald-200' : 'bg-blue-100 border-2 border-blue-200'} rounded-xl p-3 text-center`}>
-              <div className={`flex items-center justify-center gap-1 ${profit >= 0 ? 'text-emerald-500' : 'text-blue-500'} mb-1`}>
+            <div className={`${profit >= 0 ? 'bg-teal-600' : 'bg-blue-600'} rounded-xl p-3 text-center`}>
+              <div className={`flex items-center justify-center gap-1 ${profit >= 0 ? 'text-teal-100' : 'text-blue-100'} mb-1`}>
                 {profit >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
                 <span className="text-xs font-semibold">Profit</span>
               </div>
-              <p className={`font-bold text-lg ${themeClasses.text.primary}`}>{formatCurrency(profit)}</p>
+              <p className="font-bold text-lg text-white">{formatCurrency(profit)}</p>
             </div>
           </div>
 
@@ -1032,12 +1032,12 @@ const FinanceHub: React.FC<FinanceHubProps> = ({ embedded = false, searchQuery: 
                   <div key={tx.id} className={`p-5 flex items-center justify-between ${themeClasses.bg.secondary} rounded-2xl border-2 ${themeClasses.border.primary} shadow-sm`}>
                     <div className="flex items-center gap-4">
                       <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${
-                        tx.type === 'income' ? 'bg-green-100' : 'bg-red-100'
+                        tx.type === 'income' ? 'bg-emerald-600' : 'bg-red-600'
                       }`}>
                         {tx.type === 'income' ? (
-                          <ArrowUpRight className="w-7 h-7 text-green-500" />
+                          <ArrowUpRight className="w-7 h-7 text-white" />
                         ) : (
-                          <ArrowDownRight className="w-7 h-7 text-red-500" />
+                          <ArrowDownRight className="w-7 h-7 text-white" />
                         )}
                       </div>
                       <div>
@@ -1045,7 +1045,7 @@ const FinanceHub: React.FC<FinanceHubProps> = ({ embedded = false, searchQuery: 
                         <p className={`text-base ${themeClasses.text.secondary}`}>{new Date(tx.date).toLocaleDateString()}</p>
                       </div>
                     </div>
-                    <span className={`font-bold text-xl ${tx.type === 'income' ? 'text-green-500' : 'text-red-500'}`}>
+                    <span className={`font-bold text-xl ${tx.type === 'income' ? 'text-emerald-400' : 'text-red-400'}`}>
                       {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
                     </span>
                   </div>
@@ -1150,15 +1150,15 @@ const FinanceHub: React.FC<FinanceHubProps> = ({ embedded = false, searchQuery: 
                   <div key={payment.id} className={`${themeClasses.bg.secondary} rounded-xl border border-blue-500/30 p-4`}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-green-900/30 rounded-xl flex items-center justify-center">
-                          <ArrowUpRight className="w-5 h-5 text-green-400" />
+                        <div className="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center">
+                          <ArrowUpRight className="w-5 h-5 text-white" />
                         </div>
                         <div>
                           <p className={`font-semibold ${themeClasses.text.primary}`}>{displayName}</p>
                           <p className="text-sm text-zinc-500">{new Date(payment.date).toLocaleDateString()}</p>
                         </div>
                       </div>
-                      <span className="font-bold text-green-400">+{formatCurrency(payment.amount)}</span>
+                      <span className="font-bold text-emerald-400">+{formatCurrency(payment.amount)}</span>
                     </div>
                   </div>
                 );

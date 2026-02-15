@@ -4,7 +4,7 @@ import {
   Briefcase,
   Plus,
   ChevronRight,
-  Calendar,
+  Calendar as CalendarIcon,
   Users,
   Clock,
   CheckCircle,
@@ -19,10 +19,17 @@ import {
   FileText,
   X,
   Pencil,
-  Settings
+  Settings,
+  ChevronLeft,
+  ChevronDown,
+  ChevronUp,
+  MapPin,
+  ExternalLink
 } from 'lucide-react';
+import { format, addDays, isSameDay, parseISO, isToday, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek } from 'date-fns';
 import useProjectStore from '../stores/projectStore';
 import { useEmployeesStore } from '../stores/employeesStore';
+import { useClientsStore } from '../stores/clientsStore';
 import usePhotosStore from '../stores/photosStore';
 import { useOnboardingStore } from '../stores/onboardingStore';
 import AIChatPopup from '../components/ai/AIChatPopup';
@@ -93,38 +100,54 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
   const [showEditBudgetModal, setShowEditBudgetModal] = useState(false);
   const [showEditTeamModal, setShowEditTeamModal] = useState(false);
   const [editBudget, setEditBudget] = useState({ budget: 0, spent: 0 });
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState('');
+  const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<string[]>([]);
   const [showManualForm, setShowManualForm] = useState(false);
   const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [showEditProjectModal, setShowEditProjectModal] = useState(false);
   const [editProjectForm, setEditProjectForm] = useState({
     name: '',
+    clientId: '',
     client: '',
+    address: '',
     description: '',
     budget: '',
     startDate: '',
     endDate: '',
-    priority: 'medium' as 'low' | 'medium' | 'high',
     status: 'active' as 'active' | 'completed' | 'on-hold'
   });
   const [newProjectForm, setNewProjectForm] = useState({
     name: '',
+    clientId: '',
     client: '',
+    address: '',
     description: '',
     budget: '',
     startDate: '',
     endDate: '',
-    priority: 'medium' as 'low' | 'medium' | 'high',
     status: 'active' as 'active' | 'completed' | 'on-hold'
   });
+
+  // Calendar picker state for forms
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+  const [startDatePickerMonth, setStartDatePickerMonth] = useState(new Date());
+  const [endDatePickerMonth, setEndDatePickerMonth] = useState(new Date());
+  const [editShowStartDatePicker, setEditShowStartDatePicker] = useState(false);
+  const [editShowEndDatePicker, setEditShowEndDatePicker] = useState(false);
+  const [editStartDatePickerMonth, setEditStartDatePickerMonth] = useState(new Date());
+  const [editEndDatePickerMonth, setEditEndDatePickerMonth] = useState(new Date());
 
   // Employees store
   const { employees, fetchEmployees } = useEmployeesStore();
 
+  // Clients store
+  const { clients, fetchClients } = useClientsStore();
+
   useEffect(() => {
     fetchProjects();
     fetchEmployees();
-  }, [fetchProjects, fetchEmployees]);
+    fetchClients();
+  }, [fetchProjects, fetchEmployees, fetchClients]);
 
   // Hide navbar when any modal is open
   useEffect(() => {
@@ -308,24 +331,26 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
     try {
       await addProject({
         name: newProjectForm.name.trim(),
+        clientId: newProjectForm.clientId || undefined,
         client: newProjectForm.client.trim() || undefined,
+        address: newProjectForm.address.trim() || undefined,
         description: newProjectForm.description.trim() || undefined,
         budget: newProjectForm.budget ? parseFloat(newProjectForm.budget) : 0,
         startDate: newProjectForm.startDate || undefined,
         endDate: newProjectForm.endDate || undefined,
-        priority: newProjectForm.priority,
         status: newProjectForm.status
       });
 
       // Reset form and close modal
       setNewProjectForm({
         name: '',
+        clientId: '',
         client: '',
+        address: '',
         description: '',
         budget: '',
         startDate: '',
         endDate: '',
-        priority: 'medium',
         status: 'active'
       });
       setShowManualForm(false);
@@ -339,16 +364,27 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
 
   const openEditProjectModal = () => {
     if (selectedProject) {
+      const startDate = selectedProject.start_date || selectedProject.startDate || '';
+      const endDate = selectedProject.end_date || selectedProject.endDate || '';
+
       setEditProjectForm({
         name: selectedProject.name || '',
+        clientId: selectedProject.client_id || selectedProject.clientId || '',
         client: selectedProject.client_name || selectedProject.client || '',
+        address: selectedProject.address || '',
         description: selectedProject.description || '',
         budget: selectedProject.budget?.toString() || '',
-        startDate: selectedProject.start_date || selectedProject.startDate || '',
-        endDate: selectedProject.end_date || selectedProject.endDate || '',
-        priority: selectedProject.priority || 'medium',
+        startDate: startDate,
+        endDate: endDate,
         status: selectedProject.status || 'active'
       });
+
+      // Reset date picker states
+      setEditShowStartDatePicker(false);
+      setEditShowEndDatePicker(false);
+      setEditStartDatePickerMonth(startDate ? parseISO(startDate) : new Date());
+      setEditEndDatePickerMonth(endDate ? parseISO(endDate) : new Date());
+
       setShowEditProjectModal(true);
     }
   };
@@ -362,12 +398,13 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
     try {
       await updateProject(selectedProject.id, {
         name: editProjectForm.name.trim(),
+        clientId: editProjectForm.clientId || undefined,
         client: editProjectForm.client.trim() || undefined,
+        address: editProjectForm.address.trim() || undefined,
         description: editProjectForm.description.trim() || undefined,
         budget: editProjectForm.budget ? parseFloat(editProjectForm.budget) : 0,
         startDate: editProjectForm.startDate || undefined,
         endDate: editProjectForm.endDate || undefined,
-        priority: editProjectForm.priority,
         status: editProjectForm.status
       });
 
@@ -687,28 +724,41 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                 </div>
               </div>
 
-              {/* Project Title */}
+              {/* Project Title & Client Info */}
               <div className="mt-3">
                 <h1 className="text-xl font-bold text-gray-900">{selectedProject.name || 'Untitled Project'}</h1>
-                {(selectedProject.client_name || selectedProject.client) && (
-                  <button
-                    onClick={() => {
-                      // Navigate to clients page with this client selected for editing
-                      navigate('/clients', {
-                        state: {
-                          editClientId: selectedProject.client_id || selectedProject.clientId,
-                          editClientName: selectedProject.client_name || selectedProject.client
-                        }
-                      });
-                    }}
-                    className="text-sm text-blue-500 active:text-blue-600 flex items-center gap-1"
-                  >
-                    {selectedProject.client_name || selectedProject.client}
-                    <Pencil className="w-3 h-3" />
-                  </button>
+
+                {/* Client Name - Prominent Display */}
+                {(selectedProject.client_name || selectedProject.client) ? (
+                  <div className="mt-2 flex items-center gap-2">
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                      <Users className="w-4 h-4 text-blue-600" />
+                    </div>
+                    <button
+                      onClick={() => {
+                        navigate('/clients', {
+                          state: {
+                            editClientId: selectedProject.client_id || selectedProject.clientId,
+                            editClientName: selectedProject.client_name || selectedProject.client
+                          }
+                        });
+                      }}
+                      className="text-base font-semibold text-blue-600 active:text-blue-700 flex items-center gap-1"
+                    >
+                      {selectedProject.client_name || selectedProject.client}
+                      <Pencil className="w-3 h-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500 mt-1">No client assigned</p>
                 )}
-                {!(selectedProject.client_name || selectedProject.client) && (
-                  <p className="text-sm text-gray-500">No client assigned</p>
+
+                {/* Address Display */}
+                {selectedProject.address && (
+                  <p className="text-sm text-gray-600 mt-1 flex items-center gap-1">
+                    <span className="text-gray-400">📍</span>
+                    {selectedProject.address}
+                  </p>
                 )}
               </div>
             </div>
@@ -732,6 +782,63 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                   <ChevronRight className="w-8 h-8 text-blue-400" />
                 </button>
               </div>
+
+              {/* Location Map Card - Only show if address exists */}
+              {selectedProject.address && (
+                <div className="bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-sm">
+                  <div className="p-4 border-b border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
+                          <MapPin className="w-5 h-5 text-red-500" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-gray-900">Project Location</h3>
+                          <p className="text-sm text-gray-500 line-clamp-1">{selectedProject.address}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => {
+                          const encodedAddress = encodeURIComponent(selectedProject.address);
+                          const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                          const mapsUrl = isIOS
+                            ? `maps://maps.apple.com/?q=${encodedAddress}`
+                            : `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
+                          window.open(mapsUrl, '_blank');
+                        }}
+                        className="flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-sm font-medium active:bg-blue-100"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        Open
+                      </button>
+                    </div>
+                  </div>
+                  {/* Map Preview using Google Maps Embed */}
+                  <div
+                    className="h-48 bg-gray-100 relative cursor-pointer"
+                    onClick={() => {
+                      const encodedAddress = encodeURIComponent(selectedProject.address);
+                      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                      const mapsUrl = isIOS
+                        ? `maps://maps.apple.com/?q=${encodedAddress}`
+                        : `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
+                      window.open(mapsUrl, '_blank');
+                    }}
+                  >
+                    <iframe
+                      title="Project Location Map"
+                      width="100%"
+                      height="100%"
+                      style={{ border: 0 }}
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                      src={`https://www.google.com/maps?q=${encodeURIComponent(selectedProject.address)}&output=embed&z=15`}
+                    />
+                    {/* Transparent overlay to capture clicks */}
+                    <div className="absolute inset-0 bg-transparent" />
+                  </div>
+                </div>
+              )}
 
               {/* Budget Card */}
               <div className="bg-white border border-gray-200 rounded-3xl p-8 shadow-sm">
@@ -773,29 +880,29 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
               </div>
 
               {/* Team Card */}
-              <div className="bg-white border border-gray-200 rounded-3xl p-8 shadow-sm">
-                <div className="flex items-center justify-between mb-6">
-                  <label className="text-lg font-semibold text-gray-600">Team</label>
+              <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Team</label>
                   <button
                     onClick={() => {
-                      setSelectedEmployeeId('');
+                      setSelectedEmployeeIds([]);
                       setShowEditTeamModal(true);
                     }}
-                    className="text-lg text-blue-500 font-bold"
+                    className="text-sm text-blue-500 font-semibold"
                   >
-                    Add Member
+                    + Add
                   </button>
                 </div>
                 {(selectedProject.team_members || selectedProject.team || []).length === 0 ? (
-                  <p className="text-xl text-gray-400">No team members assigned</p>
+                  <p className="text-sm text-gray-400">No team members assigned</p>
                 ) : (
-                  <div className="flex flex-wrap gap-4">
+                  <div className="grid grid-cols-2 gap-3">
                     {(selectedProject.team_members || selectedProject.team || []).map((member: any, index: number) => (
-                      <div key={index} className="flex items-center gap-4 bg-gray-50 rounded-full px-5 py-3">
-                        <div className="w-14 h-14 bg-blue-500 rounded-full flex items-center justify-center text-lg text-white font-bold">
-                          {(typeof member === 'string' ? member : member.name || '').split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
+                      <div key={index} className="flex items-center gap-2.5 bg-gray-100 rounded-full pl-1.5 pr-3 py-1.5">
+                        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-xs text-white font-bold flex-shrink-0">
+                          {(typeof member === 'string' ? member : member.name || '').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
                         </div>
-                        <span className="text-xl text-gray-700 font-semibold">{typeof member === 'string' ? member : member.name}</span>
+                        <span className="text-sm text-gray-700 font-medium truncate flex-1">{typeof member === 'string' ? member : member.name}</span>
                         <button
                           onClick={async () => {
                             const memberName = typeof member === 'string' ? member : member.name;
@@ -805,9 +912,9 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                               if (updated) setSelectedProject(updated);
                             }
                           }}
-                          className="ml-2 text-gray-400 active:text-red-500"
+                          className="text-gray-400 hover:text-red-500 active:text-red-600 flex-shrink-0"
                         >
-                          <X className="w-6 h-6" />
+                          <X className="w-4 h-4" />
                         </button>
                       </div>
                     ))}
@@ -820,36 +927,66 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                 <div className="flex items-center justify-between mb-6">
                   <label className="text-lg font-semibold text-gray-600">Tasks</label>
                   <button
-                    onClick={() => setShowTaskModal(true)}
+                    onClick={() => {
+                      navigate('/todo-hub', {
+                        state: {
+                          openCreateTask: true,
+                          preselectedProjectId: selectedProject.id,
+                          preselectedProjectName: selectedProject.name,
+                          returnTo: '/projects',
+                          returnProjectId: selectedProject.id
+                        }
+                      });
+                    }}
                     className="text-lg text-blue-500 font-bold"
                   >
-                    Add Task
+                    + Add Task
                   </button>
                 </div>
                 {(selectedProject.tasks || []).length === 0 ? (
-                  <div className="text-center py-10">
-                    <CheckCircle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <p className="text-xl text-gray-400">No tasks yet</p>
+                  <div className="text-center py-8">
+                    <CheckCircle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                    <p className="text-base text-gray-400">No tasks yet</p>
+                    <button
+                      onClick={() => {
+                        navigate('/todo-hub', {
+                          state: {
+                            openCreateTask: true,
+                            preselectedProjectId: selectedProject.id,
+                            preselectedProjectName: selectedProject.name,
+                            returnTo: '/projects',
+                            returnProjectId: selectedProject.id
+                          }
+                        });
+                      }}
+                      className="mt-3 text-sm text-blue-500 font-medium"
+                    >
+                      Create your first task
+                    </button>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {(selectedProject.tasks || []).slice(0, 5).map((task: any) => (
-                      <div key={task.id} className="flex items-center gap-5 p-5 bg-gray-50 rounded-2xl">
-                        <div className={`w-6 h-6 rounded-full flex-shrink-0 ${
+                      <div key={task.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
+                        <div className={`w-5 h-5 rounded-full flex-shrink-0 ${
                           task.status === 'completed' ? 'bg-green-500' :
                           task.status === 'in-progress' ? 'bg-yellow-500' : 'bg-gray-300'
                         }`} />
                         <div className="flex-1 min-w-0">
-                          <p className={`text-xl font-semibold truncate ${task.status === 'completed' ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
+                          <p className={`text-base font-medium truncate ${task.status === 'completed' ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
                             {task.title}
                           </p>
                         </div>
+                        <ChevronRight className="w-5 h-5 text-gray-400" />
                       </div>
                     ))}
                     {(selectedProject.tasks || []).length > 5 && (
-                      <p className="text-base text-gray-500 text-center pt-4">
-                        +{(selectedProject.tasks || []).length - 5} more tasks
-                      </p>
+                      <button
+                        onClick={() => navigate('/todo-hub')}
+                        className="w-full text-sm text-blue-500 font-medium text-center pt-2"
+                      >
+                        View all {(selectedProject.tasks || []).length} tasks →
+                      </button>
                     )}
                   </div>
                 )}
@@ -1259,7 +1396,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
         <div className="fixed inset-0 z-[60] overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-md w-full">
             <div className="flex justify-between items-center p-4 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900">Add Team Member</h2>
+              <h2 className="text-lg font-semibold text-gray-900">Add Team Members</h2>
               <button
                 onClick={() => setShowEditTeamModal(false)}
                 className="text-gray-400 active:text-gray-500 p-1 rounded-full active:bg-gray-100"
@@ -1269,44 +1406,90 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
             </div>
             <div className="p-4 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Select Employee</label>
-                {employees.filter(e => e.status === 'active').length === 0 ? (
-                  <div className="text-center py-4">
-                    <p className="text-sm text-gray-500 mb-2">No employees found</p>
-                    <button
-                      onClick={() => {
-                        setShowEditTeamModal(false);
-                        navigate('/employees');
-                      }}
-                      className="text-sm text-blue-500 font-medium"
-                    >
-                      Add Employees
-                    </button>
-                  </div>
-                ) : (
-                  <select
-                    value={selectedEmployeeId}
-                    onChange={(e) => setSelectedEmployeeId(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="">Select an employee...</option>
-                    {employees
-                      .filter(e => e.status === 'active')
-                      .map(emp => (
-                        <option key={emp.id} value={emp.id}>
-                          {emp.name} {emp.jobTitle ? `- ${emp.jobTitle}` : ''}
-                        </option>
-                      ))
-                    }
-                  </select>
-                )}
+                <label className="block text-sm font-medium text-gray-700 mb-2">Select Employees</label>
+                {(() => {
+                  // Get current team member names to filter them out
+                  const currentTeamNames = (selectedProject?.team_members || selectedProject?.team || [])
+                    .map((m: any) => typeof m === 'string' ? m : m.name);
+
+                  // Filter active employees who aren't already on the team
+                  const availableEmployees = employees.filter(
+                    e => e.status === 'active' && !currentTeamNames.includes(e.name)
+                  );
+
+                  if (availableEmployees.length === 0) {
+                    return (
+                      <div className="text-center py-6 bg-gray-50 rounded-xl">
+                        <Users className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                        <p className="text-sm text-gray-500 mb-2">
+                          {employees.filter(e => e.status === 'active').length === 0
+                            ? 'No employees found'
+                            : 'All employees are already on this team'}
+                        </p>
+                        {employees.filter(e => e.status === 'active').length === 0 && (
+                          <button
+                            onClick={() => {
+                              setShowEditTeamModal(false);
+                              navigate('/employees');
+                            }}
+                            className="text-sm text-blue-500 font-medium"
+                          >
+                            Add Employees
+                          </button>
+                        )}
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {availableEmployees.map(emp => (
+                        <label
+                          key={emp.id}
+                          className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors ${
+                            selectedEmployeeIds.includes(emp.id)
+                              ? 'bg-blue-50 border-2 border-blue-500'
+                              : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100'
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedEmployeeIds.includes(emp.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedEmployeeIds([...selectedEmployeeIds, emp.id]);
+                              } else {
+                                setSelectedEmployeeIds(selectedEmployeeIds.filter(id => id !== emp.id));
+                              }
+                            }}
+                            className="w-5 h-5 rounded border-gray-300 text-blue-500 focus:ring-blue-500"
+                          />
+                          <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                            {emp.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-gray-900 truncate">{emp.name}</p>
+                            {emp.jobTitle && (
+                              <p className="text-sm text-gray-500 truncate">{emp.jobTitle}</p>
+                            )}
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  );
+                })()}
               </div>
+              {selectedEmployeeIds.length > 0 && (
+                <p className="text-sm text-blue-600 font-medium">
+                  {selectedEmployeeIds.length} employee{selectedEmployeeIds.length > 1 ? 's' : ''} selected
+                </p>
+              )}
             </div>
             <div className="flex gap-3 p-4 border-t border-gray-200">
               <button
                 onClick={() => {
                   setShowEditTeamModal(false);
-                  setSelectedEmployeeId('');
+                  setSelectedEmployeeIds([]);
                 }}
                 className="flex-1 px-4 py-2.5 border border-gray-300 rounded-xl text-gray-700 bg-white active:bg-gray-50"
               >
@@ -1314,33 +1497,38 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
               </button>
               <button
                 onClick={async () => {
-                  const selectedEmployee = employees.find(e => e.id === selectedEmployeeId);
-                  if (selectedProject && selectedEmployee) {
+                  if (selectedProject && selectedEmployeeIds.length > 0) {
                     try {
-                      await addTeamMember(
-                        selectedProject.id,
-                        selectedEmployee.name,
-                        selectedEmployee.email || undefined,
-                        selectedEmployee.jobTitle || undefined
-                      );
+                      // Add all selected employees
+                      for (const empId of selectedEmployeeIds) {
+                        const emp = employees.find(e => e.id === empId);
+                        if (emp) {
+                          await addTeamMember(
+                            selectedProject.id,
+                            emp.name,
+                            emp.email || undefined,
+                            emp.jobTitle || undefined
+                          );
+                        }
+                      }
                       setShowEditTeamModal(false);
-                      setSelectedEmployeeId('');
+                      setSelectedEmployeeIds([]);
                       await fetchProjects();
                       const updated = projects.find(p => p.id === selectedProject.id);
                       if (updated) setSelectedProject(updated);
                     } catch (error) {
-                      console.error('Error adding team member:', error);
+                      console.error('Error adding team members:', error);
                     }
                   }
                 }}
-                disabled={!selectedEmployeeId}
+                disabled={selectedEmployeeIds.length === 0}
                 className={`flex-1 px-4 py-2.5 rounded-xl ${
-                  selectedEmployeeId
+                  selectedEmployeeIds.length > 0
                     ? 'bg-blue-500 text-white active:bg-blue-600'
                     : 'bg-gray-200 text-gray-400'
                 }`}
               >
-                Add
+                Add {selectedEmployeeIds.length > 0 ? `(${selectedEmployeeIds.length})` : ''}
               </button>
             </div>
           </div>
@@ -1384,14 +1572,46 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                 />
               </div>
 
-              {/* Client Name */}
+              {/* Client */}
               <div>
-                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Client Name</label>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Client</label>
+                <select
+                  value={newProjectForm.clientId}
+                  onChange={(e) => {
+                    const selectedId = e.target.value;
+                    if (selectedId === 'new') {
+                      // Navigate to clients page to add new client
+                      navigate('/clients', { state: { returnTo: '/projects', action: 'add' } });
+                    } else {
+                      const selectedClient = clients.find(c => c.id === selectedId);
+                      setNewProjectForm({
+                        ...newProjectForm,
+                        clientId: selectedId,
+                        client: selectedClient?.name || selectedClient?.email || ''
+                      });
+                    }
+                  }}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${themeClasses.focus.border} focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                >
+                  <option value="">Select a client (optional)...</option>
+                  {clients.map((c) => {
+                    const displayName = c.name || c.email || 'Unnamed Client';
+                    return (
+                      <option key={c.id} value={c.id}>{displayName}</option>
+                    );
+                  })}
+                  <option value="new">+ Add New Client</option>
+                </select>
+              </div>
+
+              {/* Address */}
+              <div>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Project Address</label>
                 <input
                   type="text"
-                  value={newProjectForm.client}
-                  onChange={(e) => setNewProjectForm({ ...newProjectForm, client: e.target.value })}
-                  placeholder="e.g., John Smith"
+                  value={newProjectForm.address}
+                  onChange={(e) => setNewProjectForm({ ...newProjectForm, address: e.target.value })}
+                  placeholder="e.g., 123 Main St, City, State 12345"
                   className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} ${themeClasses.focus.border} focus:ring-2 focus:ring-blue-500/20 outline-none`}
                 />
               </div>
@@ -1423,40 +1643,258 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                 </div>
               </div>
 
-              {/* Start Date & End Date */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Start Date</label>
-                  <input
-                    type="date"
-                    value={newProjectForm.startDate}
-                    onChange={(e) => setNewProjectForm({ ...newProjectForm, startDate: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${themeClasses.focus.border} focus:ring-2 focus:ring-blue-500/20 outline-none`}
-                  />
-                </div>
-                <div>
-                  <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>End Date</label>
-                  <input
-                    type="date"
-                    value={newProjectForm.endDate}
-                    onChange={(e) => setNewProjectForm({ ...newProjectForm, endDate: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${themeClasses.focus.border} focus:ring-2 focus:ring-blue-500/20 outline-none`}
-                  />
-                </div>
+              {/* Start Date */}
+              <div>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Start Date</label>
+                <button
+                  type="button"
+                  onClick={() => setShowStartDatePicker(!showStartDatePicker)}
+                  className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} flex items-center justify-between`}
+                >
+                  <div className="flex items-center gap-2">
+                    <CalendarIcon className="w-5 h-5 text-blue-500" />
+                    <span className={newProjectForm.startDate ? themeClasses.text.primary : themeClasses.text.muted}>
+                      {newProjectForm.startDate
+                        ? format(parseISO(newProjectForm.startDate), 'MMM d, yyyy')
+                        : 'Select start date...'}
+                    </span>
+                  </div>
+                  {showStartDatePicker ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                </button>
+
+                {showStartDatePicker && (
+                  <div className={`mt-2 p-4 ${themeClasses.bg.input} rounded-xl border ${themeClasses.border.input}`}>
+                    {/* Month Navigation */}
+                    <div className="flex items-center justify-between mb-4">
+                      <button
+                        type="button"
+                        onClick={() => setStartDatePickerMonth(subMonths(startDatePickerMonth, 1))}
+                        className={`p-2 rounded-lg ${themeClasses.hover.bg}`}
+                      >
+                        <ChevronLeft className="w-5 h-5" />
+                      </button>
+                      <span className={`font-semibold ${themeClasses.text.primary}`}>
+                        {format(startDatePickerMonth, 'MMMM yyyy')}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setStartDatePickerMonth(addMonths(startDatePickerMonth, 1))}
+                        className={`p-2 rounded-lg ${themeClasses.hover.bg}`}
+                      >
+                        <ChevronRight className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    {/* Weekday Headers */}
+                    <div className="grid grid-cols-7 gap-1 mb-2">
+                      {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+                        <div key={i} className={`text-center text-xs font-medium ${themeClasses.text.muted} py-1`}>
+                          {day}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Calendar Days */}
+                    <div className="grid grid-cols-7 gap-1">
+                      {(() => {
+                        const monthStart = startOfMonth(startDatePickerMonth);
+                        const monthEnd = endOfMonth(startDatePickerMonth);
+                        const calStartDate = startOfWeek(monthStart);
+                        const calEndDate = endOfWeek(monthEnd);
+                        const days = [];
+                        let day = calStartDate;
+
+                        while (day <= calEndDate) {
+                          const currentDay = day;
+                          const isCurrentMonth = currentDay.getMonth() === startDatePickerMonth.getMonth();
+                          const isSelected = newProjectForm.startDate && isSameDay(currentDay, parseISO(newProjectForm.startDate));
+                          const isTodays = isToday(currentDay);
+                          const dayStr = format(currentDay, 'yyyy-MM-dd');
+
+                          days.push(
+                            <button
+                              key={dayStr}
+                              type="button"
+                              onClick={() => {
+                                setNewProjectForm(prev => ({ ...prev, startDate: dayStr }));
+                                setShowStartDatePicker(false);
+                              }}
+                              className={`aspect-square flex items-center justify-center text-sm rounded-lg transition-colors ${
+                                isSelected
+                                  ? 'bg-blue-500 text-white font-semibold'
+                                  : isTodays
+                                    ? `${themeClasses.bg.tertiary} ${themeClasses.text.primary} font-semibold`
+                                    : isCurrentMonth
+                                      ? `${themeClasses.text.primary} ${themeClasses.hover.bg}`
+                                      : `${themeClasses.text.muted} opacity-50`
+                              }`}
+                            >
+                              {format(currentDay, 'd')}
+                            </button>
+                          );
+                          day = addDays(day, 1);
+                        }
+                        return days;
+                      })()}
+                    </div>
+
+                    {/* Quick Date Options */}
+                    <div className="flex gap-2 mt-4 pt-3 border-t border-dashed" style={{ borderColor: theme === 'light' ? '#e5e7eb' : '#3f3f46' }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNewProjectForm(prev => ({ ...prev, startDate: format(new Date(), 'yyyy-MM-dd') }));
+                          setShowStartDatePicker(false);
+                        }}
+                        className={`flex-1 py-2 text-xs font-medium rounded-lg ${themeClasses.bg.tertiary} ${themeClasses.text.secondary}`}
+                      >
+                        Today
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNewProjectForm(prev => ({ ...prev, startDate: format(addDays(new Date(), 7), 'yyyy-MM-dd') }));
+                          setShowStartDatePicker(false);
+                        }}
+                        className={`flex-1 py-2 text-xs font-medium rounded-lg ${themeClasses.bg.tertiary} ${themeClasses.text.secondary}`}
+                      >
+                        Next Week
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {/* Priority */}
+              {/* End Date */}
               <div>
-                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Priority</label>
-                <select
-                  value={newProjectForm.priority}
-                  onChange={(e) => setNewProjectForm({ ...newProjectForm, priority: e.target.value as 'low' | 'medium' | 'high' })}
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${themeClasses.focus.border} focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>End Date</label>
+                <button
+                  type="button"
+                  onClick={() => setShowEndDatePicker(!showEndDatePicker)}
+                  className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} flex items-center justify-between`}
                 >
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                </select>
+                  <div className="flex items-center gap-2">
+                    <CalendarIcon className="w-5 h-5 text-green-500" />
+                    <span className={newProjectForm.endDate ? themeClasses.text.primary : themeClasses.text.muted}>
+                      {newProjectForm.endDate
+                        ? format(parseISO(newProjectForm.endDate), 'MMM d, yyyy')
+                        : 'Select end date...'}
+                    </span>
+                  </div>
+                  {showEndDatePicker ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                </button>
+
+                {showEndDatePicker && (
+                  <div className={`mt-2 p-4 ${themeClasses.bg.input} rounded-xl border ${themeClasses.border.input}`}>
+                    {/* Month Navigation */}
+                    <div className="flex items-center justify-between mb-4">
+                      <button
+                        type="button"
+                        onClick={() => setEndDatePickerMonth(subMonths(endDatePickerMonth, 1))}
+                        className={`p-2 rounded-lg ${themeClasses.hover.bg}`}
+                      >
+                        <ChevronLeft className="w-5 h-5" />
+                      </button>
+                      <span className={`font-semibold ${themeClasses.text.primary}`}>
+                        {format(endDatePickerMonth, 'MMMM yyyy')}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setEndDatePickerMonth(addMonths(endDatePickerMonth, 1))}
+                        className={`p-2 rounded-lg ${themeClasses.hover.bg}`}
+                      >
+                        <ChevronRight className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    {/* Weekday Headers */}
+                    <div className="grid grid-cols-7 gap-1 mb-2">
+                      {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+                        <div key={i} className={`text-center text-xs font-medium ${themeClasses.text.muted} py-1`}>
+                          {day}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Calendar Days */}
+                    <div className="grid grid-cols-7 gap-1">
+                      {(() => {
+                        const monthStart = startOfMonth(endDatePickerMonth);
+                        const monthEnd = endOfMonth(endDatePickerMonth);
+                        const calStartDate = startOfWeek(monthStart);
+                        const calEndDate = endOfWeek(monthEnd);
+                        const days = [];
+                        let day = calStartDate;
+
+                        while (day <= calEndDate) {
+                          const currentDay = day;
+                          const isCurrentMonth = currentDay.getMonth() === endDatePickerMonth.getMonth();
+                          const isSelected = newProjectForm.endDate && isSameDay(currentDay, parseISO(newProjectForm.endDate));
+                          const isTodays = isToday(currentDay);
+                          const dayStr = format(currentDay, 'yyyy-MM-dd');
+
+                          days.push(
+                            <button
+                              key={dayStr}
+                              type="button"
+                              onClick={() => {
+                                setNewProjectForm(prev => ({ ...prev, endDate: dayStr }));
+                                setShowEndDatePicker(false);
+                              }}
+                              className={`aspect-square flex items-center justify-center text-sm rounded-lg transition-colors ${
+                                isSelected
+                                  ? 'bg-green-500 text-white font-semibold'
+                                  : isTodays
+                                    ? `${themeClasses.bg.tertiary} ${themeClasses.text.primary} font-semibold`
+                                    : isCurrentMonth
+                                      ? `${themeClasses.text.primary} ${themeClasses.hover.bg}`
+                                      : `${themeClasses.text.muted} opacity-50`
+                              }`}
+                            >
+                              {format(currentDay, 'd')}
+                            </button>
+                          );
+                          day = addDays(day, 1);
+                        }
+                        return days;
+                      })()}
+                    </div>
+
+                    {/* Quick Date Options */}
+                    <div className="flex gap-2 mt-4 pt-3 border-t border-dashed" style={{ borderColor: theme === 'light' ? '#e5e7eb' : '#3f3f46' }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNewProjectForm(prev => ({ ...prev, endDate: format(addDays(new Date(), 30), 'yyyy-MM-dd') }));
+                          setShowEndDatePicker(false);
+                        }}
+                        className={`flex-1 py-2 text-xs font-medium rounded-lg ${themeClasses.bg.tertiary} ${themeClasses.text.secondary}`}
+                      >
+                        +30 Days
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNewProjectForm(prev => ({ ...prev, endDate: format(addDays(new Date(), 60), 'yyyy-MM-dd') }));
+                          setShowEndDatePicker(false);
+                        }}
+                        className={`flex-1 py-2 text-xs font-medium rounded-lg ${themeClasses.bg.tertiary} ${themeClasses.text.secondary}`}
+                      >
+                        +60 Days
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNewProjectForm(prev => ({ ...prev, endDate: format(addDays(new Date(), 90), 'yyyy-MM-dd') }));
+                          setShowEndDatePicker(false);
+                        }}
+                        className={`flex-1 py-2 text-xs font-medium rounded-lg ${themeClasses.bg.tertiary} ${themeClasses.text.secondary}`}
+                      >
+                        +90 Days
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Status */}
@@ -1484,19 +1922,19 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
             className="absolute inset-0 bg-black/70"
             onClick={() => setShowEditProjectModal(false)}
           />
-          <div className="relative bg-[#1C1C1E] rounded-t-3xl w-full max-h-[90vh] overflow-y-auto animate-slide-up pb-safe">
-            <div className="sticky top-0 bg-[#1C1C1E] px-4 py-4 border-b border-blue-500/30 flex items-center justify-between z-10">
+          <div className={`relative ${themeClasses.bg.secondary} rounded-t-3xl w-full max-h-[90vh] overflow-y-auto animate-slide-up pb-safe`}>
+            <div className={`sticky top-0 ${themeClasses.bg.secondary} px-4 py-4 border-b border-blue-500/30 flex items-center justify-between z-10`}>
               <button
                 onClick={() => setShowEditProjectModal(false)}
-                className="text-zinc-400 text-base font-medium active:text-zinc-300"
+                className={`${themeClasses.text.secondary} text-base font-medium active:opacity-70`}
               >
                 Cancel
               </button>
-              <h2 className="text-lg font-semibold text-white">Edit Project</h2>
+              <h2 className={`text-lg font-semibold ${themeClasses.text.primary}`}>Edit Project</h2>
               <button
                 onClick={handleUpdateProject}
                 disabled={!editProjectForm.name.trim()}
-                className="text-blue-500 text-base font-semibold active:text-blue-400 disabled:text-zinc-600 disabled:cursor-not-allowed"
+                className={`text-blue-500 text-base font-semibold active:text-blue-400 disabled:${themeClasses.text.muted} disabled:cursor-not-allowed`}
               >
                 Save
               </button>
@@ -1504,98 +1942,347 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
             <div className="p-4 space-y-4">
               {/* Project Name */}
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1">Project Name <span className="text-red-400">*</span></label>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Project Name <span className="text-red-400">*</span></label>
                 <input
                   type="text"
                   value={editProjectForm.name}
                   onChange={(e) => setEditProjectForm({ ...editProjectForm, name: e.target.value })}
                   placeholder="e.g., Kitchen Renovation"
-                  className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
                 />
               </div>
 
-              {/* Client Name */}
+              {/* Client */}
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1">Client Name</label>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Client</label>
+                <select
+                  value={editProjectForm.clientId}
+                  onChange={(e) => {
+                    const selectedId = e.target.value;
+                    if (selectedId === 'new') {
+                      navigate('/clients', { state: { returnTo: '/projects', action: 'add' } });
+                    } else {
+                      const selectedClient = clients.find(c => c.id === selectedId);
+                      setEditProjectForm({
+                        ...editProjectForm,
+                        clientId: selectedId,
+                        client: selectedClient?.name || selectedClient?.email || ''
+                      });
+                    }
+                  }}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                >
+                  <option value="">Select a client (optional)...</option>
+                  {clients.map((c) => {
+                    const displayName = c.name || c.email || 'Unnamed Client';
+                    return (
+                      <option key={c.id} value={c.id}>{displayName}</option>
+                    );
+                  })}
+                  <option value="new">+ Add New Client</option>
+                </select>
+              </div>
+
+              {/* Address */}
+              <div>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Project Address</label>
                 <input
                   type="text"
-                  value={editProjectForm.client}
-                  onChange={(e) => setEditProjectForm({ ...editProjectForm, client: e.target.value })}
-                  placeholder="e.g., John Smith"
-                  className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
+                  value={editProjectForm.address}
+                  onChange={(e) => setEditProjectForm({ ...editProjectForm, address: e.target.value })}
+                  placeholder="e.g., 123 Main St, City, State 12345"
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
                 />
               </div>
 
               {/* Description */}
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1">Description</label>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Description</label>
                 <textarea
                   value={editProjectForm.description}
                   onChange={(e) => setEditProjectForm({ ...editProjectForm, description: e.target.value })}
                   placeholder="Brief description of the project..."
                   rows={3}
-                  className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none resize-none"
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none resize-none`}
                 />
               </div>
 
               {/* Budget */}
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1">Budget</label>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Budget</label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500">$</span>
+                  <span className={`absolute left-4 top-1/2 -translate-y-1/2 ${themeClasses.text.muted}`}>$</span>
                   <input
                     type="number"
                     value={editProjectForm.budget}
                     onChange={(e) => setEditProjectForm({ ...editProjectForm, budget: e.target.value })}
                     placeholder="0"
-                    className="w-full pl-8 pr-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
+                    className={`w-full pl-8 pr-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
                   />
                 </div>
               </div>
 
-              {/* Start Date & End Date */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-1">Start Date</label>
-                  <input
-                    type="date"
-                    value={editProjectForm.startDate}
-                    onChange={(e) => setEditProjectForm({ ...editProjectForm, startDate: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-1">End Date</label>
-                  <input
-                    type="date"
-                    value={editProjectForm.endDate}
-                    onChange={(e) => setEditProjectForm({ ...editProjectForm, endDate: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
-                  />
-                </div>
-              </div>
-
-              {/* Priority */}
+              {/* Start Date */}
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1">Priority</label>
-                <select
-                  value={editProjectForm.priority}
-                  onChange={(e) => setEditProjectForm({ ...editProjectForm, priority: e.target.value as 'low' | 'medium' | 'high' })}
-                  className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Start Date</label>
+                <button
+                  type="button"
+                  onClick={() => setEditShowStartDatePicker(!editShowStartDatePicker)}
+                  className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} flex items-center justify-between`}
                 >
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                </select>
+                  <div className="flex items-center gap-2">
+                    <CalendarIcon className="w-5 h-5 text-blue-500" />
+                    <span className={editProjectForm.startDate ? themeClasses.text.primary : themeClasses.text.muted}>
+                      {editProjectForm.startDate
+                        ? format(parseISO(editProjectForm.startDate), 'MMM d, yyyy')
+                        : 'Select start date...'}
+                    </span>
+                  </div>
+                  {editShowStartDatePicker ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                </button>
+
+                {editShowStartDatePicker && (
+                  <div className={`mt-2 p-4 ${themeClasses.bg.input} rounded-xl border ${themeClasses.border.input}`}>
+                    {/* Month Navigation */}
+                    <div className="flex items-center justify-between mb-4">
+                      <button
+                        type="button"
+                        onClick={() => setEditStartDatePickerMonth(subMonths(editStartDatePickerMonth, 1))}
+                        className={`p-2 rounded-lg ${themeClasses.hover.bg}`}
+                      >
+                        <ChevronLeft className="w-5 h-5" />
+                      </button>
+                      <span className={`font-semibold ${themeClasses.text.primary}`}>
+                        {format(editStartDatePickerMonth, 'MMMM yyyy')}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setEditStartDatePickerMonth(addMonths(editStartDatePickerMonth, 1))}
+                        className={`p-2 rounded-lg ${themeClasses.hover.bg}`}
+                      >
+                        <ChevronRight className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    {/* Weekday Headers */}
+                    <div className="grid grid-cols-7 gap-1 mb-2">
+                      {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+                        <div key={i} className={`text-center text-xs font-medium ${themeClasses.text.muted} py-1`}>
+                          {day}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Calendar Days */}
+                    <div className="grid grid-cols-7 gap-1">
+                      {(() => {
+                        const monthStart = startOfMonth(editStartDatePickerMonth);
+                        const monthEnd = endOfMonth(editStartDatePickerMonth);
+                        const calStartDate = startOfWeek(monthStart);
+                        const calEndDate = endOfWeek(monthEnd);
+                        const days = [];
+                        let day = calStartDate;
+
+                        while (day <= calEndDate) {
+                          const currentDay = day;
+                          const isCurrentMonth = currentDay.getMonth() === editStartDatePickerMonth.getMonth();
+                          const isSelected = editProjectForm.startDate && isSameDay(currentDay, parseISO(editProjectForm.startDate));
+                          const isTodays = isToday(currentDay);
+                          const dayStr = format(currentDay, 'yyyy-MM-dd');
+
+                          days.push(
+                            <button
+                              key={dayStr}
+                              type="button"
+                              onClick={() => {
+                                setEditProjectForm(prev => ({ ...prev, startDate: dayStr }));
+                                setEditShowStartDatePicker(false);
+                              }}
+                              className={`aspect-square flex items-center justify-center text-sm rounded-lg transition-colors ${
+                                isSelected
+                                  ? 'bg-blue-500 text-white font-semibold'
+                                  : isTodays
+                                    ? `${themeClasses.bg.tertiary} ${themeClasses.text.primary} font-semibold`
+                                    : isCurrentMonth
+                                      ? `${themeClasses.text.primary} ${themeClasses.hover.bg}`
+                                      : `${themeClasses.text.muted} opacity-50`
+                              }`}
+                            >
+                              {format(currentDay, 'd')}
+                            </button>
+                          );
+                          day = addDays(day, 1);
+                        }
+                        return days;
+                      })()}
+                    </div>
+
+                    {/* Quick Date Options */}
+                    <div className="flex gap-2 mt-4 pt-3 border-t border-dashed" style={{ borderColor: theme === 'light' ? '#e5e7eb' : '#3f3f46' }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditProjectForm(prev => ({ ...prev, startDate: format(new Date(), 'yyyy-MM-dd') }));
+                          setEditShowStartDatePicker(false);
+                        }}
+                        className={`flex-1 py-2 text-xs font-medium rounded-lg ${themeClasses.bg.tertiary} ${themeClasses.text.secondary}`}
+                      >
+                        Today
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditProjectForm(prev => ({ ...prev, startDate: format(addDays(new Date(), 7), 'yyyy-MM-dd') }));
+                          setEditShowStartDatePicker(false);
+                        }}
+                        className={`flex-1 py-2 text-xs font-medium rounded-lg ${themeClasses.bg.tertiary} ${themeClasses.text.secondary}`}
+                      >
+                        Next Week
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* End Date */}
+              <div>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>End Date</label>
+                <button
+                  type="button"
+                  onClick={() => setEditShowEndDatePicker(!editShowEndDatePicker)}
+                  className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} flex items-center justify-between`}
+                >
+                  <div className="flex items-center gap-2">
+                    <CalendarIcon className="w-5 h-5 text-green-500" />
+                    <span className={editProjectForm.endDate ? themeClasses.text.primary : themeClasses.text.muted}>
+                      {editProjectForm.endDate
+                        ? format(parseISO(editProjectForm.endDate), 'MMM d, yyyy')
+                        : 'Select end date...'}
+                    </span>
+                  </div>
+                  {editShowEndDatePicker ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                </button>
+
+                {editShowEndDatePicker && (
+                  <div className={`mt-2 p-4 ${themeClasses.bg.input} rounded-xl border ${themeClasses.border.input}`}>
+                    {/* Month Navigation */}
+                    <div className="flex items-center justify-between mb-4">
+                      <button
+                        type="button"
+                        onClick={() => setEditEndDatePickerMonth(subMonths(editEndDatePickerMonth, 1))}
+                        className={`p-2 rounded-lg ${themeClasses.hover.bg}`}
+                      >
+                        <ChevronLeft className="w-5 h-5" />
+                      </button>
+                      <span className={`font-semibold ${themeClasses.text.primary}`}>
+                        {format(editEndDatePickerMonth, 'MMMM yyyy')}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setEditEndDatePickerMonth(addMonths(editEndDatePickerMonth, 1))}
+                        className={`p-2 rounded-lg ${themeClasses.hover.bg}`}
+                      >
+                        <ChevronRight className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    {/* Weekday Headers */}
+                    <div className="grid grid-cols-7 gap-1 mb-2">
+                      {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+                        <div key={i} className={`text-center text-xs font-medium ${themeClasses.text.muted} py-1`}>
+                          {day}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Calendar Days */}
+                    <div className="grid grid-cols-7 gap-1">
+                      {(() => {
+                        const monthStart = startOfMonth(editEndDatePickerMonth);
+                        const monthEnd = endOfMonth(editEndDatePickerMonth);
+                        const calStartDate = startOfWeek(monthStart);
+                        const calEndDate = endOfWeek(monthEnd);
+                        const days = [];
+                        let day = calStartDate;
+
+                        while (day <= calEndDate) {
+                          const currentDay = day;
+                          const isCurrentMonth = currentDay.getMonth() === editEndDatePickerMonth.getMonth();
+                          const isSelected = editProjectForm.endDate && isSameDay(currentDay, parseISO(editProjectForm.endDate));
+                          const isTodays = isToday(currentDay);
+                          const dayStr = format(currentDay, 'yyyy-MM-dd');
+
+                          days.push(
+                            <button
+                              key={dayStr}
+                              type="button"
+                              onClick={() => {
+                                setEditProjectForm(prev => ({ ...prev, endDate: dayStr }));
+                                setEditShowEndDatePicker(false);
+                              }}
+                              className={`aspect-square flex items-center justify-center text-sm rounded-lg transition-colors ${
+                                isSelected
+                                  ? 'bg-green-500 text-white font-semibold'
+                                  : isTodays
+                                    ? `${themeClasses.bg.tertiary} ${themeClasses.text.primary} font-semibold`
+                                    : isCurrentMonth
+                                      ? `${themeClasses.text.primary} ${themeClasses.hover.bg}`
+                                      : `${themeClasses.text.muted} opacity-50`
+                              }`}
+                            >
+                              {format(currentDay, 'd')}
+                            </button>
+                          );
+                          day = addDays(day, 1);
+                        }
+                        return days;
+                      })()}
+                    </div>
+
+                    {/* Quick Date Options */}
+                    <div className="flex gap-2 mt-4 pt-3 border-t border-dashed" style={{ borderColor: theme === 'light' ? '#e5e7eb' : '#3f3f46' }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditProjectForm(prev => ({ ...prev, endDate: format(addDays(new Date(), 30), 'yyyy-MM-dd') }));
+                          setEditShowEndDatePicker(false);
+                        }}
+                        className={`flex-1 py-2 text-xs font-medium rounded-lg ${themeClasses.bg.tertiary} ${themeClasses.text.secondary}`}
+                      >
+                        +30 Days
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditProjectForm(prev => ({ ...prev, endDate: format(addDays(new Date(), 60), 'yyyy-MM-dd') }));
+                          setEditShowEndDatePicker(false);
+                        }}
+                        className={`flex-1 py-2 text-xs font-medium rounded-lg ${themeClasses.bg.tertiary} ${themeClasses.text.secondary}`}
+                      >
+                        +60 Days
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditProjectForm(prev => ({ ...prev, endDate: format(addDays(new Date(), 90), 'yyyy-MM-dd') }));
+                          setEditShowEndDatePicker(false);
+                        }}
+                        className={`flex-1 py-2 text-xs font-medium rounded-lg ${themeClasses.bg.tertiary} ${themeClasses.text.secondary}`}
+                      >
+                        +90 Days
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Status */}
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1">Status</label>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Status</label>
                 <select
                   value={editProjectForm.status}
                   onChange={(e) => setEditProjectForm({ ...editProjectForm, status: e.target.value as 'active' | 'completed' | 'on-hold' })}
-                  className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
                 >
                   <option value="active">Active</option>
                   <option value="on-hold">On Hold</option>

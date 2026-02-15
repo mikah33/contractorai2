@@ -34,6 +34,7 @@ import SendEmailModal from '../email/SendEmailModal';
 interface VisionCamModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialImage?: string; // URL of image to start with
 }
 
 type Step = 'tutorial' | 'capture' | 'prompt' | 'generating' | 'result' | 'previous';
@@ -46,11 +47,11 @@ interface PreviousVision {
   metadata?: Record<string, any>;
 }
 
-const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose }) => {
+const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose, initialImage }) => {
   const { projects, fetchProjects } = useProjectStore();
   const { addPhoto } = usePhotosStore();
 
-  const [step, setStep] = useState<Step>('capture');
+  const [step, setStep] = useState<Step>(initialImage ? 'prompt' : 'capture');
   const [showTutorial, setShowTutorial] = useState(false);
   const [tutorialStep, setTutorialStep] = useState(0);
   const [hideTutorialPermanently, setHideTutorialPermanently] = useState(false);
@@ -118,7 +119,7 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose }) => {
   useEffect(() => {
     if (isOpen) {
       const tutorialHidden = localStorage.getItem('visionCamTutorialHidden');
-      if (!tutorialHidden) {
+      if (!tutorialHidden && !initialImage) {
         setShowTutorial(true);
         setStep('tutorial');
       }
@@ -126,6 +127,15 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose }) => {
       fetchPreviousVisions(); // Load previous visions on open
     }
   }, [isOpen, fetchProjects]);
+
+  // Set initial image from prop
+  useEffect(() => {
+    if (isOpen && initialImage) {
+      setCapturedImage(initialImage);
+      setOriginalImageUrl(initialImage);
+      setStep('prompt');
+    }
+  }, [isOpen, initialImage]);
 
   const resetModal = () => {
     setStep('capture');

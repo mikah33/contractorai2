@@ -27,7 +27,7 @@ interface StripeConnectStatus {
   businessName?: string;
 }
 
-type SettingsSection = 'main' | 'profile' | 'notifications' | 'security' | 'payments' | 'language' | 'email' | 'tutorials' | 'theme' | 'danger' | 'marketing';
+type SettingsSection = 'main' | 'profile' | 'notifications' | 'security' | 'payments' | 'language' | 'email' | 'tutorials' | 'theme' | 'danger' | 'marketing' | 'team';
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -577,7 +577,7 @@ const Settings = () => {
       items: [
         { id: 'profile' as SettingsSection, icon: User, label: 'Profile & Business', description: 'Name, company, logo, terms', bgColor: 'bg-blue-500/20', iconColor: 'text-blue-500' },
         { id: 'security' as SettingsSection, icon: Lock, label: 'Security', description: 'Password, authentication', bgColor: 'bg-blue-500/20', iconColor: 'text-blue-500' },
-        { id: 'profile' as SettingsSection, icon: Users, label: 'Team', description: 'Manage your employees', bgColor: 'bg-blue-500/20', iconColor: 'text-blue-500', navigateTo: '/employees-hub' },
+        { id: 'team' as SettingsSection, icon: Users, label: 'Team', description: 'Manage your employees', bgColor: 'bg-blue-500/20', iconColor: 'text-blue-500', navigateTo: '/employees-hub' },
       ]
     },
     {
@@ -1035,8 +1035,8 @@ const Settings = () => {
       case 'email':
         return (
           <div className="space-y-6">
-            <EmailPreferences />
             <BusinessEmailSetup />
+            <EmailPreferences />
           </div>
         );
 

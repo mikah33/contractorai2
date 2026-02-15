@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   Search,
   Users,
@@ -30,9 +31,14 @@ type SearchCategory = 'all' | 'clients' | 'estimates' | 'projects' | 'finance' |
 const SearchHub: React.FC = () => {
   const { theme } = useTheme();
   const themeClasses = getThemeClasses(theme);
+  const location = useLocation();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeCategory, setActiveCategory] = useState<SearchCategory>('all');
+  const [activeCategory, setActiveCategory] = useState<SearchCategory>(() => {
+    // Check if initialCategory was passed via navigation state
+    const state = location.state as { initialCategory?: SearchCategory } | null;
+    return state?.initialCategory || 'all';
+  });
 
   // Fetch data from all stores for universal search
   const { clients, fetchClients } = useClientsStore();
@@ -101,11 +107,11 @@ const SearchHub: React.FC = () => {
   );
 
   const categories = [
+    { id: 'tasks' as SearchCategory, label: 'Tasks', icon: Calendar, color: 'text-blue-500', bgColor: 'bg-blue-500/20' },
     { id: 'clients' as SearchCategory, label: 'Clients', icon: Users, color: 'text-blue-500', bgColor: 'bg-blue-500/20' },
     { id: 'estimates' as SearchCategory, label: 'Estimates', icon: FileText, color: 'text-green-500', bgColor: 'bg-green-500/20' },
     { id: 'projects' as SearchCategory, label: 'Projects', icon: Briefcase, color: 'text-blue-500', bgColor: 'bg-blue-500/20' },
     { id: 'finance' as SearchCategory, label: 'Finance', icon: DollarSign, color: 'text-blue-500', bgColor: 'bg-blue-500/20' },
-    { id: 'tasks' as SearchCategory, label: 'Tasks', icon: Calendar, color: 'text-blue-500', bgColor: 'bg-blue-500/20' },
   ];
 
   // Render the appropriate hub content based on active category
@@ -326,14 +332,14 @@ const SearchHub: React.FC = () => {
       <div className={`fixed top-0 left-0 right-0 z-50 ${themeClasses.bg.secondary} border-b ${themeClasses.border.primary}`}>
         <div className="pt-[env(safe-area-inset-top)]">
           <div className="px-4 pb-4 pt-4">
-            <h1 className={`text-2xl font-bold ${themeClasses.text.primary} mb-4`}>Search</h1>
+            <h1 className={`text-2xl font-bold ${themeClasses.text.primary} mb-4`}>Job Hub</h1>
 
             {/* Search Input */}
             <div className={`flex items-center gap-3 px-4 py-3 ${themeClasses.bg.card} rounded-xl border ${themeClasses.border.secondary}`}>
               <Search className={`w-5 h-5 ${themeClasses.text.muted}`} />
               <input
                 type="text"
-                placeholder="Search clients, estimates, projects..."
+                placeholder="Search jobs, clients, estimates..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className={`flex-1 bg-transparent border-0 outline-none ${themeClasses.text.primary} placeholder:${themeClasses.text.muted}`}
@@ -367,7 +373,7 @@ const SearchHub: React.FC = () => {
       </div>
 
       {/* Spacer for fixed header */}
-      <div className="pt-[calc(env(safe-area-inset-top)+200px)]" />
+      <div className="pt-56" />
 
       {/* Content - Full hub embedded */}
       <div className={activeCategory === 'all' ? 'px-4' : ''}>

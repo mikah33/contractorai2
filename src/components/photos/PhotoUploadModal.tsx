@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   X,
   Camera,
@@ -9,11 +10,13 @@ import {
   Check,
   Loader2,
   Trash2,
-  Plus
+  Plus,
+  Images
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import useProjectStore from '../../stores/projectStore';
 import usePhotosStore from '../../stores/photosStore';
+import { useTheme, getThemeClasses } from '../../contexts/ThemeContext';
 
 interface PhotoUploadModalProps {
   isOpen: boolean;
@@ -29,6 +32,9 @@ interface PhotoItem {
 }
 
 const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({ isOpen, onClose }) => {
+  const navigate = useNavigate();
+  const { theme } = useTheme();
+  const themeClasses = getThemeClasses(theme);
   const { projects, fetchProjects, addProject } = useProjectStore();
   const { addPhotos } = usePhotosStore();
   const [step, setStep] = useState<Step>('choose-destination');
@@ -38,6 +44,7 @@ const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({ isOpen, onClose }) 
   const [photos, setPhotos] = useState<PhotoItem[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [isVisible, setIsVisible] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -45,6 +52,9 @@ const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({ isOpen, onClose }) 
   useEffect(() => {
     if (isOpen) {
       fetchProjects();
+      setTimeout(() => setIsVisible(true), 10);
+    } else {
+      setIsVisible(false);
     }
   }, [isOpen, fetchProjects]);
 
@@ -59,8 +69,16 @@ const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({ isOpen, onClose }) 
   };
 
   const handleClose = () => {
-    resetModal();
-    onClose();
+    setIsVisible(false);
+    setTimeout(() => {
+      resetModal();
+      onClose();
+    }, 300);
+  };
+
+  const handleViewGallery = () => {
+    handleClose();
+    setTimeout(() => navigate('/photos-gallery'), 350);
   };
 
   const handleDestinationSelect = (dest: 'project' | 'new-project' | 'none') => {
@@ -217,34 +235,48 @@ const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({ isOpen, onClose }) 
 
   if (!isOpen) return null;
 
+  // Theme-aware colors
+  const bgModal = theme === 'light' ? 'bg-white' : 'bg-[#1C1C1E]';
+  const bgCard = theme === 'light' ? 'bg-gray-100' : 'bg-[#2C2C2E]';
+  const bgCardHover = theme === 'light' ? 'hover:bg-gray-200' : 'hover:bg-[#3C3C3E]';
+  const bgHandle = theme === 'light' ? 'bg-gray-300' : 'bg-[#3A3A3C]';
+  const textPrimary = theme === 'light' ? 'text-gray-900' : 'text-white';
+  const textSecondary = theme === 'light' ? 'text-gray-500' : 'text-zinc-400';
+  const textMuted = theme === 'light' ? 'text-gray-400' : 'text-zinc-500';
+  const borderColor = theme === 'light' ? 'border-gray-200' : 'border-blue-500/30';
+  const inputBg = theme === 'light' ? 'bg-gray-100 border-gray-300' : 'bg-[#2C2C2E] border-[#3A3A3C]';
+  const inputText = theme === 'light' ? 'text-gray-900 placeholder-gray-400' : 'text-white placeholder-zinc-500';
+
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/80"
+        className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
         onClick={handleClose}
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-lg bg-[#1C1C1E] rounded-t-2xl max-h-[85vh] overflow-hidden animate-slide-up">
-        {/* Handle */}
-        <div className="flex justify-center pt-3 pb-2">
-          <div className="w-10 h-1 bg-[#3A3A3C] rounded-full" />
-        </div>
-
+      <div
+        className={`relative w-full max-w-lg ${bgModal} rounded-2xl max-h-[85vh] overflow-hidden shadow-2xl transition-all duration-300 ${
+          isVisible
+            ? 'opacity-100 scale-100 translate-y-0'
+            : 'opacity-0 scale-[0.2] translate-y-[60%]'
+        }`}
+        style={{ transformOrigin: 'bottom center' }}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 pb-4 border-b border-blue-500/30">
+        <div className={`flex items-center justify-between px-5 pt-5 pb-4 border-b ${borderColor}`}>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
-              <Camera className="w-5 h-5 text-blue-500" />
+            <div className="w-11 h-11 bg-blue-500/20 rounded-xl flex items-center justify-center">
+              <Camera className="w-6 h-6 text-blue-500" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white">
+              <h2 className={`text-lg font-bold ${textPrimary}`}>
                 {step === 'choose-destination' && 'Add Photos'}
                 {step === 'capture-photos' && 'Capture Photos'}
                 {step === 'review' && 'Review Photos'}
               </h2>
-              <p className="text-sm text-zinc-400">
+              <p className={`text-sm ${textSecondary}`}>
                 {step === 'choose-destination' && 'Where should these photos go?'}
                 {step === 'capture-photos' && (selectedProjectId ? projects.find(p => p.id === selectedProjectId)?.name || 'Project' : 'General photos')}
                 {step === 'review' && `${photos.length} photo(s) ready`}
@@ -253,7 +285,7 @@ const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({ isOpen, onClose }) 
           </div>
           <button
             onClick={handleClose}
-            className="p-2 text-zinc-400 hover:text-white rounded-lg"
+            className={`p-2 ${textSecondary} hover:${textPrimary} rounded-lg transition-colors`}
           >
             <X className="w-6 h-6" />
           </button>
@@ -264,23 +296,40 @@ const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({ isOpen, onClose }) 
           {/* Step 1: Choose Destination */}
           {step === 'choose-destination' && (
             <div className="space-y-3">
+              {/* View Gallery Button */}
+              <button
+                onClick={handleViewGallery}
+                className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all ${bgCard} border-transparent ${bgCardHover}`}
+              >
+                <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center">
+                  <Images className="w-6 h-6 text-purple-500" />
+                </div>
+                <div className="flex-1 text-left">
+                  <p className={`font-semibold ${textPrimary}`}>View Gallery</p>
+                  <p className={`text-sm ${textSecondary}`}>Browse previously taken photos</p>
+                </div>
+                <ChevronRight className={`w-5 h-5 ${textMuted}`} />
+              </button>
+
+              <div className={`border-t ${theme === 'light' ? 'border-gray-200' : 'border-zinc-700'} my-3`} />
+
               {/* Attach to existing project */}
               <button
                 onClick={() => handleDestinationSelect('project')}
                 className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all ${
                   destination === 'project'
                     ? 'bg-blue-500/20 border-blue-500'
-                    : 'bg-[#2C2C2E] border-transparent hover:border-blue-500/50'
+                    : `${bgCard} border-transparent ${bgCardHover}`
                 }`}
               >
                 <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
                   <Briefcase className="w-6 h-6 text-blue-500" />
                 </div>
                 <div className="flex-1 text-left">
-                  <p className="font-semibold text-white">Attach to Project</p>
-                  <p className="text-sm text-zinc-400">Add photos to an existing project</p>
+                  <p className={`font-semibold ${textPrimary}`}>Attach to Project</p>
+                  <p className={`text-sm ${textSecondary}`}>Add photos to an existing project</p>
                 </div>
-                <ChevronRight className="w-5 h-5 text-zinc-500" />
+                <ChevronRight className={`w-5 h-5 ${textMuted}`} />
               </button>
 
               {/* Create new project */}
@@ -289,17 +338,17 @@ const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({ isOpen, onClose }) 
                 className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all ${
                   destination === 'new-project'
                     ? 'bg-blue-500/20 border-blue-500'
-                    : 'bg-[#2C2C2E] border-transparent hover:border-blue-500/50'
+                    : `${bgCard} border-transparent ${bgCardHover}`
                 }`}
               >
                 <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
                   <FolderPlus className="w-6 h-6 text-blue-400" />
                 </div>
                 <div className="flex-1 text-left">
-                  <p className="font-semibold text-white">Create New Project</p>
-                  <p className="text-sm text-zinc-400">Start a new project with these photos</p>
+                  <p className={`font-semibold ${textPrimary}`}>Create New Project</p>
+                  <p className={`text-sm ${textSecondary}`}>Start a new project with these photos</p>
                 </div>
-                <ChevronRight className="w-5 h-5 text-zinc-500" />
+                <ChevronRight className={`w-5 h-5 ${textMuted}`} />
               </button>
 
               {/* Just take photos */}
@@ -308,27 +357,27 @@ const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({ isOpen, onClose }) 
                 className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all ${
                   destination === 'none'
                     ? 'bg-blue-500/20 border-blue-500'
-                    : 'bg-[#2C2C2E] border-transparent hover:border-blue-500/50'
+                    : `${bgCard} border-transparent ${bgCardHover}`
                 }`}
               >
-                <div className="w-12 h-12 bg-zinc-700 rounded-xl flex items-center justify-center">
-                  <Image className="w-6 h-6 text-zinc-400" />
+                <div className={`w-12 h-12 ${theme === 'light' ? 'bg-gray-200' : 'bg-zinc-700'} rounded-xl flex items-center justify-center`}>
+                  <Image className={`w-6 h-6 ${textSecondary}`} />
                 </div>
                 <div className="flex-1 text-left">
-                  <p className="font-semibold text-white">Just Take Photos</p>
-                  <p className="text-sm text-zinc-400">Save without attaching to a project</p>
+                  <p className={`font-semibold ${textPrimary}`}>Just Take Photos</p>
+                  <p className={`text-sm ${textSecondary}`}>Save without attaching to a project</p>
                 </div>
-                <ChevronRight className="w-5 h-5 text-zinc-500" />
+                <ChevronRight className={`w-5 h-5 ${textMuted}`} />
               </button>
 
               {/* Project List */}
               {destination === 'project' && (
                 <div className="mt-4 space-y-2">
-                  <p className="text-sm font-medium text-zinc-400 mb-2">Select a project:</p>
+                  <p className={`text-sm font-medium ${textSecondary} mb-2`}>Select a project:</p>
                   {projects.length === 0 ? (
-                    <div className="text-center py-6 bg-[#2C2C2E] rounded-xl">
-                      <Briefcase className="w-10 h-10 text-zinc-600 mx-auto mb-2" />
-                      <p className="text-zinc-500">No projects yet</p>
+                    <div className={`text-center py-6 ${bgCard} rounded-xl`}>
+                      <Briefcase className={`w-10 h-10 ${textMuted} mx-auto mb-2`} />
+                      <p className={textMuted}>No projects yet</p>
                       <button
                         onClick={() => handleDestinationSelect('new-project')}
                         className="mt-3 text-blue-500 text-sm font-medium"
@@ -342,16 +391,16 @@ const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({ isOpen, onClose }) 
                         <button
                           key={project.id}
                           onClick={() => handleProjectSelect(project.id)}
-                          className="w-full flex items-center gap-3 p-3 bg-[#2C2C2E] rounded-lg hover:bg-[#3C3C3E] active:scale-[0.98] transition-all"
+                          className={`w-full flex items-center gap-3 p-3 ${bgCard} rounded-lg ${bgCardHover} active:scale-[0.98] transition-all`}
                         >
                           <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
                             <Briefcase className="w-4 h-4 text-blue-500" />
                           </div>
                           <div className="flex-1 text-left">
-                            <p className="font-medium text-white text-sm">{project.name}</p>
-                            <p className="text-xs text-zinc-500">{project.client || 'No client'}</p>
+                            <p className={`font-medium ${textPrimary} text-sm`}>{project.name}</p>
+                            <p className={`text-xs ${textMuted}`}>{project.client || 'No client'}</p>
                           </div>
-                          <ChevronRight className="w-4 h-4 text-zinc-500" />
+                          <ChevronRight className={`w-4 h-4 ${textMuted}`} />
                         </button>
                       ))}
                     </div>
@@ -362,19 +411,19 @@ const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({ isOpen, onClose }) 
               {/* New Project Form */}
               {destination === 'new-project' && (
                 <div className="mt-4 space-y-3">
-                  <p className="text-sm font-medium text-zinc-400">Project name:</p>
+                  <p className={`text-sm font-medium ${textSecondary}`}>Project name:</p>
                   <input
                     type="text"
                     value={newProjectName}
                     onChange={(e) => setNewProjectName(e.target.value)}
                     placeholder="Enter project name"
-                    className="w-full px-4 py-3 bg-[#2C2C2E] border border-[#3A3A3C] rounded-xl text-white placeholder-zinc-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className={`w-full px-4 py-3 ${inputBg} border rounded-xl ${inputText} focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                     autoFocus
                   />
                   <button
                     onClick={handleCreateProject}
                     disabled={!newProjectName.trim()}
-                    className="w-full py-3 bg-blue-500 text-white rounded-xl font-semibold disabled:bg-zinc-700 disabled:text-zinc-500 active:scale-[0.98] transition-all"
+                    className={`w-full py-3 bg-blue-500 text-white rounded-xl font-semibold disabled:${theme === 'light' ? 'bg-gray-300 text-gray-500' : 'bg-zinc-700 text-zinc-500'} active:scale-[0.98] transition-all`}
                   >
                     Create & Continue
                   </button>
@@ -390,19 +439,19 @@ const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({ isOpen, onClose }) 
               <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={() => cameraInputRef.current?.click()}
-                  className="flex flex-col items-center justify-center p-6 bg-[#2C2C2E] border-2 border-dashed border-blue-500/50 rounded-xl hover:border-blue-500 active:scale-[0.98] transition-all"
+                  className={`flex flex-col items-center justify-center p-6 ${bgCard} border-2 border-dashed border-blue-500/50 rounded-xl hover:border-blue-500 active:scale-[0.98] transition-all`}
                 >
                   <Camera className="w-10 h-10 text-blue-500 mb-2" />
-                  <span className="text-sm font-medium text-white">Take Photo</span>
-                  <span className="text-xs text-zinc-500">Use camera</span>
+                  <span className={`text-sm font-medium ${textPrimary}`}>Take Photo</span>
+                  <span className={`text-xs ${textMuted}`}>Use camera</span>
                 </button>
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex flex-col items-center justify-center p-6 bg-[#2C2C2E] border-2 border-dashed border-blue-500/50 rounded-xl hover:border-blue-500 active:scale-[0.98] transition-all"
+                  className={`flex flex-col items-center justify-center p-6 ${bgCard} border-2 border-dashed border-blue-500/50 rounded-xl hover:border-blue-500 active:scale-[0.98] transition-all`}
                 >
                   <Image className="w-10 h-10 text-blue-500 mb-2" />
-                  <span className="text-sm font-medium text-white">Gallery</span>
-                  <span className="text-xs text-zinc-500">Choose photos</span>
+                  <span className={`text-sm font-medium ${textPrimary}`}>Gallery</span>
+                  <span className={`text-xs ${textMuted}`}>Choose photos</span>
                 </button>
               </div>
 
@@ -428,7 +477,7 @@ const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({ isOpen, onClose }) 
               {photos.length > 0 && (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium text-zinc-400">
+                    <p className={`text-sm font-medium ${textSecondary}`}>
                       {photos.length} photo{photos.length !== 1 ? 's' : ''} selected
                     </p>
                     <button
@@ -464,7 +513,7 @@ const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({ isOpen, onClose }) 
                 <button
                   onClick={handleUploadPhotos}
                   disabled={isUploading}
-                  className="w-full py-3.5 bg-blue-500 text-white rounded-xl font-semibold flex items-center justify-center gap-2 disabled:bg-zinc-700 active:scale-[0.98] transition-all"
+                  className={`w-full py-3.5 bg-blue-500 text-white rounded-xl font-semibold flex items-center justify-center gap-2 disabled:${theme === 'light' ? 'bg-gray-300' : 'bg-zinc-700'} active:scale-[0.98] transition-all`}
                 >
                   {isUploading ? (
                     <>
@@ -486,7 +535,7 @@ const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({ isOpen, onClose }) 
                   setStep('choose-destination');
                   setDestination(null);
                 }}
-                className="w-full py-2.5 text-zinc-400 text-sm font-medium"
+                className={`w-full py-2.5 ${textSecondary} text-sm font-medium`}
               >
                 ← Back to destination
               </button>

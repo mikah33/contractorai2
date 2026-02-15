@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../stores/authStore';
+import { useTheme, getThemeClasses } from '../../contexts/ThemeContext';
 
 interface EmailPreferences {
   id: string;
@@ -14,6 +15,8 @@ interface EmailPreferences {
 
 const EmailPreferences = () => {
   const { user } = useAuthStore();
+  const { theme } = useTheme();
+  const themeClasses = getThemeClasses(theme);
   const [preferences, setPreferences] = useState<EmailPreferences | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -30,47 +33,107 @@ const EmailPreferences = () => {
 
     try {
       setLoading(true);
+      setMessage(null);
 
-      // Get user's email preferences
-      const { data, error } = await supabase
+      // First try to get by user_id
+      let { data, error } = await supabase
         .from('email_preferences')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+      // If not found by user_id, try by email
+      if (!data && user.email) {
+        const { data: emailData, error: emailError } = await supabase
+          .from('email_preferences')
+          .select('*')
+          .eq('email', user.email)
+          .maybeSingle();
+
+        if (emailData) {
+          // Update the record to include user_id
+          await supabase
+            .from('email_preferences')
+            .update({ user_id: user.id })
+            .eq('id', emailData.id);
+          data = { ...emailData, user_id: user.id };
+        }
+        error = emailError;
+      }
+
+      if (error && error.code !== 'PGRST116') {
         console.error('Error loading email preferences:', error);
-        setMessage({ type: 'error', text: 'Failed to load email preferences' });
+        // Don't show error, just use defaults
+        setPreferences({
+          id: '',
+          email: user.email || '',
+          unsubscribed_from_all: false,
+          unsubscribed_from_marketing: false,
+          unsubscribed_from_estimates: false,
+          unsubscribed_from_notifications: false,
+          updated_at: new Date().toISOString()
+        });
         return;
       }
 
       if (data) {
         setPreferences(data);
       } else {
-        // Create default preferences if they don't exist
-        const { data: newPrefs, error: createError } = await supabase
-          .from('email_preferences')
-          .insert({
-            user_id: user.id,
+        // Try to create default preferences
+        try {
+          const { data: newPrefs, error: createError } = await supabase
+            .from('email_preferences')
+            .insert({
+              user_id: user.id,
+              email: user.email || '',
+              unsubscribed_from_all: false,
+              unsubscribed_from_marketing: false,
+              unsubscribed_from_estimates: false,
+              unsubscribed_from_notifications: false
+            })
+            .select()
+            .single();
+
+          if (createError) {
+            console.error('Error creating email preferences:', createError);
+            // Use local defaults without showing error
+            setPreferences({
+              id: '',
+              email: user.email || '',
+              unsubscribed_from_all: false,
+              unsubscribed_from_marketing: false,
+              unsubscribed_from_estimates: false,
+              unsubscribed_from_notifications: false,
+              updated_at: new Date().toISOString()
+            });
+          } else {
+            setPreferences(newPrefs);
+          }
+        } catch {
+          // Use local defaults
+          setPreferences({
+            id: '',
             email: user.email || '',
             unsubscribed_from_all: false,
             unsubscribed_from_marketing: false,
             unsubscribed_from_estimates: false,
-            unsubscribed_from_notifications: false
-          })
-          .select()
-          .single();
-
-        if (createError) {
-          console.error('Error creating email preferences:', createError);
-          setMessage({ type: 'error', text: 'Failed to create email preferences' });
-        } else {
-          setPreferences(newPrefs);
+            unsubscribed_from_notifications: false,
+            updated_at: new Date().toISOString()
+          });
         }
       }
     } catch (error) {
       console.error('Error in loadPreferences:', error);
-      setMessage({ type: 'error', text: 'An unexpected error occurred' });
+      // Use local defaults instead of showing error
+      setPreferences({
+        id: '',
+        email: user?.email || '',
+        unsubscribed_from_all: false,
+        unsubscribed_from_marketing: false,
+        unsubscribed_from_estimates: false,
+        unsubscribed_from_notifications: false,
+        updated_at: new Date().toISOString()
+      });
     } finally {
       setLoading(false);
     }
@@ -148,23 +211,23 @@ const EmailPreferences = () => {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Email Preferences</h3>
+      <div className={`${themeClasses.bg.secondary} rounded-xl border ${themeClasses.border.primary} p-6`}>
+        <h3 className={`text-lg font-semibold ${themeClasses.text.primary} mb-4`}>Email Preferences</h3>
         <div className="animate-pulse space-y-4">
-          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-          <div className="h-12 bg-gray-200 rounded"></div>
-          <div className="h-12 bg-gray-200 rounded"></div>
-          <div className="h-12 bg-gray-200 rounded"></div>
+          <div className={`h-4 ${themeClasses.bg.input} rounded w-3/4`}></div>
+          <div className={`h-12 ${themeClasses.bg.input} rounded`}></div>
+          <div className={`h-12 ${themeClasses.bg.input} rounded`}></div>
+          <div className={`h-12 ${themeClasses.bg.input} rounded`}></div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+    <div className={`${themeClasses.bg.secondary} rounded-xl border ${themeClasses.border.primary} p-6`}>
       <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Email Preferences</h3>
-        <p className="text-sm text-gray-600">
+        <h3 className={`text-lg font-semibold ${themeClasses.text.primary} mb-2`}>Email Preferences</h3>
+        <p className={`text-sm ${themeClasses.text.secondary}`}>
           Manage what types of emails you receive from ContractorAI. You can unsubscribe from specific types or all emails.
         </p>
       </div>
@@ -172,8 +235,8 @@ const EmailPreferences = () => {
       {message && (
         <div className={`mb-4 p-4 rounded-lg ${
           message.type === 'success'
-            ? 'bg-green-50 border border-green-200 text-green-700'
-            : 'bg-red-50 border border-red-200 text-red-700'
+            ? 'bg-green-500/10 border border-green-500/30 text-green-400'
+            : 'bg-red-500/10 border border-red-500/30 text-red-400'
         }`}>
           {message.text}
         </div>
@@ -197,10 +260,10 @@ const EmailPreferences = () => {
             description: 'Account activity, security alerts, and system updates'
           }
         ].map((item) => (
-          <div key={item.key} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+          <div key={item.key} className={`flex items-center justify-between p-4 border ${themeClasses.border.primary} rounded-lg`}>
             <div className="flex-1">
-              <h4 className="font-medium text-gray-900">{item.title}</h4>
-              <p className="text-sm text-gray-600">{item.description}</p>
+              <h4 className={`font-medium ${themeClasses.text.primary}`}>{item.title}</h4>
+              <p className={`text-sm ${themeClasses.text.secondary}`}>{item.description}</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer ml-4">
               <input
@@ -212,8 +275,8 @@ const EmailPreferences = () => {
               />
               <div className={`relative w-11 h-6 rounded-full transition-colors duration-200 ease-in-out ${
                 getPreferenceStatus(item.key) && !preferences?.unsubscribed_from_all
-                  ? 'bg-indigo-600'
-                  : 'bg-gray-200'
+                  ? 'bg-blue-500'
+                  : theme === 'light' ? 'bg-gray-300' : 'bg-zinc-600'
               } ${saving || preferences?.unsubscribed_from_all ? 'opacity-50' : ''}`}>
                 <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform duration-200 ease-in-out ${
                   getPreferenceStatus(item.key) && !preferences?.unsubscribed_from_all
@@ -226,11 +289,11 @@ const EmailPreferences = () => {
         ))}
 
         {/* Unsubscribe from all emails option */}
-        <div className="border-t border-gray-200 pt-4">
-          <div className="flex items-center justify-between p-4 border-2 border-red-200 rounded-lg bg-red-50">
+        <div className={`border-t ${themeClasses.border.primary} pt-4`}>
+          <div className="flex items-center justify-between p-4 border-2 border-red-500/30 rounded-lg bg-red-500/10">
             <div className="flex-1">
-              <h4 className="font-medium text-red-900">Unsubscribe from All Emails</h4>
-              <p className="text-sm text-red-700">
+              <h4 className="font-medium text-red-400">Unsubscribe from All Emails</h4>
+              <p className="text-sm text-red-400/80">
                 Stop receiving all email communications from ContractorAI
               </p>
             </div>
@@ -245,7 +308,7 @@ const EmailPreferences = () => {
               <div className={`relative w-11 h-6 rounded-full transition-colors duration-200 ease-in-out ${
                 preferences?.unsubscribed_from_all
                   ? 'bg-red-600'
-                  : 'bg-gray-200'
+                  : theme === 'light' ? 'bg-gray-300' : 'bg-zinc-600'
               } ${saving ? 'opacity-50' : ''}`}>
                 <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform duration-200 ease-in-out ${
                   preferences?.unsubscribed_from_all
@@ -258,21 +321,23 @@ const EmailPreferences = () => {
         </div>
       </div>
 
-      {preferences && (
-        <div className="mt-6 pt-4 border-t border-gray-200">
-          <p className="text-xs text-gray-500">
+      {preferences && preferences.email && (
+        <div className={`mt-6 pt-4 border-t ${themeClasses.border.primary}`}>
+          <p className={`text-xs ${themeClasses.text.muted}`}>
             Email: {preferences.email}
           </p>
-          <p className="text-xs text-gray-500">
-            Last updated: {new Date(preferences.updated_at).toLocaleDateString()}
-          </p>
+          {preferences.updated_at && (
+            <p className={`text-xs ${themeClasses.text.muted}`}>
+              Last updated: {new Date(preferences.updated_at).toLocaleDateString()}
+            </p>
+          )}
         </div>
       )}
 
       {saving && (
         <div className="mt-4 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-4 w-4 border-2 border-indigo-600 border-t-transparent mr-2"></div>
-          <span className="text-sm text-gray-600">Saving preferences...</span>
+          <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-500 border-t-transparent mr-2"></div>
+          <span className={`text-sm ${themeClasses.text.secondary}`}>Saving preferences...</span>
         </div>
       )}
     </div>

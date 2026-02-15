@@ -25,7 +25,8 @@ import {
   Eye,
   Scan,
   MoreHorizontal,
-  Search
+  Search,
+  Timer
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../stores/authStore';
@@ -63,6 +64,8 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
   const [showChatHistory, setShowChatHistory] = useState(false);
   const [showSendEmailModal, setShowSendEmailModal] = useState(false);
   const [showEmailOptions, setShowEmailOptions] = useState(false);
+  const [isAIModalClosing, setIsAIModalClosing] = useState(false);
+  const [isAIModalVisible, setIsAIModalVisible] = useState(false);
   const [chatHistory, setChatHistory] = useState<ContractorChatSession[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [selectedChatSession, setSelectedChatSession] = useState<ContractorChatSession | null>(null);
@@ -139,10 +142,10 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
 
   const navItems = [
     { name: 'Home', icon: Home, href: '/' },
-    { name: 'Search', icon: Search, href: '/search' },
-    { name: 'AI', icon: Plus, href: '#', isCenter: true },
-    { name: 'Finance', icon: DollarSign, href: '/finance-hub' },
-    { name: 'More', icon: MoreHorizontal, href: '/settings' },
+    { name: 'Job Hub', icon: ClipboardList, href: '/search' },
+    { name: 'Camera', icon: Camera, href: '#', isCamera: true },
+    { name: 'Tracker', icon: Timer, href: '/tracker' },
+    { name: 'More', icon: MoreHorizontal, href: '/settings', hasFloatingButton: true },
   ];
 
   const aiModes = [
@@ -186,10 +189,20 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
 
   const handleAIClick = () => {
     setShowAIModal(true);
+    setIsAIModalClosing(false);
+    // Trigger animation after mount
+    setTimeout(() => setIsAIModalVisible(true), 10);
+  };
+
+  const handleCloseAIModal = () => {
+    setIsAIModalVisible(false);
+    setTimeout(() => {
+      setShowAIModal(false);
+    }, 400);
   };
 
   const handleModeSelect = (modeId: string) => {
-    setShowAIModal(false);
+    handleCloseAIModal();
     // Navigate to the appropriate hub page for each mode
     switch (modeId) {
       case 'estimating':
@@ -238,32 +251,44 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
       <nav className={`fixed bottom-0 left-0 right-0 ${themeClasses.bg.secondary} border-t ${themeClasses.border.primary} z-[100] pb-safe ${className} ${showAIModal || showEventPicker || showNotificationModal || showPhotoModal || showVisionCamModal || showLiDARScanner || showPlanCreation || showChatHistory || showSendEmailModal || showEmailOptions || location.pathname === '/ai-team' ? 'hidden' : ''}`}>
         {/* Nav Icons Row */}
         <div className={`flex items-center justify-around h-16 ${themeClasses.bg.secondary}`}>
-          {navItems.map((item) => {
+          {navItems.map((item, index) => {
             const isActive = location.pathname === item.href;
 
-            if (item.isCenter) {
+            if (item.isCamera) {
               return (
                 <button
                   key={item.name}
-                  onClick={handleAIClick}
-                  className="relative -mt-10 w-[72px] h-[72px] bg-blue-500 rounded-full flex items-center justify-center shadow-lg shadow-blue-500/30 active:scale-95 transition-transform"
+                  onClick={() => setShowPhotoModal(true)}
+                  className={`flex flex-col items-center justify-center flex-1 h-full ${
+                    showPhotoModal ? 'text-blue-500' : 'text-zinc-500'
+                  }`}
                 >
-                  <Plus className="w-9 h-9 text-white" />
+                  <Camera className={`w-6 h-6 ${showPhotoModal ? 'text-blue-500' : 'text-zinc-500'}`} />
+                  <span className="text-xs mt-1 font-medium">{item.name}</span>
                 </button>
               );
             }
 
             return (
-              <Link
-                key={item.name}
-                to={item.href}
-                className={`flex flex-col items-center justify-center flex-1 h-full ${
-                  isActive ? 'text-blue-500' : 'text-zinc-500'
-                }`}
-              >
-                <item.icon className={`w-6 h-6 ${isActive ? 'text-blue-500' : 'text-zinc-500'}`} />
-                <span className="text-xs mt-1 font-medium">{item.name}</span>
-              </Link>
+              <div key={item.name} className="relative flex-1 h-full flex items-center justify-center">
+                {item.hasFloatingButton && (
+                  <button
+                    onClick={handleAIClick}
+                    className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 w-[60px] h-[60px] bg-blue-500 rounded-full flex items-center justify-center shadow-lg shadow-blue-500/30 active:scale-95 transition-transform"
+                  >
+                    <Plus className="w-7 h-7 text-white" />
+                  </button>
+                )}
+                <Link
+                  to={item.href}
+                  className={`flex flex-col items-center justify-center h-full w-full ${
+                    isActive ? 'text-blue-500' : 'text-zinc-500'
+                  }`}
+                >
+                  {item.icon && <item.icon className={`w-6 h-6 ${isActive ? 'text-blue-500' : 'text-zinc-500'}`} />}
+                  <span className="text-xs mt-1 font-medium">{item.name}</span>
+                </Link>
+              </div>
             );
           })}
         </div>
@@ -287,22 +312,24 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
 
       {/* AI Mode Selection Modal */}
       {showAIModal && (
-        <div className="fixed inset-0 z-[200] flex items-end justify-center">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center px-4">
           {/* Backdrop */}
           <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => setShowAIModal(false)}
+            className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-400 ${isAIModalVisible ? 'opacity-100' : 'opacity-0'}`}
+            onClick={handleCloseAIModal}
           />
 
-          {/* Modal Content */}
-          <div className={`relative w-full max-w-lg ${themeClasses.bg.modal} rounded-t-2xl pb-safe animate-slide-up`}>
-            {/* Handle */}
-            <div className="flex justify-center pt-3 pb-2">
-              <div className={`w-10 h-1 ${themeClasses.bg.tertiary} rounded-full`} />
-            </div>
-
+          {/* Modal Content - Chat bubble effect from bottom right */}
+          <div
+            className={`relative w-full max-w-lg ${themeClasses.bg.modal} rounded-2xl shadow-2xl overflow-hidden transition-all duration-400 ${
+              isAIModalVisible
+                ? 'opacity-100 scale-100 translate-x-0 translate-y-0'
+                : 'opacity-0 scale-[0.2] translate-x-[40%] translate-y-[60%]'
+            }`}
+            style={{ transformOrigin: 'bottom right' }}
+          >
             {/* Header */}
-            <div className="flex items-center justify-between px-5 pb-4">
+            <div className="flex items-center justify-between px-5 pt-5 pb-4">
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 bg-blue-500/20 rounded-xl flex items-center justify-center">
                   <Sparkles className="w-6 h-6 text-blue-500" />
@@ -313,7 +340,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
                 </div>
               </div>
               <button
-                onClick={() => setShowAIModal(false)}
+                onClick={handleCloseAIModal}
                 className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
               >
                 <X className="w-6 h-6" />
@@ -389,7 +416,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
               {/* Gallery Button - Attached below Photos */}
               <button
                 onClick={() => {
-                  setShowAIModal(false);
+                  handleCloseAIModal();
                   navigate('/photos-gallery');
                 }}
                 className={`w-full flex items-center gap-3 px-4 py-2.5 ${theme === 'light' ? 'bg-white' : 'bg-[#1C1C1E]'} rounded-b-xl border border-gray-200 border-t-0 hover:border-gray-300 active:scale-[0.98] transition-all`}
@@ -406,7 +433,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
             <div className="px-5 pb-2.5">
               <button
                 onClick={() => {
-                  setShowAIModal(false);
+                  handleCloseAIModal();
                   setShowChatHistory(true);
                 }}
                 className={`w-full flex items-center gap-3 px-4 py-2.5 ${theme === 'light' ? 'bg-white' : 'bg-[#1C1C1E]'} rounded-xl border ${themeClasses.border.primary} ${themeClasses.hover.bg} active:scale-[0.98] transition-all`}
@@ -423,7 +450,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
             <div className="px-4 pb-6">
               <button
                 onClick={() => {
-                  setShowAIModal(false);
+                  handleCloseAIModal();
                   navigate('/settings');
                 }}
                 className={`w-full flex items-center gap-3 px-4 py-2.5 ${theme === 'light' ? 'bg-white' : 'bg-[#1C1C1E]'} rounded-lg border ${themeClasses.border.primary} ${themeClasses.hover.bg} active:scale-[0.98] transition-all`}

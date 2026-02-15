@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Home,
@@ -15,8 +15,14 @@ import {
   ChevronLeft,
   Calculator,
   CreditCard,
-  Camera
+  Camera,
+  MapPin,
+  Navigation,
+  ClipboardList
 } from 'lucide-react';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { useFinanceStore } from '../stores/financeStoreSupabase';
 import useProjectStore from '../stores/projectStore';
 import { useCalendarStoreSupabase } from '../stores/calendarStoreSupabase';
@@ -28,6 +34,8 @@ import AddChoiceModal from '../components/common/AddChoiceModal';
 import AIChatPopup from '../components/ai/AIChatPopup';
 import VisionCamModal from '../components/vision/VisionCamModal';
 import { useTheme, getThemeClasses } from '../contexts/ThemeContext';
+import { supabase } from '../lib/supabase';
+import { format, parseISO, isToday, isTomorrow } from 'date-fns';
 
 
 const Dashboard: React.FC = () => {
@@ -44,11 +52,55 @@ const Dashboard: React.FC = () => {
   const [showAddChoice, setShowAddChoice] = useState(false);
   const [showAIChat, setShowAIChat] = useState(false);
   const [showVisionCam, setShowVisionCam] = useState(false);
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [todayTasks, setTodayTasks] = useState<any[]>([]);
+  const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
+  const [taskLocations, setTaskLocations] = useState<{lat: number, lng: number, name: string, address: string}[]>([]);
+
+  // Create custom clipboard marker icon with label
+  const createMarkerIcon = (label: string) => new L.DivIcon({
+    className: 'custom-marker',
+    html: `
+      <div style="display: flex; flex-direction: column; align-items: center;">
+        <div style="
+          background: white;
+          padding: 6px 12px;
+          border-radius: 8px;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+          margin-bottom: 8px;
+          white-space: nowrap;
+          font-weight: 700;
+          font-size: 14px;
+          color: #1f2937;
+          border: 2px solid #3B82F6;
+        ">${label}</div>
+        <div style="
+          background: #3B82F6;
+          width: 44px;
+          height: 44px;
+          border-radius: 50% 50% 50% 0;
+          transform: rotate(-45deg);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5);
+          border: 3px solid white;
+        ">
+          <svg style="transform: rotate(45deg); width: 22px; height: 22px;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+          </svg>
+        </div>
+      </div>
+    `,
+    iconSize: [120, 90],
+    iconAnchor: [60, 90],
+    popupAnchor: [0, -90]
+  });
+  const [taskCardIndex, setTaskCardIndex] = useState(0);
+  const taskCarouselRef = useRef<HTMLDivElement>(null);
+  const taskTouchStartX = useRef(0);
+  const taskTouchEndX = useRef(0);
   const [topCardIndex, setTopCardIndex] = useState(0);
-  const [bottomCardIndex, setBottomCardIndex] = useState(0);
-  const carouselRef = useRef<HTMLDivElement>(null);
-  const touchStartX = useRef(0);
-  const touchEndX = useRef(0);
 
   // Get display name from profile (company name or full name)
   const displayName = profile?.company || profile?.full_name || 'there';
@@ -78,11 +130,89 @@ const Dashboard: React.FC = () => {
     fetchPayments();
     fetchReceipts();
     fetchEvents();
+
+    // Get user's current location
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+          // Default to a fallback location if geolocation fails
+          setUserLocation({ lat: 33.8361, lng: -81.1637 }); // Default SC location
+        }
+      );
+    }
+
+    // Fetch tasks from tasks table
+    const fetchTasks = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data } = await supabase
+            .from('tasks')
+            .select('*, projects(name, address)')
+            .eq('user_id', user.id)
+            .neq('status', 'done')
+            .order('due_date', { ascending: true })
+            .limit(10);
+          setTasks(data || []);
+
+          // Filter for today's tasks
+          const today = new Date().toISOString().split('T')[0];
+          const todayData = (data || []).filter(t => t.due_date === today);
+          setTodayTasks(todayData);
+        }
+      } catch (error) {
+        console.error('Error fetching tasks:', error);
+      }
+    };
+    fetchTasks();
   }, []);
 
   useEffect(() => {
     calculateFinancialSummary();
   }, [payments, receipts]);
+
+  // Geocode task addresses
+  useEffect(() => {
+    const geocodeAddresses = async () => {
+      const tasksWithAddresses = todayTasks.filter(t => t.projects?.address);
+      if (tasksWithAddresses.length === 0) return;
+
+      const locations: {lat: number, lng: number, name: string, address: string}[] = [];
+
+      for (const task of tasksWithAddresses) {
+        try {
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(task.projects.address)}&limit=1`,
+            { headers: { 'User-Agent': 'ContractorAI-App' } }
+          );
+          const data = await response.json();
+          if (data && data[0]) {
+            locations.push({
+              lat: parseFloat(data[0].lat),
+              lng: parseFloat(data[0].lon),
+              name: task.projects.name || task.title,
+              address: task.projects.address
+            });
+          }
+        } catch (error) {
+          console.error('Geocoding error:', error);
+        }
+      }
+
+      setTaskLocations(locations);
+    };
+
+    if (todayTasks.length > 0) {
+      geocodeAddresses();
+    }
+  }, [todayTasks]);
 
 
   const formatCurrency = (amount: number) => {
@@ -180,27 +310,185 @@ const Dashboard: React.FC = () => {
         onComplete={handleTutorialComplete}
       />
 
-      {/* Fixed Header with safe area background */}
-      <div className={`fixed top-0 left-0 right-0 z-50 ${themeClasses.bg.secondary} border-b ${themeClasses.border.primary}`}>
+      {/* Fixed Header with solid background */}
+      <div className={`fixed top-0 left-0 right-0 z-40 ${theme === 'light' ? 'bg-white' : 'bg-zinc-900'}`}>
         <div className="pt-[env(safe-area-inset-top)]">
-          <div className="px-4 pb-5 pt-4 max-w-5xl mx-auto">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-blue-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                <Home className="w-7 h-7 text-blue-500" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h1 className={`text-2xl font-bold ${themeClasses.text.primary}`}>Home</h1>
-                <p className={`text-base ${themeClasses.text.secondary}`}>Welcome back, {displayName}!</p>
+          <div className="px-4 pb-4 pt-3 max-w-5xl mx-auto">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className={`text-sm ${theme === 'light' ? 'text-gray-500' : 'text-zinc-400'}`}>
+                  {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                </p>
+                <h1 className={`text-2xl font-bold ${theme === 'light' ? 'text-gray-900' : 'text-white'} mt-1`}>
+                  Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {displayName}!
+                </h1>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Spacer for fixed header */}
-      <div className="pt-[calc(env(safe-area-inset-top)+100px)]" />
+      {/* Full-Bleed Map Section - Ends just past Today's Tasks cards */}
+      <div className="absolute top-0 left-0 right-0 z-0" style={{ height: '72vh', minHeight: '520px', maxHeight: '650px' }}>
+        {/* Map Container */}
+        <div className="h-full w-full">
+          {taskLocations.length > 0 ? (
+            <MapContainer
+              center={[taskLocations[0].lat, taskLocations[0].lng]}
+              zoom={12}
+              style={{ height: '100%', width: '100%' }}
+              zoomControl={false}
+              attributionControl={false}
+              dragging={false}
+              touchZoom={true}
+              scrollWheelZoom={true}
+              doubleClickZoom={true}
+            >
+              <TileLayer
+                url={theme === 'light'
+                  ? "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+                  : "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
+                }
+              />
+              {taskLocations.map((location, index) => (
+                <Marker
+                  key={index}
+                  position={[location.lat, location.lng]}
+                  icon={createMarkerIcon(location.name)}
+                >
+                  <Popup>
+                    <div className="text-center p-1">
+                      <p className="font-bold text-gray-900 text-base">{location.name}</p>
+                      <p className="text-gray-600 text-sm mt-1">{location.address}</p>
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
+            </MapContainer>
+          ) : userLocation ? (
+            <MapContainer
+              center={[userLocation.lat, userLocation.lng]}
+              zoom={11}
+              style={{ height: '100%', width: '100%' }}
+              zoomControl={false}
+              attributionControl={false}
+              dragging={false}
+              touchZoom={true}
+              scrollWheelZoom={true}
+              doubleClickZoom={true}
+            >
+              <TileLayer
+                url={theme === 'light'
+                  ? "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+                  : "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
+                }
+              />
+            </MapContainer>
+          ) : (
+            <div className={`flex items-center justify-center h-full ${theme === 'light' ? 'bg-gray-50' : 'bg-zinc-800'}`}>
+              <div className="text-center">
+                <Navigation className={`w-10 h-10 ${themeClasses.text.muted} mx-auto mb-3 animate-pulse`} />
+                <p className={`text-sm ${themeClasses.text.muted}`}>Loading map...</p>
+              </div>
+            </div>
+          )}
+        </div>
 
-      <div className="py-2 space-y-2 max-w-5xl mx-auto">
+        {/* Bottom Fade Gradient */}
+        <div
+          className="absolute bottom-0 left-0 right-0 pointer-events-none"
+          style={{
+            height: '40%',
+            background: theme === 'light'
+              ? 'linear-gradient(to top, rgba(255,255,255,1) 0%, rgba(255,255,255,0.9) 40%, rgba(255,255,255,0) 100%)'
+              : 'linear-gradient(to top, rgba(24,24,27,1) 0%, rgba(24,24,27,0.9) 40%, rgba(24,24,27,0) 100%)'
+          }}
+        />
+
+        </div>
+
+      {/* Spacer to push content below map */}
+      <div style={{ height: 'calc(52vh - 60px)', minHeight: '280px', maxHeight: '400px' }} />
+
+      {/* Today's Tasks Section - Transparent so map shows behind */}
+      <div className="relative z-20">
+        <div className="px-4 pt-4">
+          {/* Section Header with View All */}
+          <div className="flex items-center justify-between mb-4">
+            <h2 className={`text-xl font-bold ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>Today's Tasks</h2>
+            <button
+              onClick={() => navigate('/search', { state: { initialCategory: 'tasks' } })}
+              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg ${theme === 'light' ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'} text-sm font-medium active:scale-95 transition-all`}
+            >
+              View all
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div
+            ref={taskCarouselRef}
+            className="flex gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-4"
+            style={{ scrollPaddingLeft: '16px' }}
+          >
+            {todayTasks.length === 0 ? (
+              <div
+                className={`flex-shrink-0 snap-start ${theme === 'light' ? 'bg-stone-100 border-stone-200' : 'bg-zinc-800/95 border-zinc-700'} border rounded-2xl`}
+                style={{ width: 'calc(100vw - 80px)', minWidth: '280px', maxWidth: '340px' }}
+              >
+                <div className="p-6 flex items-center justify-center" style={{ minHeight: '120px' }}>
+                  <p className={`text-base font-medium ${theme === 'light' ? 'text-gray-500' : 'text-zinc-400'}`}>No visits scheduled today</p>
+                </div>
+              </div>
+            ) : (
+              todayTasks.map((task, index) => (
+                <div
+                  key={task.id}
+                  className={`flex-shrink-0 snap-start ${theme === 'light' ? 'bg-white border border-gray-200 shadow-sm' : 'bg-zinc-800/95 border border-zinc-700'} rounded-2xl text-left overflow-hidden`}
+                  style={{ width: 'calc(100vw - 80px)', minWidth: '280px', maxWidth: '340px' }}
+                >
+                  <button
+                    onClick={() => navigate('/search', { state: { initialCategory: 'tasks' } })}
+                    className="w-full p-4 flex items-start gap-3 active:scale-[0.98] transition-all"
+                  >
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${theme === 'light' ? 'bg-blue-100' : 'bg-blue-500/20'}`}>
+                      <ClipboardList className="w-6 h-6 text-blue-500" />
+                    </div>
+                    <div className="flex-1 min-w-0 text-left">
+                      <p className={`text-lg font-bold ${themeClasses.text.primary} line-clamp-1`}>{task.title}</p>
+                      <p className={`text-sm ${theme === 'light' ? 'text-gray-500' : 'text-zinc-400'} mt-0.5`}>
+                        {task.projects?.name || 'No project assigned'}
+                      </p>
+                    </div>
+                  </button>
+                  {task.projects?.address && (
+                    <a
+                      href={`https://maps.apple.com/?q=${encodeURIComponent(task.projects.address)}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className={`flex items-center gap-1.5 px-4 pb-4 -mt-2 ${theme === 'light' ? 'text-blue-600 hover:text-blue-700' : 'text-blue-400 hover:text-blue-300'} text-sm`}
+                    >
+                      <MapPin className="w-4 h-4 flex-shrink-0" />
+                      <span className="truncate underline">{task.projects.address}</span>
+                    </a>
+                  )}
+                </div>
+              ))
+            )}
+
+            {/* Add Task Card - Partially Visible */}
+            <button
+              onClick={() => navigate('/search', { state: { initialCategory: 'tasks' } })}
+              className={`flex-shrink-0 snap-start border border-dashed ${theme === 'light' ? 'border-green-400 bg-green-50/50 hover:bg-green-100/50' : 'border-green-600 bg-green-900/20 hover:bg-green-900/30'} rounded-2xl flex flex-col items-center justify-center gap-2 active:scale-[0.98] transition-all`}
+              style={{ width: '100px', minHeight: '100px' }}
+            >
+              <Plus className={`w-8 h-8 ${theme === 'light' ? 'text-green-600' : 'text-green-500'}`} />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Content below tasks - Solid background */}
+      <div className={`relative z-20 ${themeClasses.bg.primary}`}>
+        <div className="pt-6 pb-2 space-y-2 max-w-5xl mx-auto px-4">
         {/* Feature Cards Carousel */}
         <div
           className="overflow-x-auto scrollbar-hide snap-x snap-mandatory py-2"
@@ -240,11 +528,13 @@ const Dashboard: React.FC = () => {
                 </div>
               </div>
 
-              <p className={`text-sm ${themeClasses.text.secondary} mb-3 relative z-10 leading-snug font-medium italic`}>
+              <div className="flex-1" />
+
+              <p className={`text-lg ${themeClasses.text.secondary} mb-4 relative z-10 leading-snug font-semibold italic`}>
                 Create professional estimates and collect payments directly in the app.
               </p>
 
-              <div className="mt-auto relative z-10">
+              <div className="relative z-10">
                 <button
                   onClick={() => setShowAddChoice(true)}
                   className="w-full py-3.5 px-4 bg-blue-500 hover:bg-blue-600 text-white text-base font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 shadow-md"
@@ -278,7 +568,9 @@ const Dashboard: React.FC = () => {
                 </div>
               </div>
 
-              <p className={`text-sm ${themeClasses.text.secondary} mb-3 relative z-10 leading-snug font-medium italic`}>
+              <div className="flex-1" />
+
+              <p className={`text-lg ${themeClasses.text.secondary} mb-4 relative z-10 leading-snug font-semibold italic`}>
                 Use AI to show your customer their vision for their project.
               </p>
 
@@ -295,243 +587,37 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Carousel Dots Indicator */}
-        <div className="flex justify-center gap-2 pb-2">
-          <div className={`w-2 h-2 rounded-full transition-colors ${topCardIndex === 0 ? 'bg-blue-500' : theme === 'light' ? 'bg-gray-300' : 'bg-zinc-600'}`}></div>
-          <div className={`w-2 h-2 rounded-full transition-colors ${topCardIndex === 1 ? 'bg-blue-500' : theme === 'light' ? 'bg-gray-300' : 'bg-zinc-600'}`}></div>
-        </div>
-
-        {/* Tasks Section */}
-        <div className="mx-2">
-          <h2 className={`text-xl font-bold ${themeClasses.text.primary} mb-4`}>To do</h2>
-
-          <div className={`${themeClasses.bg.card} rounded-xl border ${themeClasses.border.secondary} overflow-hidden`}>
-            {upcomingJobs.length === 0 ? (
-              <div className="p-6 text-center">
-                <Calendar className={`w-10 h-10 ${themeClasses.text.muted} mx-auto mb-3`} />
-                <p className={`${themeClasses.text.secondary} mb-4`}>No tasks scheduled</p>
-                <button
-                  onClick={() => navigate('/todo-hub')}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 active:scale-95 transition-all mx-auto"
-                >
-                  <Plus className="w-4 h-4" /> Add Task
-                </button>
-              </div>
-            ) : (
-              <div className={`divide-y ${themeClasses.border.primary}`}>
-                {upcomingJobs.slice(0, 5).map((job) => {
-                  const isCompleted = job.status === 'completed';
-
-                  return (
-                    <button
-                      key={job.id}
-                      onClick={() => navigate('/todo-hub')}
-                      className={`w-full flex items-center gap-4 p-4 ${theme === 'light' ? 'hover:bg-gray-50 active:bg-gray-100' : 'hover:bg-zinc-800 active:bg-zinc-700'} transition-colors text-left`}
-                    >
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                        isCompleted
-                          ? 'bg-green-100 text-green-600'
-                          : theme === 'light' ? 'bg-gray-100 text-gray-500' : 'bg-zinc-700 text-zinc-400'
-                      }`}>
-                        <Calendar className="w-5 h-5" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className={`font-semibold ${isCompleted ? 'line-through text-gray-400' : themeClasses.text.primary}`}>
-                          {job.title}
-                        </p>
-                        <p className={`text-sm ${themeClasses.text.secondary} mt-0.5`}>
-                          {formatJobDate(job.start_date)} {job.location ? `• ${job.location}` : ''}
-                        </p>
-                      </div>
-                      <ArrowRight className="w-5 h-5 text-green-500 flex-shrink-0" />
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-
-            {upcomingJobs.length > 0 && (
-              <button
-                onClick={() => navigate('/todo-hub')}
-                className={`w-full p-4 text-center text-sm font-medium ${theme === 'light' ? 'text-blue-600 bg-blue-50 hover:bg-blue-100' : 'text-blue-400 bg-blue-500/10 hover:bg-blue-500/20'} transition-colors border-t ${themeClasses.border.primary}`}
-              >
-                View all tasks <ArrowRight className="w-4 h-4 inline ml-1" />
-              </button>
-            )}
+          {/* Carousel Dots Indicator */}
+          <div className="flex justify-center gap-2 pb-2">
+            <div className={`w-2 h-2 rounded-full transition-colors ${topCardIndex === 0 ? 'bg-blue-500' : theme === 'light' ? 'bg-gray-300' : 'bg-zinc-600'}`}></div>
+            <div className={`w-2 h-2 rounded-full transition-colors ${topCardIndex === 1 ? 'bg-blue-500' : theme === 'light' ? 'bg-gray-300' : 'bg-zinc-600'}`}></div>
           </div>
-        </div>
 
-        {/* Quick Preview Cards - Carousel */}
-        <div className="relative">
-          <div
-            ref={carouselRef}
-            className="overflow-hidden rounded-lg"
-            onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
-            onTouchMove={(e) => { touchEndX.current = e.touches[0].clientX; }}
-            onTouchEnd={() => {
-              const diff = touchStartX.current - touchEndX.current;
-              if (Math.abs(diff) > 50) {
-                if (diff > 0 && bottomCardIndex < 3) {
-                  setBottomCardIndex(prev => prev + 1);
-                } else if (diff < 0 && bottomCardIndex > 0) {
-                  setBottomCardIndex(prev => prev - 1);
-                }
-              }
-            }}
-          >
-            <div
-              className="flex transition-transform duration-300 ease-out"
-              style={{ transform: `translateX(-${bottomCardIndex * 100}%)` }}
-            >
-              {/* Finance Card */}
+          {/* Discover More Section */}
+          <div className="mt-6">
+            <h3 className={`text-lg font-bold ${themeClasses.text.primary} mb-3`}>Discover More</h3>
+            <div className="flex gap-3">
               <button
-                onClick={() => navigate('/finance-hub')}
-                className={`${themeClasses.bg.card} rounded-lg border-2 ${theme === 'light' ? 'border-gray-300 shadow-lg' : 'border-zinc-600 shadow-xl shadow-black/20'} p-5 text-left ${themeClasses.hover.bg} transition-colors w-full flex-shrink-0 min-h-[220px] flex flex-col`}
+                onClick={() => navigate('/marketing')}
+                className={`flex-1 ${theme === 'light' ? 'bg-gradient-to-br from-purple-500 to-indigo-600' : 'bg-gradient-to-br from-purple-600 to-indigo-700'} rounded-xl p-4 text-left active:scale-[0.98] transition-all shadow-lg`}
               >
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-14 h-14 bg-blue-500/20 rounded-xl flex items-center justify-center">
-                    <DollarSign className="w-7 h-7 text-blue-500" />
-                  </div>
-                  <div>
-                    <p className={`font-bold ${themeClasses.text.primary} text-xl`}>Finance</p>
-                    <p className={`text-sm ${themeClasses.text.muted}`}>This month</p>
-                  </div>
-                  <ChevronRight className="w-6 h-6 text-blue-500 ml-auto" />
+                <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mb-3">
+                  <Briefcase className="w-5 h-5 text-white" />
                 </div>
-                <div className="grid grid-cols-2 gap-4 flex-1">
-                  <div className="p-4 bg-green-500/10 rounded-lg border border-green-500/20 flex flex-col justify-center">
-                    <p className={`text-sm ${themeClasses.text.muted} mb-1`}>Revenue</p>
-                    <p className="text-2xl font-bold text-green-400">{formatCurrency(financialSummary?.totalRevenue || 0)}</p>
-                  </div>
-                  <div className="p-4 bg-blue-500/10 rounded-lg border border-blue-500/20 flex flex-col justify-center">
-                    <p className={`text-sm ${themeClasses.text.muted} mb-1`}>Profit</p>
-                    <p className={`text-2xl font-bold ${(financialSummary?.profit || 0) >= 0 ? 'text-blue-500' : 'text-red-400'}`}>
-                      {formatCurrency(financialSummary?.profit || 0)}
-                    </p>
-                  </div>
-                </div>
+                <p className="text-white font-bold text-base">Website + Marketing</p>
+                <p className="text-white/70 text-sm mt-1">Build your online presence</p>
               </button>
-
-              {/* Projects Card */}
               <button
-                onClick={() => navigate('/projects-hub')}
-                className={`${themeClasses.bg.card} rounded-lg border-2 ${theme === 'light' ? 'border-gray-300 shadow-lg' : 'border-zinc-600 shadow-xl shadow-black/20'} p-5 text-left ${themeClasses.hover.bg} transition-colors w-full flex-shrink-0 min-h-[220px] flex flex-col`}
+                onClick={() => navigate('/ads')}
+                className={`flex-1 ${theme === 'light' ? 'bg-gradient-to-br from-orange-500 to-red-500' : 'bg-gradient-to-br from-orange-600 to-red-600'} rounded-xl p-4 text-left active:scale-[0.98] transition-all shadow-lg`}
               >
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-14 h-14 bg-blue-500/20 rounded-xl flex items-center justify-center">
-                    <Briefcase className="w-7 h-7 text-blue-500" />
-                  </div>
-                  <div>
-                    <p className={`font-bold ${themeClasses.text.primary} text-xl`}>Projects</p>
-                    <p className={`text-sm ${themeClasses.text.muted}`}>{projects.length} total</p>
-                  </div>
-                  <ChevronRight className="w-6 h-6 text-blue-500 ml-auto" />
+                <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mb-3">
+                  <Target className="w-5 h-5 text-white" />
                 </div>
-                <div className="grid grid-cols-2 gap-4 flex-1">
-                  <div className="p-4 bg-blue-500/10 rounded-lg border border-blue-500/20 flex flex-col justify-center">
-                    <p className={`text-sm ${themeClasses.text.muted} mb-1`}>Active</p>
-                    <p className="text-2xl font-bold text-blue-500">{activeProjects}</p>
-                  </div>
-                  <div className="p-4 bg-green-500/10 rounded-lg border border-green-500/20 flex flex-col justify-center">
-                    <p className={`text-sm ${themeClasses.text.muted} mb-1`}>Completed</p>
-                    <p className="text-2xl font-bold text-green-400">{projects.filter(p => p.status === 'completed').length}</p>
-                  </div>
-                </div>
-              </button>
-
-              {/* Jobs Card */}
-              <button
-                onClick={() => navigate('/jobs-hub')}
-                className={`${themeClasses.bg.card} rounded-lg border-2 ${theme === 'light' ? 'border-gray-300 shadow-lg' : 'border-zinc-600 shadow-xl shadow-black/20'} p-5 text-left ${themeClasses.hover.bg} transition-colors w-full flex-shrink-0 min-h-[220px] flex flex-col`}
-              >
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-14 h-14 bg-blue-500/20 rounded-xl flex items-center justify-center">
-                    <Calendar className="w-7 h-7 text-blue-500" />
-                  </div>
-                  <div>
-                    <p className={`font-bold ${themeClasses.text.primary} text-xl`}>Jobs</p>
-                    <p className={`text-sm ${themeClasses.text.muted}`}>Upcoming</p>
-                  </div>
-                  <ChevronRight className="w-6 h-6 text-blue-500 ml-auto" />
-                </div>
-                <div className="grid grid-cols-2 gap-4 flex-1">
-                  <div className="p-4 bg-blue-500/10 rounded-lg border border-blue-500/20 flex flex-col justify-center">
-                    <p className={`text-sm ${themeClasses.text.muted} mb-1`}>Today</p>
-                    <p className="text-2xl font-bold text-blue-500">
-                      {events.filter(e => {
-                        const today = new Date();
-                        const eventDate = new Date(e.start_date);
-                        return eventDate.toDateString() === today.toDateString() &&
-                               ['task', 'meeting', 'delivery', 'inspection'].includes(e.event_type) &&
-                               e.status !== 'cancelled';
-                      }).length}
-                    </p>
-                  </div>
-                  <div className="p-4 bg-blue-500/10 rounded-lg border border-blue-500/20 flex flex-col justify-center">
-                    <p className={`text-sm ${themeClasses.text.muted} mb-1`}>This week</p>
-                    <p className="text-2xl font-bold text-blue-400">{upcomingJobs.length}</p>
-                  </div>
-                </div>
-              </button>
-
-              {/* Goals Card */}
-              <button
-                onClick={() => navigate('/business-hub')}
-                className={`${themeClasses.bg.card} rounded-lg border-2 ${theme === 'light' ? 'border-gray-300 shadow-lg' : 'border-zinc-600 shadow-xl shadow-black/20'} p-5 text-left ${themeClasses.hover.bg} transition-colors w-full flex-shrink-0 min-h-[220px] flex flex-col`}
-              >
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-14 h-14 bg-blue-500/20 rounded-xl flex items-center justify-center">
-                    <Target className="w-7 h-7 text-blue-500" />
-                  </div>
-                  <div>
-                    <p className={`font-bold ${themeClasses.text.primary} text-xl`}>Goals</p>
-                    <p className={`text-sm ${themeClasses.text.muted}`}>Monthly</p>
-                  </div>
-                  <ChevronRight className="w-6 h-6 text-blue-500 ml-auto" />
-                </div>
-                <div className="grid grid-cols-2 gap-4 flex-1">
-                  <div className="p-4 bg-green-500/10 rounded-lg border border-green-500/20 flex flex-col justify-center">
-                    <p className={`text-sm ${themeClasses.text.muted} mb-1`}>Revenue</p>
-                    <p className="text-2xl font-bold text-green-400">75%</p>
-                  </div>
-                  <div className="p-4 bg-blue-500/10 rounded-lg border border-blue-500/20 flex flex-col justify-center">
-                    <p className={`text-sm ${themeClasses.text.muted} mb-1`}>Projects</p>
-                    <p className="text-2xl font-bold text-blue-500">90%</p>
-                  </div>
-                </div>
+                <p className="text-white font-bold text-base">Ads & Lead Gen</p>
+                <p className="text-white/70 text-sm mt-1">Grow your customer base</p>
               </button>
             </div>
-          </div>
-
-          {/* Navigation Arrows */}
-          <button
-            onClick={() => setBottomCardIndex(prev => Math.max(0, prev - 1))}
-            className={`absolute left-1 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 flex items-center justify-center transition-opacity ${bottomCardIndex === 0 ? 'opacity-30' : 'opacity-100'}`}
-            disabled={bottomCardIndex === 0}
-          >
-            <ChevronLeft className="w-5 h-5 text-white" />
-          </button>
-          <button
-            onClick={() => setBottomCardIndex(prev => Math.min(3, prev + 1))}
-            className={`absolute right-1 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 flex items-center justify-center transition-opacity ${bottomCardIndex === 3 ? 'opacity-30' : 'opacity-100'}`}
-            disabled={bottomCardIndex === 3}
-          >
-            <ChevronRight className="w-5 h-5 text-white" />
-          </button>
-
-          {/* Dots Indicator */}
-          <div className="flex justify-center gap-2 mt-2">
-            {[0, 1, 2, 3].map((index) => (
-              <button
-                key={index}
-                onClick={() => setBottomCardIndex(index)}
-                className={`w-2 h-2 rounded-full transition-all ${
-                  bottomCardIndex === index
-                    ? 'bg-blue-500 w-4'
-                    : 'bg-zinc-400'
-                }`}
-              />
-            ))}
           </div>
         </div>
       </div>

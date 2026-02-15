@@ -42,6 +42,7 @@ interface Project {
   name: string;
   client: string;
   clientId?: string;
+  address?: string;
   status: 'active' | 'completed' | 'on_hold' | 'cancelled';
   priority: 'low' | 'medium' | 'high';
   startDate: string;
@@ -211,6 +212,7 @@ const useProjectStore = create<ProjectStore>((set, get) => ({
           name: p.name,
           client: clientName, // Client name is stored directly in projects table
           clientId: p.client_id || null, // Load client_id from database
+          address: p.address || '',
           status: p.status || 'active',
           priority: p.priority || 'medium',
           startDate: p.start_date || new Date().toISOString(),
@@ -245,6 +247,7 @@ const useProjectStore = create<ProjectStore>((set, get) => ({
       const insertData: any = {
         name: projectData.name,
         client_name: projectData.client || null,
+        address: projectData.address || null,
         status: projectData.status || 'active',
         priority: projectData.priority || 'medium',
         start_date: projectData.startDate || null,
@@ -287,6 +290,7 @@ const useProjectStore = create<ProjectStore>((set, get) => ({
         name: data.name,
         client: data.client_name || projectData.client || 'Direct Client',
         clientId: data.client_id || null, // Load client_id from database response
+        address: data.address || projectData.address || '',
         status: data.status,
         priority: projectData.priority || 'medium',
         startDate: data.start_date,
@@ -335,7 +339,8 @@ const useProjectStore = create<ProjectStore>((set, get) => ({
       const dbUpdates: any = {};
       if (updates.name !== undefined) dbUpdates.name = updates.name;
       if (updates.client !== undefined) dbUpdates.client_name = updates.client;
-      if (updates.clientId !== undefined) dbUpdates.client_id = updates.clientId; // Add client_id support
+      if (updates.clientId !== undefined) dbUpdates.client_id = updates.clientId;
+      if (updates.address !== undefined) dbUpdates.address = updates.address;
       if (updates.status !== undefined) dbUpdates.status = updates.status;
       if (updates.priority !== undefined) dbUpdates.priority = updates.priority;
       if (updates.startDate !== undefined) dbUpdates.start_date = updates.startDate;
