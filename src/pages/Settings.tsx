@@ -3,7 +3,7 @@ import {
   Save, Bell, Lock, User, Loader2, Calendar, Upload, X, Globe, Code,
   Trash2, AlertTriangle, CreditCard, CheckCircle, ExternalLink, XCircle,
   Clock, RefreshCw, ChevronRight, Mail, Building2, Phone, MapPin, FileText,
-  Settings as SettingsIcon, LogOut, Eye, BookOpen, Home, ClipboardList, Moon, Megaphone, Users
+  Settings as SettingsIcon, LogOut, Eye, BookOpen, Home, ClipboardList, Moon, Megaphone, Users, History, MessageSquare
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -16,6 +16,7 @@ import { BusinessEmailSetup } from '../components/settings/BusinessEmailSetup';
 import EmailPreferences from '../components/settings/EmailPreferences';
 import { useTheme, getThemeClasses } from '../contexts/ThemeContext';
 import ThemeToggle from '../components/common/ThemeToggle';
+import { contractorChatHistoryManager, ContractorChatSession } from '../lib/ai/contractorChatHistory';
 
 interface StripeConnectStatus {
   connected: boolean;
@@ -27,7 +28,7 @@ interface StripeConnectStatus {
   businessName?: string;
 }
 
-type SettingsSection = 'main' | 'profile' | 'notifications' | 'security' | 'payments' | 'language' | 'email' | 'tutorials' | 'theme' | 'danger' | 'marketing' | 'team';
+type SettingsSection = 'main' | 'profile' | 'notifications' | 'security' | 'payments' | 'language' | 'email' | 'tutorials' | 'theme' | 'danger' | 'marketing' | 'team' | 'chatHistory';
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -599,6 +600,7 @@ const Settings = () => {
       title: 'More',
       items: [
         { id: 'marketing' as SettingsSection, icon: Megaphone, label: 'Marketing', description: 'Grow your business', bgColor: 'bg-[#043d6b]/20', iconColor: 'text-[#043d6b]', navigateTo: '/ad-analyzer' },
+        { id: 'chatHistory' as SettingsSection, icon: History, label: 'AI Chat History', description: 'View past conversations', bgColor: 'bg-[#043d6b]/20', iconColor: 'text-[#043d6b]' },
       ]
     },
   ];

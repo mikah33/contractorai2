@@ -839,11 +839,11 @@ const TrackerHub: React.FC = () => {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 bg-[#043d6b]/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <Timer className="w-7 h-7 text-[#043d6b]" />
+                  <Briefcase className="w-7 h-7 text-[#043d6b]" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h1 className={`text-2xl font-bold ${themeClasses.text.primary}`}>Tracker</h1>
-                  <p className={`text-base ${themeClasses.text.secondary}`}>Employee time tracking</p>
+                  <h1 className={`text-2xl font-bold ${themeClasses.text.primary}`}>Manage</h1>
+                  <p className={`text-base ${themeClasses.text.secondary}`}>Finance, time & mileage</p>
                 </div>
               </div>
             </div>
