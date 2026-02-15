@@ -45,6 +45,8 @@ const Settings = () => {
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [activeSection, setActiveSection] = useState<SettingsSection>('main');
   const [loggingOut, setLoggingOut] = useState(false);
+  const [chatHistory, setChatHistory] = useState<ContractorChatSession[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
   const {
     dashboardTutorialCompleted,
     visionCamTutorialCompleted,
@@ -163,6 +165,30 @@ const Settings = () => {
   useEffect(() => {
     setShowMarketingTutorial(!marketingTutorialCompleted);
   }, [marketingTutorialCompleted]);
+
+  // Load chat history when section is active
+  useEffect(() => {
+    if (activeSection === 'chatHistory') {
+      const loadHistory = async () => {
+        setLoadingHistory(true);
+        try {
+          const sessions = await contractorChatHistoryManager.getAllSessions();
+          setChatHistory(sessions);
+        } catch (error) {
+          console.error('Error loading chat history:', error);
+        } finally {
+          setLoadingHistory(false);
+        }
+      };
+      loadHistory();
+    }
+  }, [activeSection]);
+
+  const handleDeleteChatSession = async (sessionId: string) => {
+    await contractorChatHistoryManager.deleteSession(sessionId);
+    const sessions = await contractorChatHistoryManager.getAllSessions();
+    setChatHistory(sessions);
+  };
 
   // Stripe Connect state
   const [stripeStatus, setStripeStatus] = useState<StripeConnectStatus>({ connected: false });
@@ -1424,6 +1450,53 @@ const Settings = () => {
           </div>
         );
 
+      case 'chatHistory':
+        return (
+          <div className="space-y-4">
+            {loadingHistory ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className={`w-8 h-8 animate-spin ${themeClasses.text.muted}`} />
+              </div>
+            ) : chatHistory.length === 0 ? (
+              <div className="text-center py-12">
+                <History className={`w-12 h-12 mx-auto mb-3 ${themeClasses.text.muted}`} />
+                <p className={`font-medium ${themeClasses.text.secondary}`}>No chat history yet</p>
+                <p className={`text-sm mt-1 ${themeClasses.text.muted}`}>Start a conversation with the AI assistant</p>
+              </div>
+            ) : (
+              chatHistory.map((session) => (
+                <div
+                  key={session.id}
+                  className={`${themeClasses.bg.card} rounded-xl border ${themeClasses.border.secondary} p-4`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 bg-[#043d6b]/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <MessageSquare className="w-5 h-5 text-[#043d6b]" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`font-medium ${themeClasses.text.primary} truncate`}>
+                        {session.messages[1]?.content?.slice(0, 50) || 'New conversation'}...
+                      </p>
+                      <p className={`text-sm ${themeClasses.text.muted} mt-0.5`}>
+                        {session.messages.length} messages • {new Date(session.updatedAt).toLocaleDateString()}
+                      </p>
+                      <p className={`text-xs ${themeClasses.text.muted} mt-1 capitalize`}>
+                        Mode: {session.mode}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleDeleteChatSession(session.id)}
+                      className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        );
+
       case 'danger':
         return (
           <div className="space-y-4">
@@ -1526,6 +1599,7 @@ const Settings = () => {
                    activeSection === 'language' ? 'Language' :
                    activeSection === 'email' ? 'Business Email' :
                    activeSection === 'tutorials' ? 'Tutorials' :
+                   activeSection === 'chatHistory' ? 'AI Chat History' :
                    activeSection === 'danger' ? 'Delete Account' : 'Settings'}
                 </h1>
                 {activeSection === 'main' && (
