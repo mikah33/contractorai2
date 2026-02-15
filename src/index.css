@@ -15,7 +15,7 @@
 
 :root {
   /* ========== TYPOGRAPHY ========== */
-  font-family: Inter, system-ui, -apple-system, sans-serif;
+  font-family: 'SF Pro Display', 'SF Pro Text', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   line-height: 1.5;
   font-weight: 400;
   font-size: 12px;
@@ -599,5 +599,5 @@ body.modal-active nav {
 }
 
 .leaflet-container {
-  font-family: Inter, system-ui, -apple-system, sans-serif !important;
+  font-family: 'SF Pro Display', 'SF Pro Text', -apple-system, BlinkMacSystemFont, system-ui, sans-serif !important;
 }
