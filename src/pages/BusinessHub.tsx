@@ -130,12 +130,6 @@ const BusinessHub: React.FC = () => {
               <p className={`text-sm ${themeClasses.text.secondary}`}>Manage your business</p>
             </div>
           </div>
-          <button
-            onClick={() => navigate('/settings')}
-            className={`w-10 h-10 ${themeClasses.bg.tertiary} rounded-lg flex items-center justify-center ${themeClasses.hover.bg} transition-colors`}
-          >
-            <Settings className={`w-5 h-5 ${themeClasses.text.secondary}`} />
-          </button>
         </div>
       </div>
 

@@ -481,12 +481,6 @@ const Calendar = () => {
                   <p className="text-base text-gray-500">{t('calendar.subtitle')}</p>
                 </div>
               </div>
-              <button
-                onClick={() => navigate('/settings')}
-                className="w-14 h-14 bg-gray-100 rounded-xl flex items-center justify-center hover:bg-gray-200 transition-colors"
-              >
-                <Settings className="w-7 h-7 text-gray-600" />
-              </button>
             </div>
           </div>
         </div>

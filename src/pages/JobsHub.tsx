@@ -292,12 +292,6 @@ const JobsHub: React.FC = () => {
                   <p className={`text-base ${themeClasses.text.secondary}`}>Manage your projects & clients</p>
                 </div>
               </div>
-              <button
-                onClick={() => navigate('/settings')}
-                className={`w-14 h-14 ${themeClasses.bg.tertiary} rounded-xl flex items-center justify-center hover:opacity-80 transition-colors`}
-              >
-                <Settings className={`w-7 h-7 ${themeClasses.text.secondary}`} />
-              </button>
             </div>
           </div>
         </div>

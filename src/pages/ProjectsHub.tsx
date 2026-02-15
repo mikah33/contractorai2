@@ -448,21 +448,13 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                       <p className={`text-base ${themeClasses.text.secondary}`}>{projects.length} total</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => navigate('/settings')}
-                      className={`w-14 h-14 ${themeClasses.bg.tertiary} rounded-xl flex items-center justify-center hover:opacity-80 transition-colors`}
-                    >
-                      <Settings className={`w-7 h-7 ${themeClasses.text.secondary}`} />
-                    </button>
-                    <button
-                      onClick={() => setShowAddChoice(true)}
-                      className="flex items-center gap-2 px-4 py-2.5 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 active:scale-95 transition-all"
-                    >
-                      <Plus className="w-5 h-5" />
-                      <span>Add</span>
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => setShowAddChoice(true)}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 active:scale-95 transition-all"
+                  >
+                    <Plus className="w-5 h-5" />
+                    <span>Add</span>
+                  </button>
                 </div>
                 {/* Search */}
                 <div className="relative">

@@ -191,12 +191,6 @@ const Dashboard: React.FC = () => {
                 <h1 className={`text-2xl font-bold ${themeClasses.text.primary}`}>Home</h1>
                 <p className={`text-base ${themeClasses.text.secondary}`}>Welcome back, {displayName}!</p>
               </div>
-              <button
-                onClick={() => navigate('/settings')}
-                className="w-14 h-14 bg-blue-500/20 rounded-xl flex items-center justify-center hover:bg-blue-500/30 transition-colors border border-blue-500/40"
-              >
-                <Settings className="w-7 h-7 text-blue-500" />
-              </button>
             </div>
           </div>
         </div>
