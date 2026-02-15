@@ -5,7 +5,6 @@ import {
   Users,
   FileText,
   Briefcase,
-  DollarSign,
   Calendar,
   X,
   ChevronRight,
@@ -16,17 +15,15 @@ import { useTheme, getThemeClasses } from '../contexts/ThemeContext';
 import { useClientsStore } from '../stores/clientsStore';
 import useEstimateStore from '../stores/estimateStore';
 import useProjectStore from '../stores/projectStore';
-import { useFinanceStore } from '../stores/financeStoreSupabase';
 import { supabase } from '../lib/supabase';
 
 // Import hub components
 import ClientsHub from './ClientsHub';
 import EstimatesHub from './EstimatesHub';
 import ProjectsHub from './ProjectsHub';
-import FinanceHub from './FinanceHub';
 import TodoHub from './TodoHub';
 
-type SearchCategory = 'all' | 'clients' | 'estimates' | 'projects' | 'finance' | 'tasks';
+type SearchCategory = 'all' | 'clients' | 'estimates' | 'projects' | 'tasks';
 
 const SearchHub: React.FC = () => {
   const { theme } = useTheme();
@@ -44,14 +41,12 @@ const SearchHub: React.FC = () => {
   const { clients, fetchClients } = useClientsStore();
   const { estimates, fetchEstimates } = useEstimateStore();
   const { projects, fetchProjects } = useProjectStore();
-  const { invoices, fetchInvoices } = useFinanceStore();
   const [tasks, setTasks] = useState<any[]>([]);
 
   useEffect(() => {
     fetchClients();
     fetchEstimates();
     fetchProjects();
-    fetchInvoices();
 
     // Fetch tasks directly from Supabase
     const fetchTasks = async () => {
@@ -89,11 +84,6 @@ const SearchHub: React.FC = () => {
     p.client_name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filteredInvoices = (invoices || []).filter(i =>
-    i.client_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    i.invoice_number?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   const filteredTasks = (tasks || []).filter(t =>
     t.title?.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -102,16 +92,14 @@ const SearchHub: React.FC = () => {
     filteredClients.length > 0 ||
     filteredEstimates.length > 0 ||
     filteredProjects.length > 0 ||
-    filteredInvoices.length > 0 ||
     filteredTasks.length > 0
   );
 
   const categories = [
-    { id: 'tasks' as SearchCategory, label: 'Tasks', icon: Calendar, color: 'text-blue-500', bgColor: 'bg-blue-500/20' },
-    { id: 'clients' as SearchCategory, label: 'Clients', icon: Users, color: 'text-blue-500', bgColor: 'bg-blue-500/20' },
-    { id: 'estimates' as SearchCategory, label: 'Estimates', icon: FileText, color: 'text-green-500', bgColor: 'bg-green-500/20' },
-    { id: 'projects' as SearchCategory, label: 'Projects', icon: Briefcase, color: 'text-blue-500', bgColor: 'bg-blue-500/20' },
-    { id: 'finance' as SearchCategory, label: 'Finance', icon: DollarSign, color: 'text-blue-500', bgColor: 'bg-blue-500/20' },
+    { id: 'tasks' as SearchCategory, label: 'Tasks', icon: Calendar, color: 'text-[#043d6b]', bgColor: 'bg-[#043d6b]/20' },
+    { id: 'clients' as SearchCategory, label: 'Clients', icon: Users, color: 'text-[#043d6b]', bgColor: 'bg-[#043d6b]/20' },
+    { id: 'estimates' as SearchCategory, label: 'Estimates', icon: FileText, color: 'text-[#043d6b]', bgColor: 'bg-[#043d6b]/20' },
+    { id: 'projects' as SearchCategory, label: 'Projects', icon: Briefcase, color: 'text-[#043d6b]', bgColor: 'bg-[#043d6b]/20' },
   ];
 
   // Render the appropriate hub content based on active category
@@ -123,8 +111,6 @@ const SearchHub: React.FC = () => {
         return <EstimatesHub embedded searchQuery={searchQuery} />;
       case 'projects':
         return <ProjectsHub embedded searchQuery={searchQuery} />;
-      case 'finance':
-        return <FinanceHub embedded searchQuery={searchQuery} />;
       case 'tasks':
         return <TodoHub embedded searchQuery={searchQuery} />;
       default:
@@ -136,7 +122,7 @@ const SearchHub: React.FC = () => {
               {filteredClients.length > 0 && (
                 <div>
                   <div className="flex items-center gap-2 mb-3">
-                    <Users className="w-5 h-5 text-blue-500" />
+                    <Users className="w-5 h-5 text-[#043d6b]" />
                     <h3 className={`font-semibold ${themeClasses.text.primary}`}>Clients ({filteredClients.length})</h3>
                   </div>
                   <div className="space-y-2">
@@ -147,7 +133,7 @@ const SearchHub: React.FC = () => {
                         className={`w-full ${themeClasses.bg.card} rounded-xl border ${themeClasses.border.primary} p-4 flex items-center justify-between active:scale-[0.99] transition-transform`}
                       >
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center text-blue-500 font-bold text-sm">
+                          <div className="w-10 h-10 bg-[#043d6b]/20 rounded-lg flex items-center justify-center text-[#043d6b] font-bold text-sm">
                             {client.name?.slice(0, 2).toUpperCase() || 'NA'}
                           </div>
                           <div className="text-left">
@@ -159,7 +145,7 @@ const SearchHub: React.FC = () => {
                       </button>
                     ))}
                     {filteredClients.length > 3 && (
-                      <button onClick={() => setActiveCategory('clients')} className="text-blue-500 text-sm font-medium">
+                      <button onClick={() => setActiveCategory('clients')} className="text-[#043d6b] hover:text-[#035291] text-sm font-medium">
                         View all {filteredClients.length} clients →
                       </button>
                     )}
@@ -189,7 +175,7 @@ const SearchHub: React.FC = () => {
                       </button>
                     ))}
                     {filteredEstimates.length > 3 && (
-                      <button onClick={() => setActiveCategory('estimates')} className="text-blue-500 text-sm font-medium">
+                      <button onClick={() => setActiveCategory('estimates')} className="text-[#043d6b] hover:text-[#035291] text-sm font-medium">
                         View all {filteredEstimates.length} estimates →
                       </button>
                     )}
@@ -201,7 +187,7 @@ const SearchHub: React.FC = () => {
               {filteredProjects.length > 0 && (
                 <div>
                   <div className="flex items-center gap-2 mb-3">
-                    <Briefcase className="w-5 h-5 text-blue-500" />
+                    <Briefcase className="w-5 h-5 text-[#043d6b]" />
                     <h3 className={`font-semibold ${themeClasses.text.primary}`}>Projects ({filteredProjects.length})</h3>
                   </div>
                   <div className="space-y-2">
@@ -219,38 +205,8 @@ const SearchHub: React.FC = () => {
                       </button>
                     ))}
                     {filteredProjects.length > 3 && (
-                      <button onClick={() => setActiveCategory('projects')} className="text-blue-500 text-sm font-medium">
+                      <button onClick={() => setActiveCategory('projects')} className="text-[#043d6b] hover:text-[#035291] text-sm font-medium">
                         View all {filteredProjects.length} projects →
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Invoices Results */}
-              {filteredInvoices.length > 0 && (
-                <div>
-                  <div className="flex items-center gap-2 mb-3">
-                    <DollarSign className="w-5 h-5 text-blue-500" />
-                    <h3 className={`font-semibold ${themeClasses.text.primary}`}>Invoices ({filteredInvoices.length})</h3>
-                  </div>
-                  <div className="space-y-2">
-                    {filteredInvoices.slice(0, 3).map((invoice) => (
-                      <button
-                        key={invoice.id}
-                        onClick={() => setActiveCategory('finance')}
-                        className={`w-full ${themeClasses.bg.card} rounded-xl border ${themeClasses.border.primary} p-4 flex items-center justify-between active:scale-[0.99] transition-transform`}
-                      >
-                        <div className="text-left">
-                          <p className={`font-medium ${themeClasses.text.primary}`}>{invoice.client_name || invoice.invoice_number}</p>
-                          <p className={`text-sm ${themeClasses.text.secondary}`}>${invoice.total?.toLocaleString()} • {invoice.status}</p>
-                        </div>
-                        <ChevronRight className={`w-5 h-5 ${themeClasses.text.muted}`} />
-                      </button>
-                    ))}
-                    {filteredInvoices.length > 3 && (
-                      <button onClick={() => setActiveCategory('finance')} className="text-blue-500 text-sm font-medium">
-                        View all {filteredInvoices.length} invoices →
                       </button>
                     )}
                   </div>
@@ -261,7 +217,7 @@ const SearchHub: React.FC = () => {
               {filteredTasks.length > 0 && (
                 <div>
                   <div className="flex items-center gap-2 mb-3">
-                    <Calendar className="w-5 h-5 text-blue-500" />
+                    <Calendar className="w-5 h-5 text-[#043d6b]" />
                     <h3 className={`font-semibold ${themeClasses.text.primary}`}>Tasks ({filteredTasks.length})</h3>
                   </div>
                   <div className="space-y-2">
@@ -275,7 +231,7 @@ const SearchHub: React.FC = () => {
                           {task.status === 'done' ? (
                             <CheckCircle className="w-5 h-5 text-green-500" />
                           ) : (
-                            <Clock className="w-5 h-5 text-blue-500" />
+                            <Clock className="w-5 h-5 text-[#043d6b]" />
                           )}
                           <div className="text-left">
                             <p className={`font-medium ${themeClasses.text.primary}`}>{task.title}</p>
@@ -286,7 +242,7 @@ const SearchHub: React.FC = () => {
                       </button>
                     ))}
                     {filteredTasks.length > 3 && (
-                      <button onClick={() => setActiveCategory('tasks')} className="text-blue-500 text-sm font-medium">
+                      <button onClick={() => setActiveCategory('tasks')} className="text-[#043d6b] hover:text-[#035291] text-sm font-medium">
                         View all {filteredTasks.length} tasks →
                       </button>
                     )}
@@ -319,7 +275,7 @@ const SearchHub: React.FC = () => {
             </div>
             <h2 className={`text-xl font-bold ${themeClasses.text.primary} mb-2`}>Find what you need</h2>
             <p className={`text-center ${themeClasses.text.secondary} max-w-xs`}>
-              Search above or select a category to browse clients, estimates, projects, finance, or tasks
+              Search above or select a category to browse clients, estimates, projects, or tasks
             </p>
           </div>
         );
@@ -352,19 +308,19 @@ const SearchHub: React.FC = () => {
             </div>
 
             {/* Category Filter Tabs */}
-            <div className="flex gap-3 mt-4 overflow-x-auto scrollbar-hide pb-2">
+            <div className="grid grid-cols-4 gap-2 mt-4">
               {categories.map((cat) => (
                 <button
                   key={cat.id}
                   onClick={() => setActiveCategory(activeCategory === cat.id ? 'all' : cat.id)}
-                  className={`flex items-center gap-2.5 px-5 py-3 rounded-xl whitespace-nowrap transition-all border-2 ${
+                  className={`flex items-center justify-center gap-1.5 px-2 py-2.5 rounded-xl transition-all border-2 ${
                     activeCategory === cat.id
                       ? `${cat.bgColor} ${cat.color} border-current`
                       : `${theme === 'light' ? 'bg-gray-100 border-gray-200' : 'bg-zinc-800 border-zinc-700'} ${themeClasses.text.secondary}`
                   }`}
                 >
-                  <cat.icon className="w-5 h-5" />
-                  <span className="text-base font-semibold">{cat.label}</span>
+                  <cat.icon className="w-4 h-4" />
+                  <span className="text-sm font-semibold">{cat.label}</span>
                 </button>
               ))}
             </div>

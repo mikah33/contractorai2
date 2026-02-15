@@ -275,7 +275,7 @@ const EmailPreferences = () => {
               />
               <div className={`relative w-11 h-6 rounded-full transition-colors duration-200 ease-in-out ${
                 getPreferenceStatus(item.key) && !preferences?.unsubscribed_from_all
-                  ? 'bg-blue-500'
+                  ? 'bg-[#043d6b]'
                   : theme === 'light' ? 'bg-gray-300' : 'bg-zinc-600'
               } ${saving || preferences?.unsubscribed_from_all ? 'opacity-50' : ''}`}>
                 <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform duration-200 ease-in-out ${
@@ -336,7 +336,7 @@ const EmailPreferences = () => {
 
       {saving && (
         <div className="mt-4 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-500 border-t-transparent mr-2"></div>
+          <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#043d6b] border-t-transparent mr-2"></div>
           <span className={`text-sm ${themeClasses.text.secondary}`}>Saving preferences...</span>
         </div>
       )}

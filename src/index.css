@@ -4,6 +4,12 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  html, body, * {
+    font-family: 'SF Pro Display', 'SF Pro Text', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  }
+}
+
 /* ============================================
    CONTRACTORAI DESIGN SYSTEM v3.0 - PREMIUM DARK
    ============================================
@@ -14,6 +20,11 @@
    ============================================ */
 
 :root {
+  /* ========== THEME COLOR ========== */
+  --color-theme: #043d6b;
+  --color-theme-light: #035291;
+  --color-theme-dark: #022a4a;
+
   /* ========== TYPOGRAPHY ========== */
   font-family: 'SF Pro Display', 'SF Pro Text', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   line-height: 1.5;

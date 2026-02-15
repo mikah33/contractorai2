@@ -414,7 +414,7 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose, initia
           {step === 'result' ? <ChevronLeft className="w-6 h-6" /> : <X className="w-6 h-6" />}
         </button>
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg flex items-center justify-center">
+          <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-[#043d6b] rounded-lg flex items-center justify-center">
             <Eye className="w-5 h-5 text-white" />
           </div>
           <span className="font-bold text-white">Vision Cam</span>
@@ -426,7 +426,7 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose, initia
       {step === 'tutorial' && (
         <div className="flex-1 flex flex-col p-6">
           <div className="flex-1 flex flex-col items-center justify-center">
-            <div className="w-20 h-20 bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-2xl flex items-center justify-center mb-6">
+            <div className="w-20 h-20 bg-gradient-to-r from-purple-500/20 to-[#043d6b]/20 rounded-2xl flex items-center justify-center mb-6">
               {React.createElement(tutorialSteps[tutorialStep].icon, {
                 className: 'w-10 h-10 text-purple-400'
               })}
@@ -456,14 +456,14 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose, initia
             {tutorialStep < tutorialSteps.length - 1 ? (
               <button
                 onClick={() => setTutorialStep(prev => prev + 1)}
-                className="w-full py-3.5 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-xl font-semibold active:scale-[0.98] transition-transform"
+                className="w-full py-3.5 bg-gradient-to-r from-purple-500 to-[#043d6b] text-white rounded-xl font-semibold active:scale-[0.98] transition-transform"
               >
                 Next
               </button>
             ) : (
               <button
                 onClick={handleTutorialComplete}
-                className="w-full py-3.5 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-xl font-semibold active:scale-[0.98] transition-transform"
+                className="w-full py-3.5 bg-gradient-to-r from-purple-500 to-[#043d6b] text-white rounded-xl font-semibold active:scale-[0.98] transition-transform"
               >
                 Get Started
               </button>
@@ -491,7 +491,7 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose, initia
               {previousVisions.length > 0 && (
                 <button
                   onClick={() => setStep('previous')}
-                  className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-xl border border-purple-500/30 hover:border-purple-500/50 active:scale-[0.98] transition-all"
+                  className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-purple-500/20 to-[#043d6b]/20 rounded-xl border border-purple-500/30 hover:border-purple-500/50 active:scale-[0.98] transition-all"
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-purple-500/30 rounded-lg flex items-center justify-center">
@@ -517,7 +517,7 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose, initia
 
               <button
                 onClick={() => cameraInputRef.current?.click()}
-                className="w-full flex flex-col items-center justify-center p-8 bg-gradient-to-b from-purple-500/10 to-blue-500/10 border-2 border-dashed border-purple-500/50 rounded-2xl hover:border-purple-500 active:scale-[0.98] transition-all"
+                className="w-full flex flex-col items-center justify-center p-8 bg-gradient-to-b from-purple-500/10 to-[#043d6b]/10 border-2 border-dashed border-purple-500/50 rounded-2xl hover:border-purple-500 active:scale-[0.98] transition-all"
               >
                 <Camera className="w-16 h-16 text-purple-400 mb-4" />
                 <span className="text-lg font-semibold text-white">Take Photo</span>
@@ -587,7 +587,7 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose, initia
                 onChange={(e) => setPrompt(e.target.value)}
                 placeholder="e.g., Renovated with modern siding, new windows, and a landscaped front yard"
                 rows={3}
-                className="w-full px-4 py-3 bg-[#2C2C2E] border border-white/10 rounded-xl text-white placeholder-zinc-500 focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                className="w-full px-4 py-3 bg-[#2C2C2E] border border-white/10 rounded-xl text-white placeholder-zinc-500 focus:ring-2 focus:ring-[#043d6b] focus:border-transparent resize-none"
               />
             </div>
 
@@ -640,7 +640,7 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose, initia
             <button
               onClick={handleGenerate}
               disabled={!prompt.trim() || isGenerating}
-              className="w-full py-3.5 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.98] transition-transform"
+              className="w-full py-3.5 bg-gradient-to-r from-purple-500 to-[#043d6b] text-white rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.98] transition-transform"
             >
               <Sparkles className="w-5 h-5" />
               Generate Vision
@@ -730,7 +730,7 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose, initia
                     }}
                     className="flex flex-col items-center gap-1 p-3 bg-[#2C2C2E] rounded-xl active:scale-95 transition-transform"
                   >
-                    <Mail className="w-5 h-5 text-blue-400" />
+                    <Mail className="w-5 h-5 text-[#043d6b]" />
                     <span className="text-xs text-zinc-300">Email</span>
                   </button>
                   <button
@@ -796,7 +796,7 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose, initia
       {/* Generating Step */}
       {step === 'generating' && (
         <div className="flex-1 flex flex-col items-center justify-center p-6">
-          <div className="w-24 h-24 bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-full flex items-center justify-center mb-6">
+          <div className="w-24 h-24 bg-gradient-to-r from-purple-500/20 to-[#043d6b]/20 rounded-full flex items-center justify-center mb-6">
             <Loader2 className="w-12 h-12 text-purple-400 animate-spin" />
           </div>
           <h2 className="text-xl font-bold text-white mb-2">Creating Your Vision</h2>
@@ -806,7 +806,7 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose, initia
           {generationProgress?.progress && (
             <div className="w-48 h-2 bg-[#2C2C2E] rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-purple-500 to-blue-500 transition-all duration-300"
+                className="h-full bg-gradient-to-r from-purple-500 to-[#043d6b] transition-all duration-300"
                 style={{ width: `${generationProgress.progress}%` }}
               />
             </div>
@@ -852,7 +852,7 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose, initia
                 onClick={handleSendToEmail}
                 className="flex flex-col items-center gap-1 p-3 bg-[#2C2C2E] rounded-xl active:scale-95 transition-transform"
               >
-                <Mail className="w-5 h-5 text-blue-400" />
+                <Mail className="w-5 h-5 text-[#043d6b]" />
                 <span className="text-xs text-zinc-300">Email</span>
               </button>
               <button

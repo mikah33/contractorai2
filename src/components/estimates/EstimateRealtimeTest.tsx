@@ -157,9 +157,9 @@ const EstimateRealtimeTest: React.FC<EstimateRealtimeTestProps> = ({ isOpen, onC
       <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
         <div className="fixed inset-0 transition-opacity bg-black/70" onClick={onClose}></div>
 
-        <div className="inline-block w-full max-w-2xl my-8 overflow-hidden text-left align-middle transition-all transform bg-[#1C1C1E] rounded-2xl shadow-xl border border-blue-500/30">
+        <div className="inline-block w-full max-w-2xl my-8 overflow-hidden text-left align-middle transition-all transform bg-[#1C1C1E] rounded-2xl shadow-xl border border-[#043d6b]/30">
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-blue-500/30">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-[#043d6b]/30">
             <h3 className="text-lg font-semibold text-white">Real-time Estimate Test</h3>
             <button onClick={onClose} className="text-zinc-400 hover:text-white transition-colors">
               ✕
@@ -168,8 +168,8 @@ const EstimateRealtimeTest: React.FC<EstimateRealtimeTestProps> = ({ isOpen, onC
 
           {/* Body */}
           <div className="px-6 py-4 space-y-4">
-            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
-              <p className="text-sm text-blue-400">
+            <div className="bg-[#043d6b]/10 border border-[#043d6b]/30 rounded-lg p-4">
+              <p className="text-sm text-[#5a9fd4]">
                 This test will create a test estimate, update its status, and simulate a customer response
                 to verify that real-time updates are working properly.
               </p>
@@ -178,7 +178,7 @@ const EstimateRealtimeTest: React.FC<EstimateRealtimeTestProps> = ({ isOpen, onC
             <button
               onClick={runEstimateRealtimeTest}
               disabled={isRunning || !userId}
-              className="w-full flex items-center justify-center gap-2 p-4 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full flex items-center justify-center gap-2 p-4 bg-[#043d6b] text-white rounded-lg font-semibold hover:bg-[#035291] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isRunning ? '⏳ Running Test...' : '🚀 Run Real-time Test'}
             </button>

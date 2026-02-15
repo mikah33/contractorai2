@@ -164,7 +164,7 @@ const EstimateGenerator = () => {
             terms: location.state.calculatorData.terms || 'Valid for 30 days from the date of issue.',
             branding: {
               logo: '',
-              primaryColor: '#3B82F6',
+              primaryColor: '#043d6b',
               fontFamily: 'Inter'
             }
           };
@@ -856,7 +856,7 @@ const EstimateGenerator = () => {
       case 'Approved':
         return 'bg-green-100 text-green-800';
       case 'Sent':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-[#043d6b]/10 text-[#043d6b]';
       case 'Draft':
         return 'bg-gray-100 text-gray-800';
       default:
@@ -934,14 +934,14 @@ const EstimateGenerator = () => {
               {currentEstimate && (
                 <button
                   onClick={handleBack}
-                  className={`p-2 ${themeClasses.text.secondary} hover:${themeClasses.text.primary} hover:bg-blue-500/10 rounded-md transition-colors`}
+                  className={`p-2 ${themeClasses.text.secondary} hover:${themeClasses.text.primary} hover:bg-[#043d6b]/10 rounded-md transition-colors`}
                   title="Back to Estimates List"
                 >
                   <ArrowLeft className="w-5 h-5" />
                 </button>
               )}
-              <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                <FileText className="w-5 h-5 text-blue-500" />
+              <div className="w-10 h-10 bg-[#043d6b]/20 rounded-lg flex items-center justify-center">
+                <FileText className="w-5 h-5 text-[#043d6b]" />
               </div>
               <div>
                 <h1 className={`text-xl font-bold ${themeClasses.text.primary}`}>{t('estimates.title')}</h1>
@@ -961,7 +961,7 @@ const EstimateGenerator = () => {
             {/* Send to Customer Button */}
             <button
               onClick={() => setShowSendModal(true)}
-              className="flex-1 sm:flex-none inline-flex items-center justify-center px-4 py-2.5 text-sm font-semibold rounded-lg text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg transition-all duration-200"
+              className="flex-1 sm:flex-none inline-flex items-center justify-center px-4 py-2.5 text-sm font-semibold rounded-lg text-white bg-[#043d6b] hover:bg-[#035291] shadow-lg transition-all duration-200"
             >
               <Mail className="w-4 h-4 mr-2" />
               Send to Customer
@@ -993,7 +993,7 @@ const EstimateGenerator = () => {
         ) : (
           <button
             onClick={handleCreateFromScratch}
-            className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-[#043d6b] hover:bg-[#035291] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#043d6b]"
           >
             <Plus className="w-4 h-4 mr-2" />
             {t('estimates.newEstimate')}
@@ -1025,7 +1025,7 @@ const EstimateGenerator = () => {
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="block w-full pl-10 pr-3 py-2 border border-white/20 rounded-md leading-5 bg-[#2C2C2E] text-white placeholder-gray-400 focus:outline-none focus:placeholder-gray-500 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    className="block w-full pl-10 pr-3 py-2 border border-white/20 rounded-md leading-5 bg-[#2C2C2E] text-white placeholder-gray-400 focus:outline-none focus:placeholder-gray-500 focus:ring-1 focus:ring-[#043d6b] focus:border-[#043d6b] sm:text-sm"
                     placeholder="Search by Estimate ID, Client, Project, or Amount..."
                   />
                   {searchQuery && (
@@ -1051,7 +1051,7 @@ const EstimateGenerator = () => {
                         No estimates found matching "{searchQuery}"
                         <button
                           onClick={() => setSearchQuery('')}
-                          className="block mx-auto mt-2 text-blue-500 hover:text-blue-400"
+                          className="block mx-auto mt-2 text-[#043d6b] hover:text-[#035291]"
                         >
                           Clear search
                         </button>
@@ -1065,7 +1065,7 @@ const EstimateGenerator = () => {
                     {filteredEstimates.map((estimate) => (
                       <div
                         key={estimate.id}
-                        className="flex items-center justify-between p-4 bg-[#2C2C2E] border border-white/10 rounded-lg hover:border-blue-500/50 hover:shadow-md transition-all duration-200"
+                        className="flex items-center justify-between p-4 bg-[#2C2C2E] border border-white/10 rounded-lg hover:border-[#043d6b]/50 hover:shadow-md transition-all duration-200"
                       >
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
@@ -1093,7 +1093,7 @@ const EstimateGenerator = () => {
                         </div>
                         <button
                           onClick={() => handleEditEstimate(estimate.id)}
-                          className="ml-4 flex-shrink-0 inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+                          className="ml-4 flex-shrink-0 inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-[#043d6b] hover:bg-[#035291] rounded-lg transition-colors"
                         >
                           <Edit2 className="w-4 h-4 mr-2" />
                           Edit
@@ -1109,10 +1109,10 @@ const EstimateGenerator = () => {
           {currentEstimate ? (
             <>
               {/* Edit with AI Banner */}
-              <div className="bg-gradient-to-r from-blue-50 to-amber-50 rounded-lg shadow-md p-4 sm:p-6 mb-6 border-2 border-blue-200">
+              <div className="bg-gradient-to-r from-[#043d6b]/10 to-amber-50 rounded-lg shadow-md p-4 sm:p-6 mb-6 border-2 border-[#043d6b]/30">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div className="flex items-start gap-3 sm:gap-4 w-full sm:w-auto">
-                    <div className="bg-gradient-to-r from-blue-500 to-amber-500 rounded-full p-2 sm:p-3 flex-shrink-0">
+                    <div className="bg-gradient-to-r from-[#043d6b] to-amber-500 rounded-full p-2 sm:p-3 flex-shrink-0">
                       <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                     </div>
                     <div className="flex-1">
@@ -1122,7 +1122,7 @@ const EstimateGenerator = () => {
                   </div>
                   <button
                     onClick={() => setShowAIEditChat(true)}
-                    className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold rounded-lg text-white bg-gradient-to-r from-blue-500 to-amber-500 hover:from-blue-600 hover:to-amber-600 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 whitespace-nowrap"
+                    className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold rounded-lg text-white bg-gradient-to-r from-[#043d6b] to-amber-500 hover:from-[#035291] hover:to-amber-600 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 whitespace-nowrap"
                   >
                     <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                     Edit with AI
@@ -1165,9 +1165,9 @@ const EstimateGenerator = () => {
           ) : (
             <>
               {/* Calculate Job Cost Card for Empty State */}
-              <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg shadow-lg p-8 mb-6 border-2 border-blue-200">
+              <div className="bg-gradient-to-r from-[#043d6b]/10 to-purple-50 rounded-lg shadow-lg p-8 mb-6 border-2 border-[#043d6b]/30">
                 <div className="text-center">
-                  <div className="bg-blue-600 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                  <div className="bg-[#043d6b] rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
                     <Calculator className="w-8 h-8 text-white" />
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 mb-2">Start with Job Cost Calculations</h3>
@@ -1176,7 +1176,7 @@ const EstimateGenerator = () => {
                   </p>
                   <button
                     onClick={() => navigate('/pricing', { state: { fromEstimate: true } })}
-                    className="inline-flex items-center px-8 py-4 text-lg font-semibold rounded-lg text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+                    className="inline-flex items-center px-8 py-4 text-lg font-semibold rounded-lg text-white bg-gradient-to-r from-[#043d6b] to-purple-600 hover:from-[#035291] hover:to-purple-700 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
                   >
                     <Calculator className="w-6 h-6 mr-3" />
                     Calculate Job Cost

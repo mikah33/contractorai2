@@ -37,7 +37,7 @@ const EstimatePreview: React.FC<EstimatePreviewProps> = ({ estimate, clients, pr
               className="h-12 sm:h-16 w-auto object-contain mb-3 sm:mb-4"
             />
           )}
-          <h1 className="text-xl sm:text-2xl font-bold" style={{ color: estimate.branding?.primaryColor || '#3B82F6' }}>
+          <h1 className="text-xl sm:text-2xl font-bold" style={{ color: estimate.branding?.primaryColor || '#043d6b' }}>
             {estimate.title}
           </h1>
           <p className="text-gray-500 mt-1 text-sm">Estimate #{estimate.id.slice(-6)}</p>
@@ -45,7 +45,7 @@ const EstimatePreview: React.FC<EstimatePreviewProps> = ({ estimate, clients, pr
 
         <div className="text-left sm:text-right w-full sm:w-auto">
           {!hideStatus && (
-            <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mb-2">
+            <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-[#043d6b]/20 text-[#5a9fd4] mb-2">
               {estimate.status.toUpperCase()}
             </div>
           )}
@@ -122,20 +122,20 @@ const EstimatePreview: React.FC<EstimatePreviewProps> = ({ estimate, clients, pr
         <div className="hidden sm:block overflow-x-auto">
           <table className="min-w-full divide-y-2 divide-gray-300 border-2 border-gray-300">
             <thead>
-              <tr style={{ backgroundColor: (estimate.branding?.primaryColor || '#3B82F6') + '20' }}>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider" style={{ color: estimate.branding?.primaryColor || '#3B82F6' }}>
+              <tr style={{ backgroundColor: (estimate.branding?.primaryColor || '#043d6b') + '20' }}>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider" style={{ color: estimate.branding?.primaryColor || '#043d6b' }}>
                   Description
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider" style={{ color: estimate.branding?.primaryColor || '#3B82F6' }}>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider" style={{ color: estimate.branding?.primaryColor || '#043d6b' }}>
                   Quantity
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider" style={{ color: estimate.branding?.primaryColor || '#3B82F6' }}>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider" style={{ color: estimate.branding?.primaryColor || '#043d6b' }}>
                   Unit
                 </th>
-                <th scope="col" className="px-6 py-3 text-right text-xs font-bold uppercase tracking-wider" style={{ color: estimate.branding?.primaryColor || '#3B82F6' }}>
+                <th scope="col" className="px-6 py-3 text-right text-xs font-bold uppercase tracking-wider" style={{ color: estimate.branding?.primaryColor || '#043d6b' }}>
                   Unit Price
                 </th>
-                <th scope="col" className="px-6 py-3 text-right text-xs font-bold uppercase tracking-wider" style={{ color: estimate.branding?.primaryColor || '#3B82F6' }}>
+                <th scope="col" className="px-6 py-3 text-right text-xs font-bold uppercase tracking-wider" style={{ color: estimate.branding?.primaryColor || '#043d6b' }}>
                   Total
                 </th>
               </tr>
@@ -196,7 +196,7 @@ const EstimatePreview: React.FC<EstimatePreviewProps> = ({ estimate, clients, pr
                 <td colSpan={4} className="px-6 py-4 text-right text-base font-extrabold text-gray-900">
                   TOTAL
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-xl font-extrabold text-right" style={{ color: estimate.branding?.primaryColor || '#3B82F6' }}>
+                <td className="px-6 py-4 whitespace-nowrap text-xl font-extrabold text-right" style={{ color: estimate.branding?.primaryColor || '#043d6b' }}>
                   ${(estimate.total ?? 0).toFixed(2)}
                 </td>
               </tr>
@@ -206,8 +206,8 @@ const EstimatePreview: React.FC<EstimatePreviewProps> = ({ estimate, clients, pr
 
         {/* Mobile Card View */}
         <div className="sm:hidden space-y-3">
-          <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-3 mb-4">
-            <h3 className="text-xs font-bold uppercase text-blue-700 mb-1">Line Items</h3>
+          <div className="bg-[#043d6b]/10 border-2 border-[#043d6b]/30 rounded-lg p-3 mb-4">
+            <h3 className="text-xs font-bold uppercase text-[#043d6b] mb-1">Line Items</h3>
           </div>
 
           {estimate.items.length === 0 ? (
@@ -238,7 +238,7 @@ const EstimatePreview: React.FC<EstimatePreviewProps> = ({ estimate, clients, pr
                     </div>
                     <div className="mt-2 pt-2 border-t border-gray-200 text-right">
                       <span className="text-xs text-gray-500">Item Total: </span>
-                      <span className="font-bold text-base" style={{ color: estimate.branding?.primaryColor || '#3B82F6' }}>
+                      <span className="font-bold text-base" style={{ color: estimate.branding?.primaryColor || '#043d6b' }}>
                         ${((item.totalPrice != null ? item.totalPrice : (item.unitPrice ?? 0) * (item.quantity ?? 0))).toFixed(2)}
                       </span>
                     </div>
@@ -258,9 +258,9 @@ const EstimatePreview: React.FC<EstimatePreviewProps> = ({ estimate, clients, pr
               <span className="text-xs font-semibold text-gray-700">Tax ({estimate.taxRate ?? 0}%)</span>
               <span className="text-sm font-bold text-gray-900">${(estimate.taxAmount ?? 0).toFixed(2)}</span>
             </div>
-            <div className="bg-blue-50 px-3 py-3 flex justify-between items-center">
+            <div className="bg-[#043d6b]/10 px-3 py-3 flex justify-between items-center">
               <span className="text-sm font-extrabold text-gray-900">TOTAL</span>
-              <span className="text-xl font-extrabold" style={{ color: estimate.branding?.primaryColor || '#3B82F6' }}>
+              <span className="text-xl font-extrabold" style={{ color: estimate.branding?.primaryColor || '#043d6b' }}>
                 ${(estimate.total ?? 0).toFixed(2)}
               </span>
             </div>

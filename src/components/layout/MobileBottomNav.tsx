@@ -25,15 +25,14 @@ import {
   Eye,
   Scan,
   MoreHorizontal,
-  Search,
-  Timer
+  Search
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../stores/authStore';
 import { CalendarEvent } from '../../services/calendarService';
 import { useTheme, getThemeClasses } from '../../contexts/ThemeContext';
 import NotificationWebhookModal from '../calendar/NotificationWebhookModal';
-import PhotoUploadModal from '../photos/PhotoUploadModal';
+import CameraHub from '../camera/CameraHub';
 import VisionCamModal from '../vision/VisionCamModal';
 import SendEmailModal from '../email/SendEmailModal';
 import LiDARScannerModal from '../lidar/LiDARScannerModal';
@@ -122,10 +121,10 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
 
   const getModeIcon = (mode: string) => {
     switch (mode) {
-      case 'estimating': return <Calculator className="w-5 h-5 text-blue-500" />;
+      case 'estimating': return <Calculator className="w-5 h-5 text-[#043d6b]" />;
       case 'projects': return <Briefcase className="w-5 h-5 text-purple-500" />;
       case 'finance': return <DollarSign className="w-5 h-5 text-green-500" />;
-      case 'crm': return <UserPlus className="w-5 h-5 text-blue-500" />;
+      case 'crm': return <UserPlus className="w-5 h-5 text-[#043d6b]" />;
       default: return <MessageSquare className="w-5 h-5 text-zinc-400" />;
     }
   };
@@ -144,7 +143,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
     { name: 'Home', icon: Home, href: '/' },
     { name: 'Job Hub', icon: ClipboardList, href: '/search' },
     { name: 'Camera', icon: Camera, href: '#', isCamera: true },
-    { name: 'Tracker', icon: Timer, href: '/tracker' },
+    { name: 'Manage', icon: Briefcase, href: '/tracker' },
     { name: 'More', icon: MoreHorizontal, href: '/settings', hasFloatingButton: true },
   ];
 
@@ -248,7 +247,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
   return (
     <>
       {/* Unified Bottom Navigation Bar with AI Search */}
-      <nav className={`fixed bottom-0 left-0 right-0 ${themeClasses.bg.secondary} border-t ${themeClasses.border.primary} z-[100] pb-safe ${className} ${showAIModal || showEventPicker || showNotificationModal || showPhotoModal || showVisionCamModal || showLiDARScanner || showPlanCreation || showChatHistory || showSendEmailModal || showEmailOptions || location.pathname === '/ai-team' ? 'hidden' : ''}`}>
+      <nav className={`fixed bottom-0 left-0 right-0 ${themeClasses.bg.secondary} border-t ${themeClasses.border.primary} z-[100] pb-safe ${className} ${showEventPicker || showNotificationModal || showPhotoModal || showVisionCamModal || showLiDARScanner || showPlanCreation || showChatHistory || showSendEmailModal || showEmailOptions || location.pathname === '/ai-team' ? 'hidden' : ''}`}>
         {/* Nav Icons Row */}
         <div className={`flex items-center justify-around h-16 ${themeClasses.bg.secondary}`}>
           {navItems.map((item, index) => {
@@ -260,10 +259,10 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
                   key={item.name}
                   onClick={() => setShowPhotoModal(true)}
                   className={`flex flex-col items-center justify-center flex-1 h-full ${
-                    showPhotoModal ? 'text-blue-500' : 'text-zinc-500'
+                    showPhotoModal ? 'text-[#043d6b]' : 'text-zinc-500'
                   }`}
                 >
-                  <Camera className={`w-6 h-6 ${showPhotoModal ? 'text-blue-500' : 'text-zinc-500'}`} />
+                  <Camera className={`w-6 h-6 ${showPhotoModal ? 'text-[#043d6b]' : 'text-zinc-500'}`} />
                   <span className="text-xs mt-1 font-medium">{item.name}</span>
                 </button>
               );
@@ -274,7 +273,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
                 {item.hasFloatingButton && (
                   <button
                     onClick={handleAIClick}
-                    className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 w-[60px] h-[60px] bg-blue-500 rounded-full flex items-center justify-center shadow-lg shadow-blue-500/30 active:scale-95 transition-transform"
+                    className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 w-[60px] h-[60px] bg-[#043d6b] rounded-full flex items-center justify-center shadow-lg shadow-[#043d6b]/30 active:scale-95 transition-transform"
                   >
                     <Plus className="w-7 h-7 text-white" />
                   </button>
@@ -282,10 +281,10 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
                 <Link
                   to={item.href}
                   className={`flex flex-col items-center justify-center h-full w-full ${
-                    isActive ? 'text-blue-500' : 'text-zinc-500'
+                    isActive ? 'text-[#043d6b]' : 'text-zinc-500'
                   }`}
                 >
-                  {item.icon && <item.icon className={`w-6 h-6 ${isActive ? 'text-blue-500' : 'text-zinc-500'}`} />}
+                  {item.icon && <item.icon className={`w-6 h-6 ${isActive ? 'text-[#043d6b]' : 'text-zinc-500'}`} />}
                   <span className="text-xs mt-1 font-medium">{item.name}</span>
                 </Link>
               </div>
@@ -297,172 +296,101 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
         <div className="px-4 pb-2">
           <button
             onClick={() => window.dispatchEvent(new CustomEvent('openAIChat'))}
-            className={`w-full flex items-center gap-3 px-4 py-2.5 ${themeClasses.bg.card} rounded-xl border ${theme === 'light' ? 'border-blue-300' : 'border-blue-500/30'} active:scale-[0.98] transition-transform`}
+            className={`w-full flex items-center gap-3 px-4 py-2.5 ${themeClasses.bg.card} rounded-xl border ${theme === 'light' ? 'border-[#043d6b]/50' : 'border-[#043d6b]/30'} active:scale-[0.98] transition-transform`}
           >
-            <div className="w-7 h-7 bg-blue-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Sparkles className="w-4 h-4 text-blue-500" />
+            <div className="w-7 h-7 bg-[#043d6b]/20 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Sparkles className="w-4 h-4 text-[#043d6b]" />
             </div>
             <span className={`flex-1 text-left text-sm ${themeClasses.text.secondary}`}>Ask Contractor AI anything...</span>
-            <div className={`flex items-center gap-1 px-2 py-0.5 rounded-md ${theme === 'light' ? 'bg-gray-200' : 'bg-zinc-800'} text-blue-500`}>
+            <div className={`flex items-center gap-1 px-2 py-0.5 rounded-md ${theme === 'light' ? 'bg-gray-200' : 'bg-zinc-800'} text-[#043d6b]`}>
               <Sparkles className="w-4 h-4" />
             </div>
           </button>
         </div>
       </nav>
 
-      {/* AI Mode Selection Modal */}
+      {/* Quick Action FAB Menu */}
       {showAIModal && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center px-4">
-          {/* Backdrop */}
+        <div className="fixed inset-0 z-[150]">
+          {/* Backdrop - more opaque */}
           <div
-            className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-400 ${isAIModalVisible ? 'opacity-100' : 'opacity-0'}`}
+            className={`absolute inset-0 bg-black/70 backdrop-blur-sm transition-all duration-500 ease-out ${isAIModalVisible ? 'opacity-100' : 'opacity-0'}`}
             onClick={handleCloseAIModal}
           />
 
-          {/* Modal Content - Chat bubble effect from bottom right */}
+          {/* FAB Menu - Positioned above the + button */}
           <div
-            className={`relative w-full max-w-lg ${themeClasses.bg.modal} rounded-2xl shadow-2xl overflow-hidden transition-all duration-400 ${
-              isAIModalVisible
-                ? 'opacity-100 scale-100 translate-x-0 translate-y-0'
-                : 'opacity-0 scale-[0.2] translate-x-[40%] translate-y-[60%]'
-            }`}
-            style={{ transformOrigin: 'bottom right' }}
+            className="absolute right-4 flex flex-col items-end gap-4"
+            style={{ bottom: 'calc(160px + env(safe-area-inset-bottom))' }}
           >
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 pt-5 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 bg-blue-500/20 rounded-xl flex items-center justify-center">
-                  <Sparkles className="w-6 h-6 text-blue-500" />
-                </div>
-                <div>
-                  <h2 className={`text-lg font-bold ${themeClasses.text.primary}`}>Contractor AI</h2>
-                  <p className={`text-sm ${themeClasses.text.secondary}`}>What would you like help with?</p>
-                </div>
-              </div>
+            {[
+              { id: 'client', label: 'Client', icon: UserPlus, color: 'bg-[#043d6b]', delay: 0 },
+              { id: 'picture', label: 'Picture', icon: Camera, color: 'bg-sky-600', delay: 1 },
+              { id: 'plan', label: 'Plan', icon: Scan, color: 'bg-cyan-600', delay: 2 },
+              { id: 'email', label: 'Email', icon: Mail, color: 'bg-violet-600', delay: 3 },
+              { id: 'invoice', label: 'Invoice', icon: CreditCard, color: 'bg-amber-600', delay: 4 },
+              { id: 'estimate', label: 'Estimate', icon: Calculator, color: 'bg-orange-600', delay: 5 },
+              { id: 'expense', label: 'Expense', icon: DollarSign, color: 'bg-emerald-600', delay: 6 },
+              { id: 'task', label: 'Task', icon: ClipboardList, color: 'bg-teal-600', delay: 7 },
+            ].map((item) => (
               <button
-                onClick={handleCloseAIModal}
-                className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            {/* Mode Options */}
-            <div className="px-5 pb-4 grid grid-cols-2 gap-2.5">
-              {aiModes.map((mode) => (
-                <button
-                  key={mode.id}
-                  onClick={() => handleModeSelect(mode.id)}
-                  className={`flex flex-col items-center p-3.5 ${theme === 'light' ? 'bg-white' : 'bg-[#1C1C1E]'} rounded-xl border border-gray-200 hover:border-gray-300 active:scale-[0.98] transition-all`}
-                >
-                  <div className="w-11 h-11 bg-blue-500/20 rounded-xl flex items-center justify-center mb-2">
-                    <mode.icon className="w-6 h-6 text-blue-500" />
-                  </div>
-                  <span className={`font-semibold text-sm ${themeClasses.text.primary}`}>{mode.name}</span>
-                  <span className={`text-xs ${themeClasses.text.secondary} text-center mt-0.5`}>{mode.description}</span>
-                </button>
-              ))}
-            </div>
-
-            {/* Plan Creation Button - LiDAR */}
-            <div className="px-5 pb-2.5">
-              <button
-                onClick={() => handleModeSelect('lidar-scan')}
-                className={`w-full flex items-center gap-4 p-3.5 ${theme === 'light' ? 'bg-white' : 'bg-[#1C1C1E]'} rounded-xl border border-gray-200 hover:border-gray-300 active:scale-[0.98] transition-all`}
-              >
-                <div className="w-11 h-11 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center">
-                  <Scan className="w-6 h-6 text-white" />
-                </div>
-                <div className="flex-1 text-left">
-                  <span className={`font-semibold ${themeClasses.text.primary}`}>Plan Creation</span>
-                  <p className={`text-xs ${themeClasses.text.secondary}`}>Scan rooms or draw floor plans</p>
-                </div>
-                <ChevronRight className="w-5 h-5 text-gray-400" />
-              </button>
-            </div>
-
-            {/* Vision Cam Button - Above Photos */}
-            <div className="px-5 pb-2.5">
-              <button
-                onClick={() => handleModeSelect('vision-cam')}
-                className={`w-full flex items-center gap-4 p-3.5 ${theme === 'light' ? 'bg-white' : 'bg-[#1C1C1E]'} rounded-xl border border-gray-200 hover:border-gray-300 active:scale-[0.98] transition-all`}
-              >
-                <div className="w-11 h-11 bg-gradient-to-r from-purple-500 to-blue-500 rounded-xl flex items-center justify-center">
-                  <Eye className="w-6 h-6 text-white" />
-                </div>
-                <div className="flex-1 text-left">
-                  <span className={`font-semibold ${themeClasses.text.primary}`}>Vision Cam</span>
-                  <p className={`text-xs ${themeClasses.text.secondary}`}>AI-powered project visualization</p>
-                </div>
-                <ChevronRight className="w-5 h-5 text-gray-400" />
-              </button>
-            </div>
-
-            {/* Photos Button - Full Width */}
-            <div className="px-5 pb-2.5">
-              <button
-                onClick={() => handleModeSelect('photos')}
-                className={`w-full flex items-center gap-4 p-3.5 ${theme === 'light' ? 'bg-white' : 'bg-[#1C1C1E]'} rounded-t-xl border border-gray-200 border-b-0 hover:border-gray-300 active:scale-[0.98] transition-all`}
-              >
-                <div className="w-11 h-11 bg-blue-500 rounded-xl flex items-center justify-center">
-                  <Camera className="w-6 h-6 text-white" />
-                </div>
-                <div className="flex-1 text-left">
-                  <span className={`font-semibold ${themeClasses.text.primary}`}>Photos</span>
-                  <p className={`text-xs ${themeClasses.text.secondary}`}>Capture & organize project photos</p>
-                </div>
-                <ChevronRight className="w-5 h-5 text-gray-400" />
-              </button>
-              {/* Gallery Button - Attached below Photos */}
-              <button
+                key={item.id}
                 onClick={() => {
                   handleCloseAIModal();
-                  navigate('/photos-gallery');
+                  switch (item.id) {
+                    case 'task':
+                      navigate('/search', { state: { initialCategory: 'tasks', openAddTask: true } });
+                      break;
+                    case 'expense':
+                      navigate('/tracker', { state: { openExpense: true } });
+                      break;
+                    case 'estimate':
+                      navigate('/estimates-hub', { state: { openCreate: true } });
+                      break;
+                    case 'invoice':
+                      navigate('/tracker', { state: { openInvoice: true } });
+                      break;
+                    case 'email':
+                      setShowSendEmailModal(true);
+                      break;
+                    case 'client':
+                      navigate('/clients-hub', { state: { openCreate: true } });
+                      break;
+                    case 'picture':
+                      setShowPhotoModal(true);
+                      break;
+                    case 'plan':
+                      setShowPlanCreation(true);
+                      break;
+                  }
                 }}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 ${theme === 'light' ? 'bg-white' : 'bg-[#1C1C1E]'} rounded-b-xl border border-gray-200 border-t-0 hover:border-gray-300 active:scale-[0.98] transition-all`}
+                className={`flex items-center gap-3 transition-all duration-500 ease-out ${
+                  isAIModalVisible
+                    ? 'opacity-100 translate-y-0 scale-100'
+                    : 'opacity-0 translate-y-4 scale-95'
+                }`}
+                style={{ transitionDelay: isAIModalVisible ? `${item.delay * 50}ms` : '0ms' }}
               >
-                <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                  <Camera className="w-4 h-4 text-blue-400" />
+                <span className="px-3 py-1.5 bg-white rounded-full text-sm font-bold text-zinc-800 shadow-lg">
+                  {item.label}
+                </span>
+                <div className={`w-14 h-14 ${item.color} rounded-full flex items-center justify-center shadow-xl active:scale-90 transition-transform`}>
+                  <item.icon className="w-6 h-6 text-white" />
                 </div>
-                <span className={`text-sm font-medium ${themeClasses.text.primary}`}>Gallery</span>
-                <ChevronRight className={`w-4 h-4 ${themeClasses.text.secondary} ml-auto`} />
               </button>
-            </div>
-
-            {/* Chat History Button - Full Width */}
-            <div className="px-5 pb-2.5">
-              <button
-                onClick={() => {
-                  handleCloseAIModal();
-                  setShowChatHistory(true);
-                }}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 ${theme === 'light' ? 'bg-white' : 'bg-[#1C1C1E]'} rounded-xl border ${themeClasses.border.primary} ${themeClasses.hover.bg} active:scale-[0.98] transition-all`}
-              >
-                <div className={`w-8 h-8 ${themeClasses.bg.tertiary} rounded-lg flex items-center justify-center`}>
-                  <History className={`w-4 h-4 ${themeClasses.text.secondary}`} />
-                </div>
-                <span className={`text-sm font-medium ${themeClasses.text.primary}`}>AI Chat History</span>
-                <ChevronRight className={`w-4 h-4 ${themeClasses.text.secondary} ml-auto`} />
-              </button>
-            </div>
-
-            {/* Settings Button - Full Width */}
-            <div className="px-4 pb-6">
-              <button
-                onClick={() => {
-                  handleCloseAIModal();
-                  navigate('/settings');
-                }}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 ${theme === 'light' ? 'bg-white' : 'bg-[#1C1C1E]'} rounded-lg border ${themeClasses.border.primary} ${themeClasses.hover.bg} active:scale-[0.98] transition-all`}
-              >
-                <div className={`w-8 h-8 ${themeClasses.bg.tertiary} rounded-md flex items-center justify-center`}>
-                  <Settings className={`w-4 h-4 ${themeClasses.text.secondary}`} />
-                </div>
-                <span className={`text-sm font-medium ${themeClasses.text.primary}`}>Settings</span>
-                <ChevronRight className={`w-4 h-4 ${themeClasses.text.secondary} ml-auto`} />
-              </button>
-            </div>
+            ))}
           </div>
+
+          {/* Close button (X) - positioned over the + button location */}
+          <button
+            onClick={handleCloseAIModal}
+            className={`absolute right-4 w-[60px] h-[60px] bg-[#043d6b] rounded-full flex items-center justify-center shadow-xl transition-all duration-300 ${
+              isAIModalVisible ? 'rotate-0 scale-100' : 'rotate-45 scale-90'
+            }`}
+            style={{ bottom: 'calc(84px + env(safe-area-inset-bottom))' }}
+          >
+            <X className="w-7 h-7 text-white" />
+          </button>
         </div>
       )}
 
@@ -483,10 +411,10 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
             </div>
 
             {/* Header */}
-            <div className={`flex items-center justify-between px-6 pb-5 border-b border-blue-500/30`}>
+            <div className={`flex items-center justify-between px-6 pb-5 border-b border-[#043d6b]/30`}>
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-blue-500/20 rounded-xl flex items-center justify-center">
-                  <Mail className="w-7 h-7 text-blue-500" />
+                <div className="w-14 h-14 bg-[#043d6b]/20 rounded-xl flex items-center justify-center">
+                  <Mail className="w-7 h-7 text-[#043d6b]" />
                 </div>
                 <div>
                   <h2 className={`text-2xl font-bold ${themeClasses.text.primary}`}>Email</h2>
@@ -505,30 +433,30 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
             <div className="p-6 pb-10 space-y-4">
               <button
                 onClick={() => handleModeSelect('send-email')}
-                className={`w-full flex items-center gap-5 p-5 ${themeClasses.bg.card} rounded-2xl border-2 border-blue-500/30 hover:border-blue-500 active:scale-[0.98] transition-all`}
+                className={`w-full flex items-center gap-5 p-5 ${themeClasses.bg.card} rounded-2xl border-2 border-[#043d6b]/30 hover:border-[#043d6b] active:scale-[0.98] transition-all`}
               >
-                <div className="w-16 h-16 bg-blue-500 rounded-xl flex items-center justify-center shadow-lg">
+                <div className="w-16 h-16 bg-[#043d6b] rounded-xl flex items-center justify-center shadow-lg">
                   <Mail className="w-8 h-8 text-white" />
                 </div>
                 <div className="flex-1 text-left">
                   <h3 className={`text-xl font-bold ${themeClasses.text.primary}`}>Send Email</h3>
                   <p className={`text-base ${themeClasses.text.secondary}`}>Compose a new email to clients or team</p>
                 </div>
-                <ChevronRight className="w-7 h-7 text-blue-500" />
+                <ChevronRight className="w-7 h-7 text-[#043d6b]" />
               </button>
 
               <button
                 onClick={() => handleModeSelect('email-notification')}
-                className={`w-full flex items-center gap-5 p-5 ${themeClasses.bg.card} rounded-2xl border-2 border-blue-500/30 hover:border-blue-500 active:scale-[0.98] transition-all`}
+                className={`w-full flex items-center gap-5 p-5 ${themeClasses.bg.card} rounded-2xl border-2 border-[#043d6b]/30 hover:border-[#043d6b] active:scale-[0.98] transition-all`}
               >
-                <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg">
+                <div className="w-16 h-16 bg-gradient-to-r from-[#043d6b] to-cyan-500 rounded-xl flex items-center justify-center shadow-lg">
                   <CalendarIcon className="w-8 h-8 text-white" />
                 </div>
                 <div className="flex-1 text-left">
                   <h3 className={`text-xl font-bold ${themeClasses.text.primary}`}>Email About Event</h3>
                   <p className={`text-base ${themeClasses.text.secondary}`}>Notify about a calendar event</p>
                 </div>
-                <ChevronRight className="w-7 h-7 text-blue-500" />
+                <ChevronRight className="w-7 h-7 text-[#043d6b]" />
               </button>
             </div>
           </div>
@@ -552,10 +480,10 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
             </div>
 
             {/* Header */}
-            <div className="flex items-center justify-between px-4 pb-4 border-b border-blue-500/30">
+            <div className="flex items-center justify-between px-4 pb-4 border-b border-[#043d6b]/30">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                  <Mail className="w-5 h-5 text-blue-500" />
+                <div className="w-10 h-10 bg-[#043d6b]/20 rounded-lg flex items-center justify-center">
+                  <Mail className="w-5 h-5 text-[#043d6b]" />
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-white">Send Email</h2>
@@ -574,7 +502,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
             <div className="p-4 overflow-y-auto max-h-[60vh]">
               {loadingEvents ? (
                 <div className="flex items-center justify-center py-12">
-                  <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                  <div className="w-8 h-8 border-2 border-[#043d6b] border-t-transparent rounded-full animate-spin" />
                 </div>
               ) : events.length === 0 ? (
                 <div className="text-center py-12">
@@ -586,7 +514,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
                       setShowEventPicker(false);
                       navigate('/calendar');
                     }}
-                    className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md font-medium hover:bg-blue-600 active:scale-95 transition-all"
+                    className="mt-4 px-4 py-2 bg-[#043d6b] text-white rounded-md font-medium hover:bg-[#035291] active:scale-95 transition-all"
                   >
                     Go to Calendar
                   </button>
@@ -601,10 +529,10 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
                         setShowEventPicker(false);
                         setShowNotificationModal(true);
                       }}
-                      className="w-full flex items-center gap-3 p-4 bg-[#2C2C2E] rounded-lg border border-blue-500/30 hover:border-blue-500/60 active:scale-[0.98] transition-all text-left"
+                      className="w-full flex items-center gap-3 p-4 bg-[#2C2C2E] rounded-lg border border-[#043d6b]/30 hover:border-[#043d6b]/60 active:scale-[0.98] transition-all text-left"
                     >
-                      <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <CalendarIcon className="w-5 h-5 text-blue-500" />
+                      <div className="w-10 h-10 bg-[#043d6b]/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <CalendarIcon className="w-5 h-5 text-[#043d6b]" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="font-medium text-white truncate">{event.title}</h3>
@@ -670,7 +598,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
             <div className="p-4 overflow-y-auto max-h-[70vh]">
               {loadingHistory ? (
                 <div className="flex items-center justify-center py-12">
-                  <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                  <div className="w-8 h-8 border-2 border-[#043d6b] border-t-transparent rounded-full animate-spin" />
                 </div>
               ) : chatHistory.length === 0 ? (
                 <div className="text-center py-12">
@@ -687,7 +615,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
                         setSelectedChatSession(session);
                         setShowChatHistory(false);
                       }}
-                      className="w-full flex items-center gap-3 p-4 bg-[#2C2C2E] rounded-lg border border-white/10 hover:border-blue-500/50 active:scale-[0.98] transition-all text-left"
+                      className="w-full flex items-center gap-3 p-4 bg-[#2C2C2E] rounded-lg border border-white/10 hover:border-[#043d6b]/50 active:scale-[0.98] transition-all text-left"
                     >
                       <div className="w-10 h-10 bg-[#3A3A3C] rounded-lg flex items-center justify-center flex-shrink-0">
                         {getModeIcon(session.mode || 'general')}
@@ -730,8 +658,8 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
         event={selectedEvent}
       />
 
-      {/* Photo Upload Modal */}
-      <PhotoUploadModal
+      {/* Camera Hub */}
+      <CameraHub
         isOpen={showPhotoModal}
         onClose={() => setShowPhotoModal(false)}
       />

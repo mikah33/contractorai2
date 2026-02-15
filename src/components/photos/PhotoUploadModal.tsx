@@ -243,7 +243,7 @@ const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({ isOpen, onClose }) 
   const textPrimary = theme === 'light' ? 'text-gray-900' : 'text-white';
   const textSecondary = theme === 'light' ? 'text-gray-500' : 'text-zinc-400';
   const textMuted = theme === 'light' ? 'text-gray-400' : 'text-zinc-500';
-  const borderColor = theme === 'light' ? 'border-gray-200' : 'border-blue-500/30';
+  const borderColor = theme === 'light' ? 'border-gray-200' : 'border-[#043d6b]/30';
   const inputBg = theme === 'light' ? 'bg-gray-100 border-gray-300' : 'bg-[#2C2C2E] border-[#3A3A3C]';
   const inputText = theme === 'light' ? 'text-gray-900 placeholder-gray-400' : 'text-white placeholder-zinc-500';
 
@@ -267,8 +267,8 @@ const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({ isOpen, onClose }) 
         {/* Header */}
         <div className={`flex items-center justify-between px-5 pt-5 pb-4 border-b ${borderColor}`}>
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 bg-blue-500/20 rounded-xl flex items-center justify-center">
-              <Camera className="w-6 h-6 text-blue-500" />
+            <div className="w-11 h-11 bg-[#043d6b]/20 rounded-xl flex items-center justify-center">
+              <Camera className="w-6 h-6 text-[#043d6b]" />
             </div>
             <div>
               <h2 className={`text-lg font-bold ${textPrimary}`}>
@@ -318,12 +318,12 @@ const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({ isOpen, onClose }) 
                 onClick={() => handleDestinationSelect('project')}
                 className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all ${
                   destination === 'project'
-                    ? 'bg-blue-500/20 border-blue-500'
+                    ? 'bg-[#043d6b]/20 border-[#043d6b]'
                     : `${bgCard} border-transparent ${bgCardHover}`
                 }`}
               >
-                <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
-                  <Briefcase className="w-6 h-6 text-blue-500" />
+                <div className="w-12 h-12 bg-[#043d6b]/20 rounded-xl flex items-center justify-center">
+                  <Briefcase className="w-6 h-6 text-[#043d6b]" />
                 </div>
                 <div className="flex-1 text-left">
                   <p className={`font-semibold ${textPrimary}`}>Attach to Project</p>
@@ -337,12 +337,12 @@ const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({ isOpen, onClose }) 
                 onClick={() => handleDestinationSelect('new-project')}
                 className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all ${
                   destination === 'new-project'
-                    ? 'bg-blue-500/20 border-blue-500'
+                    ? 'bg-[#043d6b]/20 border-[#043d6b]'
                     : `${bgCard} border-transparent ${bgCardHover}`
                 }`}
               >
-                <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
-                  <FolderPlus className="w-6 h-6 text-blue-400" />
+                <div className="w-12 h-12 bg-[#043d6b]/20 rounded-xl flex items-center justify-center">
+                  <FolderPlus className="w-6 h-6 text-[#043d6b]" />
                 </div>
                 <div className="flex-1 text-left">
                   <p className={`font-semibold ${textPrimary}`}>Create New Project</p>
@@ -356,7 +356,7 @@ const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({ isOpen, onClose }) 
                 onClick={() => handleDestinationSelect('none')}
                 className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all ${
                   destination === 'none'
-                    ? 'bg-blue-500/20 border-blue-500'
+                    ? 'bg-[#043d6b]/20 border-[#043d6b]'
                     : `${bgCard} border-transparent ${bgCardHover}`
                 }`}
               >
@@ -380,7 +380,7 @@ const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({ isOpen, onClose }) 
                       <p className={textMuted}>No projects yet</p>
                       <button
                         onClick={() => handleDestinationSelect('new-project')}
-                        className="mt-3 text-blue-500 text-sm font-medium"
+                        className="mt-3 text-[#043d6b] text-sm font-medium"
                       >
                         Create a new project
                       </button>
@@ -393,8 +393,8 @@ const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({ isOpen, onClose }) 
                           onClick={() => handleProjectSelect(project.id)}
                           className={`w-full flex items-center gap-3 p-3 ${bgCard} rounded-lg ${bgCardHover} active:scale-[0.98] transition-all`}
                         >
-                          <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                            <Briefcase className="w-4 h-4 text-blue-500" />
+                          <div className="w-8 h-8 bg-[#043d6b]/20 rounded-lg flex items-center justify-center">
+                            <Briefcase className="w-4 h-4 text-[#043d6b]" />
                           </div>
                           <div className="flex-1 text-left">
                             <p className={`font-medium ${textPrimary} text-sm`}>{project.name}</p>
@@ -417,13 +417,13 @@ const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({ isOpen, onClose }) 
                     value={newProjectName}
                     onChange={(e) => setNewProjectName(e.target.value)}
                     placeholder="Enter project name"
-                    className={`w-full px-4 py-3 ${inputBg} border rounded-xl ${inputText} focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                    className={`w-full px-4 py-3 ${inputBg} border rounded-xl ${inputText} focus:ring-2 focus:ring-[#043d6b] focus:border-transparent`}
                     autoFocus
                   />
                   <button
                     onClick={handleCreateProject}
                     disabled={!newProjectName.trim()}
-                    className={`w-full py-3 bg-blue-500 text-white rounded-xl font-semibold disabled:${theme === 'light' ? 'bg-gray-300 text-gray-500' : 'bg-zinc-700 text-zinc-500'} active:scale-[0.98] transition-all`}
+                    className={`w-full py-3 bg-[#043d6b] text-white rounded-xl font-semibold hover:bg-[#035291] disabled:${theme === 'light' ? 'bg-gray-300 text-gray-500' : 'bg-zinc-700 text-zinc-500'} active:scale-[0.98] transition-all`}
                   >
                     Create & Continue
                   </button>
@@ -439,17 +439,17 @@ const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({ isOpen, onClose }) 
               <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={() => cameraInputRef.current?.click()}
-                  className={`flex flex-col items-center justify-center p-6 ${bgCard} border-2 border-dashed border-blue-500/50 rounded-xl hover:border-blue-500 active:scale-[0.98] transition-all`}
+                  className={`flex flex-col items-center justify-center p-6 ${bgCard} border-2 border-dashed border-[#043d6b]/50 rounded-xl hover:border-[#043d6b] active:scale-[0.98] transition-all`}
                 >
-                  <Camera className="w-10 h-10 text-blue-500 mb-2" />
+                  <Camera className="w-10 h-10 text-[#043d6b] mb-2" />
                   <span className={`text-sm font-medium ${textPrimary}`}>Take Photo</span>
                   <span className={`text-xs ${textMuted}`}>Use camera</span>
                 </button>
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className={`flex flex-col items-center justify-center p-6 ${bgCard} border-2 border-dashed border-blue-500/50 rounded-xl hover:border-blue-500 active:scale-[0.98] transition-all`}
+                  className={`flex flex-col items-center justify-center p-6 ${bgCard} border-2 border-dashed border-[#043d6b]/50 rounded-xl hover:border-[#043d6b] active:scale-[0.98] transition-all`}
                 >
-                  <Image className="w-10 h-10 text-blue-500 mb-2" />
+                  <Image className="w-10 h-10 text-[#043d6b] mb-2" />
                   <span className={`text-sm font-medium ${textPrimary}`}>Gallery</span>
                   <span className={`text-xs ${textMuted}`}>Choose photos</span>
                 </button>
@@ -482,7 +482,7 @@ const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({ isOpen, onClose }) 
                     </p>
                     <button
                       onClick={() => fileInputRef.current?.click()}
-                      className="flex items-center gap-1 text-blue-500 text-sm font-medium"
+                      className="flex items-center gap-1 text-[#043d6b] text-sm font-medium"
                     >
                       <Plus className="w-4 h-4" />
                       Add more
@@ -513,7 +513,7 @@ const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({ isOpen, onClose }) 
                 <button
                   onClick={handleUploadPhotos}
                   disabled={isUploading}
-                  className={`w-full py-3.5 bg-blue-500 text-white rounded-xl font-semibold flex items-center justify-center gap-2 disabled:${theme === 'light' ? 'bg-gray-300' : 'bg-zinc-700'} active:scale-[0.98] transition-all`}
+                  className={`w-full py-3.5 bg-[#043d6b] text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-[#035291] disabled:${theme === 'light' ? 'bg-gray-300' : 'bg-zinc-700'} active:scale-[0.98] transition-all`}
                 >
                   {isUploading ? (
                     <>

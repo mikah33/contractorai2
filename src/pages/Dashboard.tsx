@@ -72,10 +72,10 @@ const Dashboard: React.FC = () => {
           font-weight: 700;
           font-size: 14px;
           color: #1f2937;
-          border: 2px solid #3B82F6;
+          border: 2px solid #043d6b;
         ">${label}</div>
         <div style="
-          background: #3B82F6;
+          background: #043d6b;
           width: 44px;
           height: 44px;
           border-radius: 50% 50% 50% 0;
@@ -83,7 +83,7 @@ const Dashboard: React.FC = () => {
           display: flex;
           align-items: center;
           justify-content: center;
-          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5);
+          box-shadow: 0 4px 12px rgba(4, 61, 107, 0.5);
           border: 3px solid white;
         ">
           <svg style="transform: rotate(45deg); width: 22px; height: 22px;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2">
@@ -234,10 +234,10 @@ const Dashboard: React.FC = () => {
   };
 
   const quickActions = [
-    { id: 'finance', label: 'Finance', icon: DollarSign, bgColor: 'bg-blue-500/20', iconColor: 'text-blue-500', href: '/finance-hub' },
-    { id: 'projects', label: 'Projects', icon: Briefcase, bgColor: 'bg-blue-500/20', iconColor: 'text-blue-500', href: '/projects-hub' },
-    { id: 'jobs', label: 'Jobs', icon: Calendar, bgColor: 'bg-blue-500/20', iconColor: 'text-blue-500', href: '/jobs-hub' },
-    { id: 'goals', label: 'Goals', icon: Target, bgColor: 'bg-blue-500/20', iconColor: 'text-blue-500', href: '/business-hub' },
+    { id: 'finance', label: 'Finance', icon: DollarSign, bgColor: 'bg-[#043d6b]/20', iconColor: 'text-[#043d6b]', href: '/finance-hub' },
+    { id: 'projects', label: 'Projects', icon: Briefcase, bgColor: 'bg-[#043d6b]/20', iconColor: 'text-[#043d6b]', href: '/projects-hub' },
+    { id: 'jobs', label: 'Jobs', icon: Calendar, bgColor: 'bg-[#043d6b]/20', iconColor: 'text-[#043d6b]', href: '/jobs-hub' },
+    { id: 'goals', label: 'Goals', icon: Target, bgColor: 'bg-[#043d6b]/20', iconColor: 'text-[#043d6b]', href: '/business-hub' },
   ];
 
   // Get active projects count
@@ -450,8 +450,8 @@ const Dashboard: React.FC = () => {
                     onClick={() => navigate('/search', { state: { initialCategory: 'tasks' } })}
                     className="w-full p-4 flex items-start gap-3 active:scale-[0.98] transition-all"
                   >
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${theme === 'light' ? 'bg-blue-100' : 'bg-blue-500/20'}`}>
-                      <ClipboardList className="w-6 h-6 text-blue-500" />
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${theme === 'light' ? 'bg-[#043d6b]/20' : 'bg-[#043d6b]/20'}`}>
+                      <ClipboardList className="w-6 h-6 text-[#043d6b]" />
                     </div>
                     <div className="flex-1 min-w-0 text-left">
                       <p className={`text-lg font-bold ${themeClasses.text.primary} line-clamp-1`}>{task.title}</p>
@@ -464,7 +464,7 @@ const Dashboard: React.FC = () => {
                     <a
                       href={`https://maps.apple.com/?q=${encodeURIComponent(task.projects.address)}`}
                       onClick={(e) => e.stopPropagation()}
-                      className={`flex items-center gap-1.5 px-4 pb-4 -mt-2 ${theme === 'light' ? 'text-blue-600 hover:text-blue-700' : 'text-blue-400 hover:text-blue-300'} text-sm`}
+                      className={`flex items-center gap-1.5 px-4 pb-4 -mt-2 ${theme === 'light' ? 'text-[#043d6b] hover:text-[#035291]' : 'text-[#043d6b] hover:text-[#035291]'} text-sm`}
                     >
                       <MapPin className="w-4 h-4 flex-shrink-0" />
                       <span className="truncate underline">{task.projects.address}</span>
@@ -509,7 +509,7 @@ const Dashboard: React.FC = () => {
               style={{ width: 'calc(100vw - 48px)', maxWidth: '380px', minHeight: '240px' }}
             >
               {/* Background payment card visual */}
-              <div className="absolute top-4 right-4 w-36 h-24 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl shadow-lg transform rotate-6 opacity-20">
+              <div className="absolute top-4 right-4 w-36 h-24 bg-gradient-to-br from-[#043d6b] to-[#032b4d] rounded-xl shadow-lg transform rotate-6 opacity-20">
                 <div className="absolute bottom-2 left-2 flex gap-1">
                   <div className="w-6 h-4 bg-white/30 rounded"></div>
                 </div>
@@ -519,7 +519,7 @@ const Dashboard: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-3 mb-3 relative z-10">
-                <div className="w-14 h-14 bg-blue-500 rounded-xl flex items-center justify-center shadow-lg">
+                <div className="w-14 h-14 bg-[#043d6b] rounded-xl flex items-center justify-center shadow-[0_4px_12px_rgba(4,61,107,0.3)]">
                   <Calculator className="w-7 h-7 text-white" />
                 </div>
                 <div>
@@ -537,7 +537,7 @@ const Dashboard: React.FC = () => {
               <div className="relative z-10">
                 <button
                   onClick={() => setShowAddChoice(true)}
-                  className="w-full py-3.5 px-4 bg-blue-500 hover:bg-blue-600 text-white text-base font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 shadow-md"
+                  className="w-full py-3.5 px-4 bg-[#043d6b] hover:bg-[#035291] text-white text-base font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 shadow-[0_4px_12px_rgba(4,61,107,0.3)]"
                 >
                   <Calculator className="w-5 h-5" />
                   Create an Estimate
@@ -552,14 +552,14 @@ const Dashboard: React.FC = () => {
             >
               {/* Background camera visuals */}
               <div className="absolute top-2 right-2 opacity-25">
-                <Camera className="w-24 h-24 text-blue-600 transform rotate-12" />
+                <Camera className="w-24 h-24 text-[#043d6b] transform rotate-12" />
               </div>
               <div className="absolute top-12 right-12 opacity-30">
-                <Camera className="w-20 h-20 text-blue-700 transform -rotate-6" />
+                <Camera className="w-20 h-20 text-[#032b4d] transform -rotate-6" />
               </div>
 
               <div className="flex items-center gap-3 mb-3 relative z-10">
-                <div className="w-14 h-14 bg-blue-500 rounded-xl flex items-center justify-center shadow-lg">
+                <div className="w-14 h-14 bg-[#043d6b] rounded-xl flex items-center justify-center shadow-[0_4px_12px_rgba(4,61,107,0.3)]">
                   <Camera className="w-7 h-7 text-white" />
                 </div>
                 <div>
@@ -577,7 +577,7 @@ const Dashboard: React.FC = () => {
               <div className="mt-auto relative z-10">
                 <button
                   onClick={() => setShowVisionCam(true)}
-                  className="w-full py-3.5 px-4 bg-blue-500 hover:bg-blue-600 text-white text-base font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 shadow-md"
+                  className="w-full py-3.5 px-4 bg-[#043d6b] hover:bg-[#035291] text-white text-base font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 shadow-[0_4px_12px_rgba(4,61,107,0.3)]"
                 >
                   <Camera className="w-5 h-5" />
                   Use Vision Cam Now
@@ -589,8 +589,8 @@ const Dashboard: React.FC = () => {
 
           {/* Carousel Dots Indicator */}
           <div className="flex justify-center gap-2 pb-2">
-            <div className={`w-2 h-2 rounded-full transition-colors ${topCardIndex === 0 ? 'bg-blue-500' : theme === 'light' ? 'bg-gray-300' : 'bg-zinc-600'}`}></div>
-            <div className={`w-2 h-2 rounded-full transition-colors ${topCardIndex === 1 ? 'bg-blue-500' : theme === 'light' ? 'bg-gray-300' : 'bg-zinc-600'}`}></div>
+            <div className={`w-2 h-2 rounded-full transition-colors ${topCardIndex === 0 ? 'bg-[#043d6b]' : theme === 'light' ? 'bg-gray-300' : 'bg-zinc-600'}`}></div>
+            <div className={`w-2 h-2 rounded-full transition-colors ${topCardIndex === 1 ? 'bg-[#043d6b]' : theme === 'light' ? 'bg-gray-300' : 'bg-zinc-600'}`}></div>
           </div>
 
           {/* Discover More Section */}
@@ -599,7 +599,7 @@ const Dashboard: React.FC = () => {
             <div className="flex gap-3">
               <button
                 onClick={() => navigate('/marketing')}
-                className={`flex-1 ${theme === 'light' ? 'bg-gradient-to-br from-purple-500 to-indigo-600' : 'bg-gradient-to-br from-purple-600 to-indigo-700'} rounded-xl p-4 text-left active:scale-[0.98] transition-all shadow-lg`}
+                className={`flex-1 bg-gradient-to-br from-[#043d6b] to-[#022a4a] rounded-xl p-4 text-left active:scale-[0.98] transition-all shadow-lg`}
               >
                 <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mb-3">
                   <Briefcase className="w-5 h-5 text-white" />
@@ -609,7 +609,7 @@ const Dashboard: React.FC = () => {
               </button>
               <button
                 onClick={() => navigate('/ads')}
-                className={`flex-1 ${theme === 'light' ? 'bg-gradient-to-br from-orange-500 to-red-500' : 'bg-gradient-to-br from-orange-600 to-red-600'} rounded-xl p-4 text-left active:scale-[0.98] transition-all shadow-lg`}
+                className={`flex-1 bg-gradient-to-br from-[#035291] to-[#043d6b] rounded-xl p-4 text-left active:scale-[0.98] transition-all shadow-lg`}
               >
                 <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mb-3">
                   <Target className="w-5 h-5 text-white" />

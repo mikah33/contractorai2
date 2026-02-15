@@ -333,8 +333,8 @@ const EmployeesHub: React.FC = () => {
           <div className="px-4 pb-5 pt-4">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-blue-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <UserCheck className="w-7 h-7 text-blue-500" />
+                <div className="w-14 h-14 bg-[#043d6b]/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <UserCheck className="w-7 h-7 text-[#043d6b]" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h1 className={`text-2xl font-bold ${themeClasses.text.primary}`}>Team</h1>
@@ -343,7 +343,7 @@ const EmployeesHub: React.FC = () => {
               </div>
               <button
                 onClick={handleManual}
-                className="flex items-center gap-2 px-4 py-2.5 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 active:scale-95 transition-all"
+                className="flex items-center gap-2 px-4 py-2.5 bg-[#043d6b] text-white rounded-lg font-medium hover:bg-[#035291] active:scale-95 transition-all"
               >
                 <Plus className="w-5 h-5" />
                 <span>Add</span>
@@ -358,7 +358,7 @@ const EmployeesHub: React.FC = () => {
                 placeholder="Search team members..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className={`w-full pl-10 pr-4 py-2.5 ${themeClasses.bg.input} rounded-lg border ${themeClasses.border.input} ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} focus:ring-2 focus:ring-blue-500 transition-all`}
+                className={`w-full pl-10 pr-4 py-2.5 ${themeClasses.bg.input} rounded-lg border ${themeClasses.border.input} ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} focus:ring-2 focus:ring-[#043d6b] transition-all`}
               />
             </div>
           </div>
@@ -371,13 +371,13 @@ const EmployeesHub: React.FC = () => {
       <div className="px-4 pb-4 -mt-1">
         <div className={`${themeClasses.bg.card} rounded-2xl border-2 ${theme === 'light' ? 'border-gray-300' : 'border-zinc-600'} p-6 relative overflow-hidden`}>
           {/* Background decorations */}
-          <div className="absolute -right-6 -top-6 w-44 h-44 bg-blue-500/10 rounded-full" />
-          <div className="absolute right-16 top-20 w-28 h-28 bg-blue-500/5 rounded-full" />
+          <div className="absolute -right-6 -top-6 w-44 h-44 bg-[#043d6b]/10 rounded-full" />
+          <div className="absolute right-16 top-20 w-28 h-28 bg-[#043d6b]/5 rounded-full" />
 
           <div className="relative">
             <div className="flex items-center gap-4 mb-5">
-              <div className="w-16 h-16 bg-blue-500/20 rounded-2xl flex items-center justify-center">
-                <UserCheck className="w-8 h-8 text-blue-500" />
+              <div className="w-16 h-16 bg-[#043d6b]/20 rounded-2xl flex items-center justify-center">
+                <UserCheck className="w-8 h-8 text-[#043d6b]" />
               </div>
               <div>
                 <h3 className={`font-bold ${themeClasses.text.primary} text-xl`}>Add Team Member</h3>
@@ -391,7 +391,7 @@ const EmployeesHub: React.FC = () => {
 
             <button
               onClick={handleManual}
-              className="w-full flex items-center justify-center gap-2 px-5 py-4 bg-blue-500 text-white rounded-xl font-semibold text-lg hover:bg-blue-600 active:scale-[0.98] transition-all shadow-lg shadow-blue-500/20"
+              className="w-full flex items-center justify-center gap-2 px-5 py-4 bg-[#043d6b] text-white rounded-xl font-semibold text-lg hover:bg-[#035291] active:scale-[0.98] transition-all shadow-lg shadow-[#043d6b]/20"
             >
               <Plus className="w-6 h-6" />
               Add Team Member
@@ -425,7 +425,7 @@ const EmployeesHub: React.FC = () => {
                 {/* Header with avatar and status */}
                 <div className="p-4 pb-3">
                   <div className="flex items-start gap-3">
-                    <div className="w-14 h-14 bg-blue-500/20 rounded-xl flex items-center justify-center text-blue-500 font-bold text-lg">
+                    <div className="w-14 h-14 bg-[#043d6b]/20 rounded-xl flex items-center justify-center text-[#043d6b] font-bold text-lg">
                       {getInitials(employee.name || 'NA')}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -482,8 +482,8 @@ const EmployeesHub: React.FC = () => {
 
                     {/* Projects */}
                     <div className="flex items-center gap-1.5">
-                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${employeeProjects.length > 0 ? 'bg-blue-900/30' : theme === 'light' ? 'bg-gray-200' : 'bg-zinc-800'}`}>
-                        <Briefcase className={`w-4 h-4 ${employeeProjects.length > 0 ? 'text-blue-400' : themeClasses.text.muted.includes('text-zinc-500') ? 'text-zinc-500' : 'text-gray-500'}`} />
+                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${employeeProjects.length > 0 ? 'bg-[#043d6b]/30' : theme === 'light' ? 'bg-gray-200' : 'bg-zinc-800'}`}>
+                        <Briefcase className={`w-4 h-4 ${employeeProjects.length > 0 ? 'text-[#043d6b]' : themeClasses.text.muted.includes('text-zinc-500') ? 'text-zinc-500' : 'text-gray-500'}`} />
                       </div>
                       <div>
                         <p className={`text-sm font-semibold ${employeeProjects.length > 0 ? themeClasses.text.primary : themeClasses.text.muted}`}>
@@ -527,7 +527,7 @@ const EmployeesHub: React.FC = () => {
               <button
                 onClick={handleCreateEmployee}
                 disabled={!newForm.name.trim() || isCreating}
-                className={`text-blue-500 text-base font-semibold active:text-blue-400 disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={`text-[#043d6b] text-base font-semibold active:text-[#035291] disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 {isCreating ? 'Saving...' : 'Save'}
               </button>
@@ -543,7 +543,7 @@ const EmployeesHub: React.FC = () => {
                   type="text"
                   value={newForm.name}
                   onChange={(e) => setNewForm({ ...newForm, name: e.target.value })}
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} ${themeClasses.text.placeholder} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} ${themeClasses.text.placeholder} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                   placeholder="Full name"
                 />
               </div>
@@ -555,7 +555,7 @@ const EmployeesHub: React.FC = () => {
                   type="text"
                   value={newForm.job_title}
                   onChange={(e) => setNewForm({ ...newForm, job_title: e.target.value })}
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} ${themeClasses.text.placeholder} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} ${themeClasses.text.placeholder} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                   placeholder="e.g., Foreman, Carpenter, Electrician"
                 />
               </div>
@@ -568,7 +568,7 @@ const EmployeesHub: React.FC = () => {
                     type="email"
                     value={newForm.email}
                     onChange={(e) => setNewForm({ ...newForm, email: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} ${themeClasses.text.placeholder} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} ${themeClasses.text.placeholder} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                     placeholder="email@example.com"
                   />
                 </div>
@@ -578,7 +578,7 @@ const EmployeesHub: React.FC = () => {
                     type="tel"
                     value={newForm.phone}
                     onChange={(e) => setNewForm({ ...newForm, phone: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} ${themeClasses.text.placeholder} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} ${themeClasses.text.placeholder} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                     placeholder="(555) 123-4567"
                   />
                 </div>
@@ -594,7 +594,7 @@ const EmployeesHub: React.FC = () => {
                       type="number"
                       value={newForm.hourly_rate}
                       onChange={(e) => setNewForm({ ...newForm, hourly_rate: parseFloat(e.target.value) || 0 })}
-                      className={`w-full pl-8 pr-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} ${themeClasses.text.placeholder} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                      className={`w-full pl-8 pr-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} ${themeClasses.text.placeholder} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                       placeholder="25"
                       min="0"
                       step="0.50"
@@ -606,7 +606,7 @@ const EmployeesHub: React.FC = () => {
                   <select
                     value={newForm.status}
                     onChange={(e) => setNewForm({ ...newForm, status: e.target.value as 'active' | 'inactive' })}
-                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                   >
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
@@ -621,7 +621,7 @@ const EmployeesHub: React.FC = () => {
                   value={newForm.notes}
                   onChange={(e) => setNewForm({ ...newForm, notes: e.target.value })}
                   rows={3}
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} ${themeClasses.text.placeholder} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none resize-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} ${themeClasses.text.placeholder} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none resize-none`}
                   placeholder="Additional notes..."
                 />
               </div>
@@ -649,7 +649,7 @@ const EmployeesHub: React.FC = () => {
               <button
                 onClick={handleUpdateEmployee}
                 disabled={!editForm.name.trim() || isUpdating}
-                className={`text-blue-500 text-base font-semibold active:text-blue-400 disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={`text-[#043d6b] text-base font-semibold active:text-[#035291] disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 {isUpdating ? 'Saving...' : 'Save'}
               </button>
@@ -665,7 +665,7 @@ const EmployeesHub: React.FC = () => {
                   type="text"
                   value={editForm.name}
                   onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} ${themeClasses.text.placeholder} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} ${themeClasses.text.placeholder} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                   placeholder="Full name"
                 />
               </div>
@@ -677,7 +677,7 @@ const EmployeesHub: React.FC = () => {
                   type="text"
                   value={editForm.job_title}
                   onChange={(e) => setEditForm({ ...editForm, job_title: e.target.value })}
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} ${themeClasses.text.placeholder} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} ${themeClasses.text.placeholder} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                   placeholder="e.g., Foreman, Carpenter, Electrician"
                 />
               </div>
@@ -690,7 +690,7 @@ const EmployeesHub: React.FC = () => {
                     type="email"
                     value={editForm.email}
                     onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} ${themeClasses.text.placeholder} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} ${themeClasses.text.placeholder} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                     placeholder="email@example.com"
                   />
                 </div>
@@ -700,7 +700,7 @@ const EmployeesHub: React.FC = () => {
                     type="tel"
                     value={editForm.phone}
                     onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} ${themeClasses.text.placeholder} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} ${themeClasses.text.placeholder} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                     placeholder="(555) 123-4567"
                   />
                 </div>
@@ -716,7 +716,7 @@ const EmployeesHub: React.FC = () => {
                       type="number"
                       value={editForm.hourly_rate}
                       onChange={(e) => setEditForm({ ...editForm, hourly_rate: parseFloat(e.target.value) || 0 })}
-                      className={`w-full pl-8 pr-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} ${themeClasses.text.placeholder} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                      className={`w-full pl-8 pr-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} ${themeClasses.text.placeholder} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                       placeholder="25"
                       min="0"
                       step="0.50"
@@ -728,7 +728,7 @@ const EmployeesHub: React.FC = () => {
                   <select
                     value={editForm.status}
                     onChange={(e) => setEditForm({ ...editForm, status: e.target.value as 'active' | 'inactive' })}
-                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                   >
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
@@ -743,7 +743,7 @@ const EmployeesHub: React.FC = () => {
                   value={editForm.notes}
                   onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
                   rows={3}
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} ${themeClasses.text.placeholder} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none resize-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} ${themeClasses.text.placeholder} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none resize-none`}
                   placeholder="Additional notes..."
                 />
               </div>
@@ -776,7 +776,7 @@ const EmployeesHub: React.FC = () => {
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => handleEditEmployee(selectedEmployee)}
-                    className="p-2 text-blue-400 active:text-blue-300 active:bg-blue-500/10 rounded-xl"
+                    className="p-2 text-[#043d6b] active:text-[#035291] active:bg-[#043d6b]/10 rounded-xl"
                   >
                     <Pencil className="w-5 h-5" />
                   </button>
@@ -795,7 +795,7 @@ const EmployeesHub: React.FC = () => {
 
               {/* Employee Title */}
               <div className="mt-3 flex items-center gap-3">
-                <div className="w-14 h-14 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-blue-500/20">
+                <div className="w-14 h-14 bg-gradient-to-br from-[#8a9ba3] to-[#043d6b] rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-[#043d6b]/20">
                   {getInitials(selectedEmployee.name || 'NA')}
                 </div>
                 <div>
@@ -820,9 +820,9 @@ const EmployeesHub: React.FC = () => {
                 <label className={`text-xs ${themeClasses.text.muted} mb-3 block`}>Contact Information</label>
                 <div className="space-y-3">
                   {selectedEmployee.email && (
-                    <a href={`mailto:${selectedEmployee.email}`} className={`flex items-center gap-3 ${themeClasses.text.secondary} active:text-blue-400`}>
-                      <div className="w-10 h-10 bg-blue-900/30 rounded-xl flex items-center justify-center">
-                        <Mail className="w-5 h-5 text-blue-400" />
+                    <a href={`mailto:${selectedEmployee.email}`} className={`flex items-center gap-3 ${themeClasses.text.secondary} active:text-[#043d6b]`}>
+                      <div className="w-10 h-10 bg-[#043d6b]/30 rounded-xl flex items-center justify-center">
+                        <Mail className="w-5 h-5 text-[#043d6b]" />
                       </div>
                       <div>
                         <p className={`text-xs ${themeClasses.text.muted}`}>Email</p>
@@ -831,9 +831,9 @@ const EmployeesHub: React.FC = () => {
                     </a>
                   )}
                   {selectedEmployee.phone && (
-                    <a href={`tel:${selectedEmployee.phone}`} className={`flex items-center gap-3 ${themeClasses.text.secondary} active:text-blue-400`}>
-                      <div className="w-10 h-10 bg-blue-900/30 rounded-xl flex items-center justify-center">
-                        <Phone className="w-5 h-5 text-blue-400" />
+                    <a href={`tel:${selectedEmployee.phone}`} className={`flex items-center gap-3 ${themeClasses.text.secondary} active:text-[#043d6b]`}>
+                      <div className="w-10 h-10 bg-[#043d6b]/30 rounded-xl flex items-center justify-center">
+                        <Phone className="w-5 h-5 text-[#043d6b]" />
                       </div>
                       <div>
                         <p className={`text-xs ${themeClasses.text.muted}`}>Phone</p>
@@ -854,8 +854,8 @@ const EmployeesHub: React.FC = () => {
                     </p>
                     <p className={`text-xs ${themeClasses.text.muted} mt-1`}>Hourly Rate</p>
                   </div>
-                  <div className={`flex-1 text-center p-3 rounded-xl ${theme === 'light' ? 'bg-blue-100' : 'bg-blue-900/20'}`}>
-                    <p className={`text-2xl font-bold ${theme === 'light' ? 'text-blue-700' : 'text-blue-400'}`}>
+                  <div className={`flex-1 text-center p-3 rounded-xl ${theme === 'light' ? 'bg-[#043d6b]/20' : 'bg-[#043d6b]/20'}`}>
+                    <p className={`text-2xl font-bold ${theme === 'light' ? 'text-[#035291]' : 'text-[#043d6b]'}`}>
                       {getEmployeeProjects(selectedEmployee.name).length}
                     </p>
                     <p className={`text-xs ${themeClasses.text.muted} mt-1`}>Active Projects</p>
@@ -872,7 +872,7 @@ const EmployeesHub: React.FC = () => {
                       setSelectedEmployee(null);
                       navigate('/projects-hub');
                     }}
-                    className="text-xs text-blue-400 font-medium"
+                    className="text-xs text-[#043d6b] font-medium"
                   >
                     View All
                   </button>
@@ -898,8 +898,8 @@ const EmployeesHub: React.FC = () => {
                           }}
                           className={`flex items-center gap-3 p-3 ${themeClasses.bg.tertiary} rounded-xl ${themeClasses.hover.bg}`}
                         >
-                          <div className="w-10 h-10 bg-blue-900/30 rounded-xl flex items-center justify-center">
-                            <Briefcase className="w-5 h-5 text-blue-400" />
+                          <div className="w-10 h-10 bg-[#043d6b]/30 rounded-xl flex items-center justify-center">
+                            <Briefcase className="w-5 h-5 text-[#043d6b]" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className={`font-medium ${themeClasses.text.primary} truncate`}>{project.name}</p>

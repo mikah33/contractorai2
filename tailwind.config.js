@@ -4,6 +4,20 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Theme color - Deep Blue
+        theme: {
+          DEFAULT: '#043d6b',
+          50: '#e6f0f7',
+          100: '#c2d9eb',
+          200: '#9ac0de',
+          300: '#72a7d1',
+          400: '#5493c7',
+          500: '#367fbd',
+          600: '#0667a3',
+          700: '#043d6b',
+          800: '#032d50',
+          900: '#022a4a',
+        },
         // 60% Dominant - Backgrounds
         bg: {
           primary: 'var(--color-bg-primary)',

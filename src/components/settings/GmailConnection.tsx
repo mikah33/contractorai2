@@ -123,7 +123,7 @@ export const GmailConnection: React.FC = () => {
     return (
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#718189]"></div>
         </div>
       </div>
     );
@@ -133,8 +133,8 @@ export const GmailConnection: React.FC = () => {
     <div className="bg-white rounded-lg shadow p-6">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-            <Mail className="w-6 h-6 text-blue-600" />
+          <div className="w-12 h-12 bg-[#718189]/20 rounded-lg flex items-center justify-center">
+            <Mail className="w-6 h-6 text-[#718189]" />
           </div>
           <div>
             <h3 className="text-lg font-semibold text-gray-900">Gmail Integration</h3>
@@ -186,7 +186,7 @@ export const GmailConnection: React.FC = () => {
           <button
             onClick={handleConnectGmail}
             disabled={isConnecting}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="px-6 py-3 bg-[#718189] text-white rounded-lg hover:bg-[#5f6d74] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {isConnecting ? (
               <>

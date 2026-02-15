@@ -33,6 +33,7 @@ import { supabase } from '../lib/supabase';
 import useProjectStore from '../stores/projectStore';
 import { useTheme, getThemeClasses } from '../contexts/ThemeContext';
 import { format, differenceInSeconds, startOfDay, endOfDay, startOfWeek, endOfWeek, parseISO } from 'date-fns';
+import FinanceHub from './FinanceHub';
 
 interface Employee {
   id: string;
@@ -101,7 +102,7 @@ const TrackerHub: React.FC = () => {
   const themeClasses = getThemeClasses(theme);
   const { projects, fetchProjects } = useProjectStore();
 
-  const [activeTab, setActiveTab] = useState<'timesheets' | 'mileage'>('timesheets');
+  const [activeTab, setActiveTab] = useState<'timesheets' | 'mileage' | 'finance'>('timesheets');
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [timeEntries, setTimeEntries] = useState<TimeEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -828,8 +829,8 @@ const TrackerHub: React.FC = () => {
           <div className="px-4 pb-4 pt-4">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-blue-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <Timer className="w-7 h-7 text-blue-500" />
+                <div className="w-14 h-14 bg-[#043d6b]/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Timer className="w-7 h-7 text-[#043d6b]" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h1 className={`text-2xl font-bold ${themeClasses.text.primary}`}>Tracker</h1>
@@ -839,27 +840,38 @@ const TrackerHub: React.FC = () => {
             </div>
 
             {/* Tabs */}
-            <div className={`flex rounded-xl ${themeClasses.bg.tertiary} p-1`}>
+            <div className={`grid grid-cols-3 gap-1 rounded-xl ${themeClasses.bg.tertiary} p-1`}>
               <button
-                onClick={() => setActiveTab('timesheets')}
-                className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-                  activeTab === 'timesheets'
-                    ? 'bg-blue-500 text-white shadow-lg'
+                onClick={() => setActiveTab('finance')}
+                className={`py-2.5 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-1 ${
+                  activeTab === 'finance'
+                    ? 'bg-[#043d6b] text-white shadow-lg'
                     : `${themeClasses.text.secondary}`
                 }`}
               >
-                Employee Timesheets
+                <DollarSign className="w-4 h-4 flex-shrink-0" />
+                <span>Finance</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('timesheets')}
+                className={`py-2.5 rounded-lg text-sm font-semibold transition-all flex items-center justify-center ${
+                  activeTab === 'timesheets'
+                    ? 'bg-[#043d6b] text-white shadow-lg'
+                    : `${themeClasses.text.secondary}`
+                }`}
+              >
+                Timesheets
               </button>
               <button
                 onClick={() => setActiveTab('mileage')}
-                className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-1.5 ${
+                className={`py-2.5 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-1 ${
                   activeTab === 'mileage'
-                    ? 'bg-blue-500 text-white shadow-lg'
+                    ? 'bg-[#043d6b] text-white shadow-lg'
                     : `${themeClasses.text.secondary}`
                 }`}
               >
-                <Car className="w-4 h-4" />
-                Miles Tracking
+                <Car className="w-4 h-4 flex-shrink-0" />
+                <span>Miles</span>
               </button>
             </div>
           </div>
@@ -879,7 +891,7 @@ const TrackerHub: React.FC = () => {
                 placeholder="Search employees..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className={`w-full pl-10 pr-4 py-2.5 ${themeClasses.bg.input} rounded-lg border ${themeClasses.border.input} ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} focus:ring-2 focus:ring-blue-500 transition-all`}
+                className={`w-full pl-10 pr-4 py-2.5 ${themeClasses.bg.input} rounded-lg border ${themeClasses.border.input} ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} focus:ring-2 focus:ring-[#043d6b] transition-all`}
               />
             </div>
           </div>
@@ -897,7 +909,7 @@ const TrackerHub: React.FC = () => {
                 <p className={`text-sm ${themeClasses.text.muted} mt-1`}>Add team members in the Team tab</p>
                 <button
                   onClick={() => navigate('/employees-hub')}
-                  className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg font-medium"
+                  className="mt-4 px-4 py-2 bg-[#043d6b] text-white rounded-lg font-medium"
                 >
                   Go to Team
                 </button>
@@ -917,7 +929,7 @@ const TrackerHub: React.FC = () => {
                     <div className="p-4">
                       <div className="flex items-center gap-3">
                         {/* Avatar */}
-                        <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center text-blue-500 font-bold text-sm">
+                        <div className="w-12 h-12 bg-[#043d6b]/20 rounded-xl flex items-center justify-center text-[#043d6b] font-bold text-sm">
                           {getInitials(employee.name || 'NA')}
                         </div>
 
@@ -1016,9 +1028,9 @@ const TrackerHub: React.FC = () => {
                       <div className={`border-t ${themeClasses.border.primary} p-4 space-y-4`}>
                         {/* Week Summary */}
                         <div className={`grid grid-cols-2 gap-3`}>
-                          <div className={`p-3 rounded-xl ${theme === 'light' ? 'bg-blue-50' : 'bg-blue-500/10'}`}>
+                          <div className={`p-3 rounded-xl ${theme === 'light' ? 'bg-[#043d6b]/10' : 'bg-[#043d6b]/10'}`}>
                             <p className={`text-xs ${themeClasses.text.muted} mb-1`}>This Week</p>
-                            <p className={`text-lg font-bold ${theme === 'light' ? 'text-blue-700' : 'text-blue-400'}`}>
+                            <p className={`text-lg font-bold ${theme === 'light' ? 'text-[#043d6b]' : 'text-[#043d6b]'}`}>
                               {formatHoursMinutes(data.weekTotal)}
                             </p>
                           </div>
@@ -1098,9 +1110,9 @@ const TrackerHub: React.FC = () => {
             const stats = getMileageStats();
             return (
               <div className="grid grid-cols-3 gap-3">
-                <div className={`p-3 rounded-xl ${theme === 'light' ? 'bg-blue-200' : 'bg-blue-500/10'}`}>
-                  <p className={`text-xs ${theme === 'light' ? 'text-blue-700' : themeClasses.text.muted} mb-1`}>This Month</p>
-                  <p className={`text-lg font-bold ${theme === 'light' ? 'text-blue-800' : 'text-blue-400'}`}>
+                <div className={`p-3 rounded-xl ${theme === 'light' ? 'bg-[#043d6b]/30' : 'bg-[#043d6b]/10'}`}>
+                  <p className={`text-xs ${theme === 'light' ? 'text-[#043d6b]' : themeClasses.text.muted} mb-1`}>This Month</p>
+                  <p className={`text-lg font-bold ${theme === 'light' ? 'text-[#035291]' : 'text-[#043d6b]'}`}>
                     {stats.monthMiles.toFixed(1)} mi
                   </p>
                 </div>
@@ -1127,7 +1139,7 @@ const TrackerHub: React.FC = () => {
                 resetTripForm();
                 setShowAddTrip(true);
               }}
-              className="flex-1 flex items-center justify-center gap-2 py-3 bg-blue-500 text-white rounded-xl font-semibold shadow-lg shadow-blue-500/30 active:scale-[0.98] transition-transform"
+              className="flex-1 flex items-center justify-center gap-2 py-3 bg-[#043d6b] text-white rounded-xl font-semibold shadow-lg shadow-[#043d6b]/30 active:scale-[0.98] transition-transform"
             >
               <Plus className="w-5 h-5" />
               Add Trip
@@ -1167,7 +1179,7 @@ const TrackerHub: React.FC = () => {
                             {format(parseISO(trip.trip_date), 'MMM d, yyyy')}
                           </span>
                           {trip.is_business && (
-                            <span className="px-2 py-0.5 bg-blue-500/20 text-blue-500 text-xs font-medium rounded-full">
+                            <span className="px-2 py-0.5 bg-[#043d6b]/20 text-[#043d6b] text-xs font-medium rounded-full">
                               Business
                             </span>
                           )}
@@ -1245,6 +1257,10 @@ const TrackerHub: React.FC = () => {
         </div>
       )}
 
+      {activeTab === 'finance' && (
+        <FinanceHub embedded={true} />
+      )}
+
       {/* Stop Timer Modal */}
       {showStopModal && stoppingEntry && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center px-4">
@@ -1283,7 +1299,7 @@ const TrackerHub: React.FC = () => {
                 value={stopNotes}
                 onChange={(e) => setStopNotes(e.target.value)}
                 rows={2}
-                className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none resize-none`}
+                className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none resize-none`}
                 placeholder="What was worked on?"
               />
             </div>
@@ -1324,7 +1340,7 @@ const TrackerHub: React.FC = () => {
               <h2 className={`text-lg font-semibold ${themeClasses.text.primary}`}>Manual Entry</h2>
               <button
                 onClick={submitManualEntry}
-                className="text-blue-500 text-base font-semibold active:text-blue-400"
+                className="text-[#043d6b] text-base font-semibold active:text-[#035291]"
               >
                 Save
               </button>
@@ -1344,7 +1360,7 @@ const TrackerHub: React.FC = () => {
                   type="date"
                   value={manualEntryForm.date}
                   onChange={(e) => setManualEntryForm({ ...manualEntryForm, date: e.target.value })}
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                 />
               </div>
 
@@ -1356,7 +1372,7 @@ const TrackerHub: React.FC = () => {
                     type="number"
                     value={manualEntryForm.hours}
                     onChange={(e) => setManualEntryForm({ ...manualEntryForm, hours: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                     placeholder="0"
                     min="0"
                   />
@@ -1367,7 +1383,7 @@ const TrackerHub: React.FC = () => {
                     type="number"
                     value={manualEntryForm.minutes}
                     onChange={(e) => setManualEntryForm({ ...manualEntryForm, minutes: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                     placeholder="0"
                     min="0"
                     max="59"
@@ -1382,7 +1398,7 @@ const TrackerHub: React.FC = () => {
                   value={manualEntryForm.notes}
                   onChange={(e) => setManualEntryForm({ ...manualEntryForm, notes: e.target.value })}
                   rows={2}
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none resize-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none resize-none`}
                   placeholder="What was worked on?"
                 />
               </div>
@@ -1427,7 +1443,7 @@ const TrackerHub: React.FC = () => {
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => handleEditEmployee(selectedEmployee)}
-                    className="p-2 text-blue-400 active:text-blue-300 active:bg-blue-500/10 rounded-xl"
+                    className="p-2 text-[#043d6b] active:text-[#035291] active:bg-[#043d6b]/10 rounded-xl"
                   >
                     <Pencil className="w-5 h-5" />
                   </button>
@@ -1446,7 +1462,7 @@ const TrackerHub: React.FC = () => {
 
               {/* Employee Title */}
               <div className="mt-3 flex items-center gap-3">
-                <div className="w-14 h-14 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-blue-500/20">
+                <div className="w-14 h-14 bg-gradient-to-br from-[#043d6b] to-[#035291] rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-[#043d6b]/20">
                   {getInitials(selectedEmployee.name || 'NA')}
                 </div>
                 <div>
@@ -1475,9 +1491,9 @@ const TrackerHub: React.FC = () => {
                 <label className={`text-xs ${themeClasses.text.muted} mb-3 block`}>Contact Information</label>
                 <div className="space-y-3">
                   {selectedEmployee.email && (
-                    <a href={`mailto:${selectedEmployee.email}`} className={`flex items-center gap-3 ${themeClasses.text.secondary} active:text-blue-400`}>
-                      <div className="w-10 h-10 bg-blue-900/30 rounded-xl flex items-center justify-center">
-                        <Mail className="w-5 h-5 text-blue-400" />
+                    <a href={`mailto:${selectedEmployee.email}`} className={`flex items-center gap-3 ${themeClasses.text.secondary} active:text-[#043d6b]`}>
+                      <div className="w-10 h-10 bg-[#043d6b]/30 rounded-xl flex items-center justify-center">
+                        <Mail className="w-5 h-5 text-[#043d6b]" />
                       </div>
                       <div>
                         <p className={`text-xs ${themeClasses.text.muted}`}>Email</p>
@@ -1486,9 +1502,9 @@ const TrackerHub: React.FC = () => {
                     </a>
                   )}
                   {selectedEmployee.phone && (
-                    <a href={`tel:${selectedEmployee.phone}`} className={`flex items-center gap-3 ${themeClasses.text.secondary} active:text-blue-400`}>
-                      <div className="w-10 h-10 bg-blue-900/30 rounded-xl flex items-center justify-center">
-                        <Phone className="w-5 h-5 text-blue-400" />
+                    <a href={`tel:${selectedEmployee.phone}`} className={`flex items-center gap-3 ${themeClasses.text.secondary} active:text-[#043d6b]`}>
+                      <div className="w-10 h-10 bg-[#043d6b]/30 rounded-xl flex items-center justify-center">
+                        <Phone className="w-5 h-5 text-[#043d6b]" />
                       </div>
                       <div>
                         <p className={`text-xs ${themeClasses.text.muted}`}>Phone</p>
@@ -1509,8 +1525,8 @@ const TrackerHub: React.FC = () => {
                     </p>
                     <p className={`text-xs ${themeClasses.text.muted} mt-1`}>Hourly Rate</p>
                   </div>
-                  <div className={`flex-1 text-center p-3 rounded-xl ${theme === 'light' ? 'bg-blue-100' : 'bg-blue-900/20'}`}>
-                    <p className={`text-2xl font-bold ${theme === 'light' ? 'text-blue-700' : 'text-blue-400'}`}>
+                  <div className={`flex-1 text-center p-3 rounded-xl ${theme === 'light' ? 'bg-[#043d6b]/20' : 'bg-[#043d6b]/20'}`}>
+                    <p className={`text-2xl font-bold ${theme === 'light' ? 'text-[#043d6b]' : 'text-[#043d6b]'}`}>
                       {getEmployeeProjects(selectedEmployee.name).length}
                     </p>
                     <p className={`text-xs ${themeClasses.text.muted} mt-1`}>Active Projects</p>
@@ -1527,7 +1543,7 @@ const TrackerHub: React.FC = () => {
                       setSelectedEmployee(null);
                       navigate('/projects-hub');
                     }}
-                    className="text-xs text-blue-400 font-medium"
+                    className="text-xs text-[#043d6b] font-medium"
                   >
                     View All
                   </button>
@@ -1553,8 +1569,8 @@ const TrackerHub: React.FC = () => {
                           }}
                           className={`flex items-center gap-3 p-3 ${themeClasses.bg.tertiary} rounded-xl ${themeClasses.hover.bg}`}
                         >
-                          <div className="w-10 h-10 bg-blue-900/30 rounded-xl flex items-center justify-center">
-                            <Briefcase className="w-5 h-5 text-blue-400" />
+                          <div className="w-10 h-10 bg-[#043d6b]/30 rounded-xl flex items-center justify-center">
+                            <Briefcase className="w-5 h-5 text-[#043d6b]" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className={`font-medium ${themeClasses.text.primary} truncate`}>{project.name}</p>
@@ -1626,16 +1642,16 @@ const TrackerHub: React.FC = () => {
                   <div key={step} className="flex-1 flex items-center">
                     <div className={`flex-1 h-1 rounded-full transition-colors ${
                       step <= tripWizardStep
-                        ? 'bg-blue-500'
+                        ? 'bg-[#043d6b]'
                         : theme === 'light' ? 'bg-gray-200' : 'bg-zinc-700'
                     }`} />
                   </div>
                 ))}
               </div>
               <div className="flex justify-between mt-2">
-                <span className={`text-xs ${tripWizardStep >= 1 ? 'text-blue-500' : themeClasses.text.muted}`}>Addresses</span>
-                <span className={`text-xs ${tripWizardStep >= 2 ? 'text-blue-500' : themeClasses.text.muted}`}>Details</span>
-                <span className={`text-xs ${tripWizardStep >= 3 ? 'text-blue-500' : themeClasses.text.muted}`}>Confirm</span>
+                <span className={`text-xs ${tripWizardStep >= 1 ? 'text-[#043d6b]' : themeClasses.text.muted}`}>Addresses</span>
+                <span className={`text-xs ${tripWizardStep >= 2 ? 'text-[#043d6b]' : themeClasses.text.muted}`}>Details</span>
+                <span className={`text-xs ${tripWizardStep >= 3 ? 'text-[#043d6b]' : themeClasses.text.muted}`}>Confirm</span>
               </div>
             </div>
 
@@ -1651,7 +1667,7 @@ const TrackerHub: React.FC = () => {
                       </label>
                       <button
                         onClick={() => setShowProjectPicker(showProjectPicker === 'start' ? null : 'start')}
-                        className="text-xs text-blue-500 font-medium"
+                        className="text-xs text-[#043d6b] font-medium"
                       >
                         Use Project Address
                       </button>
@@ -1662,7 +1678,7 @@ const TrackerHub: React.FC = () => {
                         type="text"
                         value={tripForm.startAddress}
                         onChange={(e) => setTripForm({ ...tripForm, startAddress: e.target.value })}
-                        className={`w-full pl-10 pr-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                        className={`w-full pl-10 pr-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                         placeholder="123 Main St, City, State"
                       />
                     </div>
@@ -1693,7 +1709,7 @@ const TrackerHub: React.FC = () => {
                       </label>
                       <button
                         onClick={() => setShowProjectPicker(showProjectPicker === 'stop' ? null : 'stop')}
-                        className="text-xs text-blue-500 font-medium"
+                        className="text-xs text-[#043d6b] font-medium"
                       >
                         Add from Project
                       </button>
@@ -1720,13 +1736,13 @@ const TrackerHub: React.FC = () => {
                         value={newStop}
                         onChange={(e) => setNewStop(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && addStop()}
-                        className={`flex-1 px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                        className={`flex-1 px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                         placeholder="Add a stop address"
                       />
                       <button
                         onClick={addStop}
                         disabled={!newStop.trim()}
-                        className="px-4 py-3 bg-blue-500 text-white rounded-xl font-medium disabled:opacity-50"
+                        className="px-4 py-3 bg-[#043d6b] text-white rounded-xl font-medium disabled:opacity-50"
                       >
                         <Plus className="w-5 h-5" />
                       </button>
@@ -1755,7 +1771,7 @@ const TrackerHub: React.FC = () => {
                       </label>
                       <button
                         onClick={() => setShowProjectPicker(showProjectPicker === 'end' ? null : 'end')}
-                        className="text-xs text-blue-500 font-medium"
+                        className="text-xs text-[#043d6b] font-medium"
                       >
                         Use Project Address
                       </button>
@@ -1766,7 +1782,7 @@ const TrackerHub: React.FC = () => {
                         type="text"
                         value={tripForm.endAddress}
                         onChange={(e) => setTripForm({ ...tripForm, endAddress: e.target.value })}
-                        className={`w-full pl-10 pr-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                        className={`w-full pl-10 pr-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                         placeholder="456 Oak Ave, City, State"
                       />
                     </div>
@@ -1790,7 +1806,7 @@ const TrackerHub: React.FC = () => {
                   <button
                     onClick={() => setTripWizardStep(2)}
                     disabled={!tripForm.startAddress.trim() || !tripForm.endAddress.trim()}
-                    className="w-full py-4 bg-blue-500 text-white rounded-xl font-semibold disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="w-full py-4 bg-[#043d6b] text-white rounded-xl font-semibold disabled:opacity-50 flex items-center justify-center gap-2"
                   >
                     Continue
                     <ChevronRight className="w-5 h-5" />
@@ -1810,7 +1826,7 @@ const TrackerHub: React.FC = () => {
                       type="date"
                       value={tripForm.date}
                       onChange={(e) => setTripForm({ ...tripForm, date: e.target.value })}
-                      className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                      className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                     />
                   </div>
 
@@ -1825,7 +1841,7 @@ const TrackerHub: React.FC = () => {
                         type="number"
                         value={tripForm.totalMiles}
                         onChange={(e) => setTripForm({ ...tripForm, totalMiles: e.target.value })}
-                        className={`w-full pl-10 pr-16 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                        className={`w-full pl-10 pr-16 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                         placeholder="0.0"
                         step="0.1"
                         min="0"
@@ -1848,7 +1864,7 @@ const TrackerHub: React.FC = () => {
                     <button
                       onClick={() => setTripForm({ ...tripForm, isBusiness: !tripForm.isBusiness })}
                       className={`w-14 h-8 rounded-full transition-colors ${
-                        tripForm.isBusiness ? 'bg-blue-500' : theme === 'light' ? 'bg-gray-200' : 'bg-zinc-700'
+                        tripForm.isBusiness ? 'bg-[#043d6b]' : theme === 'light' ? 'bg-gray-200' : 'bg-zinc-700'
                       }`}
                     >
                       <div className={`w-6 h-6 rounded-full bg-white shadow-md transition-transform ${
@@ -1866,7 +1882,7 @@ const TrackerHub: React.FC = () => {
                       type="text"
                       value={tripForm.purpose}
                       onChange={(e) => setTripForm({ ...tripForm, purpose: e.target.value })}
-                      className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                      className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                       placeholder="e.g., Client meeting, Site inspection"
                     />
                   </div>
@@ -1878,7 +1894,7 @@ const TrackerHub: React.FC = () => {
                       <select
                         value={tripForm.employeeId}
                         onChange={(e) => setTripForm({ ...tripForm, employeeId: e.target.value })}
-                        className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                        className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                       >
                         <option value="">None</option>
                         {employees.map(emp => (
@@ -1891,7 +1907,7 @@ const TrackerHub: React.FC = () => {
                       <select
                         value={tripForm.projectId}
                         onChange={(e) => setTripForm({ ...tripForm, projectId: e.target.value })}
-                        className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                        className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                       >
                         <option value="">None</option>
                         {projects.map(p => (
@@ -1908,7 +1924,7 @@ const TrackerHub: React.FC = () => {
                       value={tripForm.notes}
                       onChange={(e) => setTripForm({ ...tripForm, notes: e.target.value })}
                       rows={2}
-                      className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none resize-none`}
+                      className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none resize-none`}
                       placeholder="Additional details..."
                     />
                   </div>
@@ -1917,7 +1933,7 @@ const TrackerHub: React.FC = () => {
                   <button
                     onClick={() => setTripWizardStep(3)}
                     disabled={!tripForm.totalMiles || parseFloat(tripForm.totalMiles) <= 0}
-                    className="w-full py-4 bg-blue-500 text-white rounded-xl font-semibold disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="w-full py-4 bg-[#043d6b] text-white rounded-xl font-semibold disabled:opacity-50 flex items-center justify-center gap-2"
                   >
                     Review Trip
                     <ChevronRight className="w-5 h-5" />
@@ -2017,7 +2033,7 @@ const TrackerHub: React.FC = () => {
                   <div className={`flex justify-center`}>
                     <span className={`px-4 py-2 rounded-full text-sm font-medium ${
                       tripForm.isBusiness
-                        ? 'bg-blue-500/20 text-blue-500'
+                        ? 'bg-[#043d6b]/20 text-[#043d6b]'
                         : theme === 'light' ? 'bg-gray-200 text-gray-600' : 'bg-zinc-700 text-zinc-300'
                     }`}>
                       {tripForm.isBusiness ? '💼 Business Trip' : '🏠 Personal Trip'}
@@ -2058,7 +2074,7 @@ const TrackerHub: React.FC = () => {
               <button
                 onClick={handleUpdateEmployee}
                 disabled={!editForm.name.trim() || isUpdating}
-                className={`text-blue-500 text-base font-semibold active:text-blue-400 disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={`text-[#043d6b] text-base font-semibold active:text-[#035291] disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 {isUpdating ? 'Saving...' : 'Save'}
               </button>
@@ -2074,7 +2090,7 @@ const TrackerHub: React.FC = () => {
                   type="text"
                   value={editForm.name}
                   onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                   placeholder="Full name"
                 />
               </div>
@@ -2086,7 +2102,7 @@ const TrackerHub: React.FC = () => {
                   type="text"
                   value={editForm.job_title}
                   onChange={(e) => setEditForm({ ...editForm, job_title: e.target.value })}
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                   placeholder="e.g., Foreman, Carpenter, Electrician"
                 />
               </div>
@@ -2099,7 +2115,7 @@ const TrackerHub: React.FC = () => {
                     type="email"
                     value={editForm.email}
                     onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                     placeholder="email@example.com"
                   />
                 </div>
@@ -2109,7 +2125,7 @@ const TrackerHub: React.FC = () => {
                     type="tel"
                     value={editForm.phone}
                     onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                     placeholder="(555) 123-4567"
                   />
                 </div>
@@ -2125,7 +2141,7 @@ const TrackerHub: React.FC = () => {
                       type="number"
                       value={editForm.hourly_rate}
                       onChange={(e) => setEditForm({ ...editForm, hourly_rate: parseFloat(e.target.value) || 0 })}
-                      className={`w-full pl-8 pr-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                      className={`w-full pl-8 pr-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                       placeholder="25"
                       min="0"
                       step="0.50"
@@ -2137,7 +2153,7 @@ const TrackerHub: React.FC = () => {
                   <select
                     value={editForm.status}
                     onChange={(e) => setEditForm({ ...editForm, status: e.target.value as 'active' | 'inactive' })}
-                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                   >
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
@@ -2152,7 +2168,7 @@ const TrackerHub: React.FC = () => {
                   value={editForm.notes}
                   onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
                   rows={3}
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none resize-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none resize-none`}
                   placeholder="Additional notes..."
                 />
               </div>

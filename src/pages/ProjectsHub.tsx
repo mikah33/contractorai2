@@ -253,7 +253,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
       case 'completed':
         return theme === 'light' ? 'bg-green-100 text-green-700' : 'bg-green-500/20 text-green-400';
       case 'in_progress':
-        return theme === 'light' ? 'bg-blue-100 text-blue-700' : 'bg-blue-500/20 text-blue-400';
+        return theme === 'light' ? 'bg-[#043d6b]/20 text-[#4d565a]' : 'bg-[#043d6b]/20 text-[#043d6b]';
       case 'on_hold':
         return theme === 'light' ? 'bg-yellow-100 text-yellow-700' : 'bg-yellow-500/20 text-yellow-400';
       case 'cancelled':
@@ -477,8 +477,8 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
               <div className="px-4 pb-5 pt-4">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 bg-blue-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <Briefcase className="w-7 h-7 text-blue-500" />
+                    <div className="w-14 h-14 bg-[#043d6b]/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <Briefcase className="w-7 h-7 text-[#043d6b]" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h1 className={`text-2xl font-bold ${themeClasses.text.primary}`}>Projects</h1>
@@ -487,7 +487,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                   </div>
                   <button
                     onClick={() => setShowAddChoice(true)}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 active:scale-95 transition-all"
+                    className="flex items-center gap-2 px-4 py-2.5 bg-[#043d6b] text-white rounded-lg font-medium hover:bg-[#035291] active:scale-95 transition-all"
                   >
                     <Plus className="w-5 h-5" />
                     <span>Add</span>
@@ -517,13 +517,13 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
       <div className="px-4 pb-4 -mt-1">
         <div className={`${themeClasses.bg.card} rounded-2xl border-2 ${theme === 'light' ? 'border-gray-300' : 'border-zinc-600'} p-6 relative overflow-hidden`}>
           {/* Background decorations */}
-          <div className="absolute -right-6 -top-6 w-44 h-44 bg-blue-500/10 rounded-full" />
-          <div className="absolute right-16 top-20 w-28 h-28 bg-blue-500/5 rounded-full" />
+          <div className="absolute -right-6 -top-6 w-44 h-44 bg-[#043d6b]/10 rounded-full" />
+          <div className="absolute right-16 top-20 w-28 h-28 bg-[#043d6b]/5 rounded-full" />
 
           <div className="relative min-h-[240px] flex flex-col">
             <div className="flex items-center gap-4 mb-5">
-              <div className="w-16 h-16 bg-blue-500/20 rounded-2xl flex items-center justify-center">
-                <Briefcase className="w-8 h-8 text-blue-500" />
+              <div className="w-16 h-16 bg-[#043d6b]/20 rounded-2xl flex items-center justify-center">
+                <Briefcase className="w-8 h-8 text-[#043d6b]" />
               </div>
               <div>
                 <h3 className={`font-bold ${themeClasses.text.primary} text-xl`}>Add Project</h3>
@@ -538,7 +538,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
             <div className="space-y-3 mt-auto">
               <button
                 onClick={() => setShowAddChoice(true)}
-                className="w-full flex items-center justify-center gap-2 px-5 py-4 bg-blue-500 text-white rounded-xl font-semibold text-lg hover:bg-blue-600 active:scale-[0.98] transition-all"
+                className="w-full flex items-center justify-center gap-2 px-5 py-4 bg-[#043d6b] text-white rounded-xl font-semibold text-lg hover:bg-[#035291] active:scale-[0.98] transition-all"
               >
                 <Plus className="w-6 h-6" />
                 Add Project
@@ -600,7 +600,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                     </div>
                     <div className={`h-3 ${theme === 'light' ? 'bg-gray-200' : 'bg-zinc-800'} rounded-full overflow-hidden`}>
                       <div
-                        className="h-full bg-blue-500 rounded-full transition-all"
+                        className="h-full bg-[#043d6b] rounded-full transition-all"
                         style={{ width: `${project.progress}%` }}
                       />
                     </div>
@@ -628,7 +628,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                     </div>
                   )}
                   <div className="flex-1" />
-                  <ChevronRight className={`w-6 h-6 text-blue-500`} />
+                  <ChevronRight className={`w-6 h-6 text-[#043d6b]`} />
                 </div>
               </div>
             </button>
@@ -701,7 +701,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                 <div className="flex items-center gap-1">
                   <button
                     onClick={openEditProjectModal}
-                    className="p-2 text-blue-500 active:text-blue-600 active:bg-blue-50 rounded-xl"
+                    className="p-2 text-[#043d6b] active:text-[#035291] active:bg-[#043d6b]/10 rounded-xl"
                   >
                     <Pencil className="w-5 h-5" />
                   </button>
@@ -731,8 +731,8 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                 {/* Client Name - Prominent Display */}
                 {(selectedProject.client_name || selectedProject.client) ? (
                   <div className="mt-2 flex items-center gap-2">
-                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                      <Users className="w-4 h-4 text-blue-600" />
+                    <div className="w-8 h-8 bg-[#043d6b]/20 rounded-full flex items-center justify-center">
+                      <Users className="w-4 h-4 text-[#035291]" />
                     </div>
                     <button
                       onClick={() => {
@@ -743,7 +743,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                           }
                         });
                       }}
-                      className="text-base font-semibold text-blue-600 active:text-blue-700 flex items-center gap-1"
+                      className="text-base font-semibold text-[#035291] active:text-[#4d565a] flex items-center gap-1"
                     >
                       {selectedProject.client_name || selectedProject.client}
                       <Pencil className="w-3 h-3" />
@@ -767,19 +767,19 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
             <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 pb-24">
 
               {/* Vision Cam Card */}
-              <div className="bg-gradient-to-r from-blue-50 to-amber-50 border-2 border-blue-400 rounded-3xl p-8 shadow-md">
+              <div className="bg-gradient-to-r from-[#043d6b] to-amber-50 border-2 border-[#043d6b] rounded-3xl p-8 shadow-md">
                 <button
                   onClick={() => setShowVisionCam(true)}
                   className="w-full flex items-center gap-6 active:scale-[0.98] transition-transform"
                 >
-                  <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-amber-500 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg">
+                  <div className="w-20 h-20 bg-gradient-to-r from-[#043d6b] to-amber-500 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg">
                     <Camera className="w-10 h-10 text-white" />
                   </div>
                   <div className="flex-1 text-left">
                     <p className="font-bold text-2xl text-gray-900">Vision Cam</p>
                     <p className="text-lg text-gray-600 mt-1">Show your customer their vision before you build it</p>
                   </div>
-                  <ChevronRight className="w-8 h-8 text-blue-400" />
+                  <ChevronRight className="w-8 h-8 text-[#043d6b]" />
                 </button>
               </div>
 
@@ -806,7 +806,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                             : `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
                           window.open(mapsUrl, '_blank');
                         }}
-                        className="flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-sm font-medium active:bg-blue-100"
+                        className="flex items-center gap-1 px-3 py-1.5 bg-[#043d6b]/10 text-[#035291] rounded-lg text-sm font-medium active:bg-[#043d6b]/20"
                       >
                         <ExternalLink className="w-4 h-4" />
                         Open
@@ -849,7 +849,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                       setEditBudget({ budget: selectedProject.budget || 0, spent: selectedProject.spent || 0 });
                       setShowEditBudgetModal(true);
                     }}
-                    className="text-lg text-blue-500 font-bold"
+                    className="text-lg text-[#043d6b] font-bold"
                   >
                     Edit
                   </button>
@@ -888,7 +888,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                       setSelectedEmployeeIds([]);
                       setShowEditTeamModal(true);
                     }}
-                    className="text-sm text-blue-500 font-semibold"
+                    className="text-sm text-[#043d6b] font-semibold"
                   >
                     + Add
                   </button>
@@ -899,7 +899,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                   <div className="grid grid-cols-2 gap-3">
                     {(selectedProject.team_members || selectedProject.team || []).map((member: any, index: number) => (
                       <div key={index} className="flex items-center gap-2.5 bg-gray-100 rounded-full pl-1.5 pr-3 py-1.5">
-                        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-xs text-white font-bold flex-shrink-0">
+                        <div className="w-8 h-8 bg-[#043d6b] rounded-full flex items-center justify-center text-xs text-white font-bold flex-shrink-0">
                           {(typeof member === 'string' ? member : member.name || '').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
                         </div>
                         <span className="text-sm text-gray-700 font-medium truncate flex-1">{typeof member === 'string' ? member : member.name}</span>
@@ -938,7 +938,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                         }
                       });
                     }}
-                    className="text-lg text-blue-500 font-bold"
+                    className="text-lg text-[#043d6b] font-bold"
                   >
                     + Add Task
                   </button>
@@ -959,7 +959,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                           }
                         });
                       }}
-                      className="mt-3 text-sm text-blue-500 font-medium"
+                      className="mt-3 text-sm text-[#043d6b] font-medium"
                     >
                       Create your first task
                     </button>
@@ -983,7 +983,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                     {(selectedProject.tasks || []).length > 5 && (
                       <button
                         onClick={() => navigate('/todo-hub')}
-                        className="w-full text-sm text-blue-500 font-medium text-center pt-2"
+                        className="w-full text-sm text-[#043d6b] font-medium text-center pt-2"
                       >
                         View all {(selectedProject.tasks || []).length} tasks →
                       </button>
@@ -1023,12 +1023,12 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                     placeholder="Add a comment..."
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
-                    className="flex-1 px-6 py-4 text-lg border border-gray-200 rounded-2xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="flex-1 px-6 py-4 text-lg border border-gray-200 rounded-2xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#043d6b] focus:border-transparent"
                     onKeyPress={(e) => e.key === 'Enter' && handleAddComment()}
                   />
                   <button
                     onClick={handleAddComment}
-                    className="px-6 py-4 bg-blue-500 text-white rounded-2xl active:bg-blue-600"
+                    className="px-6 py-4 bg-[#043d6b] text-white rounded-2xl active:bg-[#035291]"
                   >
                     <Send className="w-6 h-6" />
                   </button>
@@ -1041,7 +1041,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                   <label className="text-lg font-semibold text-gray-600">Estimates</label>
                   <button
                     onClick={() => navigate('/pricing')}
-                    className="text-lg text-blue-500 font-bold"
+                    className="text-lg text-[#043d6b] font-bold"
                   >
                     Create New
                   </button>
@@ -1067,7 +1067,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                           <p className="text-2xl font-bold text-green-600">${estimate.total?.toFixed(2) || '0.00'}</p>
                           <span className={`text-base px-4 py-1.5 rounded-full ${
                             estimate.status === 'approved' ? 'bg-green-100 text-green-700' :
-                            estimate.status === 'sent' ? 'bg-blue-100 text-blue-700' :
+                            estimate.status === 'sent' ? 'bg-[#043d6b]/20 text-[#4d565a]' :
                             'bg-gray-100 text-gray-600'
                           }`}>
                             {estimate.status}
@@ -1085,7 +1085,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                   <label className="text-lg font-semibold text-gray-600">Project Photos ({projectPhotos.length})</label>
                   <button
                     onClick={() => setShowPhotoGallery(true)}
-                    className="text-lg text-blue-500 font-bold"
+                    className="text-lg text-[#043d6b] font-bold"
                   >
                     View All
                   </button>
@@ -1136,7 +1136,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                   type="text"
                   value={newTask.title}
                   onChange={(e) => setNewTask({...newTask, title: e.target.value})}
-                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#043d6b] focus:border-transparent"
                   placeholder="Enter task title"
                 />
               </div>
@@ -1146,7 +1146,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                   type="date"
                   value={newTask.dueDate}
                   onChange={(e) => setNewTask({...newTask, dueDate: e.target.value})}
-                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#043d6b] focus:border-transparent"
                 />
               </div>
               <div>
@@ -1154,7 +1154,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                 <select
                   value={newTask.priority}
                   onChange={(e) => setNewTask({...newTask, priority: e.target.value as 'low' | 'medium' | 'high'})}
-                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#043d6b] focus:border-transparent"
                 >
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
@@ -1189,7 +1189,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                     }
                   }
                 }}
-                className="flex-1 px-4 py-2.5 bg-blue-500 text-white rounded-xl active:bg-blue-600"
+                className="flex-1 px-4 py-2.5 bg-[#043d6b] text-white rounded-xl active:bg-[#035291]"
               >
                 Add Task
               </button>
@@ -1217,7 +1217,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                 <textarea
                   value={uploadDescription}
                   onChange={(e) => setUploadDescription(e.target.value)}
-                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#043d6b] focus:border-transparent"
                   rows={3}
                   placeholder="Describe the progress update"
                 ></textarea>
@@ -1308,7 +1308,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                   setUploadImages([]);
                   setUploadPreviewUrls([]);
                 }}
-                className="flex-1 px-4 py-2.5 bg-blue-500 text-white rounded-xl active:bg-blue-600"
+                className="flex-1 px-4 py-2.5 bg-[#043d6b] text-white rounded-xl active:bg-[#035291]"
               >
                 Upload
               </button>
@@ -1339,7 +1339,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                     type="number"
                     value={editBudget.budget || ''}
                     onChange={(e) => setEditBudget({...editBudget, budget: parseFloat(e.target.value) || 0})}
-                    className="w-full pl-8 pr-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full pl-8 pr-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#043d6b] focus:border-transparent"
                     placeholder="0"
                   />
                 </div>
@@ -1352,7 +1352,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                     type="number"
                     value={editBudget.spent || ''}
                     onChange={(e) => setEditBudget({...editBudget, spent: parseFloat(e.target.value) || 0})}
-                    className="w-full pl-8 pr-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full pl-8 pr-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#043d6b] focus:border-transparent"
                     placeholder="0"
                   />
                 </div>
@@ -1382,7 +1382,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                     }
                   }
                 }}
-                className="flex-1 px-4 py-2.5 bg-blue-500 text-white rounded-xl active:bg-blue-600"
+                className="flex-1 px-4 py-2.5 bg-[#043d6b] text-white rounded-xl active:bg-[#035291]"
               >
                 Save
               </button>
@@ -1432,7 +1432,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                               setShowEditTeamModal(false);
                               navigate('/employees');
                             }}
-                            className="text-sm text-blue-500 font-medium"
+                            className="text-sm text-[#043d6b] font-medium"
                           >
                             Add Employees
                           </button>
@@ -1448,7 +1448,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                           key={emp.id}
                           className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors ${
                             selectedEmployeeIds.includes(emp.id)
-                              ? 'bg-blue-50 border-2 border-blue-500'
+                              ? 'bg-[#043d6b]/10 border-2 border-[#043d6b]'
                               : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100'
                           }`}
                         >
@@ -1462,9 +1462,9 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                                 setSelectedEmployeeIds(selectedEmployeeIds.filter(id => id !== emp.id));
                               }
                             }}
-                            className="w-5 h-5 rounded border-gray-300 text-blue-500 focus:ring-blue-500"
+                            className="w-5 h-5 rounded border-gray-300 text-[#043d6b] focus:ring-[#043d6b]"
                           />
-                          <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                          <div className="w-10 h-10 bg-[#043d6b] rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
                             {emp.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                           </div>
                           <div className="flex-1 min-w-0">
@@ -1480,7 +1480,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                 })()}
               </div>
               {selectedEmployeeIds.length > 0 && (
-                <p className="text-sm text-blue-600 font-medium">
+                <p className="text-sm text-[#035291] font-medium">
                   {selectedEmployeeIds.length} employee{selectedEmployeeIds.length > 1 ? 's' : ''} selected
                 </p>
               )}
@@ -1524,7 +1524,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                 disabled={selectedEmployeeIds.length === 0}
                 className={`flex-1 px-4 py-2.5 rounded-xl ${
                   selectedEmployeeIds.length > 0
-                    ? 'bg-blue-500 text-white active:bg-blue-600'
+                    ? 'bg-[#043d6b] text-white active:bg-[#035291]'
                     : 'bg-gray-200 text-gray-400'
                 }`}
               >
@@ -1543,7 +1543,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
             onClick={() => setShowManualForm(false)}
           />
           <div className={`relative ${themeClasses.bg.modal} rounded-t-3xl w-full max-h-[90vh] overflow-y-auto animate-slide-up pb-safe`}>
-            <div className={`sticky top-0 ${themeClasses.bg.modal} px-4 py-4 border-b border-blue-500/30 flex items-center justify-between z-10`}>
+            <div className={`sticky top-0 ${themeClasses.bg.modal} px-4 py-4 border-b border-[#043d6b]/30 flex items-center justify-between z-10`}>
               <button
                 onClick={() => setShowManualForm(false)}
                 className={`${themeClasses.text.secondary} text-base font-medium ${themeClasses.hover.text}`}
@@ -1554,7 +1554,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
               <button
                 onClick={handleCreateProject}
                 disabled={!newProjectForm.name.trim() || isCreatingProject}
-                className={`text-blue-500 text-base font-semibold active:text-blue-400 disabled:${themeClasses.text.muted} disabled:cursor-not-allowed`}
+                className={`text-[#043d6b] text-base font-semibold active:text-[#043d6b] disabled:${themeClasses.text.muted} disabled:cursor-not-allowed`}
               >
                 {isCreatingProject ? 'Saving...' : 'Save'}
               </button>
@@ -1568,7 +1568,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                   value={newProjectForm.name}
                   onChange={(e) => setNewProjectForm({ ...newProjectForm, name: e.target.value })}
                   placeholder="e.g., Kitchen Renovation"
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} ${themeClasses.focus.border} focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} ${themeClasses.focus.border} focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                 />
               </div>
 
@@ -1591,7 +1591,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                       });
                     }
                   }}
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${themeClasses.focus.border} focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${themeClasses.focus.border} focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                 >
                   <option value="">Select a client (optional)...</option>
                   {clients.map((c) => {
@@ -1612,7 +1612,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                   value={newProjectForm.address}
                   onChange={(e) => setNewProjectForm({ ...newProjectForm, address: e.target.value })}
                   placeholder="e.g., 123 Main St, City, State 12345"
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} ${themeClasses.focus.border} focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} ${themeClasses.focus.border} focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                 />
               </div>
 
@@ -1624,7 +1624,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                   onChange={(e) => setNewProjectForm({ ...newProjectForm, description: e.target.value })}
                   placeholder="Brief description of the project..."
                   rows={3}
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} ${themeClasses.focus.border} focus:ring-2 focus:ring-blue-500/20 outline-none resize-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} ${themeClasses.focus.border} focus:ring-2 focus:ring-[#043d6b]/20 outline-none resize-none`}
                 />
               </div>
 
@@ -1638,7 +1638,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                     value={newProjectForm.budget}
                     onChange={(e) => setNewProjectForm({ ...newProjectForm, budget: e.target.value })}
                     placeholder="0"
-                    className={`w-full pl-8 pr-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} ${themeClasses.focus.border} focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                    className={`w-full pl-8 pr-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} ${themeClasses.focus.border} focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                   />
                 </div>
               </div>
@@ -1652,7 +1652,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                   className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} flex items-center justify-between`}
                 >
                   <div className="flex items-center gap-2">
-                    <CalendarIcon className="w-5 h-5 text-blue-500" />
+                    <CalendarIcon className="w-5 h-5 text-[#043d6b]" />
                     <span className={newProjectForm.startDate ? themeClasses.text.primary : themeClasses.text.muted}>
                       {newProjectForm.startDate
                         ? format(parseISO(newProjectForm.startDate), 'MMM d, yyyy')
@@ -1721,7 +1721,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                               }}
                               className={`aspect-square flex items-center justify-center text-sm rounded-lg transition-colors ${
                                 isSelected
-                                  ? 'bg-blue-500 text-white font-semibold'
+                                  ? 'bg-[#043d6b] text-white font-semibold'
                                   : isTodays
                                     ? `${themeClasses.bg.tertiary} ${themeClasses.text.primary} font-semibold`
                                     : isCurrentMonth
@@ -1903,7 +1903,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                 <select
                   value={newProjectForm.status}
                   onChange={(e) => setNewProjectForm({ ...newProjectForm, status: e.target.value as 'active' | 'completed' | 'on-hold' })}
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${themeClasses.focus.border} focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${themeClasses.focus.border} focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                 >
                   <option value="active">Active</option>
                   <option value="on-hold">On Hold</option>
@@ -1923,7 +1923,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
             onClick={() => setShowEditProjectModal(false)}
           />
           <div className={`relative ${themeClasses.bg.secondary} rounded-t-3xl w-full max-h-[90vh] overflow-y-auto animate-slide-up pb-safe`}>
-            <div className={`sticky top-0 ${themeClasses.bg.secondary} px-4 py-4 border-b border-blue-500/30 flex items-center justify-between z-10`}>
+            <div className={`sticky top-0 ${themeClasses.bg.secondary} px-4 py-4 border-b border-[#043d6b]/30 flex items-center justify-between z-10`}>
               <button
                 onClick={() => setShowEditProjectModal(false)}
                 className={`${themeClasses.text.secondary} text-base font-medium active:opacity-70`}
@@ -1934,7 +1934,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
               <button
                 onClick={handleUpdateProject}
                 disabled={!editProjectForm.name.trim()}
-                className={`text-blue-500 text-base font-semibold active:text-blue-400 disabled:${themeClasses.text.muted} disabled:cursor-not-allowed`}
+                className={`text-[#043d6b] text-base font-semibold active:text-[#043d6b] disabled:${themeClasses.text.muted} disabled:cursor-not-allowed`}
               >
                 Save
               </button>
@@ -1948,7 +1948,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                   value={editProjectForm.name}
                   onChange={(e) => setEditProjectForm({ ...editProjectForm, name: e.target.value })}
                   placeholder="e.g., Kitchen Renovation"
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                 />
               </div>
 
@@ -1970,7 +1970,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                       });
                     }
                   }}
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                 >
                   <option value="">Select a client (optional)...</option>
                   {clients.map((c) => {
@@ -1991,7 +1991,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                   value={editProjectForm.address}
                   onChange={(e) => setEditProjectForm({ ...editProjectForm, address: e.target.value })}
                   placeholder="e.g., 123 Main St, City, State 12345"
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                 />
               </div>
 
@@ -2003,7 +2003,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                   onChange={(e) => setEditProjectForm({ ...editProjectForm, description: e.target.value })}
                   placeholder="Brief description of the project..."
                   rows={3}
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none resize-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none resize-none`}
                 />
               </div>
 
@@ -2017,7 +2017,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                     value={editProjectForm.budget}
                     onChange={(e) => setEditProjectForm({ ...editProjectForm, budget: e.target.value })}
                     placeholder="0"
-                    className={`w-full pl-8 pr-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                    className={`w-full pl-8 pr-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                   />
                 </div>
               </div>
@@ -2031,7 +2031,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                   className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} flex items-center justify-between`}
                 >
                   <div className="flex items-center gap-2">
-                    <CalendarIcon className="w-5 h-5 text-blue-500" />
+                    <CalendarIcon className="w-5 h-5 text-[#043d6b]" />
                     <span className={editProjectForm.startDate ? themeClasses.text.primary : themeClasses.text.muted}>
                       {editProjectForm.startDate
                         ? format(parseISO(editProjectForm.startDate), 'MMM d, yyyy')
@@ -2100,7 +2100,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                               }}
                               className={`aspect-square flex items-center justify-center text-sm rounded-lg transition-colors ${
                                 isSelected
-                                  ? 'bg-blue-500 text-white font-semibold'
+                                  ? 'bg-[#043d6b] text-white font-semibold'
                                   : isTodays
                                     ? `${themeClasses.bg.tertiary} ${themeClasses.text.primary} font-semibold`
                                     : isCurrentMonth
@@ -2282,7 +2282,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                 <select
                   value={editProjectForm.status}
                   onChange={(e) => setEditProjectForm({ ...editProjectForm, status: e.target.value as 'active' | 'completed' | 'on-hold' })}
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
                 >
                   <option value="active">Active</option>
                   <option value="on-hold">On Hold</option>
@@ -2298,7 +2298,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
       {showPhotoGallery && selectedProject && (
         <div className="fixed inset-0 z-50 bg-[#0F0F0F] overflow-y-auto">
           {/* Header */}
-          <div className="sticky top-0 z-10 bg-[#1C1C1E] border-b border-blue-500/30 px-4 py-4 flex items-center gap-3">
+          <div className="sticky top-0 z-10 bg-[#1C1C1E] border-b border-[#043d6b]/30 px-4 py-4 flex items-center gap-3">
             <button
               onClick={() => setShowPhotoGallery(false)}
               className="p-2 text-white hover:bg-white/10 rounded-lg"

@@ -126,7 +126,7 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
-        return 'bg-blue-100 text-blue-700 border border-blue-300';
+        return 'bg-green-100 text-green-700 border border-green-300';
       case 'inactive':
         return 'bg-zinc-100 text-zinc-600 border border-zinc-300';
       case 'prospect':
@@ -297,8 +297,8 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
               <div className="px-4 pb-5 pt-4">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 bg-blue-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <Users className="w-7 h-7 text-blue-500" />
+                    <div className="w-14 h-14 bg-[#043d6b]/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <Users className="w-7 h-7 text-[#043d6b]" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h1 className={`text-2xl font-bold ${themeClasses.text.primary}`}>Clients</h1>
@@ -315,7 +315,7 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
                     placeholder="Search clients..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className={`w-full pl-10 pr-4 py-2.5 ${themeClasses.bg.input} rounded-lg border ${themeClasses.border.primary} ${themeClasses.text.primary} placeholder-gray-400 focus:ring-2 focus:ring-blue-500 transition-all`}
+                    className={`w-full pl-10 pr-4 py-2.5 ${themeClasses.bg.input} rounded-lg border ${themeClasses.border.primary} ${themeClasses.text.primary} placeholder-gray-400 focus:ring-2 focus:ring-[#043d6b] transition-all`}
                   />
                 </div>
               </div>
@@ -330,13 +330,13 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
       <div className="px-4 pb-4 -mt-1">
         <div className={`${themeClasses.bg.card} rounded-2xl border-2 ${theme === 'light' ? 'border-gray-300' : 'border-zinc-600'} p-6 relative overflow-hidden`}>
           {/* Background decorations */}
-          <div className="absolute -right-6 -top-6 w-44 h-44 bg-blue-500/10 rounded-full" />
-          <div className="absolute right-16 top-20 w-28 h-28 bg-blue-500/5 rounded-full" />
+          <div className="absolute -right-6 -top-6 w-44 h-44 bg-[#043d6b]/10 rounded-full" />
+          <div className="absolute right-16 top-20 w-28 h-28 bg-[#043d6b]/5 rounded-full" />
 
           <div className="relative min-h-[240px] flex flex-col">
             <div className="flex items-center gap-4 mb-5">
-              <div className="w-16 h-16 bg-blue-500/20 rounded-2xl flex items-center justify-center">
-                <Users className="w-8 h-8 text-blue-500" />
+              <div className="w-16 h-16 bg-[#043d6b]/20 rounded-2xl flex items-center justify-center">
+                <Users className="w-8 h-8 text-[#043d6b]" />
               </div>
               <div>
                 <h3 className={`font-bold ${themeClasses.text.primary} text-xl`}>Add Client</h3>
@@ -351,7 +351,7 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
             <div className="space-y-3 mt-auto">
               <button
                 onClick={() => setShowManualForm(true)}
-                className="w-full flex items-center justify-center gap-2 px-5 py-4 bg-blue-500 text-white rounded-xl font-semibold text-lg hover:bg-blue-600 active:scale-[0.98] transition-all"
+                className="w-full flex items-center justify-center gap-2 px-5 py-4 bg-[#043d6b] text-white rounded-xl font-semibold text-lg hover:bg-[#035291] active:scale-[0.98] transition-all"
               >
                 <Plus className="w-6 h-6" />
                 Add Client
@@ -394,7 +394,7 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
                 {/* Header with avatar and status */}
                 <div className="p-3 md:p-4 pb-2 md:pb-3">
                   <div className="flex items-start gap-2 md:gap-3">
-                    <div className="w-12 h-12 md:w-14 md:h-14 bg-blue-500/20 rounded-xl flex items-center justify-center text-blue-500 font-bold text-base md:text-lg">
+                    <div className="w-12 h-12 md:w-14 md:h-14 bg-[#043d6b]/20 rounded-xl flex items-center justify-center text-[#043d6b] font-bold text-base md:text-lg">
                       {getInitials(client.name || 'NA')}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -413,7 +413,7 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
                         </div>
                       )}
                     </div>
-                    <ChevronRight className="w-5 h-5 text-blue-500 flex-shrink-0" />
+                    <ChevronRight className="w-5 h-5 text-[#043d6b] flex-shrink-0" />
                   </div>
                 </div>
 
@@ -444,10 +444,10 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
                         const encodedAddress = encodeURIComponent(fullAddress);
                         window.open(`maps://maps.apple.com/?q=${encodedAddress}`, '_blank');
                       }}
-                      className={`flex items-center gap-2 ${theme === 'light' ? 'text-blue-600 active:text-blue-500' : 'text-white active:text-zinc-300'} text-sm`}
+                      className={`flex items-center gap-2 ${theme === 'light' ? 'text-[#035291] active:text-[#043d6b]' : 'text-white active:text-zinc-300'} text-sm`}
                     >
-                      <div className={`w-7 h-7 rounded-lg ${theme === 'light' ? 'bg-blue-100 border border-blue-300' : 'bg-blue-500/20 border border-blue-500/40'} flex items-center justify-center`}>
-                        <MapPin className="w-4 h-4 text-blue-600" />
+                      <div className={`w-7 h-7 rounded-lg ${theme === 'light' ? 'bg-[#043d6b]/20 border border-[#043d6b]/30' : 'bg-[#043d6b]/20 border border-[#043d6b]/40'} flex items-center justify-center`}>
+                        <MapPin className="w-4 h-4 text-[#043d6b]" />
                       </div>
                       <div className="text-left">
                         <p className="font-medium">
@@ -459,7 +459,7 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
                           </p>
                         )}
                       </div>
-                      <ChevronRight className="w-4 h-4 ml-auto text-blue-500" />
+                      <ChevronRight className="w-4 h-4 ml-auto text-[#043d6b]" />
                     </button>
                   ) : (
                     <button
@@ -479,38 +479,38 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
                 </div>
 
                 {/* Stats Row */}
-                <div className={`px-3 md:px-4 py-2 md:py-3 ${theme === 'light' ? 'bg-blue-50 border-t border-blue-200' : 'bg-blue-500/10 border-t border-blue-500/30'} flex items-center justify-between`}>
+                <div className={`px-3 md:px-4 py-2 md:py-3 ${theme === 'light' ? 'bg-[#043d6b] border-t border-[#043d6b]' : 'bg-[#043d6b]/10 border-t border-[#043d6b]/30'} flex items-center justify-between`}>
                   <div className="flex items-center gap-3 md:gap-4">
                     {/* Projects */}
                     <div className="flex items-center gap-1.5">
-                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${clientProjects.length > 0 ? (theme === 'light' ? 'bg-blue-100 border border-blue-300' : 'bg-blue-500/20 border border-blue-500/40') : (theme === 'light' ? 'bg-zinc-100 border border-zinc-300' : 'bg-zinc-700 border border-zinc-600')}`}>
-                        <Briefcase className={`w-4 h-4 ${clientProjects.length > 0 ? 'text-blue-600' : 'text-zinc-500'}`} />
+                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${clientProjects.length > 0 ? (theme === 'light' ? 'bg-white/20 border border-white/30' : 'bg-[#043d6b]/20 border border-[#043d6b]/40') : (theme === 'light' ? 'bg-white/10 border border-white/20' : 'bg-zinc-700 border border-zinc-600')}`}>
+                        <Briefcase className={`w-4 h-4 ${theme === 'light' ? 'text-white' : (clientProjects.length > 0 ? 'text-[#035291]' : 'text-zinc-500')}`} />
                       </div>
                       <div>
-                        <p className={`text-sm font-semibold ${clientProjects.length > 0 ? (theme === 'light' ? 'text-blue-700' : 'text-white') : themeClasses.text.muted}`}>
+                        <p className={`text-sm font-semibold ${theme === 'light' ? 'text-white' : (clientProjects.length > 0 ? 'text-white' : themeClasses.text.muted)}`}>
                           {clientProjects.length}
                         </p>
-                        <p className={`text-xs ${themeClasses.text.secondary}`}>Projects</p>
+                        <p className={`text-xs ${theme === 'light' ? 'text-white/70' : themeClasses.text.secondary}`}>Projects</p>
                       </div>
                     </div>
 
                     {/* Revenue */}
                     <div className="flex items-center gap-1.5">
-                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${totalRevenue > 0 ? (theme === 'light' ? 'bg-blue-100 border border-blue-300' : 'bg-blue-500/20 border border-blue-500/40') : (theme === 'light' ? 'bg-zinc-100 border border-zinc-300' : 'bg-zinc-700 border border-zinc-600')}`}>
-                        <DollarSign className={`w-4 h-4 ${totalRevenue > 0 ? 'text-blue-600' : 'text-zinc-500'}`} />
+                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${totalRevenue > 0 ? (theme === 'light' ? 'bg-white/20 border border-white/30' : 'bg-[#043d6b]/20 border border-[#043d6b]/40') : (theme === 'light' ? 'bg-white/10 border border-white/20' : 'bg-zinc-700 border border-zinc-600')}`}>
+                        <DollarSign className={`w-4 h-4 ${theme === 'light' ? 'text-white' : (totalRevenue > 0 ? 'text-[#035291]' : 'text-zinc-500')}`} />
                       </div>
                       <div>
-                        <p className={`text-sm font-semibold ${totalRevenue > 0 ? (theme === 'light' ? 'text-blue-700' : 'text-white') : themeClasses.text.muted}`}>
+                        <p className={`text-sm font-semibold ${theme === 'light' ? 'text-white' : (totalRevenue > 0 ? 'text-white' : themeClasses.text.muted)}`}>
                           {formatCurrency(totalRevenue)}
                         </p>
-                        <p className={`text-xs ${themeClasses.text.secondary}`}>Revenue</p>
+                        <p className={`text-xs ${theme === 'light' ? 'text-white/70' : themeClasses.text.secondary}`}>Revenue</p>
                       </div>
                     </div>
                   </div>
 
                   {/* Date Added */}
                   {formatDate(client.createdAt) && (
-                    <div className={`flex items-center gap-1 text-xs ${themeClasses.text.secondary}`}>
+                    <div className={`flex items-center gap-1 text-xs ${theme === 'light' ? 'text-white/70' : themeClasses.text.secondary}`}>
                       <Calendar className="w-3.5 h-3.5" />
                       <span>{formatDate(client.createdAt)}</span>
                     </div>
@@ -550,7 +550,7 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
             onClick={() => setShowManualForm(false)}
           />
           <div className="relative bg-[#1C1C1E] rounded-t-3xl w-full max-h-[90vh] overflow-y-auto animate-slide-up">
-            <div className="sticky top-0 bg-[#1C1C1E] px-4 py-4 border-b border-blue-500/30 flex items-center justify-between">
+            <div className="sticky top-0 bg-[#1C1C1E] px-4 py-4 border-b border-[#043d6b]/30 flex items-center justify-between">
               <h2 className="text-lg font-semibold text-white">New Client</h2>
               <button
                 onClick={() => setShowManualForm(false)}
@@ -570,7 +570,7 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
                   type="text"
                   value={newClientForm.name}
                   onChange={(e) => setNewClientForm({ ...newClientForm, name: e.target.value })}
-                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
+                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none"
                   placeholder="Client name"
                 />
               </div>
@@ -582,7 +582,7 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
                   type="text"
                   value={newClientForm.company}
                   onChange={(e) => setNewClientForm({ ...newClientForm, company: e.target.value })}
-                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
+                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none"
                   placeholder="Company name"
                 />
               </div>
@@ -595,7 +595,7 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
                     type="email"
                     value={newClientForm.email}
                     onChange={(e) => setNewClientForm({ ...newClientForm, email: e.target.value })}
-                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none"
                     placeholder="email@example.com"
                   />
                 </div>
@@ -605,7 +605,7 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
                     type="tel"
                     value={newClientForm.phone}
                     onChange={(e) => setNewClientForm({ ...newClientForm, phone: e.target.value })}
-                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none"
                     placeholder="(555) 123-4567"
                   />
                 </div>
@@ -618,7 +618,7 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
                   type="text"
                   value={newClientForm.address}
                   onChange={(e) => setNewClientForm({ ...newClientForm, address: e.target.value })}
-                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
+                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none"
                   placeholder="123 Main St"
                 />
               </div>
@@ -631,7 +631,7 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
                     type="text"
                     value={newClientForm.city}
                     onChange={(e) => setNewClientForm({ ...newClientForm, city: e.target.value })}
-                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none"
                     placeholder="City"
                   />
                 </div>
@@ -641,7 +641,7 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
                     type="text"
                     value={newClientForm.state}
                     onChange={(e) => setNewClientForm({ ...newClientForm, state: e.target.value })}
-                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none"
                     placeholder="SC"
                     maxLength={2}
                   />
@@ -652,7 +652,7 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
                     type="text"
                     value={newClientForm.zip}
                     onChange={(e) => setNewClientForm({ ...newClientForm, zip: e.target.value })}
-                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none"
                     placeholder="29401"
                     maxLength={10}
                   />
@@ -665,7 +665,7 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
                 <select
                   value={newClientForm.status}
                   onChange={(e) => setNewClientForm({ ...newClientForm, status: e.target.value as 'active' | 'inactive' | 'prospect' })}
-                  className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
+                  className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none"
                 >
                   <option value="prospect">Prospect</option>
                   <option value="active">Active</option>
@@ -680,18 +680,18 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
                   value={newClientForm.notes}
                   onChange={(e) => setNewClientForm({ ...newClientForm, notes: e.target.value })}
                   rows={3}
-                  className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none resize-none"
+                  className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none resize-none"
                   placeholder="Additional notes about this client..."
                 />
               </div>
             </div>
 
             {/* Create Button */}
-            <div className="sticky bottom-0 bg-[#1C1C1E] p-3 md:p-4 border-t border-blue-500/30">
+            <div className="sticky bottom-0 bg-[#1C1C1E] p-3 md:p-4 border-t border-[#043d6b]/30">
               <button
                 onClick={handleCreateClient}
                 disabled={!newClientForm.name.trim() || isCreatingClient}
-                className="w-full py-3 md:py-4 rounded-xl font-semibold text-white bg-blue-500 shadow-lg shadow-blue-500/20 active:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3 md:py-4 rounded-xl font-semibold text-white bg-[#043d6b] shadow-lg shadow-[#043d6b]/20 active:bg-[#035291] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isCreatingClient ? 'Creating...' : 'Create Client'}
               </button>
@@ -708,7 +708,7 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
             onClick={() => setShowEditForm(false)}
           />
           <div className="relative bg-[#1C1C1E] rounded-t-3xl w-full max-h-[90vh] overflow-y-auto animate-slide-up">
-            <div className="sticky top-0 bg-[#1C1C1E] px-4 py-4 border-b border-blue-500/30 flex items-center justify-between">
+            <div className="sticky top-0 bg-[#1C1C1E] px-4 py-4 border-b border-[#043d6b]/30 flex items-center justify-between">
               <h2 className="text-lg font-semibold text-white">Edit Client</h2>
               <button
                 onClick={() => setShowEditForm(false)}
@@ -728,7 +728,7 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
                   type="text"
                   value={editClientForm.name}
                   onChange={(e) => setEditClientForm({ ...editClientForm, name: e.target.value })}
-                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
+                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none"
                   placeholder="Client name"
                 />
               </div>
@@ -740,7 +740,7 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
                   type="text"
                   value={editClientForm.company}
                   onChange={(e) => setEditClientForm({ ...editClientForm, company: e.target.value })}
-                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
+                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none"
                   placeholder="Company name"
                 />
               </div>
@@ -753,7 +753,7 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
                     type="email"
                     value={editClientForm.email}
                     onChange={(e) => setEditClientForm({ ...editClientForm, email: e.target.value })}
-                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none"
                     placeholder="email@example.com"
                   />
                 </div>
@@ -763,7 +763,7 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
                     type="tel"
                     value={editClientForm.phone}
                     onChange={(e) => setEditClientForm({ ...editClientForm, phone: e.target.value })}
-                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none"
                     placeholder="(555) 123-4567"
                   />
                 </div>
@@ -776,7 +776,7 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
                   type="text"
                   value={editClientForm.address}
                   onChange={(e) => setEditClientForm({ ...editClientForm, address: e.target.value })}
-                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
+                  className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none"
                   placeholder="123 Main St"
                 />
               </div>
@@ -789,7 +789,7 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
                     type="text"
                     value={editClientForm.city}
                     onChange={(e) => setEditClientForm({ ...editClientForm, city: e.target.value })}
-                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none"
                     placeholder="City"
                   />
                 </div>
@@ -799,7 +799,7 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
                     type="text"
                     value={editClientForm.state}
                     onChange={(e) => setEditClientForm({ ...editClientForm, state: e.target.value })}
-                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none"
                     placeholder="SC"
                     maxLength={2}
                   />
@@ -810,7 +810,7 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
                     type="text"
                     value={editClientForm.zip}
                     onChange={(e) => setEditClientForm({ ...editClientForm, zip: e.target.value })}
-                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
+                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none"
                     placeholder="29401"
                     maxLength={10}
                   />
@@ -823,7 +823,7 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
                 <select
                   value={editClientForm.status}
                   onChange={(e) => setEditClientForm({ ...editClientForm, status: e.target.value as 'active' | 'inactive' | 'prospect' })}
-                  className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
+                  className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none"
                 >
                   <option value="prospect">Prospect</option>
                   <option value="active">Active</option>
@@ -838,18 +838,18 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
                   value={editClientForm.notes}
                   onChange={(e) => setEditClientForm({ ...editClientForm, notes: e.target.value })}
                   rows={3}
-                  className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none resize-none"
+                  className="w-full px-4 py-3 rounded-xl bg-[#262626] border border-[#3A3A3C] text-white placeholder-zinc-500 focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none resize-none"
                   placeholder="Additional notes about this client..."
                 />
               </div>
             </div>
 
             {/* Update Button */}
-            <div className="sticky bottom-0 bg-[#1C1C1E] p-3 md:p-4 border-t border-blue-500/30">
+            <div className="sticky bottom-0 bg-[#1C1C1E] p-3 md:p-4 border-t border-[#043d6b]/30">
               <button
                 onClick={handleUpdateClient}
                 disabled={!editClientForm.name.trim() || isUpdatingClient}
-                className="w-full py-3 md:py-4 rounded-xl font-semibold text-white bg-blue-500 shadow-lg shadow-blue-500/20 active:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3 md:py-4 rounded-xl font-semibold text-white bg-[#043d6b] shadow-lg shadow-[#043d6b]/20 active:bg-[#035291] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isUpdatingClient ? 'Saving...' : 'Save Changes'}
               </button>
@@ -870,7 +870,7 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
           {/* Slide-up Modal */}
           <div className="absolute inset-x-0 bottom-0 top-12 bg-white rounded-t-3xl shadow-2xl flex flex-col animate-slide-up overflow-hidden">
             {/* Header */}
-            <div className="bg-white px-4 py-4 border-b-2 border-blue-400 flex-shrink-0">
+            <div className="bg-white px-4 py-4 border-b-2 border-[#043d6b] flex-shrink-0">
               <div className="flex items-center justify-between">
                 <button
                   onClick={() => setSelectedClient(null)}
@@ -882,7 +882,7 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => handleEditClient(selectedClient)}
-                    className="p-2 text-blue-500 active:text-blue-600 active:bg-blue-100 rounded-xl"
+                    className="p-2 text-[#043d6b] active:text-[#035291] active:bg-[#043d6b] rounded-xl"
                   >
                     <Pencil className="w-5 h-5" />
                   </button>
@@ -907,7 +907,7 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
 
               {/* Client Title */}
               <div className="mt-3 flex items-center gap-3">
-                <div className="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center text-white font-bold text-base md:text-lg shadow-lg shadow-blue-500/20">
+                <div className="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-[#043d6b] to-#035291 rounded-2xl flex items-center justify-center text-white font-bold text-base md:text-lg shadow-lg shadow-[#043d6b]/20">
                   {getInitials(selectedClient.name || 'NA')}
                 </div>
                 <div>
@@ -928,13 +928,13 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
             <div className="flex-1 overflow-y-auto px-3 md:px-4 py-3 md:py-4 space-y-3 md:space-y-4 pb-24 bg-zinc-50">
 
               {/* Contact Info Card */}
-              <div className="bg-white border-2 border-blue-400 rounded-2xl p-3 md:p-4 shadow-sm">
+              <div className="bg-white border-2 border-[#043d6b] rounded-2xl p-3 md:p-4 shadow-sm">
                 <label className="text-xs text-zinc-600 font-medium mb-3 block">Contact Information</label>
                 <div className="space-y-3">
                   {selectedClient.email && (
-                    <a href={`mailto:${selectedClient.email}`} className="flex items-center gap-3 text-zinc-700 active:text-blue-600">
-                      <div className="w-10 h-10 bg-blue-100 border border-blue-300 rounded-xl flex items-center justify-center">
-                        <Mail className="w-5 h-5 text-blue-600" />
+                    <a href={`mailto:${selectedClient.email}`} className="flex items-center gap-3 text-zinc-700 active:text-[#035291]">
+                      <div className="w-10 h-10 bg-[#043d6b] border border-[#043d6b] rounded-xl flex items-center justify-center">
+                        <Mail className="w-5 h-5 text-[#035291]" />
                       </div>
                       <div>
                         <p className="text-xs text-zinc-500">Email</p>
@@ -943,9 +943,9 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
                     </a>
                   )}
                   {selectedClient.phone && (
-                    <a href={`tel:${selectedClient.phone}`} className="flex items-center gap-3 text-zinc-700 active:text-blue-600">
-                      <div className="w-10 h-10 bg-blue-100 border border-blue-300 rounded-xl flex items-center justify-center">
-                        <Phone className="w-5 h-5 text-blue-600" />
+                    <a href={`tel:${selectedClient.phone}`} className="flex items-center gap-3 text-zinc-700 active:text-[#035291]">
+                      <div className="w-10 h-10 bg-[#043d6b] border border-[#043d6b] rounded-xl flex items-center justify-center">
+                        <Phone className="w-5 h-5 text-[#035291]" />
                       </div>
                       <div>
                         <p className="text-xs text-zinc-500">Phone</p>
@@ -955,8 +955,8 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
                   )}
                   {(selectedClient.address || selectedClient.city || selectedClient.state) && (
                     <div className="flex items-center gap-3 text-zinc-700">
-                      <div className="w-10 h-10 bg-blue-100 border border-blue-300 rounded-xl flex items-center justify-center">
-                        <MapPin className="w-5 h-5 text-blue-600" />
+                      <div className="w-10 h-10 bg-[#043d6b] border border-[#043d6b] rounded-xl flex items-center justify-center">
+                        <MapPin className="w-5 h-5 text-[#035291]" />
                       </div>
                       <div>
                         <p className="text-xs text-zinc-500">Address</p>
@@ -972,7 +972,7 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
               </div>
 
               {/* Projects Card */}
-              <div className="bg-white border-2 border-blue-400 rounded-2xl p-3 md:p-4 shadow-sm">
+              <div className="bg-white border-2 border-[#043d6b] rounded-2xl p-3 md:p-4 shadow-sm">
                 <div className="flex items-center justify-between mb-3">
                   <label className="text-xs text-zinc-600 font-medium">Projects</label>
                   <button
@@ -980,7 +980,7 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
                       setSelectedClient(null);
                       navigate('/projects-hub');
                     }}
-                    className="text-xs text-blue-600 font-medium"
+                    className="text-xs text-[#035291] font-medium"
                   >
                     View All
                   </button>
@@ -1004,10 +1004,10 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
                             setSelectedClient(null);
                             navigate('/projects-hub', { state: { selectedProjectId: project.id } });
                           }}
-                          className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-xl active:bg-blue-100"
+                          className="flex items-center gap-3 p-3 bg-[#043d6b] border border-[#043d6b] rounded-xl active:bg-[#043d6b]"
                         >
-                          <div className="w-10 h-10 bg-blue-100 border border-blue-300 rounded-xl flex items-center justify-center">
-                            <Briefcase className="w-5 h-5 text-blue-600" />
+                          <div className="w-10 h-10 bg-[#043d6b] border border-[#043d6b] rounded-xl flex items-center justify-center">
+                            <Briefcase className="w-5 h-5 text-[#035291]" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="font-medium text-black truncate">{project.name}</p>
@@ -1016,7 +1016,7 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
                               {project.budget ? ` • ${formatCurrency(project.budget)}` : ''}
                             </p>
                           </div>
-                          <ChevronRight className="w-4 h-4 text-blue-500" />
+                          <ChevronRight className="w-4 h-4 text-[#043d6b]" />
                         </div>
                       ))}
                       {clientProjects.length > 5 && (
@@ -1030,17 +1030,17 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
               </div>
 
               {/* Revenue Summary Card */}
-              <div className="bg-white border-2 border-blue-400 rounded-2xl p-3 md:p-4 shadow-sm">
+              <div className="bg-white border-2 border-[#043d6b] rounded-2xl p-3 md:p-4 shadow-sm">
                 <label className="text-xs text-zinc-600 font-medium mb-3 block">Revenue Summary</label>
                 <div className="flex items-center gap-4">
-                  <div className="flex-1 text-center p-3 bg-blue-50 border border-blue-200 rounded-xl">
-                    <p className="text-2xl font-bold text-blue-600">
+                  <div className="flex-1 text-center p-3 bg-[#043d6b] border border-[#043d6b] rounded-xl">
+                    <p className="text-2xl font-bold text-[#035291]">
                       {formatCurrency(getClientRevenue(selectedClient.id, selectedClient.name))}
                     </p>
                     <p className="text-xs text-zinc-600 mt-1">Total Budget</p>
                   </div>
-                  <div className="flex-1 text-center p-3 bg-blue-50 border border-blue-200 rounded-xl">
-                    <p className="text-2xl font-bold text-blue-600">
+                  <div className="flex-1 text-center p-3 bg-[#043d6b] border border-[#043d6b] rounded-xl">
+                    <p className="text-2xl font-bold text-[#035291]">
                       {getClientProjects(selectedClient.id, selectedClient.name).length}
                     </p>
                     <p className="text-xs text-zinc-600 mt-1">Total Projects</p>
@@ -1050,7 +1050,7 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
 
               {/* Notes Card */}
               {selectedClient.notes && (
-                <div className="bg-white border-2 border-blue-400 rounded-2xl p-3 md:p-4 shadow-sm">
+                <div className="bg-white border-2 border-[#043d6b] rounded-2xl p-3 md:p-4 shadow-sm">
                   <label className="text-xs text-zinc-600 font-medium mb-2 block">Notes</label>
                   <p className="text-sm text-zinc-700 whitespace-pre-wrap">{selectedClient.notes}</p>
                 </div>

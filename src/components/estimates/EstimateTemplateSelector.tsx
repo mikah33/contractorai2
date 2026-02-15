@@ -86,8 +86,8 @@ const EstimateTemplateSelector: React.FC<EstimateTemplateSelectorProps> = ({ onS
             onClick={() => handleSelectTemplate(template)}
             className={`cursor-pointer border rounded-lg transition-all ${
               selectedTemplateId === template.id
-                ? 'border-blue-500 ring-2 ring-blue-200'
-                : 'border-gray-200 hover:border-blue-300'
+                ? 'border-[#043d6b] ring-2 ring-[#043d6b]/30'
+                : 'border-gray-200 hover:border-[#035291]'
             }`}
           >
             <div className="relative">
@@ -113,7 +113,7 @@ const EstimateTemplateSelector: React.FC<EstimateTemplateSelectorProps> = ({ onS
               )}
               
               {selectedTemplateId === template.id && (
-                <div className="absolute top-2 left-2 bg-blue-500 text-white rounded-full p-1">
+                <div className="absolute top-2 left-2 bg-[#043d6b] text-white rounded-full p-1">
                   <Check className="w-4 h-4" />
                 </div>
               )}
