@@ -1692,12 +1692,12 @@ const Settings = () => {
               <div className="flex items-center gap-3">
                 <LogOut className="w-6 h-6 text-red-500" />
                 <div className="flex-1 text-left">
-                  <p className="font-semibold text-status-red-700">
+                  <p className="font-semibold text-red-500">
                     {loggingOut ? 'Logging out...' : 'Log Out'}
                   </p>
                   <p className={`text-sm ${themeClasses.text.secondary}`}>{user?.email}</p>
                 </div>
-                {loggingOut && <Loader2 className="w-5 h-5 text-status-red-600 animate-spin" />}
+                {loggingOut && <Loader2 className="w-5 h-5 text-red-500 animate-spin" />}
               </div>
             </button>
           </div>
