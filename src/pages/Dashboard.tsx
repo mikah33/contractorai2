@@ -769,13 +769,14 @@ const Dashboard: React.FC = () => {
                           </p>
                         </div>
                       </div>
-                      {estimate.declined_reason && (
-                        <div className={`ml-13 p-2 rounded ${theme === 'light' ? 'bg-red-50' : 'bg-red-900/20'}`}>
-                          <p className={`text-sm ${theme === 'light' ? 'text-red-700' : 'text-red-300'}`}>
-                            <span className="font-medium">Reason:</span> {estimate.declined_reason}
-                          </p>
-                        </div>
-                      )}
+                      <div className={`mt-1 p-3 rounded-lg ${theme === 'light' ? 'bg-red-50 border border-red-100' : 'bg-red-900/20 border border-red-800/50'}`}>
+                        <p className={`text-sm font-medium ${theme === 'light' ? 'text-red-800' : 'text-red-300'} mb-1`}>
+                          Customer Feedback:
+                        </p>
+                        <p className={`text-sm ${theme === 'light' ? 'text-red-700' : 'text-red-400'}`}>
+                          {estimate.declined_reason || 'No reason provided'}
+                        </p>
+                      </div>
                     </div>
                   ))}
                 </div>
