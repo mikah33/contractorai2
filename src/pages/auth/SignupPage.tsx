@@ -125,18 +125,18 @@ const SignupPage = () => {
   };
 
   return (
-    <div className={`min-h-screen ${themeClasses.bg.primary} flex flex-col justify-center px-4 sm:px-6 lg:px-8 py-8`}>
+    <div className={`min-h-screen ${themeClasses.bg.primary} flex flex-col justify-center px-4 sm:px-6 lg:px-8 py-8 relative`}>
       {/* Back button */}
-      <div className="absolute top-12 left-4 md:top-16 md:left-6">
+      <div className="absolute left-4 md:left-6 z-50" style={{ top: 'calc(env(safe-area-inset-top) + 12px)' }}>
         <button
           onClick={() => {
             console.log('Back button clicked');
             navigate(-1);
           }}
-          className={`flex items-center gap-2 px-3 py-2 rounded-lg ${themeClasses.text.secondary} ${themeClasses.hover.text} transition-colors`}
+          className={`flex items-center gap-2 px-4 py-3 rounded-lg ${themeClasses.text.secondary} ${themeClasses.hover.text} transition-colors active:opacity-70`}
         >
-          <ArrowLeft className="h-5 w-5" />
-          <span className="text-sm font-medium">Back</span>
+          <ArrowLeft className="h-6 w-6" />
+          <span className="text-base font-medium">Back</span>
         </button>
       </div>
 
