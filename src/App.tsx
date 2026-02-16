@@ -87,6 +87,16 @@ function App() {
   const [checkingSubscription, setCheckingSubscription] = useState(true);
   const { profileCompleted, checkOnboardingStatus } = useOnboardingStore();
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
+  const [splashMinTimePassed, setSplashMinTimePassed] = useState(false);
+
+  // Splash screen timer - ensures animation completes (4.5 seconds)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSplashMinTimePassed(true);
+    }, 4500);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Handle deep links on iOS/Android
   useDeepLinks();
@@ -190,38 +200,26 @@ function App() {
     setShowOnboarding(false);
   };
 
-  // Show loading while auth or data initializes
-  if (!initialized || (user && !dataInitialized)) {
+  // Show splash screen on every app launch - must complete before transitioning
+  const isLoading = !initialized || (user && !dataInitialized);
+  const shouldShowSplash = showSplash && (!splashMinTimePassed || isLoading);
+
+  // Hide splash when both animation is done AND loading is complete
+  useEffect(() => {
+    if (splashMinTimePassed && !isLoading && showSplash) {
+      setShowSplash(false);
+    }
+  }, [splashMinTimePassed, isLoading, showSplash]);
+
+  if (shouldShowSplash) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center max-w-md px-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 text-lg mb-2">
-            {!initialized ? 'Checking authentication...' : 'Loading your data...'}
-          </p>
-          {initError && (
-            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-700 text-sm font-medium">Error: {initError}</p>
-              <button
-                onClick={() => window.location.reload()}
-                className="mt-3 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors text-sm"
-              >
-                Reload Page
-              </button>
-            </div>
-          )}
-          {!initialized && (
-            <p className="text-gray-500 text-sm mt-4">
-              If this takes more than 10 seconds, please check your internet connection or{' '}
-              <button
-                onClick={() => window.location.reload()}
-                className="text-blue-600 hover:underline"
-              >
-                reload the page
-              </button>
-            </p>
-          )}
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-[#f5f5f5]">
+        <img
+          src="/onsite-logo.gif"
+          alt="Onsite"
+          className="w-[300px] h-auto"
+          key={Date.now()}
+        />
       </div>
     );
   }
