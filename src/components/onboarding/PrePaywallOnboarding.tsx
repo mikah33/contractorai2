@@ -376,6 +376,7 @@ const PrePaywallOnboarding: React.FC<PrePaywallOnboardingProps> = ({ onComplete 
   const sessionId = useRef(getSessionId());
   const stepStartTime = useRef(Date.now());
   const trackedSteps = useRef<Set<number>>(new Set());
+  const hasCompleted = useRef(false); // Flag to prevent false "dropped" events
 
   // Track analytics event
   const trackEvent = useCallback(async (
@@ -409,9 +410,12 @@ const PrePaywallOnboarding: React.FC<PrePaywallOnboardingProps> = ({ onComplete 
     stepStartTime.current = Date.now();
   }, [step, trackEvent]);
 
-  // Track drop-off when user leaves
+  // Track drop-off when user leaves (but not if they completed onboarding)
   useEffect(() => {
     const handleBeforeUnload = () => {
+      // Don't track as dropped if user completed onboarding
+      if (hasCompleted.current) return;
+
       const timeOnStep = Date.now() - stepStartTime.current;
       // Use sendBeacon for reliable tracking on page close
       const data = JSON.stringify({
@@ -432,6 +436,9 @@ const PrePaywallOnboarding: React.FC<PrePaywallOnboardingProps> = ({ onComplete 
     };
 
     const handleVisibilityChange = () => {
+      // Don't track as dropped if user completed onboarding
+      if (hasCompleted.current) return;
+
       if (document.visibilityState === 'hidden') {
         trackEvent(step, 'dropped', Date.now() - stepStartTime.current);
       }
@@ -486,6 +493,9 @@ const PrePaywallOnboarding: React.FC<PrePaywallOnboardingProps> = ({ onComplete 
   };
 
   const handleComplete = async () => {
+    // Mark as completed to prevent false "dropped" events when navigating away
+    hasCompleted.current = true;
+
     // Track step 4 completion (full onboarding completed)
     trackEvent(4, 'completed', Date.now() - stepStartTime.current);
 
