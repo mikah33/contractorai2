@@ -194,41 +194,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         // Send registration data to n8n webhook (only for new signups)
         if (data.user.identities && data.user.identities.length > 0) {
           try {
-            // Generate unsubscribe URL using Supabase function
-            let unsubscribeUrl = '';
-            try {
-              const { data: urlData } = await supabase.rpc('get_unsubscribe_url', {
-                p_email: email,
-                p_base_url: window.location.origin
-              });
-              unsubscribeUrl = urlData || `${window.location.origin}/unsubscribe`;
-            } catch (urlError) {
-              console.warn('Failed to generate unsubscribe URL:', urlError);
-              unsubscribeUrl = `${window.location.origin}/unsubscribe`;
-            }
-
-            await fetch('https://contractorai.app.n8n.cloud/webhook/170d14a9-ace1-49cf-baab-49dd8aec1245', {
+            await fetch('https://contractorai.app.n8n.cloud/webhook/47e9a815-fbd7-4ac7-a3d0-0ec212d977fc', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
               },
               body: JSON.stringify({
                 email,
-                fullName: metadata?.fullName || '',
-                companyName: metadata?.companyName || '',
-                phoneNumber: metadata?.phoneNumber || '',
-                userId: data.user.id,
                 timestamp: new Date().toISOString(),
-                source: 'ContractorAI Web App',
-                // Add unsubscribe information for email compliance
-                unsubscribeUrl,
-                emailType: 'welcome', // This helps n8n know what type of email template to use
-                complianceInfo: {
-                  canUnsubscribe: true,
-                  unsubscribeTypes: ['all', 'marketing', 'notifications'],
-                  privacyPolicyUrl: `${window.location.origin}/legal/privacy`,
-                  termsOfServiceUrl: `${window.location.origin}/legal/terms`
-                }
+                platform: 'webapp'
               }),
             });
           } catch (webhookError) {

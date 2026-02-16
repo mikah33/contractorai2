@@ -146,7 +146,7 @@ serve(async (req) => {
         <div style="white-space: pre-wrap;">${textContent.replace(/\n/g, "<br>")}</div>
         ${imageHtml ? `<div style="margin-top: 20px;">${imageHtml}</div>` : ""}
         <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #666; font-size: 12px;">
-          Sent via ContractorAI
+          Sent via OnSite
         </div>
       </div>
     `;

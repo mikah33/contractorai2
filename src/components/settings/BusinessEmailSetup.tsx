@@ -144,15 +144,15 @@ export const BusinessEmailSetup: React.FC = () => {
         body: {
           userId: user.id,
           to: user.email,
-          subject: 'Test Email from ContractorAI',
+          subject: 'Test Email from OnSite',
           htmlBody: `
             <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <div style="background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%); padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
-                <h1 style="color: white; margin: 0; font-size: 24px;">ContractorAI</h1>
+              <div style="background: #043d6b; padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
+                <h1 style="color: white; margin: 0; font-size: 24px;">OnSite</h1>
               </div>
               <div style="background: #ffffff; padding: 32px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
                 <h2 style="color: #18181b; margin: 0 0 16px;">Email Connection Successful!</h2>
-                <p style="color: #52525b; line-height: 1.6;">This is a test email from ContractorAI.</p>
+                <p style="color: #52525b; line-height: 1.6;">This is a test email from OnSite.</p>
                 <p style="color: #52525b; line-height: 1.6;">Your Google account email (<strong>${gmailEmail}</strong>) is connected and working correctly!</p>
                 <div style="margin-top: 24px; padding: 16px; background: #f0fdf4; border-radius: 8px; border-left: 4px solid #22c55e;">
                   <p style="color: #166534; margin: 0;">✓ Task reminders and notifications will be sent from this email address.</p>

@@ -17,6 +17,16 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
+// Generate a short code for payment links (8 chars alphanumeric)
+function generateShortCode(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+  let result = '';
+  for (let i = 0; i < 8; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -158,7 +168,11 @@ Deno.serve(async (req) => {
 
       const session = await stripe.checkout.sessions.create(sessionParams);
 
-      // Store payment link info
+      // Generate short code for the payment link
+      const shortCode = generateShortCode();
+      const shortUrl = `https://contractorai.tools/pay/${shortCode}`;
+
+      // Store payment link info with short code
       await supabase
         .from('invoice_payment_links')
         .upsert({
@@ -166,6 +180,7 @@ Deno.serve(async (req) => {
           user_id: user.id,
           stripe_session_id: session.id,
           payment_url: session.url,
+          short_code: shortCode,
           amount: paymentAmount,
           status: 'pending',
           created_at: new Date().toISOString(),
@@ -177,6 +192,8 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({
           paymentUrl: session.url,
+          shortUrl: shortUrl,
+          shortCode: shortCode,
           sessionId: session.id,
           amount: paymentAmount,
           expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
@@ -195,9 +212,15 @@ Deno.serve(async (req) => {
         .single();
 
       if (paymentLink && paymentLink.status === 'pending' && new Date(paymentLink.expires_at) > new Date()) {
+        const shortUrl = paymentLink.short_code
+          ? `https://contractorai.tools/pay/${paymentLink.short_code}`
+          : null;
+
         return new Response(
           JSON.stringify({
             paymentUrl: paymentLink.payment_url,
+            shortUrl: shortUrl,
+            shortCode: paymentLink.short_code,
             sessionId: paymentLink.stripe_session_id,
             amount: paymentLink.amount,
             expiresAt: paymentLink.expires_at,

@@ -18,7 +18,10 @@ import {
   Camera,
   MapPin,
   Navigation,
-  ClipboardList
+  ClipboardList,
+  Bell,
+  FileCheck,
+  X as XIcon
 } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
@@ -55,7 +58,10 @@ const Dashboard: React.FC = () => {
   const [tasks, setTasks] = useState<any[]>([]);
   const [todayTasks, setTodayTasks] = useState<any[]>([]);
   const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
+  const [businessLocation, setBusinessLocation] = useState<{lat: number, lng: number, address: string} | null>(null);
   const [taskLocations, setTaskLocations] = useState<{lat: number, lng: number, name: string, address: string}[]>([]);
+  const [approvedEstimates, setApprovedEstimates] = useState<any[]>([]);
+  const [dismissedNotifications, setDismissedNotifications] = useState<Set<string>>(new Set());
 
   // Create custom clipboard marker icon with label
   const createMarkerIcon = (label: string) => new L.DivIcon({
@@ -88,6 +94,46 @@ const Dashboard: React.FC = () => {
         ">
           <svg style="transform: rotate(45deg); width: 22px; height: 22px;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+          </svg>
+        </div>
+      </div>
+    `,
+    iconSize: [120, 90],
+    iconAnchor: [60, 90],
+    popupAnchor: [0, -90]
+  });
+
+  // Create home marker icon for business location
+  const createHomeMarkerIcon = () => new L.DivIcon({
+    className: 'custom-marker',
+    html: `
+      <div style="display: flex; flex-direction: column; align-items: center;">
+        <div style="
+          background: white;
+          padding: 6px 12px;
+          border-radius: 8px;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+          margin-bottom: 8px;
+          white-space: nowrap;
+          font-weight: 700;
+          font-size: 14px;
+          color: #1f2937;
+          border: 2px solid #10b981;
+        ">Home Base</div>
+        <div style="
+          background: #10b981;
+          width: 44px;
+          height: 44px;
+          border-radius: 50% 50% 50% 0;
+          transform: rotate(-45deg);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.5);
+          border: 3px solid white;
+        ">
+          <svg style="transform: rotate(45deg); width: 22px; height: 22px;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
           </svg>
         </div>
       </div>
@@ -174,6 +220,32 @@ const Dashboard: React.FC = () => {
     fetchTasks();
   }, []);
 
+  // Geocode business address from profile
+  useEffect(() => {
+    const geocodeBusinessAddress = async () => {
+      if (!profile?.address) return;
+
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(profile.address)}&limit=1`,
+          { headers: { 'User-Agent': 'ContractorAI-App' } }
+        );
+        const data = await response.json();
+        if (data && data[0]) {
+          setBusinessLocation({
+            lat: parseFloat(data[0].lat),
+            lng: parseFloat(data[0].lon),
+            address: profile.address
+          });
+        }
+      } catch (error) {
+        console.error('Business address geocoding error:', error);
+      }
+    };
+
+    geocodeBusinessAddress();
+  }, [profile?.address]);
+
   useEffect(() => {
     calculateFinancialSummary();
   }, [payments, receipts]);
@@ -213,6 +285,68 @@ const Dashboard: React.FC = () => {
       geocodeAddresses();
     }
   }, [todayTasks]);
+
+  // Fetch approved estimates for notifications
+  useEffect(() => {
+    const fetchApprovedEstimates = async () => {
+      if (!user?.id) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('estimate_email_responses')
+          .select(`
+            *,
+            estimate:estimates(title, total)
+          `)
+          .eq('user_id', user.id)
+          .eq('accepted', true)
+          .order('created_at', { ascending: false })
+          .limit(5);
+
+        if (error) {
+          console.error('Error fetching approved estimates:', error);
+          return;
+        }
+
+        // Filter out dismissed notifications locally
+        const filtered = (data || []).filter(e => !dismissedNotifications.has(e.id));
+        setApprovedEstimates(filtered);
+        console.log('Approved estimates found:', filtered.length);
+      } catch (err) {
+        console.error('Error fetching approved estimates:', err);
+      }
+    };
+
+    fetchApprovedEstimates();
+
+    // Set up real-time subscription for new approvals
+    const channel = supabase
+      .channel('estimate-approvals')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'estimate_email_responses',
+          filter: `user_id=eq.${user?.id}`
+        },
+        (payload) => {
+          if (payload.new.accepted === true) {
+            fetchApprovedEstimates();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
+
+  const dismissNotification = (id: string) => {
+    setDismissedNotifications(prev => new Set([...prev, id]));
+    setApprovedEstimates(prev => prev.filter(e => e.id !== id));
+  };
 
 
   const formatCurrency = (amount: number) => {
@@ -350,6 +484,20 @@ const Dashboard: React.FC = () => {
                   : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
                 }
               />
+              {/* Business location home marker */}
+              {businessLocation && (
+                <Marker
+                  position={[businessLocation.lat, businessLocation.lng]}
+                  icon={createHomeMarkerIcon()}
+                >
+                  <Popup>
+                    <div className="text-center p-1">
+                      <p className="font-bold text-gray-900 text-base">Home Base</p>
+                      <p className="text-gray-600 text-sm mt-1">{businessLocation.address}</p>
+                    </div>
+                  </Popup>
+                </Marker>
+              )}
               {taskLocations.map((location, index) => (
                 <Marker
                   key={index}
@@ -364,6 +512,37 @@ const Dashboard: React.FC = () => {
                   </Popup>
                 </Marker>
               ))}
+            </MapContainer>
+          ) : businessLocation ? (
+            <MapContainer
+              center={[businessLocation.lat, businessLocation.lng]}
+              zoom={13}
+              style={{ height: '100%', width: '100%' }}
+              zoomControl={false}
+              attributionControl={false}
+              dragging={false}
+              touchZoom={true}
+              scrollWheelZoom={true}
+              doubleClickZoom={true}
+            >
+              <TileLayer
+                url={theme === 'light'
+                  ? "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+                  : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                }
+              />
+              {/* Business location home marker */}
+              <Marker
+                position={[businessLocation.lat, businessLocation.lng]}
+                icon={createHomeMarkerIcon()}
+              >
+                <Popup>
+                  <div className="text-center p-1">
+                    <p className="font-bold text-gray-900 text-base">Home Base</p>
+                    <p className="text-gray-600 text-sm mt-1">{businessLocation.address}</p>
+                  </div>
+                </Popup>
+              </Marker>
             </MapContainer>
           ) : userLocation ? (
             <MapContainer
@@ -488,6 +667,59 @@ const Dashboard: React.FC = () => {
 
       {/* Content below tasks - Solid background */}
       <div className={`relative z-20 ${themeClasses.bg.primary}`}>
+        {/* Approved Estimates Notification */}
+        {approvedEstimates.length > 0 && (
+          <div className="px-4 pt-4">
+            <div className={`rounded-xl overflow-hidden ${theme === 'light' ? 'bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200' : 'bg-gradient-to-r from-green-900/30 to-emerald-900/30 border border-green-800'}`}>
+              <div className="p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${theme === 'light' ? 'bg-green-100' : 'bg-green-800'}`}>
+                    <Bell className="w-4 h-4 text-green-600" />
+                  </div>
+                  <h3 className={`font-bold ${theme === 'light' ? 'text-green-800' : 'text-green-300'}`}>
+                    Estimate{approvedEstimates.length > 1 ? 's' : ''} Approved!
+                  </h3>
+                </div>
+
+                <div className="space-y-2">
+                  {approvedEstimates.map((estimate) => (
+                    <div
+                      key={estimate.id}
+                      className={`flex items-center gap-3 p-3 rounded-lg ${theme === 'light' ? 'bg-white' : 'bg-zinc-800'}`}
+                    >
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${theme === 'light' ? 'bg-green-100' : 'bg-green-900/50'}`}>
+                        <FileCheck className="w-5 h-5 text-green-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`font-semibold ${themeClasses.text.primary} truncate`}>
+                          {estimate.customer_name || 'Customer'}
+                        </p>
+                        <p className={`text-sm ${themeClasses.text.muted}`}>
+                          {estimate.estimate?.title || 'Estimate'} • ${estimate.estimate?.total ? Number(estimate.estimate.total).toLocaleString() : '0'}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="w-5 h-5 text-green-500" />
+                        <button
+                          onClick={() => dismissNotification(estimate.id)}
+                          className={`p-1.5 rounded-lg ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-zinc-700'}`}
+                        >
+                          <XIcon className="w-4 h-4 text-gray-400" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <p className={`text-sm mt-3 ${theme === 'light' ? 'text-green-700' : 'text-green-400'}`}>
+                  <CreditCard className="w-4 h-4 inline mr-1" />
+                  Payment links have been sent automatically
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="pt-6 pb-2 space-y-2 max-w-5xl mx-auto px-4">
         {/* Feature Cards Carousel */}
         <div

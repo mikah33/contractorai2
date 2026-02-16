@@ -632,7 +632,7 @@ const EmployeesHub: React.FC = () => {
 
       {/* Edit Employee Modal */}
       {showEditForm && (
-        <div className="fixed inset-0 z-[200] flex items-end justify-center">
+        <div className="fixed inset-0 z-[250] flex items-end justify-center">
           <div
             className="absolute inset-0 bg-black/70"
             onClick={() => setShowEditForm(false)}

@@ -202,7 +202,7 @@ export const GmailConnection: React.FC = () => {
           </button>
 
           <div className="text-xs text-gray-500">
-            By connecting, you allow ContractorAI to send emails on your behalf using Gmail API.
+            By connecting, you allow OnSite to send emails on your behalf using Gmail API.
             You can disconnect at any time.
           </div>
         </div>
