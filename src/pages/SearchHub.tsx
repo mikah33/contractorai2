@@ -315,12 +315,12 @@ const SearchHub: React.FC = () => {
                   onClick={() => setActiveCategory(activeCategory === cat.id ? 'all' : cat.id)}
                   className={`flex items-center justify-center gap-1.5 px-2 py-2.5 rounded-xl transition-all border-2 ${
                     activeCategory === cat.id
-                      ? `${cat.bgColor} ${cat.color} border-current`
+                      ? `${cat.bgColor} ${cat.color} border-[#043d6b]`
                       : `${theme === 'light' ? 'bg-gray-100 border-gray-200' : 'bg-zinc-800 border-zinc-700'} ${themeClasses.text.secondary}`
                   }`}
                 >
-                  <cat.icon className="w-4 h-4" />
-                  <span className="text-sm font-semibold">{cat.label}</span>
+                  <cat.icon className="w-4 h-4 flex-shrink-0" />
+                  <span className="text-sm font-semibold truncate">{cat.label}</span>
                 </button>
               ))}
             </div>
