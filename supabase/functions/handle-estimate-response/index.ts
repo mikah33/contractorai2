@@ -234,8 +234,10 @@ Deno.serve(async (req) => {
 
     } else {
       // action === 'decline'
-      // If this is a GET request for decline without reason, redirect to decline form page
-      if (req.method === 'GET' && !reason) {
+      // If this is the initial decline click (no reason param at all), redirect to decline form page
+      // Note: reason === null means no param, reason === "" means form submitted with empty reason
+      const hasReasonParam = url.searchParams.has('reason');
+      if (req.method === 'GET' && !hasReasonParam) {
         const params = new URLSearchParams({
           action: 'decline-form',
           id: estimateId,
