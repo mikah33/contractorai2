@@ -1,0 +1,162 @@
+{
+  "name": "Onboarding Alerts",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "onboarding-alerts",
+        "responseMode": "onReceived",
+        "responseData": "allEntries"
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook - Onboarding Event",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "webhookId": "onboarding-alerts"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-dropoff",
+              "leftValue": "={{ $json.record.action }}",
+              "rightValue": "dropped",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "condition-completed",
+              "leftValue": "={{ $json.record.action === 'completed' && $json.record.step_number === 4 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "or"
+        }
+      },
+      "id": "filter-events",
+      "name": "Filter Notable Events",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [470, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.record.action === 'completed' && $json.record.step_number === 4 }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "is-conversion",
+      "name": "Is Conversion?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [690, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "notifications@contractorai.app",
+        "toEmail": "mikah@elevatedsystems.tech",
+        "subject": "=🎉 New Onboarding Conversion! - {{ $json.record.business_name || 'New User' }}",
+        "emailType": "html",
+        "html": "=<div style=\"font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto;\">\n  <div style=\"background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); padding: 24px; border-radius: 12px 12px 0 0;\">\n    <h1 style=\"color: white; margin: 0; font-size: 24px;\">🎉 New Conversion!</h1>\n  </div>\n  <div style=\"background: #f8fafc; padding: 24px; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 12px 12px;\">\n    <p style=\"margin: 0 0 16px; color: #1e293b; font-size: 16px;\">Someone just completed the onboarding flow!</p>\n    <div style=\"background: white; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0;\">\n      <p style=\"margin: 0 0 8px;\"><strong>Business Name:</strong> {{ $json.record.business_name || 'Not provided' }}</p>\n      <p style=\"margin: 0 0 8px;\"><strong>Trade:</strong> {{ $json.record.selected_trade || 'Not selected' }}</p>\n      <p style=\"margin: 0 0 8px;\"><strong>Device:</strong> {{ $json.record.device_type || 'Unknown' }}</p>\n      <p style=\"margin: 0;\"><strong>Time on final step:</strong> {{ Math.round(($json.record.time_on_step_ms || 0) / 1000) }} seconds</p>\n    </div>\n    <p style=\"margin: 16px 0 0; color: #64748b; font-size: 14px;\">They should now see the paywall. 💰</p>\n  </div>\n</div>"
+      },
+      "id": "email-conversion",
+      "name": "Email - Conversion",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [910, 200],
+      "credentials": {
+        "smtp": {
+          "id": "smtp-credentials",
+          "name": "SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "notifications@contractorai.app",
+        "toEmail": "mikah@elevatedsystems.tech",
+        "subject": "=⚠️ User Dropped at Step {{ $json.record.step_number }} - {{ $json.record.step_name }}",
+        "emailType": "html",
+        "html": "=<div style=\"font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto;\">\n  <div style=\"background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 24px; border-radius: 12px 12px 0 0;\">\n    <h1 style=\"color: white; margin: 0; font-size: 24px;\">⚠️ User Dropped Off</h1>\n  </div>\n  <div style=\"background: #f8fafc; padding: 24px; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 12px 12px;\">\n    <p style=\"margin: 0 0 16px; color: #1e293b; font-size: 16px;\">Someone left during onboarding.</p>\n    <div style=\"background: white; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0;\">\n      <p style=\"margin: 0 0 8px;\"><strong>Dropped at:</strong> Step {{ $json.record.step_number }} - {{ $json.record.step_name }}</p>\n      <p style=\"margin: 0 0 8px;\"><strong>Time before leaving:</strong> {{ Math.round(($json.record.time_on_step_ms || 0) / 1000) }} seconds</p>\n      <p style=\"margin: 0 0 8px;\"><strong>Business Name:</strong> {{ $json.record.business_name || 'Not entered yet' }}</p>\n      <p style=\"margin: 0 0 8px;\"><strong>Trade:</strong> {{ $json.record.selected_trade || 'Not selected yet' }}</p>\n      <p style=\"margin: 0;\"><strong>Device:</strong> {{ $json.record.device_type || 'Unknown' }}</p>\n    </div>\n    <div style=\"margin-top: 16px; padding: 12px; background: #fef3c7; border-radius: 8px; border: 1px solid #fcd34d;\">\n      <p style=\"margin: 0; color: #92400e; font-size: 14px;\">\n        {{ $json.record.step_number === 1 ? '💡 Left during business setup - maybe simplify the form?' : '' }}\n        {{ $json.record.step_number === 2 ? '💡 Left at email compose - is the UI overwhelming?' : '' }}\n        {{ $json.record.step_number === 3 ? '💡 Left at email preview - does the estimate look compelling?' : '' }}\n      </p>\n    </div>\n  </div>\n</div>"
+      },
+      "id": "email-dropoff",
+      "name": "Email - Dropoff",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [910, 400],
+      "credentials": {
+        "smtp": {
+          "id": "smtp-credentials",
+          "name": "SMTP"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook - Onboarding Event": {
+      "main": [
+        [
+          {
+            "node": "Filter Notable Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Notable Events": {
+      "main": [
+        [
+          {
+            "node": "Is Conversion?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Conversion?": {
+      "main": [
+        [
+          {
+            "node": "Email - Conversion",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Email - Dropoff",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "pinData": {}
+}

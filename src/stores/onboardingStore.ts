@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
 
 interface OnboardingState {
+  prePaywallCompleted: boolean | null;
   profileCompleted: boolean | null;
   dashboardTutorialCompleted: boolean | null;
   visionCamTutorialCompleted: boolean | null;
@@ -15,6 +16,8 @@ interface OnboardingState {
   photosTutorialCompleted: boolean | null;
   marketingTutorialCompleted: boolean | null;
   loading: boolean;
+  checkPrePaywallStatus: (userId: string) => Promise<boolean>;
+  markPrePaywallCompleted: (userId: string) => Promise<void>;
   checkOnboardingStatus: (userId: string) => Promise<boolean>;
   markProfileCompleted: (userId: string) => Promise<void>;
   checkDashboardTutorial: (userId: string) => Promise<boolean>;
@@ -43,6 +46,7 @@ interface OnboardingState {
 }
 
 export const useOnboardingStore = create<OnboardingState>((set, get) => ({
+  prePaywallCompleted: null,
   profileCompleted: null,
   dashboardTutorialCompleted: null,
   visionCamTutorialCompleted: null,
@@ -56,6 +60,64 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
   photosTutorialCompleted: null,
   marketingTutorialCompleted: null,
   loading: false,
+
+  checkPrePaywallStatus: async (userId: string): Promise<boolean> => {
+    if (!userId) return false;
+
+    try {
+      const { data, error } = await supabase
+        .from('user_onboarding')
+        .select('pre_paywall_completed')
+        .eq('user_id', userId)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // No record exists
+          console.log('[Onboarding] No pre-paywall record found');
+          set({ prePaywallCompleted: false });
+          return false;
+        }
+        console.error('[Onboarding] Error checking pre-paywall status:', error);
+        return false;
+      }
+
+      const completed = data?.pre_paywall_completed || false;
+      console.log('[Onboarding] Pre-paywall status:', completed);
+      set({ prePaywallCompleted: completed });
+      return completed;
+    } catch (error) {
+      console.error('[Onboarding] Error:', error);
+      return false;
+    }
+  },
+
+  markPrePaywallCompleted: async (userId: string): Promise<void> => {
+    if (!userId) return;
+
+    try {
+      const { error } = await supabase
+        .from('user_onboarding')
+        .upsert({
+          user_id: userId,
+          pre_paywall_completed: true,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id'
+        });
+
+      if (error) {
+        console.error('[Onboarding] Error marking pre-paywall complete:', error);
+        throw error;
+      }
+
+      console.log('[Onboarding] Pre-paywall marked as completed');
+      set({ prePaywallCompleted: true });
+    } catch (error) {
+      console.error('[Onboarding] Error:', error);
+      throw error;
+    }
+  },
 
   checkOnboardingStatus: async (userId: string): Promise<boolean> => {
     if (!userId) return false;
@@ -668,6 +730,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
 
   reset: () => {
     set({
+      prePaywallCompleted: null,
       profileCompleted: null,
       dashboardTutorialCompleted: null,
       visionCamTutorialCompleted: null,

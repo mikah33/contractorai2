@@ -400,16 +400,16 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose, initia
 
   return (
     <div
-      className="fixed inset-0 z-[200] bg-[#0F0F0F] flex flex-col"
+      className="fixed inset-0 z-[200] bg-gray-50 flex flex-col"
       style={{
         paddingTop: 'env(safe-area-inset-top)'
       }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white">
         <button
           onClick={step === 'result' ? () => setStep('prompt') : handleClose}
-          className="p-2 -ml-2 text-zinc-400 hover:text-white"
+          className="p-2 -ml-2 text-gray-500 hover:text-gray-900"
         >
           {step === 'result' ? <ChevronLeft className="w-6 h-6" /> : <X className="w-6 h-6" />}
         </button>
@@ -417,24 +417,24 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose, initia
           <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-[#043d6b] rounded-lg flex items-center justify-center">
             <Eye className="w-5 h-5 text-white" />
           </div>
-          <span className="font-bold text-white">Vision Cam</span>
+          <span className="font-bold text-gray-900">Vision Cam</span>
         </div>
         <div className="w-10" />
       </div>
 
       {/* Tutorial Step */}
       {step === 'tutorial' && (
-        <div className="flex-1 flex flex-col p-6">
+        <div className="flex-1 flex flex-col p-6 bg-white">
           <div className="flex-1 flex flex-col items-center justify-center">
-            <div className="w-20 h-20 bg-gradient-to-r from-purple-500/20 to-[#043d6b]/20 rounded-2xl flex items-center justify-center mb-6">
+            <div className="w-20 h-20 bg-gradient-to-r from-purple-100 to-blue-100 rounded-2xl flex items-center justify-center mb-6">
               {React.createElement(tutorialSteps[tutorialStep].icon, {
-                className: 'w-10 h-10 text-purple-400'
+                className: 'w-10 h-10 text-purple-500'
               })}
             </div>
-            <h2 className="text-2xl font-bold text-white mb-2 text-center">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2 text-center">
               {tutorialSteps[tutorialStep].title}
             </h2>
-            <p className="text-zinc-400 text-center max-w-xs">
+            <p className="text-gray-500 text-center max-w-xs">
               {tutorialSteps[tutorialStep].description}
             </p>
 
@@ -444,7 +444,7 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose, initia
                 <div
                   key={i}
                   className={`w-2 h-2 rounded-full transition-colors ${
-                    i === tutorialStep ? 'bg-purple-500' : 'bg-zinc-700'
+                    i === tutorialStep ? 'bg-purple-500' : 'bg-gray-300'
                   }`}
                 />
               ))}
@@ -469,12 +469,12 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose, initia
               </button>
             )}
 
-            <label className="flex items-center justify-center gap-2 text-sm text-zinc-500">
+            <label className="flex items-center justify-center gap-2 text-sm text-gray-500">
               <input
                 type="checkbox"
                 checked={hideTutorialPermanently}
                 onChange={(e) => setHideTutorialPermanently(e.target.checked)}
-                className="rounded border-zinc-600 bg-zinc-800 text-purple-500 focus:ring-purple-500"
+                className="rounded border-gray-300 bg-white text-purple-500 focus:ring-purple-500"
               />
               Don't show this again
             </label>
@@ -484,52 +484,52 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose, initia
 
       {/* Capture Step */}
       {step === 'capture' && (
-        <div className="flex-1 flex flex-col p-4">
+        <div className="flex-1 flex flex-col p-4 bg-white">
           <div className="flex-1 flex flex-col items-center justify-center">
             <div className="w-full max-w-sm space-y-4">
               {/* Previous Visions Button */}
               {previousVisions.length > 0 && (
                 <button
                   onClick={() => setStep('previous')}
-                  className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-purple-500/20 to-[#043d6b]/20 rounded-xl border border-purple-500/30 hover:border-purple-500/50 active:scale-[0.98] transition-all"
+                  className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl border border-purple-200 hover:border-purple-300 active:scale-[0.98] transition-all"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-purple-500/30 rounded-lg flex items-center justify-center">
-                      <History className="w-5 h-5 text-purple-400" />
+                    <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                      <History className="w-5 h-5 text-purple-500" />
                     </div>
                     <div className="text-left">
-                      <span className="font-medium text-white block">Previous Visions</span>
-                      <span className="text-xs text-zinc-400">{previousVisions.length} saved</span>
+                      <span className="font-medium text-gray-900 block">Previous Visions</span>
+                      <span className="text-xs text-gray-500">{previousVisions.length} saved</span>
                     </div>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-purple-400" />
+                  <ChevronRight className="w-5 h-5 text-purple-500" />
                 </button>
               )}
 
               {/* Divider */}
               {previousVisions.length > 0 && (
                 <div className="flex items-center gap-3">
-                  <div className="flex-1 h-px bg-white/10" />
-                  <span className="text-xs text-zinc-500">Create New</span>
-                  <div className="flex-1 h-px bg-white/10" />
+                  <div className="flex-1 h-px bg-gray-200" />
+                  <span className="text-xs text-gray-500">Create New</span>
+                  <div className="flex-1 h-px bg-gray-200" />
                 </div>
               )}
 
               <button
                 onClick={() => cameraInputRef.current?.click()}
-                className="w-full flex flex-col items-center justify-center p-8 bg-gradient-to-b from-purple-500/10 to-[#043d6b]/10 border-2 border-dashed border-purple-500/50 rounded-2xl hover:border-purple-500 active:scale-[0.98] transition-all"
+                className="w-full flex flex-col items-center justify-center p-8 bg-gradient-to-b from-purple-50 to-blue-50 border-2 border-dashed border-purple-300 rounded-2xl hover:border-purple-500 active:scale-[0.98] transition-all"
               >
-                <Camera className="w-16 h-16 text-purple-400 mb-4" />
-                <span className="text-lg font-semibold text-white">Take Photo</span>
-                <span className="text-sm text-zinc-500">Use your camera</span>
+                <Camera className="w-16 h-16 text-purple-500 mb-4" />
+                <span className="text-lg font-semibold text-gray-900">Take Photo</span>
+                <span className="text-sm text-gray-500">Use your camera</span>
               </button>
 
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full flex items-center justify-center gap-3 p-4 bg-[#2C2C2E] rounded-xl border border-white/10 hover:border-purple-500/50 active:scale-[0.98] transition-all"
+                className="w-full flex items-center justify-center gap-3 p-4 bg-gray-100 rounded-xl border border-gray-200 hover:border-purple-300 active:scale-[0.98] transition-all"
               >
-                <Image className="w-6 h-6 text-zinc-400" />
-                <span className="font-medium text-white">Choose from Gallery</span>
+                <Image className="w-6 h-6 text-gray-500" />
+                <span className="font-medium text-gray-900">Choose from Gallery</span>
               </button>
             </div>
           </div>
@@ -554,10 +554,10 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose, initia
 
       {/* Prompt Step */}
       {step === 'prompt' && (
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col bg-white">
           {/* Image Preview */}
           {capturedImage && (
-            <div className="relative aspect-video bg-black">
+            <div className="relative aspect-video bg-gray-100">
               <img
                 src={capturedImage}
                 alt="Captured"
@@ -579,7 +579,7 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose, initia
           <div className="flex-1 p-4 space-y-4">
             {/* Prompt Input */}
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-2">
+              <label className="block text-sm font-medium text-gray-600 mb-2">
                 Describe your vision
               </label>
               <textarea
@@ -587,19 +587,19 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose, initia
                 onChange={(e) => setPrompt(e.target.value)}
                 placeholder="e.g., Renovated with modern siding, new windows, and a landscaped front yard"
                 rows={3}
-                className="w-full px-4 py-3 bg-[#2C2C2E] border border-white/10 rounded-xl text-white placeholder-zinc-500 focus:ring-2 focus:ring-[#043d6b] focus:border-transparent resize-none"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
               />
             </div>
 
             {/* Prompt Suggestions */}
             <div>
-              <p className="text-xs text-zinc-500 mb-2">Suggestions:</p>
+              <p className="text-xs text-gray-500 mb-2">Suggestions:</p>
               <div className="flex flex-wrap gap-2">
                 {VISION_PROMPT_SUGGESTIONS.slice(0, 4).map((suggestion, i) => (
                   <button
                     key={i}
                     onClick={() => setPrompt(suggestion)}
-                    className="px-3 py-1.5 bg-[#2C2C2E] rounded-full text-xs text-zinc-300 hover:bg-[#3C3C3E] active:scale-95 transition-all"
+                    className="px-3 py-1.5 bg-gray-100 rounded-full text-xs text-gray-600 hover:bg-gray-200 active:scale-95 transition-all"
                   >
                     {suggestion.slice(0, 30)}...
                   </button>
@@ -610,10 +610,10 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose, initia
             {/* Transformation Strength */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-medium text-zinc-400">
+                <label className="text-sm font-medium text-gray-600">
                   Transformation Strength
                 </label>
-                <span className="text-sm text-purple-400">{Math.round(strength * 100)}%</span>
+                <span className="text-sm text-purple-500">{Math.round(strength * 100)}%</span>
               </div>
               <input
                 type="range"
@@ -622,17 +622,17 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose, initia
                 step="0.05"
                 value={strength}
                 onChange={(e) => setStrength(parseFloat(e.target.value))}
-                className="w-full h-2 bg-[#2C2C2E] rounded-lg appearance-none cursor-pointer accent-purple-500"
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-500"
               />
-              <div className="flex justify-between text-xs text-zinc-500 mt-1">
+              <div className="flex justify-between text-xs text-gray-500 mt-1">
                 <span>Subtle changes</span>
                 <span>Full renovation</span>
               </div>
             </div>
 
             {error && (
-              <div className="p-3 bg-red-500/20 border border-red-500/50 rounded-lg">
-                <p className="text-sm text-red-400">{error}</p>
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-600">{error}</p>
               </div>
             )}
 
@@ -651,23 +651,23 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose, initia
 
       {/* Previous Visions Gallery Step */}
       {step === 'previous' && (
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 flex flex-col overflow-hidden bg-white">
           {/* Subheader */}
-          <div className="px-4 py-3 border-b border-white/10 flex items-center gap-3">
+          <div className="px-4 py-3 border-b border-gray-200 flex items-center gap-3">
             <button
               onClick={() => setStep('capture')}
-              className="p-1 text-zinc-400 hover:text-white"
+              className="p-1 text-gray-500 hover:text-gray-900"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
-            <h2 className="font-semibold text-white">Previous Visions</h2>
-            <span className="text-xs text-zinc-500">({previousVisions.length})</span>
+            <h2 className="font-semibold text-gray-900">Previous Visions</h2>
+            <span className="text-xs text-gray-500">({previousVisions.length})</span>
           </div>
 
           {/* Selected Vision View */}
           {selectedVision ? (
             <div className="flex-1 flex flex-col overflow-hidden">
-              <div className="flex-1 bg-black flex items-center justify-center min-h-0 relative">
+              <div className="flex-1 bg-gray-100 flex items-center justify-center min-h-0 relative">
                 <img
                   src={selectedVision.imageUrl}
                   alt="Vision"
@@ -681,23 +681,23 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose, initia
                 </button>
               </div>
               <div
-                className="p-4 space-y-3 bg-[#1C1C1E] flex-shrink-0"
+                className="p-4 space-y-3 bg-white border-t border-gray-200 flex-shrink-0"
                 style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}
               >
                 {selectedVision.caption && (
-                  <p className="text-sm text-zinc-400 text-center">"{selectedVision.caption}"</p>
+                  <p className="text-sm text-gray-500 text-center">"{selectedVision.caption}"</p>
                 )}
-                <div className="flex items-center justify-center gap-2 text-xs text-zinc-500">
+                <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
                   <Clock className="w-3.5 h-3.5" />
                   <span>{formatDate(selectedVision.createdAt)}</span>
                 </div>
                 <div className="grid grid-cols-4 gap-2">
                   <button
                     onClick={() => handleRegenerate(selectedVision)}
-                    className="flex flex-col items-center gap-1 p-3 bg-[#2C2C2E] rounded-xl active:scale-95 transition-transform"
+                    className="flex flex-col items-center gap-1 p-3 bg-gray-100 rounded-xl active:scale-95 transition-transform"
                   >
-                    <RefreshCw className="w-5 h-5 text-green-400" />
-                    <span className="text-xs text-zinc-300">Reprompt</span>
+                    <RefreshCw className="w-5 h-5 text-green-500" />
+                    <span className="text-xs text-gray-600">Reprompt</span>
                   </button>
                   <button
                     onClick={async () => {
@@ -714,10 +714,10 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose, initia
                         window.open(selectedVision.imageUrl, '_blank');
                       }
                     }}
-                    className="flex flex-col items-center gap-1 p-3 bg-[#2C2C2E] rounded-xl active:scale-95 transition-transform"
+                    className="flex flex-col items-center gap-1 p-3 bg-gray-100 rounded-xl active:scale-95 transition-transform"
                   >
-                    <Download className="w-5 h-5 text-purple-400" />
-                    <span className="text-xs text-zinc-300">Download</span>
+                    <Download className="w-5 h-5 text-purple-500" />
+                    <span className="text-xs text-gray-600">Download</span>
                   </button>
                   <button
                     onClick={() => {
@@ -728,10 +728,10 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose, initia
                       }]);
                       setShowEmailModal(true);
                     }}
-                    className="flex flex-col items-center gap-1 p-3 bg-[#2C2C2E] rounded-xl active:scale-95 transition-transform"
+                    className="flex flex-col items-center gap-1 p-3 bg-gray-100 rounded-xl active:scale-95 transition-transform"
                   >
-                    <Mail className="w-5 h-5 text-[#043d6b]" />
-                    <span className="text-xs text-zinc-300">Email</span>
+                    <Mail className="w-5 h-5 text-blue-500" />
+                    <span className="text-xs text-gray-600">Email</span>
                   </button>
                   <button
                     onClick={() => {
@@ -739,10 +739,10 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose, initia
                         handleDeleteVision(selectedVision.id);
                       }
                     }}
-                    className="flex flex-col items-center gap-1 p-3 bg-[#2C2C2E] rounded-xl active:scale-95 transition-transform"
+                    className="flex flex-col items-center gap-1 p-3 bg-gray-100 rounded-xl active:scale-95 transition-transform"
                   >
-                    <Trash2 className="w-5 h-5 text-red-400" />
-                    <span className="text-xs text-zinc-300">Delete</span>
+                    <Trash2 className="w-5 h-5 text-red-500" />
+                    <span className="text-xs text-gray-600">Delete</span>
                   </button>
                 </div>
               </div>
@@ -752,12 +752,12 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose, initia
             <div className="flex-1 overflow-y-auto p-4">
               {isLoadingVisions ? (
                 <div className="flex items-center justify-center py-12">
-                  <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
+                  <Loader2 className="w-8 h-8 text-purple-500 animate-spin" />
                 </div>
               ) : previousVisions.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12">
-                  <History className="w-12 h-12 text-zinc-600 mb-3" />
-                  <p className="text-zinc-500">No previous visions yet</p>
+                  <History className="w-12 h-12 text-gray-400 mb-3" />
+                  <p className="text-gray-500">No previous visions yet</p>
                   <button
                     onClick={() => setStep('capture')}
                     className="mt-4 px-4 py-2 bg-purple-500 text-white rounded-lg text-sm font-medium"
@@ -771,7 +771,7 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose, initia
                     <button
                       key={vision.id}
                       onClick={() => setSelectedVision(vision)}
-                      className="relative aspect-square rounded-xl overflow-hidden bg-[#2C2C2E] group"
+                      className="relative aspect-square rounded-xl overflow-hidden bg-gray-100 group"
                     >
                       <img
                         src={vision.imageUrl}
@@ -780,7 +780,7 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose, initia
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-active:opacity-100 transition-opacity" />
                       <div className="absolute bottom-0 left-0 right-0 p-2">
-                        <p className="text-[10px] text-zinc-400 truncate">
+                        <p className="text-[10px] text-gray-500 truncate">
                           {formatDate(vision.createdAt)}
                         </p>
                       </div>
@@ -795,16 +795,16 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose, initia
 
       {/* Generating Step */}
       {step === 'generating' && (
-        <div className="flex-1 flex flex-col items-center justify-center p-6">
-          <div className="w-24 h-24 bg-gradient-to-r from-purple-500/20 to-[#043d6b]/20 rounded-full flex items-center justify-center mb-6">
-            <Loader2 className="w-12 h-12 text-purple-400 animate-spin" />
+        <div className="flex-1 flex flex-col items-center justify-center p-6 bg-white">
+          <div className="w-24 h-24 bg-gradient-to-r from-purple-100 to-blue-100 rounded-full flex items-center justify-center mb-6">
+            <Loader2 className="w-12 h-12 text-purple-500 animate-spin" />
           </div>
-          <h2 className="text-xl font-bold text-white mb-2">Creating Your Vision</h2>
-          <p className="text-zinc-400 text-center mb-4">
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Creating Your Vision</h2>
+          <p className="text-gray-500 text-center mb-4">
             {generationProgress?.message || 'Processing...'}
           </p>
           {generationProgress?.progress && (
-            <div className="w-48 h-2 bg-[#2C2C2E] rounded-full overflow-hidden">
+            <div className="w-48 h-2 bg-gray-200 rounded-full overflow-hidden">
               <div
                 className="h-full bg-gradient-to-r from-purple-500 to-[#043d6b] transition-all duration-300"
                 style={{ width: `${generationProgress.progress}%` }}
@@ -818,7 +818,7 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose, initia
       {step === 'result' && generatedImage && (
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Generated Image */}
-          <div className="flex-1 bg-black flex items-center justify-center min-h-0">
+          <div className="flex-1 bg-gray-100 flex items-center justify-center min-h-0">
             <img
               src={generatedImage}
               alt="Generated Vision"
@@ -828,43 +828,43 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose, initia
 
           {/* Actions */}
           <div
-            className="p-4 space-y-3 bg-[#1C1C1E] flex-shrink-0"
+            className="p-4 space-y-3 bg-white border-t border-gray-200 flex-shrink-0"
             style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}
           >
-            <p className="text-sm text-zinc-400 text-center mb-2">"{prompt}"</p>
+            <p className="text-sm text-gray-500 text-center mb-2">"{prompt}"</p>
 
             <div className="grid grid-cols-4 gap-2">
               <button
                 onClick={handleDownload}
-                className="flex flex-col items-center gap-1 p-3 bg-[#2C2C2E] rounded-xl active:scale-95 transition-transform"
+                className="flex flex-col items-center gap-1 p-3 bg-gray-100 rounded-xl active:scale-95 transition-transform"
               >
-                <Download className="w-5 h-5 text-purple-400" />
-                <span className="text-xs text-zinc-300">Download</span>
+                <Download className="w-5 h-5 text-purple-500" />
+                <span className="text-xs text-gray-600">Download</span>
               </button>
               <button
                 onClick={handleShare}
-                className="flex flex-col items-center gap-1 p-3 bg-[#2C2C2E] rounded-xl active:scale-95 transition-transform"
+                className="flex flex-col items-center gap-1 p-3 bg-gray-100 rounded-xl active:scale-95 transition-transform"
               >
-                <Share2 className="w-5 h-5 text-purple-400" />
-                <span className="text-xs text-zinc-300">Share</span>
+                <Share2 className="w-5 h-5 text-purple-500" />
+                <span className="text-xs text-gray-600">Share</span>
               </button>
               <button
                 onClick={handleSendToEmail}
-                className="flex flex-col items-center gap-1 p-3 bg-[#2C2C2E] rounded-xl active:scale-95 transition-transform"
+                className="flex flex-col items-center gap-1 p-3 bg-gray-100 rounded-xl active:scale-95 transition-transform"
               >
-                <Mail className="w-5 h-5 text-[#043d6b]" />
-                <span className="text-xs text-zinc-300">Email</span>
+                <Mail className="w-5 h-5 text-blue-500" />
+                <span className="text-xs text-gray-600">Email</span>
               </button>
               <button
                 onClick={() => setShowProjectPicker(true)}
-                className="flex flex-col items-center gap-1 p-3 bg-[#2C2C2E] rounded-xl active:scale-95 transition-transform"
+                className="flex flex-col items-center gap-1 p-3 bg-gray-100 rounded-xl active:scale-95 transition-transform"
               >
-                <Briefcase className="w-5 h-5 text-purple-400" />
-                <span className="text-xs text-zinc-300">Attach</span>
+                <Briefcase className="w-5 h-5 text-purple-500" />
+                <span className="text-xs text-gray-600">Attach</span>
               </button>
             </div>
 
-            <div className="w-full py-3 bg-green-500/20 border border-green-500/30 text-green-400 rounded-xl font-medium flex items-center justify-center gap-2">
+            <div className="w-full py-3 bg-green-50 border border-green-200 text-green-600 rounded-xl font-medium flex items-center justify-center gap-2">
               <Check className="w-5 h-5" />
               Auto-saved to Gallery
             </div>
@@ -874,7 +874,7 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose, initia
                 setGeneratedImage(null);
                 setStep('prompt');
               }}
-              className="w-full py-2.5 text-zinc-400 text-sm font-medium flex items-center justify-center gap-2"
+              className="w-full py-2.5 text-gray-500 text-sm font-medium flex items-center justify-center gap-2"
             >
               <RefreshCw className="w-4 h-4" />
               Generate Again
@@ -887,18 +887,18 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose, initia
       {showProjectPicker && (
         <div className="fixed inset-0 z-[210] flex items-end justify-center">
           <div
-            className="absolute inset-0 bg-black/80"
+            className="absolute inset-0 bg-black/50"
             onClick={() => setShowProjectPicker(false)}
           />
-          <div className="relative w-full max-w-lg bg-[#1C1C1E] rounded-t-2xl max-h-[60vh] overflow-hidden">
+          <div className="relative w-full max-w-lg bg-white rounded-t-2xl max-h-[60vh] overflow-hidden">
             <div className="flex justify-center pt-3 pb-2">
-              <div className="w-10 h-1 bg-[#3A3A3C] rounded-full" />
+              <div className="w-10 h-1 bg-gray-300 rounded-full" />
             </div>
-            <div className="flex items-center justify-between px-4 pb-4 border-b border-white/10">
-              <h3 className="font-bold text-white">Attach to Project</h3>
+            <div className="flex items-center justify-between px-4 pb-4 border-b border-gray-200">
+              <h3 className="font-bold text-gray-900">Attach to Project</h3>
               <button
                 onClick={() => setShowProjectPicker(false)}
-                className="p-2 text-zinc-400"
+                className="p-2 text-gray-500"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -906,8 +906,8 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose, initia
             <div className="p-4 overflow-y-auto max-h-[50vh]">
               {projects.length === 0 ? (
                 <div className="text-center py-8">
-                  <Briefcase className="w-10 h-10 text-zinc-600 mx-auto mb-2" />
-                  <p className="text-zinc-500">No projects yet</p>
+                  <Briefcase className="w-10 h-10 text-gray-400 mx-auto mb-2" />
+                  <p className="text-gray-500">No projects yet</p>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -916,19 +916,19 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose, initia
                       key={project.id}
                       onClick={() => handleSaveToGallery(project.id)}
                       disabled={isSaving}
-                      className="w-full flex items-center gap-3 p-3 bg-[#2C2C2E] rounded-lg hover:bg-[#3C3C3E] active:scale-[0.98] transition-all"
+                      className="w-full flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 active:scale-[0.98] transition-all"
                     >
-                      <div className="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                        <Briefcase className="w-4 h-4 text-purple-400" />
+                      <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <Briefcase className="w-4 h-4 text-purple-500" />
                       </div>
                       <div className="flex-1 text-left">
-                        <p className="font-medium text-white text-sm">{project.name}</p>
-                        <p className="text-xs text-zinc-500">{project.client || 'No client'}</p>
+                        <p className="font-medium text-gray-900 text-sm">{project.name}</p>
+                        <p className="text-xs text-gray-500">{project.client || 'No client'}</p>
                       </div>
                       {isSaving ? (
-                        <Loader2 className="w-4 h-4 text-purple-400 animate-spin" />
+                        <Loader2 className="w-4 h-4 text-purple-500 animate-spin" />
                       ) : (
-                        <ChevronRight className="w-4 h-4 text-zinc-500" />
+                        <ChevronRight className="w-4 h-4 text-gray-400" />
                       )}
                     </button>
                   ))}

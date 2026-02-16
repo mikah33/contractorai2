@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import OnboardingModal from './components/onboarding/OnboardingModal';
+import PrePaywallOnboarding from './components/onboarding/PrePaywallOnboarding';
 import { useOnboardingStore } from './stores/onboardingStore';
 import { useDeepLinks } from './hooks/useDeepLinks';
 import Dashboard from './pages/Dashboard';
@@ -88,8 +89,10 @@ function App() {
   const { isInitialized: dataInitialized, initError } = useAppInitialization();
   const [hasActiveSubscription, setHasActiveSubscription] = useState<boolean | null>(null);
   const [checkingSubscription, setCheckingSubscription] = useState(true);
-  const { profileCompleted, checkOnboardingStatus } = useOnboardingStore();
+  const { profileCompleted, checkOnboardingStatus, checkPrePaywallStatus, prePaywallCompleted } = useOnboardingStore();
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showPrePaywallOnboarding, setShowPrePaywallOnboarding] = useState(false);
+  const [checkingPrePaywall, setCheckingPrePaywall] = useState(true);
   const [showSplash, setShowSplash] = useState(true);
   const [splashMinTimePassed, setSplashMinTimePassed] = useState(false);
 
@@ -104,11 +107,47 @@ function App() {
   // Handle deep links on iOS/Android
   useDeepLinks();
 
-  // Check subscription status when user is authenticated
+  // Check pre-paywall onboarding status when user is authenticated
+  useEffect(() => {
+    const checkPrePaywall = async () => {
+      if (!user) {
+        setCheckingPrePaywall(false);
+        return;
+      }
+
+      try {
+        console.log('[PrePaywall Check] Checking for user:', user.id);
+        const completed = await checkPrePaywallStatus(user.id);
+        console.log('[PrePaywall Check] Completed:', completed);
+
+        if (!completed) {
+          setShowPrePaywallOnboarding(true);
+        }
+      } catch (error) {
+        console.error('[PrePaywall Check] Error:', error);
+      } finally {
+        setCheckingPrePaywall(false);
+      }
+    };
+
+    checkPrePaywall();
+  }, [user, checkPrePaywallStatus]);
+
+  // Handle pre-paywall onboarding completion
+  const handlePrePaywallComplete = () => {
+    setShowPrePaywallOnboarding(false);
+  };
+
+  // Check subscription status when user is authenticated AND pre-paywall is complete
   useEffect(() => {
     const checkSubscription = async () => {
       if (!user) {
         setCheckingSubscription(false);
+        return;
+      }
+
+      // Wait for pre-paywall check to complete
+      if (checkingPrePaywall || showPrePaywallOnboarding) {
         return;
       }
 
@@ -181,7 +220,7 @@ function App() {
     };
 
     checkSubscription();
-  }, [user]);
+  }, [user, checkingPrePaywall, showPrePaywallOnboarding]);
 
   // Check onboarding status when user has active subscription
   useEffect(() => {
@@ -270,13 +309,33 @@ function App() {
     );
   }
 
+  // Show pre-paywall onboarding if not completed
+  if (checkingPrePaywall) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#0F0F0F]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-zinc-400">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (showPrePaywallOnboarding) {
+    return (
+      <ThemeProvider>
+        <PrePaywallOnboarding onComplete={handlePrePaywallComplete} />
+      </ThemeProvider>
+    );
+  }
+
   // Show subscription paywall if no active subscription
   if (checkingSubscription) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-[#0F0F0F]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Checking subscription...</p>
+          <p className="text-zinc-400">Checking subscription...</p>
         </div>
       </div>
     );
