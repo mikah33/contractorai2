@@ -773,7 +773,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
       )}
 
       {/* Content */}
-      <div className={`px-4 pb-4 space-y-4 ${embedded ? 'pt-0' : 'pt-4'}`}>
+      <div className={`px-4 pb-4 space-y-4 ${embedded ? '-mt-1' : 'pt-4'}`}>
         {/* Add Task Card */}
         <div className={`${themeClasses.bg.card} rounded-2xl border-2 ${theme === 'light' ? 'border-gray-300' : 'border-zinc-600'} p-6 relative overflow-hidden`}>
           {/* Background decorations */}
