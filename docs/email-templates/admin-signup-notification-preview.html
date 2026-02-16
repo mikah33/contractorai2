@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New OnSite Signup</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 30px 15px;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+            background: #0F0F0F;
+            color: #FFFFFF;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 420px;
+            margin: 0 auto;
+            background: #1C1C1E;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid #2C2C2E;
+        }
+        .header {
+            background: linear-gradient(135deg, #043d6b 0%, #035291 100%);
+            padding: 28px 24px;
+            text-align: center;
+        }
+        .logo-container {
+            width: 56px;
+            height: 56px;
+            background: #1C1C1E;
+            border-radius: 14px;
+            margin: 0 auto 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .logo-container img {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 17px;
+            font-weight: 600;
+            color: white;
+            letter-spacing: -0.2px;
+        }
+        .content {
+            padding: 24px;
+        }
+        .email-card {
+            background: #2C2C2E;
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        .email-label {
+            font-size: 12px;
+            color: #8E8E93;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        .email-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #FFFFFF;
+            word-break: break-all;
+        }
+        .email-value a {
+            color: #FFFFFF;
+            text-decoration: none;
+        }
+        .meta-grid {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .meta-card {
+            flex: 1;
+            background: #2C2C2E;
+            border-radius: 14px;
+            padding: 16px;
+            text-align: center;
+        }
+        .meta-icon {
+            font-size: 20px;
+            margin-bottom: 6px;
+        }
+        .meta-label {
+            font-size: 10px;
+            color: #8E8E93;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+        .meta-value {
+            font-size: 13px;
+            font-weight: 600;
+            color: #FFFFFF;
+        }
+        .platform-ios {
+            color: #007AFF;
+        }
+        .platform-webapp {
+            color: #043d6b;
+        }
+        .action-btn {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            background: #043d6b;
+            color: #FFFFFF;
+            box-sizing: border-box;
+            transition: background 0.2s ease;
+        }
+        .action-btn:hover {
+            background: #035291;
+        }
+        .footer {
+            padding: 16px 24px;
+            text-align: center;
+            border-top: 1px solid #2C2C2E;
+        }
+        .footer p {
+            margin: 0;
+            font-size: 12px;
+            color: #8E8E93;
+        }
+        .footer strong {
+            color: #FFFFFF;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo-container">
+                <img src="https://contractorai.tools/onsite-icon.png" alt="OnSite" />
+            </div>
+            <h1>New User Signup</h1>
+        </div>
+
+        <div class="content">
+            <div class="email-card">
+                <div class="email-label">Email Address</div>
+                <div class="email-value"><a href="mailto:{{email}}">{{email}}</a></div>
+            </div>
+
+            <div class="meta-grid">
+                <div class="meta-card">
+                    <div class="meta-icon">📱</div>
+                    <div class="meta-label">Platform</div>
+                    <div class="meta-value platform-webapp">{{platform}}</div>
+                </div>
+                <div class="meta-card">
+                    <div class="meta-icon">🕐</div>
+                    <div class="meta-label">Time</div>
+                    <div class="meta-value">{{timestamp}}</div>
+                </div>
+            </div>
+
+            <a href="mailto:{{email}}?subject=Welcome to OnSite!" class="action-btn">Contact User</a>
+        </div>
+
+        <div class="footer">
+            <p><strong>OnSite</strong> • Admin Notification</p>
+        </div>
+    </div>
+</body>
+</html>
