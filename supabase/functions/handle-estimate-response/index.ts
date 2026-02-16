@@ -82,24 +82,39 @@ Deno.serve(async (req) => {
     }
 
     if (action === 'approve') {
-      // Mark as approved
-      await supabase
+      // Mark as approved in estimate_email_responses
+      // Note: constraint requires declined IS NULL when accepted IS TRUE
+      console.log('📝 Updating estimate_email_responses:', { id: emailResponse.id, accepted: true });
+      const { error: updateError } = await supabase
         .from('estimate_email_responses')
         .update({
           accepted: true,
-          declined: false,
+          declined: null,
           responded_at: new Date().toISOString()
         })
         .eq('id', emailResponse.id);
 
-      // Update estimate status
-      await supabase
+      if (updateError) {
+        console.error('❌ Failed to update estimate_email_responses:', updateError);
+      } else {
+        console.log('✅ Successfully updated estimate_email_responses');
+      }
+
+      // Update estimate status in estimates table
+      console.log('📝 Updating estimates table:', { id: estimateId, status: 'approved' });
+      const { error: estimateUpdateError } = await supabase
         .from('estimates')
         .update({
           status: 'approved',
           approved_at: new Date().toISOString()
         })
         .eq('id', estimateId);
+
+      if (estimateUpdateError) {
+        console.error('❌ Failed to update estimates:', estimateUpdateError);
+      } else {
+        console.log('✅ Successfully updated estimates');
+      }
 
       // Generate Stripe payment link
       let paymentUrl = null;
@@ -218,15 +233,23 @@ Deno.serve(async (req) => {
       }
 
       // Process the decline
-      await supabase
+      // Note: constraint requires accepted IS NULL when declined IS TRUE
+      console.log('📝 Updating estimate_email_responses for decline:', { id: emailResponse.id });
+      const { error: declineError } = await supabase
         .from('estimate_email_responses')
         .update({
-          accepted: false,
+          accepted: null,
           declined: true,
           declined_reason: reason || null,
           responded_at: new Date().toISOString()
         })
         .eq('id', emailResponse.id);
+
+      if (declineError) {
+        console.error('❌ Failed to update estimate_email_responses:', declineError);
+      } else {
+        console.log('✅ Successfully updated estimate_email_responses for decline');
+      }
 
       // Update estimate status
       await supabase
