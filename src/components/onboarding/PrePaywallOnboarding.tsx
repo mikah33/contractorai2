@@ -377,6 +377,7 @@ const PrePaywallOnboarding: React.FC<PrePaywallOnboardingProps> = ({ onComplete 
   const stepStartTime = useRef(Date.now());
   const trackedSteps = useRef<Set<number>>(new Set());
   const hasCompleted = useRef(false); // Flag to prevent false "dropped" events
+  const cleanupListeners = useRef<(() => void) | null>(null); // Store cleanup function
 
   // Track analytics event
   const trackEvent = useCallback(async (
@@ -447,10 +448,14 @@ const PrePaywallOnboarding: React.FC<PrePaywallOnboardingProps> = ({ onComplete 
     window.addEventListener('beforeunload', handleBeforeUnload);
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
-    return () => {
+    // Store cleanup function so we can call it manually before navigation
+    const cleanup = () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
+    cleanupListeners.current = cleanup;
+
+    return cleanup;
   }, [step, user?.id, businessName, selectedTrade, trackEvent]);
 
   const handleNext = async () => {
@@ -493,7 +498,12 @@ const PrePaywallOnboarding: React.FC<PrePaywallOnboardingProps> = ({ onComplete 
   };
 
   const handleComplete = async () => {
-    // Mark as completed to prevent false "dropped" events when navigating away
+    // IMMEDIATELY remove event listeners to prevent any "dropped" events
+    if (cleanupListeners.current) {
+      cleanupListeners.current();
+    }
+
+    // Mark as completed (belt and suspenders)
     hasCompleted.current = true;
 
     // Track step 4 completion (full onboarding completed)
