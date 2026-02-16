@@ -895,7 +895,7 @@ const Dashboard: React.FC = () => {
             <h3 className={`text-lg font-bold ${themeClasses.text.primary} mb-3`}>Discover More</h3>
             <div className="flex gap-3">
               <button
-                onClick={() => navigate('/marketing')}
+                onClick={() => navigate('/ad-analyzer')}
                 className={`flex-1 bg-gradient-to-br from-[#043d6b] to-[#022a4a] rounded-xl p-4 text-left active:scale-[0.98] transition-all shadow-lg`}
               >
                 <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mb-3">
@@ -905,7 +905,7 @@ const Dashboard: React.FC = () => {
                 <p className="text-white/70 text-sm mt-1">Build your online presence</p>
               </button>
               <button
-                onClick={() => navigate('/ads')}
+                onClick={() => navigate('/ad-analyzer')}
                 className={`flex-1 bg-gradient-to-br from-[#035291] to-[#043d6b] rounded-xl p-4 text-left active:scale-[0.98] transition-all shadow-lg`}
               >
                 <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mb-3">
