@@ -21,7 +21,9 @@ import {
   ClipboardList,
   Bell,
   FileCheck,
-  X as XIcon
+  X as XIcon,
+  XCircle,
+  AlertCircle
 } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
@@ -61,6 +63,7 @@ const Dashboard: React.FC = () => {
   const [businessLocation, setBusinessLocation] = useState<{lat: number, lng: number, address: string} | null>(null);
   const [taskLocations, setTaskLocations] = useState<{lat: number, lng: number, name: string, address: string}[]>([]);
   const [approvedEstimates, setApprovedEstimates] = useState<any[]>([]);
+  const [declinedEstimates, setDeclinedEstimates] = useState<any[]>([]);
   const [dismissedNotifications, setDismissedNotifications] = useState<Set<string>>(new Set());
 
   // Create custom clipboard marker icon with label
@@ -286,13 +289,14 @@ const Dashboard: React.FC = () => {
     }
   }, [todayTasks]);
 
-  // Fetch approved estimates for notifications
+  // Fetch approved and declined estimates for notifications
   useEffect(() => {
-    const fetchApprovedEstimates = async () => {
+    const fetchEstimateResponses = async () => {
       if (!user?.id) return;
 
       try {
-        const { data, error } = await supabase
+        // Fetch approved estimates
+        const { data: approved, error: approvedError } = await supabase
           .from('estimate_email_responses')
           .select(`
             *,
@@ -303,25 +307,43 @@ const Dashboard: React.FC = () => {
           .order('created_at', { ascending: false })
           .limit(3);
 
-        if (error) {
-          console.error('Error fetching approved estimates:', error);
-          return;
+        if (approvedError) {
+          console.error('Error fetching approved estimates:', approvedError);
+        } else {
+          // Filter out dismissed notifications locally
+          const filtered = (approved || []).filter(e => !dismissedNotifications.has(e.id));
+          setApprovedEstimates(filtered);
+          console.log('Approved estimates found:', filtered.length, approved);
         }
 
-        // Filter out dismissed notifications locally
-        const filtered = (data || []).filter(e => !dismissedNotifications.has(e.id));
-        setApprovedEstimates(filtered);
-        console.log('Approved estimates found:', filtered.length);
+        // Fetch declined estimates
+        const { data: declined, error: declinedError } = await supabase
+          .from('estimate_email_responses')
+          .select(`
+            *,
+            estimate:estimates(title, total)
+          `)
+          .eq('user_id', user.id)
+          .eq('declined', true)
+          .order('responded_at', { ascending: false })
+          .limit(3);
+
+        if (declinedError) {
+          console.error('Error fetching declined estimates:', declinedError);
+        } else {
+          setDeclinedEstimates(declined || []);
+          console.log('Declined estimates found:', declined?.length, declined);
+        }
       } catch (err) {
-        console.error('Error fetching approved estimates:', err);
+        console.error('Error fetching estimate responses:', err);
       }
     };
 
-    fetchApprovedEstimates();
+    fetchEstimateResponses();
 
-    // Set up real-time subscription for new approvals
+    // Set up real-time subscription for estimate updates
     const channel = supabase
-      .channel('estimate-approvals')
+      .channel('estimate-responses')
       .on(
         'postgres_changes',
         {
@@ -331,9 +353,9 @@ const Dashboard: React.FC = () => {
           filter: `user_id=eq.${user?.id}`
         },
         (payload) => {
-          if (payload.new.accepted === true) {
-            fetchApprovedEstimates();
-          }
+          console.log('Real-time update received:', payload);
+          // Re-fetch both on any update
+          fetchEstimateResponses();
         }
       )
       .subscribe();
@@ -715,6 +737,54 @@ const Dashboard: React.FC = () => {
                   <CreditCard className="w-4 h-4 inline mr-1" />
                   Payment links have been sent automatically
                 </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Declined Estimates Notification */}
+        {declinedEstimates.length > 0 && (
+          <div className="px-4 pt-4">
+            <div className={`rounded-xl overflow-hidden ${theme === 'light' ? 'bg-gradient-to-r from-red-50 to-orange-50 border border-red-200' : 'bg-gradient-to-r from-red-900/30 to-orange-900/30 border border-red-800'}`}>
+              <div className="p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${theme === 'light' ? 'bg-red-100' : 'bg-red-800'}`}>
+                    <AlertCircle className="w-4 h-4 text-red-600" />
+                  </div>
+                  <h3 className={`font-bold ${theme === 'light' ? 'text-red-800' : 'text-red-300'}`}>
+                    Estimate{declinedEstimates.length > 1 ? 's' : ''} Declined
+                  </h3>
+                </div>
+
+                <div className="space-y-2">
+                  {declinedEstimates.map((estimate) => (
+                    <div
+                      key={estimate.id}
+                      className={`flex flex-col gap-2 p-3 rounded-lg ${theme === 'light' ? 'bg-white' : 'bg-zinc-800'}`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${theme === 'light' ? 'bg-red-100' : 'bg-red-900/50'}`}>
+                          <XCircle className="w-5 h-5 text-red-600" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className={`font-semibold ${themeClasses.text.primary} truncate`}>
+                            {estimate.customer_name || 'Customer'}
+                          </p>
+                          <p className={`text-sm ${themeClasses.text.muted}`}>
+                            {estimate.estimate?.title || 'Estimate'} • ${estimate.estimate?.total ? Number(estimate.estimate.total).toLocaleString() : '0'}
+                          </p>
+                        </div>
+                      </div>
+                      {estimate.declined_reason && (
+                        <div className={`ml-13 p-2 rounded ${theme === 'light' ? 'bg-red-50' : 'bg-red-900/20'}`}>
+                          <p className={`text-sm ${theme === 'light' ? 'text-red-700' : 'text-red-300'}`}>
+                            <span className="font-medium">Reason:</span> {estimate.declined_reason}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>

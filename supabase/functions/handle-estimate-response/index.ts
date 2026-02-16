@@ -60,6 +60,9 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Log all records for this user to debug
+    console.log('🔍 DEBUG: Fetching estimate_email_response for estimate_id:', estimateId);
+
     // Fetch the estimate_email_response record
     const { data: emailResponse, error: fetchError } = await supabase
       .from('estimate_email_responses')
@@ -75,9 +78,19 @@ Deno.serve(async (req) => {
       return redirect(`${BASE_URL}/estimate-response?error=notfound&message=Estimate+not+found`);
     }
 
+    console.log('📋 DEBUG: Found email response record:', {
+      id: emailResponse.id,
+      estimate_id: emailResponse.estimate_id,
+      customer_name: emailResponse.customer_name,
+      accepted: emailResponse.accepted,
+      declined: emailResponse.declined,
+      user_id: emailResponse.user_id
+    });
+
     // Check if already responded
     if (emailResponse.accepted || emailResponse.declined) {
       const status = emailResponse.accepted ? 'approved' : 'declined';
+      console.log('⚠️ DEBUG: Already responded, status:', status);
       return redirect(`${BASE_URL}/estimate-response?status=already-responded&previous=${status}`);
     }
 
@@ -252,12 +265,25 @@ Deno.serve(async (req) => {
       }
 
       // Update estimate status
-      await supabase
+      const { error: estimateDeclineError } = await supabase
         .from('estimates')
         .update({ status: 'declined' })
         .eq('id', estimateId);
 
+      if (estimateDeclineError) {
+        console.error('❌ Failed to update estimates table for decline:', estimateDeclineError);
+      }
+
       console.log('❌ Estimate declined:', { estimateId, reason });
+
+      // Debug: Log all approved estimates for this user after the decline
+      const { data: allApproved } = await supabase
+        .from('estimate_email_responses')
+        .select('id, estimate_id, customer_name, accepted, declined')
+        .eq('user_id', emailResponse.user_id)
+        .eq('accepted', true);
+
+      console.log('📊 DEBUG: All approved estimates for user after decline:', allApproved);
 
       const params = new URLSearchParams({
         status: 'declined',
