@@ -59,7 +59,7 @@ const SubscriptionsWeb = () => {
         await revenueCatWebService.initialize(user.id);
 
         // Check if already subscribed
-        const isSubscribed = await revenueCatWebService.hasAnyEntitlement();
+        const isSubscribed = await revenueCatWebService.hasActiveSubscription();
         if (isSubscribed) {
           console.log('[SubscriptionsWeb] Already subscribed, redirecting to home');
           navigate('/');
