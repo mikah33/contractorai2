@@ -38,15 +38,15 @@ const WelcomePage = () => {
           {/* Logo */}
           <div className="mb-6">
             <img
-              src="/logo.png"
-              alt="ContractorAI"
+              src="/onsite-icon.png"
+              alt="OnSite"
               className="w-24 h-24 object-contain rounded-2xl"
             />
           </div>
 
           {/* App Name */}
           <h1 className="text-4xl font-bold text-white mb-3 text-center">
-            ContractorAI
+            OnSite
           </h1>
 
           {/* Tagline */}

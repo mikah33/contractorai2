@@ -58,8 +58,8 @@ const EmailConfirmation = () => {
         <div className="flex justify-center mb-6">
           <div className="bg-[#1C1C1E] rounded-lg p-3 border border-[#2C2C2E]">
             <img
-              src="/logo.png"
-              alt="ContractorAI Logo"
+              src="/onsite-icon.png"
+              alt="OnSite Logo"
               className="w-14 h-14 object-contain"
             />
           </div>

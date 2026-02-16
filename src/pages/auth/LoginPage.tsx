@@ -144,8 +144,8 @@ const LoginPage = () => {
         <div className="flex justify-center mb-6">
           <div className={`${themeClasses.bg.secondary} rounded-lg p-2 md:p-3 border ${themeClasses.border.secondary}`}>
             <img
-              src="/logo.png"
-              alt="ContractorAI Logo"
+              src="/onsite-icon.png"
+              alt="OnSite Logo"
               className="w-10 h-10 md:w-12 md:h-12 object-contain"
             />
           </div>

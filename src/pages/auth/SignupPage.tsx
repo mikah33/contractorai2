@@ -145,8 +145,8 @@ const SignupPage = () => {
         <div className="flex justify-center mb-6">
           <div className={`${themeClasses.bg.secondary} rounded-lg p-3 border ${themeClasses.border.secondary}`}>
             <img
-              src="/logo.png"
-              alt="ContractorAI Logo"
+              src="/onsite-icon.png"
+              alt="OnSite Logo"
               className="w-14 h-14 object-contain"
             />
           </div>
@@ -157,7 +157,7 @@ const SignupPage = () => {
             Create account
           </h1>
           <p className={`${themeClasses.text.muted} text-sm`}>
-            Get started with ContractorAI
+            Get started with OnSite
           </p>
         </div>
       </div>
