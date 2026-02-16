@@ -301,7 +301,7 @@ const Dashboard: React.FC = () => {
           .eq('user_id', user.id)
           .eq('accepted', true)
           .order('created_at', { ascending: false })
-          .limit(5);
+          .limit(3);
 
         if (error) {
           console.error('Error fetching approved estimates:', error);
