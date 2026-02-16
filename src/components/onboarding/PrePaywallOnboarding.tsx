@@ -416,6 +416,8 @@ const PrePaywallOnboarding: React.FC<PrePaywallOnboardingProps> = ({ onComplete 
     const handleBeforeUnload = () => {
       // Don't track as dropped if user completed onboarding
       if (hasCompleted.current) return;
+      // Don't track dropped for step 4 - they either complete or don't
+      if (step === 4) return;
 
       const timeOnStep = Date.now() - stepStartTime.current;
       // Use sendBeacon for reliable tracking on page close
@@ -439,6 +441,8 @@ const PrePaywallOnboarding: React.FC<PrePaywallOnboardingProps> = ({ onComplete 
     const handleVisibilityChange = () => {
       // Don't track as dropped if user completed onboarding
       if (hasCompleted.current) return;
+      // Don't track dropped for step 4 - they either complete or don't
+      if (step === 4) return;
 
       if (document.visibilityState === 'hidden') {
         trackEvent(step, 'dropped', Date.now() - stepStartTime.current);
