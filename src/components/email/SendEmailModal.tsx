@@ -1085,7 +1085,7 @@ const SendEmailModal = ({ isOpen, onClose, initialAttachments = [], draftId }: S
     <div className="fixed inset-0 z-[200] flex items-center justify-center px-4">
       <div className="absolute inset-0 bg-black/80" onClick={handleClose} />
 
-      <div className="relative w-full max-w-xl bg-white rounded-2xl max-h-[85vh] overflow-hidden animate-slide-up shadow-2xl">
+      <div className="relative w-full max-w-xl bg-white rounded-2xl max-h-[95vh] overflow-hidden animate-slide-up shadow-2xl">
         {/* Handle */}
         <div className="flex justify-center pt-4 pb-3">
           <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
@@ -1257,7 +1257,7 @@ const SendEmailModal = ({ isOpen, onClose, initialAttachments = [], draftId }: S
             </div>
 
             {/* Content */}
-            <div className="px-4 pb-6 overflow-y-auto max-h-[40vh]">
+            <div className="px-4 pb-6 overflow-y-auto max-h-[65vh]">
               {/* Step 1: Recipients */}
               {step === 'recipients' && (
                 <div className="space-y-3">
