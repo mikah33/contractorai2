@@ -65,6 +65,7 @@ const Dashboard: React.FC = () => {
   const [approvedEstimates, setApprovedEstimates] = useState<any[]>([]);
   const [declinedEstimates, setDeclinedEstimates] = useState<any[]>([]);
   const [dismissedNotifications, setDismissedNotifications] = useState<Set<string>>(new Set());
+  const [showApprovalsDropdown, setShowApprovalsDropdown] = useState(false);
 
   // Create custom clipboard marker icon with label
   const createMarkerIcon = (label: string) => new L.DivIcon({
@@ -683,104 +684,112 @@ const Dashboard: React.FC = () => {
 
       {/* Content below tasks - Solid background */}
       <div className={`relative z-20 ${themeClasses.bg.primary}`}>
-        {/* Approved Estimates Notification */}
-        {approvedEstimates.length > 0 && (
+        {/* Approvals & Denials Dropdown */}
+        {(approvedEstimates.length > 0 || declinedEstimates.length > 0) && (
           <div className="px-4 pt-4">
-            <div className={`rounded-xl overflow-hidden ${theme === 'light' ? 'bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200' : 'bg-gradient-to-r from-green-900/30 to-emerald-900/30 border border-green-800'}`}>
-              <div className="p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${theme === 'light' ? 'bg-green-100' : 'bg-green-800'}`}>
-                    <Bell className="w-4 h-4 text-green-600" />
+            <div className={`rounded-xl overflow-hidden ${theme === 'light' ? 'bg-white border border-gray-200 shadow-sm' : 'bg-zinc-800 border border-zinc-700'}`}>
+              {/* Dropdown Header */}
+              <button
+                onClick={() => setShowApprovalsDropdown(!showApprovalsDropdown)}
+                className="w-full p-4 flex items-center justify-between"
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${theme === 'light' ? 'bg-[#043d6b]/10' : 'bg-[#043d6b]/30'}`}>
+                    <FileCheck className="w-5 h-5 text-[#043d6b]" />
                   </div>
-                  <h3 className={`font-bold ${theme === 'light' ? 'text-green-800' : 'text-green-300'}`}>
-                    Estimate{approvedEstimates.length > 1 ? 's' : ''} Approved!
-                  </h3>
-                </div>
-
-                <div className="space-y-2">
-                  {approvedEstimates.map((estimate) => (
-                    <div
-                      key={estimate.id}
-                      className={`flex items-center gap-3 p-3 rounded-lg ${theme === 'light' ? 'bg-white' : 'bg-zinc-800'}`}
-                    >
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${theme === 'light' ? 'bg-green-100' : 'bg-green-900/50'}`}>
-                        <FileCheck className="w-5 h-5 text-green-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className={`font-semibold ${themeClasses.text.primary} truncate`}>
-                          {estimate.customer_name || 'Customer'}
-                        </p>
-                        <p className={`text-sm ${themeClasses.text.muted}`}>
-                          {estimate.estimate?.title || 'Estimate'} • ${estimate.estimate?.total ? Number(estimate.estimate.total).toLocaleString() : '0'}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 className="w-5 h-5 text-green-500" />
-                        <button
-                          onClick={() => dismissNotification(estimate.id)}
-                          className={`p-1.5 rounded-lg ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-zinc-700'}`}
-                        >
-                          <XIcon className="w-4 h-4 text-gray-400" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <p className={`text-sm mt-3 ${theme === 'light' ? 'text-green-700' : 'text-green-400'}`}>
-                  <CreditCard className="w-4 h-4 inline mr-1" />
-                  Payment links have been sent automatically
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Declined Estimates Notification */}
-        {declinedEstimates.length > 0 && (
-          <div className="px-4 pt-4">
-            <div className={`rounded-xl overflow-hidden ${theme === 'light' ? 'bg-gradient-to-r from-red-50 to-orange-50 border border-red-200' : 'bg-gradient-to-r from-red-900/30 to-orange-900/30 border border-red-800'}`}>
-              <div className="p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${theme === 'light' ? 'bg-red-100' : 'bg-red-800'}`}>
-                    <AlertCircle className="w-4 h-4 text-red-600" />
+                  <div className="text-left">
+                    <h3 className={`font-bold ${themeClasses.text.primary}`}>Approvals & Denials</h3>
+                    <p className={`text-sm ${themeClasses.text.muted}`}>
+                      {approvedEstimates.length} approved, {declinedEstimates.length} declined
+                    </p>
                   </div>
-                  <h3 className={`font-bold ${theme === 'light' ? 'text-red-800' : 'text-red-300'}`}>
-                    Estimate{declinedEstimates.length > 1 ? 's' : ''} Declined
-                  </h3>
                 </div>
+                <ChevronRight className={`w-5 h-5 ${themeClasses.text.muted} transition-transform ${showApprovalsDropdown ? 'rotate-90' : ''}`} />
+              </button>
 
-                <div className="space-y-2">
-                  {declinedEstimates.map((estimate) => (
-                    <div
-                      key={estimate.id}
-                      className={`flex flex-col gap-2 p-3 rounded-lg ${theme === 'light' ? 'bg-white' : 'bg-zinc-800'}`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${theme === 'light' ? 'bg-red-100' : 'bg-red-900/50'}`}>
-                          <XCircle className="w-5 h-5 text-red-600" />
+              {/* Dropdown Content */}
+              {showApprovalsDropdown && (
+                <div className="px-4 pb-4 space-y-3">
+                  {/* Approved Estimates */}
+                  {approvedEstimates.length > 0 && (
+                    <div className={`rounded-xl overflow-hidden ${theme === 'light' ? 'bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200' : 'bg-green-900/20 border border-green-800'}`}>
+                      <div className="p-3">
+                        <div className="flex items-center gap-2 mb-2">
+                          <CheckCircle2 className="w-4 h-4 text-green-600" />
+                          <span className={`text-sm font-semibold ${theme === 'light' ? 'text-green-800' : 'text-green-300'}`}>
+                            Approved ({approvedEstimates.length})
+                          </span>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className={`font-semibold ${themeClasses.text.primary} truncate`}>
-                            {estimate.customer_name || 'Customer'}
-                          </p>
-                          <p className={`text-sm ${themeClasses.text.muted}`}>
-                            {estimate.estimate?.title || 'Estimate'} • ${estimate.estimate?.total ? Number(estimate.estimate.total).toLocaleString() : '0'}
-                          </p>
+                        <div className="space-y-2">
+                          {approvedEstimates.map((estimate) => (
+                            <div
+                              key={estimate.id}
+                              className={`flex items-center gap-3 p-2 rounded-lg ${theme === 'light' ? 'bg-white' : 'bg-zinc-800'}`}
+                            >
+                              <div className="flex-1 min-w-0">
+                                <p className={`font-medium text-sm ${themeClasses.text.primary} truncate`}>
+                                  {estimate.customer_name || 'Customer'}
+                                </p>
+                                <p className={`text-xs ${themeClasses.text.muted}`}>
+                                  {estimate.estimate?.title || 'Estimate'} • ${estimate.estimate?.total ? Number(estimate.estimate.total).toLocaleString() : '0'}
+                                </p>
+                              </div>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); dismissNotification(estimate.id); }}
+                                className={`p-1 rounded ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-zinc-700'}`}
+                              >
+                                <XIcon className="w-3 h-3 text-gray-400" />
+                              </button>
+                            </div>
+                          ))}
                         </div>
-                      </div>
-                      <div className={`mt-1 p-3 rounded-lg ${theme === 'light' ? 'bg-red-50 border border-red-100' : 'bg-red-900/20 border border-red-800/50'}`}>
-                        <p className={`text-sm font-medium ${theme === 'light' ? 'text-red-800' : 'text-red-300'} mb-1`}>
-                          Customer Feedback:
-                        </p>
-                        <p className={`text-sm ${theme === 'light' ? 'text-red-700' : 'text-red-400'}`}>
-                          {estimate.declined_reason || 'No reason provided'}
+                        <p className={`text-xs mt-2 ${theme === 'light' ? 'text-green-600' : 'text-green-400'}`}>
+                          <CreditCard className="w-3 h-3 inline mr-1" />
+                          Payment links sent automatically
                         </p>
                       </div>
                     </div>
-                  ))}
+                  )}
+
+                  {/* Declined Estimates */}
+                  {declinedEstimates.length > 0 && (
+                    <div className={`rounded-xl overflow-hidden ${theme === 'light' ? 'bg-gradient-to-r from-red-50 to-orange-50 border border-red-200' : 'bg-red-900/20 border border-red-800'}`}>
+                      <div className="p-3">
+                        <div className="flex items-center gap-2 mb-2">
+                          <XCircle className="w-4 h-4 text-red-600" />
+                          <span className={`text-sm font-semibold ${theme === 'light' ? 'text-red-800' : 'text-red-300'}`}>
+                            Declined ({declinedEstimates.length})
+                          </span>
+                        </div>
+                        <div className="space-y-2">
+                          {declinedEstimates.map((estimate) => (
+                            <div
+                              key={estimate.id}
+                              className={`p-2 rounded-lg ${theme === 'light' ? 'bg-white' : 'bg-zinc-800'}`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="flex-1 min-w-0">
+                                  <p className={`font-medium text-sm ${themeClasses.text.primary} truncate`}>
+                                    {estimate.customer_name || 'Customer'}
+                                  </p>
+                                  <p className={`text-xs ${themeClasses.text.muted}`}>
+                                    {estimate.estimate?.title || 'Estimate'} • ${estimate.estimate?.total ? Number(estimate.estimate.total).toLocaleString() : '0'}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className={`mt-2 p-2 rounded ${theme === 'light' ? 'bg-red-50' : 'bg-red-900/30'}`}>
+                                <p className={`text-xs ${theme === 'light' ? 'text-red-700' : 'text-red-400'}`}>
+                                  <span className="font-medium">Feedback:</span> {estimate.declined_reason || 'No reason provided'}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
+              )}
             </div>
           </div>
         )}
