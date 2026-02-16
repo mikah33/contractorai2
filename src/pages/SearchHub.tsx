@@ -329,7 +329,7 @@ const SearchHub: React.FC = () => {
       </div>
 
       {/* Spacer for fixed header */}
-      <div className="pt-56" />
+      <div className="pt-[calc(env(safe-area-inset-top)+220px)]" />
 
       {/* Content - Full hub embedded */}
       <div className={activeCategory === 'all' ? 'px-4' : ''}>

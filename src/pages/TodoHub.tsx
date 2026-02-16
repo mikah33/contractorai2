@@ -1506,12 +1506,12 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                         </button>
                       </div>
                       <p className={`px-3 py-2 text-xs ${themeClasses.text.muted}`}>{selectedProject.address}</p>
-                      <div className="h-32 bg-gray-100">
+                      <div className="h-32 bg-gray-100 overflow-hidden">
                         <iframe
                           src={`https://www.google.com/maps?q=${encodeURIComponent(selectedProject.address)}&output=embed&z=15`}
                           width="100%"
                           height="100%"
-                          style={{ border: 0 }}
+                          style={{ border: 0, maxWidth: '100%' }}
                           allowFullScreen
                           loading="lazy"
                           referrerPolicy="no-referrer-when-downgrade"
@@ -2015,12 +2015,12 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
 
       {/* Edit Task Modal */}
       {showEditTask && selectedTask && (
-        <div className="fixed inset-0 z-[150] flex items-end justify-center">
+        <div className="fixed inset-0 z-[150] flex items-end justify-center overflow-hidden">
           <div
             className="absolute inset-0 bg-black/50"
             onClick={() => { setShowEditTask(false); setSelectedTask(null); }}
           />
-          <div className={`relative ${themeClasses.bg.secondary} rounded-t-3xl w-full max-h-[90vh] overflow-y-auto animate-slide-up mb-20`}>
+          <div className={`relative ${themeClasses.bg.secondary} rounded-t-3xl w-full max-w-full max-h-[90vh] overflow-y-auto overflow-x-hidden animate-slide-up pb-[env(safe-area-inset-bottom)]`}>
             <div className={`sticky top-0 ${themeClasses.bg.secondary} px-4 py-4 border-b ${themeClasses.border.primary} flex items-center justify-between z-10`}>
               <button
                 onClick={() => { setShowEditTask(false); setSelectedTask(null); }}
@@ -2144,12 +2144,12 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                         </button>
                       </div>
                       <p className={`px-3 py-2 text-xs ${themeClasses.text.muted}`}>{selectedProject.address}</p>
-                      <div className="h-32 bg-gray-100">
+                      <div className="h-32 bg-gray-100 overflow-hidden">
                         <iframe
                           src={`https://www.google.com/maps?q=${encodeURIComponent(selectedProject.address)}&output=embed&z=15`}
                           width="100%"
                           height="100%"
-                          style={{ border: 0 }}
+                          style={{ border: 0, maxWidth: '100%' }}
                           allowFullScreen
                           loading="lazy"
                           referrerPolicy="no-referrer-when-downgrade"

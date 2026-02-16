@@ -815,7 +815,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                   </div>
                   {/* Map Preview using Google Maps Embed */}
                   <div
-                    className="h-48 bg-gray-100 relative cursor-pointer"
+                    className="h-48 bg-gray-100 relative cursor-pointer overflow-hidden"
                     onClick={() => {
                       const encodedAddress = encodeURIComponent(selectedProject.address);
                       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
@@ -829,7 +829,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                       title="Project Location Map"
                       width="100%"
                       height="100%"
-                      style={{ border: 0 }}
+                      style={{ border: 0, maxWidth: '100%' }}
                       loading="lazy"
                       referrerPolicy="no-referrer-when-downgrade"
                       src={`https://www.google.com/maps?q=${encodeURIComponent(selectedProject.address)}&output=embed&z=15`}
