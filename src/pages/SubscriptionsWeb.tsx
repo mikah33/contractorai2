@@ -41,15 +41,38 @@ const SubscriptionsWeb = () => {
         if (isIOS) {
           // iOS - use native paywall directly
           await revenueCatService.initialize(user.id);
-          await revenueCatService.presentPaywall('ContractorAI Pro');
+
+          // Check if already subscribed
+          const hasEntitlement = await revenueCatService.checkEntitlement('ContractorAI Pro');
+          if (hasEntitlement) {
+            console.log('[SubscriptionsWeb] Already subscribed, redirecting to home');
+            navigate('/');
+            return;
+          }
+
+          await revenueCatService.presentPaywall('OnSite Pro');
           navigate(-1);
           return;
         }
 
-        // Web - go directly to RevenueCat checkout (skip custom UI)
+        // Web - initialize and check subscription status first
         await revenueCatWebService.initialize(user.id);
+
+        // Check if already subscribed
+        const isSubscribed = await revenueCatWebService.hasAnyEntitlement();
+        if (isSubscribed) {
+          console.log('[SubscriptionsWeb] Already subscribed, redirecting to home');
+          navigate('/');
+          return;
+        }
+
+        // Not subscribed - go to RevenueCat checkout
         const result = await revenueCatWebService.purchaseCurrentOffering();
         if (result.success) {
+          navigate('/');
+        } else if (result.error?.includes('already active')) {
+          // Product already active - redirect to home
+          console.log('[SubscriptionsWeb] Product already active, redirecting to home');
           navigate('/');
         } else {
           // If user cancelled, go back to previous screen
@@ -58,6 +81,14 @@ const SubscriptionsWeb = () => {
         return;
       } catch (err: any) {
         console.error('[SubscriptionsWeb] Error:', err);
+
+        // If error is "already active", redirect to home
+        if (err.message?.includes('already active')) {
+          console.log('[SubscriptionsWeb] Product already active, redirecting to home');
+          navigate('/');
+          return;
+        }
+
         setError(err.message || 'Failed to load subscription options');
         setLoading(false);
       }
@@ -98,10 +129,10 @@ const SubscriptionsWeb = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0F0F0F] text-white flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 text-gray-900 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-500" />
-          <p className="text-zinc-400">Loading subscription options...</p>
+          <p className="text-gray-500">Loading subscription options...</p>
         </div>
       </div>
     );
@@ -119,9 +150,9 @@ const SubscriptionsWeb = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0F0F0F] text-white">
+    <div className="min-h-screen bg-gray-50 text-gray-900">
       {/* Header */}
-      <div className="border-b border-[#2C2C2E]">
+      <div className="border-b border-gray-200 bg-white">
         <div className="max-w-2xl mx-auto px-4 py-4">
           <button
             onClick={() => {
@@ -132,7 +163,7 @@ const SubscriptionsWeb = () => {
                 });
               });
             }}
-            className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors"
+            className="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
             Back
@@ -146,8 +177,8 @@ const SubscriptionsWeb = () => {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl mb-4">
             <Crown className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold mb-2">ContractorAI Pro</h1>
-          <p className="text-zinc-400">The complete toolkit for modern contractors</p>
+          <h1 className="text-3xl font-bold mb-2 text-gray-900">OnSite Pro</h1>
+          <p className="text-gray-500">The complete toolkit for modern contractors</p>
         </div>
 
         {/* Package Selection */}
@@ -158,8 +189,8 @@ const SubscriptionsWeb = () => {
               onClick={() => setSelectedPackage(pkg.identifier)}
               className={`w-full p-4 rounded-xl border-2 transition-all text-left relative ${
                 selectedPackage === pkg.identifier
-                  ? 'border-blue-500 bg-blue-500/10'
-                  : 'border-[#2C2C2E] bg-[#1C1C1E] hover:border-[#3C3C3E]'
+                  ? 'border-blue-500 bg-blue-50'
+                  : 'border-gray-200 bg-white hover:border-gray-300'
               }`}
             >
               {pkg.popular && (
@@ -173,22 +204,22 @@ const SubscriptionsWeb = () => {
                   <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
                     selectedPackage === pkg.identifier
                       ? 'border-blue-500 bg-blue-500'
-                      : 'border-zinc-600'
+                      : 'border-gray-300'
                   }`}>
                     {selectedPackage === pkg.identifier && (
                       <Check className="w-3 h-3 text-white" />
                     )}
                   </div>
                   <div>
-                    <div className="font-semibold text-white">{pkg.title}</div>
-                    <div className="text-sm text-zinc-400">{pkg.pricePerMonth}</div>
+                    <div className="font-semibold text-gray-900">{pkg.title}</div>
+                    <div className="text-sm text-gray-500">{pkg.pricePerMonth}</div>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="font-bold text-white">{pkg.price}</div>
-                  <div className="text-xs text-zinc-500">{pkg.duration}</div>
+                  <div className="font-bold text-gray-900">{pkg.price}</div>
+                  <div className="text-xs text-gray-500">{pkg.duration}</div>
                   {pkg.savings && (
-                    <div className="text-xs text-green-400 font-medium">{pkg.savings}</div>
+                    <div className="text-xs text-green-600 font-medium">{pkg.savings}</div>
                   )}
                 </div>
               </div>
@@ -197,14 +228,14 @@ const SubscriptionsWeb = () => {
         </div>
 
         {/* Features */}
-        <div className="bg-[#1C1C1E] rounded-xl p-6 mb-8">
-          <h3 className="font-semibold mb-4 flex items-center gap-2">
+        <div className="bg-white rounded-xl p-6 mb-8 border border-gray-200">
+          <h3 className="font-semibold mb-4 flex items-center gap-2 text-gray-900">
             <Zap className="w-5 h-5 text-blue-500" />
             Everything included
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {features.map((feature, i) => (
-              <div key={i} className="flex items-center gap-2 text-sm text-zinc-300">
+              <div key={i} className="flex items-center gap-2 text-sm text-gray-600">
                 <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
                 {feature}
               </div>
@@ -214,8 +245,8 @@ const SubscriptionsWeb = () => {
 
         {/* Error */}
         {error && (
-          <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 mb-4 text-center">
-            <p className="text-red-400 text-sm">{error}</p>
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4 text-center">
+            <p className="text-red-600 text-sm">{error}</p>
           </div>
         )}
 
@@ -238,7 +269,7 @@ const SubscriptionsWeb = () => {
         </button>
 
         {/* Terms */}
-        <p className="text-center text-xs text-zinc-500 mt-4">
+        <p className="text-center text-xs text-gray-500 mt-4">
           Free trial included. Cancel anytime. By subscribing, you agree to our{' '}
           <a href="/legal/terms" className="text-blue-500 hover:underline">Terms</a> and{' '}
           <a href="/legal/privacy" className="text-blue-500 hover:underline">Privacy Policy</a>.
