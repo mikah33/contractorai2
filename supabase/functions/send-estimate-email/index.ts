@@ -89,11 +89,16 @@ serve(async (req) => {
 
     const userHasGmail = !profileError && profile?.gmail_access_token && profile?.gmail_email
 
+    // Generate approve/decline links
+    const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? ''
+    const approveLink = `${SUPABASE_URL}/functions/v1/handle-estimate-response?id=${estimateId}&action=approve`
+    const declineLink = `${SUPABASE_URL}/functions/v1/handle-estimate-response?id=${estimateId}&action=decline`
+
     if (userHasGmail) {
       // Use user's Gmail OAuth (send-user-gmail)
       console.log(`✅ User has Gmail connected (${profile.gmail_email}) - using Gmail OAuth`)
 
-      // Build HTML body for the estimate email
+      // Build HTML body for the estimate email with approve/decline buttons
       const htmlBody = `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background: #043d6b; padding: 24px; text-align: center; border-radius: 12px 12px 0 0;">
@@ -107,6 +112,15 @@ serve(async (req) => {
                 <a href="${pdfUrl}" style="display: inline-block; padding: 12px 24px; background: #043d6b; color: white; text-decoration: none; border-radius: 8px; font-weight: 500;">View Estimate PDF</a>
               </div>
             ` : ''}
+
+            <!-- Approve/Decline Buttons -->
+            <div style="margin-top: 32px; padding: 24px; background: #f9fafb; border-radius: 12px; text-align: center;">
+              <p style="margin: 0 0 16px 0; font-weight: 600; color: #1f2937; font-size: 16px;">Ready to proceed?</p>
+              <div style="display: inline-block;">
+                <a href="${approveLink}" style="display: inline-block; padding: 14px 32px; background: #22c55e; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; margin-right: 12px;">✓ Approve Estimate</a>
+                <a href="${declineLink}" style="display: inline-block; padding: 14px 32px; background: #ef4444; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">✗ Decline</a>
+              </div>
+            </div>
           </div>
         </div>
       `
@@ -318,6 +332,9 @@ serve(async (req) => {
         pdfUrl,
         estimateId,
         clientId,
+        // Add approve/decline links directly
+        approveLink,
+        declineLink,
         // Add unsubscribe compliance information
         unsubscribeUrl,
         emailType: 'estimate',
