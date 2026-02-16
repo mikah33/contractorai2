@@ -249,8 +249,14 @@ Deno.serve(async (req) => {
 
       // Process the decline
       // Note: constraint requires accepted IS NULL when declined IS TRUE
-      console.log('📝 Updating estimate_email_responses for decline:', { id: emailResponse.id });
-      const { error: declineError } = await supabase
+      console.log('📝 Updating estimate_email_responses for decline:', {
+        recordId: emailResponse.id,
+        estimateId: estimateId,
+        hasReasonParam: hasReasonParam,
+        reason: reason
+      });
+
+      const { data: updateData, error: declineError } = await supabase
         .from('estimate_email_responses')
         .update({
           accepted: null,
@@ -258,13 +264,24 @@ Deno.serve(async (req) => {
           declined_reason: reason || null,
           responded_at: new Date().toISOString()
         })
-        .eq('id', emailResponse.id);
+        .eq('id', emailResponse.id)
+        .select();
 
       if (declineError) {
         console.error('❌ Failed to update estimate_email_responses:', declineError);
+        console.error('❌ Error details:', JSON.stringify(declineError));
       } else {
         console.log('✅ Successfully updated estimate_email_responses for decline');
+        console.log('✅ Updated data:', JSON.stringify(updateData));
       }
+
+      // Verify the update actually happened
+      const { data: verifyData } = await supabase
+        .from('estimate_email_responses')
+        .select('id, declined, declined_reason, responded_at')
+        .eq('id', emailResponse.id)
+        .single();
+      console.log('🔍 Verification after update:', JSON.stringify(verifyData));
 
       // Update estimate status
       const { error: estimateDeclineError } = await supabase
