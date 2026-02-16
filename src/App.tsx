@@ -32,6 +32,9 @@ import WelcomePage from './pages/auth/WelcomePage';
 import TermsOfService from './pages/legal/TermsOfService';
 import PrivacyPolicy from './pages/legal/PrivacyPolicy';
 import UnsubscribePage from './pages/UnsubscribePage';
+import EstimateApprovalPage from './pages/EstimateApprovalPage';
+import EstimateResponsePage from './pages/EstimateResponsePage';
+import PaymentRedirect from './pages/PaymentRedirect';
 import { Capacitor } from '@capacitor/core';
 import ConfigureDeckCalculator from './pages/ConfigureDeckCalculator';
 import ConfigureRoofingCalculator from './pages/ConfigureRoofingCalculator';
@@ -224,6 +227,20 @@ function App() {
     );
   }
 
+  // Public estimate pages - accessible to anyone (customers without accounts)
+  const pathname = window.location.pathname;
+  if (pathname.startsWith('/estimate-response') || pathname.startsWith('/estimate-approval/')) {
+    return (
+      <ThemeProvider>
+        <Routes>
+          <Route path="/estimate-response" element={<EstimateResponsePage />} />
+          <Route path="/estimate-approval/:id" element={<EstimateApprovalPage />} />
+          <Route path="*" element={<EstimateResponsePage />} />
+        </Routes>
+      </ThemeProvider>
+    );
+  }
+
   // Handle authentication routes
   if (!user) {
     return (
@@ -235,6 +252,9 @@ function App() {
           <Route path="/auth/confirm-email" element={<EmailConfirmation />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/unsubscribe" element={<UnsubscribePage />} />
+          <Route path="/estimate-approval/:id" element={<EstimateApprovalPage />} />
+          <Route path="/estimate-response" element={<EstimateResponsePage />} />
+          <Route path="/pay/:shortCode" element={<PaymentRedirect />} />
           <Route path="/legal/terms" element={<TermsOfService />} />
           <Route path="/legal/privacy" element={<PrivacyPolicy />} />
           <Route path="*" element={<Navigate to="/auth/welcome" replace />} />
@@ -332,6 +352,7 @@ function App() {
                     <Route path="/cindy-crm" element={<Navigate to="/ai-team?mode=crm" replace />} />
                     <Route path="/bill-project-manager" element={<Navigate to="/ai-team?mode=projects" replace />} />
                     <Route path="/finance" element={<FinanceTracker />} />
+                    <Route path="/pay/:shortCode" element={<PaymentRedirect />} />
                     <Route path="/estimates" element={<EstimateGenerator />} />
                     <Route path="/projects" element={<ProjectManager />} />
                     <Route path="/clients" element={<Clients />} />

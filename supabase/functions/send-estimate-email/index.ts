@@ -78,9 +78,105 @@ serve(async (req) => {
       throw new Error('Missing required fields')
     }
 
-    // Check if client has Gmail connected for customer email sending
+    // Check if user has their own Gmail connected (primary method)
+    console.log('🔍 Checking user Gmail connection status...')
+
+    const { data: profile, error: profileError } = await supabaseClient
+      .from('profiles')
+      .select('gmail_access_token, gmail_refresh_token, gmail_token_expiry, gmail_email')
+      .eq('id', user.id)
+      .single()
+
+    const userHasGmail = !profileError && profile?.gmail_access_token && profile?.gmail_email
+
+    if (userHasGmail) {
+      // Use user's Gmail OAuth (send-user-gmail)
+      console.log(`✅ User has Gmail connected (${profile.gmail_email}) - using Gmail OAuth`)
+
+      // Build HTML body for the estimate email
+      const htmlBody = `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: #043d6b; padding: 24px; text-align: center; border-radius: 12px 12px 0 0;">
+            <h1 style="color: white; margin: 0; font-size: 24px;">OnSite</h1>
+          </div>
+          <div style="background: #ffffff; padding: 32px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
+            <p style="color: #374151; line-height: 1.6; white-space: pre-wrap;">${body}</p>
+            ${pdfUrl ? `
+              <div style="margin-top: 24px; padding: 16px; background: #f3f4f6; border-radius: 8px;">
+                <p style="margin: 0 0 12px 0; font-weight: 600; color: #1f2937;">📎 Estimate Attached</p>
+                <a href="${pdfUrl}" style="display: inline-block; padding: 12px 24px; background: #043d6b; color: white; text-decoration: none; border-radius: 8px; font-weight: 500;">View Estimate PDF</a>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      `
+
+      const userGmailPayload = {
+        userId: user.id,
+        to: customerEmail,
+        subject,
+        htmlBody
+      }
+
+      const userGmailResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-user-gmail`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': authHeader,
+        },
+        body: JSON.stringify(userGmailPayload)
+      })
+
+      if (!userGmailResponse.ok) {
+        const errorData = await userGmailResponse.json()
+        console.error('❌ User Gmail function failed:', errorData)
+        // Fall through to n8n webhook as backup
+        console.log('📧 Falling back to n8n webhook...')
+      } else {
+        const userGmailResult = await userGmailResponse.json()
+        console.log('✅ User Gmail function completed successfully:', userGmailResult)
+
+        // Still create the estimate_email_responses record
+        await supabaseClient
+          .from('estimate_email_responses')
+          .delete()
+          .eq('estimate_id', estimateId)
+
+        await supabaseClient
+          .from('estimate_email_responses')
+          .insert({
+            estimate_id: estimateId,
+            customer_name: customerName || 'Customer',
+            customer_email: customerEmail,
+            pdf_url: pdfUrl,
+            user_id: user.id,
+            client_id: clientId || null,
+            contractor_email: contractorEmail || null,
+            email_subject: subject || '',
+            email_body: body || '',
+            accepted: null,
+            declined: null,
+          })
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            message: `Estimate sent from ${profile.gmail_email}`,
+            method: 'user_gmail',
+            gmail_message_id: userGmailResult.messageId,
+            from: profile.gmail_email
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200,
+          }
+        )
+      }
+    }
+
+    // Check if client has Gmail connected for customer email sending (backup)
     let shouldUseCustomerGmail = false
-    if (clientId) {
+    if (clientId && !userHasGmail) {
       console.log('🔍 Checking client Gmail connection status...')
 
       const { data: client, error: clientError } = await supabaseClient
@@ -95,11 +191,11 @@ serve(async (req) => {
       } else {
         console.log('📧 Client does not have Gmail connected - using n8n webhook fallback')
       }
-    } else {
-      console.log('📧 No client ID provided - using n8n webhook')
+    } else if (!userHasGmail) {
+      console.log('📧 No Gmail connection - using n8n webhook')
     }
 
-    // Route to appropriate email sending method
+    // Route to customer Gmail if available
     if (shouldUseCustomerGmail) {
       // Route to customer Gmail function
       console.log('📧 Routing to customer Gmail function...')
@@ -228,7 +324,7 @@ serve(async (req) => {
         complianceInfo: {
           canUnsubscribe: true,
           unsubscribeTypes: ['all', 'estimates'],
-          businessName: 'ContractorAI',
+          businessName: 'OnSite',
           estimateSpecific: {
             unsubscribeFromEstimatesUrl: unsubscribeUrl + '?type=estimates',
             unsubscribeFromAllUrl: unsubscribeUrl + '?type=all'
