@@ -203,6 +203,27 @@ function App() {
     setShowOnboarding(false);
   };
 
+  // Public customer-facing pages - render immediately without splash screen
+  const pathname = window.location.pathname;
+  const isCustomerPage = pathname.startsWith('/estimate-response') ||
+                         pathname.startsWith('/estimate-approval/') ||
+                         pathname.startsWith('/pay/') ||
+                         pathname.startsWith('/unsubscribe');
+
+  if (isCustomerPage) {
+    return (
+      <ThemeProvider>
+        <Routes>
+          <Route path="/estimate-response" element={<EstimateResponsePage />} />
+          <Route path="/estimate-approval/:id" element={<EstimateApprovalPage />} />
+          <Route path="/pay/:shortCode" element={<PaymentRedirect />} />
+          <Route path="/unsubscribe" element={<UnsubscribePage />} />
+          <Route path="*" element={<EstimateResponsePage />} />
+        </Routes>
+      </ThemeProvider>
+    );
+  }
+
   // Show splash screen on every app launch - must complete before transitioning
   const isLoading = !initialized || (user && !dataInitialized);
   const shouldShowSplash = showSplash && (!splashMinTimePassed || isLoading);
@@ -224,20 +245,6 @@ function App() {
           key={Date.now()}
         />
       </div>
-    );
-  }
-
-  // Public estimate pages - accessible to anyone (customers without accounts)
-  const pathname = window.location.pathname;
-  if (pathname.startsWith('/estimate-response') || pathname.startsWith('/estimate-approval/')) {
-    return (
-      <ThemeProvider>
-        <Routes>
-          <Route path="/estimate-response" element={<EstimateResponsePage />} />
-          <Route path="/estimate-approval/:id" element={<EstimateApprovalPage />} />
-          <Route path="*" element={<EstimateResponsePage />} />
-        </Routes>
-      </ThemeProvider>
     );
   }
 
