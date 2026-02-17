@@ -17,7 +17,8 @@ import {
   Camera,
   Mic,
   X,
-  Check
+  Check,
+  BarChart3
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useTheme, getThemeClasses } from '../../contexts/ThemeContext';
@@ -35,9 +36,10 @@ interface OnSiteSetupProps {
   profile: any;
   userId: string | undefined;
   onShowEstimateTutorial?: () => void;
+  onShowManageTutorial?: () => void;
 }
 
-export const OnSiteSetup: React.FC<OnSiteSetupProps> = ({ profile, userId, onShowEstimateTutorial }) => {
+export const OnSiteSetup: React.FC<OnSiteSetupProps> = ({ profile, userId, onShowEstimateTutorial, onShowManageTutorial }) => {
   const navigate = useNavigate();
   const { theme } = useTheme();
   const themeClasses = getThemeClasses(theme);
@@ -53,6 +55,7 @@ export const OnSiteSetup: React.FC<OnSiteSetupProps> = ({ profile, userId, onSho
   const [hasOpenedEstimate, setHasOpenedEstimate] = useState(false);
   const [hasOpenedVisionCam, setHasOpenedVisionCam] = useState(false);
   const [hasUsedOnSiteAI, setHasUsedOnSiteAI] = useState(false);
+  const [hasOpenedManage, setHasOpenedManage] = useState(false);
   const [showOnSiteAITutorial, setShowOnSiteAITutorial] = useState(false);
   const [showVisionCamTutorial, setShowVisionCamTutorial] = useState(false);
 
@@ -91,6 +94,11 @@ export const OnSiteSetup: React.FC<OnSiteSetupProps> = ({ profile, userId, onSho
     const onSiteAIUsed = localStorage.getItem('onsite_ai_used');
     if (onSiteAIUsed === 'true') {
       setHasUsedOnSiteAI(true);
+    }
+
+    const manageOpened = localStorage.getItem('onsite_manage_opened');
+    if (manageOpened === 'true') {
+      setHasOpenedManage(true);
     }
   }, []);
 
@@ -138,7 +146,7 @@ export const OnSiteSetup: React.FC<OnSiteSetupProps> = ({ profile, userId, onSho
     },
   ];
 
-  // Step 2 items - Core Features (3 tasks)
+  // Step 2 items - Core Features (4 tasks)
   const step2Items: SetupStep[] = [
     {
       id: 'estimate',
@@ -169,6 +177,18 @@ export const OnSiteSetup: React.FC<OnSiteSetupProps> = ({ profile, userId, onSho
       icon: Camera,
       isComplete: hasOpenedVisionCam,
       action: () => setShowVisionCamTutorial(true)
+    },
+    {
+      id: 'manage',
+      title: 'Use Manage',
+      description: 'Track payroll, expenses, revenue & invoices',
+      icon: BarChart3,
+      isComplete: hasOpenedManage,
+      action: () => {
+        if (onShowManageTutorial) {
+          onShowManageTutorial();
+        }
+      }
     },
   ];
 
@@ -576,6 +596,7 @@ export const OnSiteSetup: React.FC<OnSiteSetupProps> = ({ profile, userId, onSho
           </div>
         </div>
       )}
+
     </div>
   );
 };

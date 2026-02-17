@@ -23,7 +23,8 @@ import {
   Bell,
   X as XIcon,
   XCircle,
-  AlertCircle
+  AlertCircle,
+  BarChart3
 } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
@@ -65,6 +66,7 @@ const Dashboard: React.FC = () => {
   const [dismissedNotifications, setDismissedNotifications] = useState<Set<string>>(new Set());
   const [showApprovalsDropdown, setShowApprovalsDropdown] = useState(false);
   const [showEstimateTutorial, setShowEstimateTutorial] = useState(false);
+  const [showManageTutorial, setShowManageTutorial] = useState(false);
   const [showSetupNotifications, setShowSetupNotifications] = useState(false);
 
   // Track incomplete setup tasks
@@ -75,6 +77,7 @@ const Dashboard: React.FC = () => {
     estimate: false,
     onSiteAI: false,
     visionCam: false,
+    manage: false,
     client: false,
     team: false,
     task: false,
@@ -95,6 +98,7 @@ const Dashboard: React.FC = () => {
         estimate: localStorage.getItem('onsite_estimate_opened') === 'true',
         onSiteAI: localStorage.getItem('onsite_ai_used') === 'true',
         visionCam: localStorage.getItem('onsite_vision_cam_opened') === 'true',
+        manage: localStorage.getItem('onsite_manage_opened') === 'true',
         client: localStorage.getItem('onsite_client_modal_opened') === 'true',
         team: localStorage.getItem('onsite_team_page_opened') === 'true',
         task: localStorage.getItem('onsite_task_modal_opened') === 'true',
@@ -115,6 +119,7 @@ const Dashboard: React.FC = () => {
     if (!setupTasksStatus.estimate) tasks.push({ id: 'estimate', title: 'Create an Estimate', step: 2 });
     if (!setupTasksStatus.onSiteAI) tasks.push({ id: 'onSiteAI', title: 'Try OnSite AI', step: 2 });
     if (!setupTasksStatus.visionCam) tasks.push({ id: 'visionCam', title: 'Use Vision Cam', step: 2 });
+    if (!setupTasksStatus.manage) tasks.push({ id: 'manage', title: 'Use Manage', step: 2 });
     if (!setupTasksStatus.client) tasks.push({ id: 'client', title: 'Add Your First Client', step: 3 });
     if (!setupTasksStatus.team) tasks.push({ id: 'team', title: 'Set up Your Team', step: 3 });
     if (!setupTasksStatus.task) tasks.push({ id: 'task', title: 'Create Your First Task', step: 3 });
@@ -913,6 +918,9 @@ const Dashboard: React.FC = () => {
             setShowEstimateTutorial(true);
             setShowAIChat(true);
           }}
+          onShowManageTutorial={() => {
+            setShowManageTutorial(true);
+          }}
         />
 
           {/* Discover More Section */}
@@ -1036,6 +1044,88 @@ const Dashboard: React.FC = () => {
               className="w-full mt-8 py-4 bg-gradient-to-r from-[#043d6b] to-[#065a9e] text-white font-bold text-xl rounded-2xl hover:from-[#035291] hover:to-[#054a7a] active:scale-[0.98] transition-all shadow-lg"
             >
               Got it, let's build an estimate!
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Manage Tutorial Popup */}
+      {showManageTutorial && (
+        <div className="fixed inset-0 z-[210] flex items-center justify-center">
+          {/* Opaque backdrop */}
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+          <div
+            className={`relative max-w-2xl w-full mx-4 ${theme === 'light' ? 'bg-white' : 'bg-zinc-800'} rounded-3xl shadow-2xl border ${theme === 'light' ? 'border-gray-200' : 'border-zinc-700'} p-8 animate-in slide-in-from-bottom-4 duration-300`}
+          >
+            <div className="flex items-start justify-between mb-6">
+              <div className="flex items-center gap-4">
+                <div className="w-20 h-20 bg-gradient-to-br from-[#022a4a] to-[#043d6b] rounded-2xl flex items-center justify-center shadow-lg">
+                  <BarChart3 className="w-10 h-10 text-white" />
+                </div>
+                <div>
+                  <h3 className={`font-bold text-3xl ${themeClasses.text.primary}`}>Manage Tab</h3>
+                  <p className={`text-lg ${themeClasses.text.muted} mt-1`}>Your financial command center</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowManageTutorial(false)}
+                className={`p-2 rounded-xl ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-zinc-700'}`}
+              >
+                <XIcon className="w-6 h-6 text-gray-400" />
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              <p className={`text-xl ${themeClasses.text.secondary} leading-relaxed`}>
+                The Manage tab helps you stay on top of your business finances. Track everything in one place and send invoices directly to customers.
+              </p>
+
+              <div className={`p-6 rounded-2xl ${theme === 'light' ? 'bg-[#e8f0f8] border-2 border-[#043d6b]/20' : 'bg-[#043d6b]/30 border-2 border-[#043d6b]/50'}`}>
+                <p className={`font-bold text-xl ${theme === 'light' ? 'text-[#022a4a]' : 'text-blue-200'} mb-5`}>What you can do:</p>
+                <ul className={`space-y-5 text-lg ${theme === 'light' ? 'text-[#043d6b]' : 'text-blue-300'}`}>
+                  <li className="flex items-start gap-4">
+                    <div className={`w-9 h-9 rounded-full ${theme === 'light' ? 'bg-[#043d6b]' : 'bg-[#065a9e]'} flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                      <span className="text-white font-bold">1</span>
+                    </div>
+                    <span><strong className={theme === 'light' ? 'text-[#022a4a]' : 'text-white'}>Track employee payroll</strong> - log hours and calculate wages</span>
+                  </li>
+                  <li className="flex items-start gap-4">
+                    <div className={`w-9 h-9 rounded-full ${theme === 'light' ? 'bg-[#043d6b]' : 'bg-[#065a9e]'} flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                      <span className="text-white font-bold">2</span>
+                    </div>
+                    <span><strong className={theme === 'light' ? 'text-[#022a4a]' : 'text-white'}>Log miles & expenses</strong> - keep records for tax time</span>
+                  </li>
+                  <li className="flex items-start gap-4">
+                    <div className={`w-9 h-9 rounded-full ${theme === 'light' ? 'bg-[#043d6b]' : 'bg-[#065a9e]'} flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                      <span className="text-white font-bold">3</span>
+                    </div>
+                    <span><strong className={theme === 'light' ? 'text-[#022a4a]' : 'text-white'}>Track revenue</strong> - see your income at a glance</span>
+                  </li>
+                  <li className="flex items-start gap-4">
+                    <div className={`w-9 h-9 rounded-full ${theme === 'light' ? 'bg-[#043d6b]' : 'bg-[#065a9e]'} flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                      <span className="text-white font-bold">4</span>
+                    </div>
+                    <span><strong className={theme === 'light' ? 'text-[#022a4a]' : 'text-white'}>Send invoices</strong> - bill customers and get paid faster</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className={`p-5 rounded-2xl ${theme === 'light' ? 'bg-amber-100 border-2 border-amber-400' : 'bg-amber-900/30 border-2 border-amber-700'}`}>
+                <p className={`text-lg ${theme === 'light' ? 'text-amber-900' : 'text-amber-200'} leading-relaxed`}>
+                  <strong>Pro tip:</strong> Log your mileage after each job to maximize your tax deductions at year end!
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                localStorage.setItem('onsite_manage_opened', 'true');
+                setShowManageTutorial(false);
+                navigate('/tracker');
+              }}
+              className="w-full mt-8 py-4 bg-gradient-to-r from-[#043d6b] to-[#065a9e] text-white font-bold text-xl rounded-2xl hover:from-[#035291] hover:to-[#054a7a] active:scale-[0.98] transition-all shadow-lg"
+            >
+              Got it, let's check it out!
             </button>
           </div>
         </div>
