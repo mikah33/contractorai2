@@ -25,15 +25,48 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComplete })
     defaultTerms: ''
   });
 
-  // Auto-fill from auth metadata when modal opens
+  // Auto-fill from existing profile and auth metadata when modal opens
   useEffect(() => {
-    if (isOpen && user) {
-      const metadata = user.user_metadata || {};
-      setProfile(prev => ({
-        ...prev,
-        phone: metadata.phone || prev.phone
-      }));
-    }
+    const loadExistingProfile = async () => {
+      if (!isOpen || !user) return;
+
+      try {
+        // Fetch existing profile from database
+        const { data: existingProfile } = await supabase
+          .from('profiles')
+          .select('full_name, company_name, phone, address, default_terms')
+          .eq('id', user.id)
+          .single();
+
+        if (existingProfile) {
+          console.log('[OnboardingModal] Found existing profile:', existingProfile);
+          setProfile(prev => ({
+            name: existingProfile.full_name || prev.name,
+            company: existingProfile.company_name || prev.company,
+            phone: existingProfile.phone || prev.phone,
+            address: existingProfile.address || prev.address,
+            defaultTerms: existingProfile.default_terms || prev.defaultTerms
+          }));
+        } else {
+          // Fall back to auth metadata
+          const metadata = user.user_metadata || {};
+          setProfile(prev => ({
+            ...prev,
+            phone: metadata.phone || prev.phone
+          }));
+        }
+      } catch (error) {
+        console.error('[OnboardingModal] Error loading profile:', error);
+        // Fall back to auth metadata
+        const metadata = user.user_metadata || {};
+        setProfile(prev => ({
+          ...prev,
+          phone: metadata.phone || prev.phone
+        }));
+      }
+    };
+
+    loadExistingProfile();
   }, [isOpen, user]);
 
   const handleChange = (key: keyof typeof profile, value: string) => {
