@@ -122,6 +122,11 @@ const Dashboard: React.FC = () => {
     return tasks;
   }, [setupTasksStatus]);
 
+  // Count completed tasks (show map only after at least 1 task is done)
+  const completedTasksCount = useMemo(() => {
+    return Object.values(setupTasksStatus).filter(Boolean).length;
+  }, [setupTasksStatus]);
+
   // Create custom clipboard marker icon with label
   const createMarkerIcon = (label: string) => new L.DivIcon({
     className: 'custom-marker',
@@ -577,7 +582,8 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Full-Bleed Map Section - Ends just past Today's Tasks cards */}
+      {/* Full-Bleed Map Section - Only shows after completing at least 1 setup task */}
+      {completedTasksCount >= 1 && (
       <div className="absolute top-0 left-0 right-0 z-0" style={{ height: '72vh', minHeight: '520px', maxHeight: '650px' }}>
         {/* Map Container */}
         <div className="h-full w-full">
@@ -700,9 +706,15 @@ const Dashboard: React.FC = () => {
         />
 
         </div>
+      )}
 
-      {/* Spacer to push content below map */}
-      <div style={{ height: 'calc(52vh - 60px)', minHeight: '280px', maxHeight: '400px' }} />
+      {/* Spacer to push content below map (only when map is shown) */}
+      {completedTasksCount >= 1 ? (
+        <div style={{ height: 'calc(52vh - 60px)', minHeight: '280px', maxHeight: '400px' }} />
+      ) : (
+        /* Spacer for header when map is hidden */
+        <div style={{ height: '100px' }} />
+      )}
 
       {/* Today's Tasks Section - Transparent so map shows behind */}
       <div className="relative z-20">
