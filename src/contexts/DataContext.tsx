@@ -111,26 +111,11 @@ export const DataProvider = ({ children }: DataProviderProps) => {
         .single();
 
       if (customerError) {
-        console.error('Error loading customer:', customerError);
-        // Retry once after a delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        const { data: retryCustomer } = await supabase
-          .from('stripe_customers')
-          .select('customer_id')
-          .eq('user_id', user.id)
-          .single();
-
-        if (!retryCustomer?.customer_id) return;
-
-        const { data: sub } = await supabase
-          .from('stripe_subscriptions')
-          .select('*')
-          .eq('customer_id', retryCustomer.customer_id)
-          .eq('status', 'active')
-          .single();
-
-        setSubscription(sub);
-        return;
+        // PGRST116 means no rows found - this is normal for new users without Stripe
+        if (customerError.code !== 'PGRST116') {
+          console.error('Error loading customer:', customerError);
+        }
+        return; // No customer record yet, that's okay
       }
 
       if (!customer?.customer_id) return;
