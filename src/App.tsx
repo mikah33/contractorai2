@@ -286,7 +286,10 @@ function App() {
 
   if (shouldShowSplash) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#ebe8e9]">
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ background: 'linear-gradient(180deg, #e8e8e8 0%, #e9e7e8 50%, #e9e8e6 100%)' }}
+      >
         <img
           src="/onsite-logo.gif"
           alt="Onsite"
