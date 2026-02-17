@@ -218,7 +218,7 @@ const Settings = () => {
       setLocalProfile({
         name: profile.full_name || metadata.full_name || '',
         phone: profile.phone || metadata.phone || '',
-        company: profile.company || metadata.company_name || '',
+        company: profile.company_name || metadata.company_name || '',
         address: profile.address || '',
         defaultTerms: profile.default_terms || '',
         contractorNotificationEmail: profile.contractor_notification_email || user?.email || ''
@@ -502,7 +502,7 @@ const Settings = () => {
           email: user.email,
           full_name: localProfile.name,
           phone: localProfile.phone,
-          company: localProfile.company,
+          company_name: localProfile.company,
           address: localProfile.address,
           default_terms: localProfile.defaultTerms,
           contractor_notification_email: localProfile.contractorNotificationEmail,

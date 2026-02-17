@@ -8,7 +8,7 @@ interface Profile {
   email: string;
   full_name?: string;
   phone?: string;
-  company?: string;
+  company_name?: string;
   address?: string;
   logo_url?: string;
   calendar_reminders?: boolean;
