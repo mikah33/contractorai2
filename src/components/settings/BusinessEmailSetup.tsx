@@ -303,6 +303,16 @@ export const BusinessEmailSetup: React.FC = () => {
             </ul>
           </div>
 
+          {/* Important disclaimer */}
+          <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-amber-600 dark:text-amber-400">
+                <strong>Important:</strong> Please connect the same Gmail account you used to sign up for OnSite.
+              </p>
+            </div>
+          </div>
+
           <button
             onClick={handleConnectGoogle}
             disabled={isConnecting}
@@ -327,7 +337,7 @@ export const BusinessEmailSetup: React.FC = () => {
           </button>
 
           <p className={`text-xs ${themeClasses.text.muted} text-center`}>
-            By connecting, you allow ContractorAI to send emails on your behalf.
+            By connecting, you allow OnSite to send emails on your behalf.
             You can disconnect at any time.
           </p>
         </div>
