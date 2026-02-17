@@ -311,11 +311,11 @@ export const OnSiteSetup: React.FC<OnSiteSetupProps> = ({ profile, userId, onSho
     <div className="w-full max-w-lg mx-auto px-4 py-4">
       {/* Header */}
       <div className="flex flex-col items-center text-center mb-6">
-        <div className={`w-16 h-16 ${allComplete ? 'bg-green-500' : 'bg-gradient-to-br from-[#043d6b] to-[#065a9e]'} rounded-2xl flex items-center justify-center shadow-lg mb-3`}>
+        <div className={`w-16 h-16 ${allComplete ? 'bg-green-500' : ''} rounded-2xl flex items-center justify-center shadow-lg mb-3 overflow-hidden`}>
           {allComplete ? (
             <Check className="w-8 h-8 text-white" />
           ) : (
-            <Rocket className="w-8 h-8 text-white" />
+            <img src="/onsite-icon.png" alt="OnSite" className="w-16 h-16 object-cover" />
           )}
         </div>
         <h3 className={`font-bold ${themeClasses.text.primary} text-xl`}>
