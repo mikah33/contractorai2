@@ -11,7 +11,9 @@ import {
   Briefcase,
   FileText,
   ChevronRight,
-  Trash2
+  Trash2,
+  Mic,
+  MicOff
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { detectMode, ContractorMode } from '../../lib/ai/contractor-config';
@@ -58,9 +60,62 @@ const GlobalAISearchBar: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentMode, setCurrentMode] = useState<ContractorMode>('general');
   const [currentEstimate, setCurrentEstimate] = useState<EstimateLineItem[]>([]);
+  const [isListening, setIsListening] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<any>(null);
+
+  // Initialize speech recognition
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        recognitionRef.current = new SpeechRecognition();
+        recognitionRef.current.continuous = false;
+        recognitionRef.current.interimResults = true;
+        recognitionRef.current.lang = 'en-US';
+
+        recognitionRef.current.onresult = (event: any) => {
+          const transcript = Array.from(event.results)
+            .map((result: any) => result[0].transcript)
+            .join('');
+          setInput(transcript);
+        };
+
+        recognitionRef.current.onend = () => {
+          setIsListening(false);
+        };
+
+        recognitionRef.current.onerror = (event: any) => {
+          console.error('Speech recognition error:', event.error);
+          setIsListening(false);
+        };
+      }
+    }
+
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.abort();
+      }
+    };
+  }, []);
+
+  const toggleListening = () => {
+    if (!recognitionRef.current) {
+      alert('Speech recognition is not supported in your browser');
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      setInput('');
+      recognitionRef.current.start();
+      setIsListening(true);
+    }
+  };
 
   const totalEstimate = currentEstimate.reduce((sum, item) => sum + item.totalPrice, 0);
 
@@ -88,9 +143,24 @@ const GlobalAISearchBar: React.FC = () => {
     const handleExpandEvent = () => {
       setIsExpanded(true);
     };
+    const handleExpandWithVoice = () => {
+      setIsExpanded(true);
+      // Start listening after a brief delay to ensure the component is ready
+      setTimeout(() => {
+        if (recognitionRef.current && !isListening) {
+          setInput('');
+          recognitionRef.current.start();
+          setIsListening(true);
+        }
+      }, 300);
+    };
     window.addEventListener('openAIChat', handleExpandEvent);
-    return () => window.removeEventListener('openAIChat', handleExpandEvent);
-  }, []);
+    window.addEventListener('openAIChatWithVoice', handleExpandWithVoice);
+    return () => {
+      window.removeEventListener('openAIChat', handleExpandEvent);
+      window.removeEventListener('openAIChatWithVoice', handleExpandWithVoice);
+    };
+  }, [isListening]);
 
   // Focus input when expanded
   useEffect(() => {
@@ -263,10 +333,10 @@ const GlobalAISearchBar: React.FC = () => {
           <div className={`flex items-center justify-between px-4 py-5 ${themeClasses.bg.secondary} border-b ${theme === 'light' ? 'border-blue-300' : 'border-blue-500/30'}`}>
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 rounded-xl flex items-center justify-center overflow-hidden">
-                <img src="/logo.png" alt="ContractorAI" className="w-14 h-14 object-cover" />
+                <img src="/onsite-icon.png" alt="OnSite" className="w-14 h-14 object-contain" />
               </div>
               <div>
-                <h2 className={`font-bold ${themeClasses.text.primary} text-2xl`}>Contractor AI</h2>
+                <h2 className={`font-bold ${themeClasses.text.primary} text-2xl`}>OnSite</h2>
                 <div className={`flex items-center gap-1 text-base ${themeClasses.text.secondary}`}>
                   <span className={modeConfig[currentMode].color}>{modeConfig[currentMode].label}</span>
                   <span>Mode</span>
@@ -295,8 +365,8 @@ const GlobalAISearchBar: React.FC = () => {
           <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center px-4">
-                <div className="w-16 h-16 bg-blue-500/20 rounded-2xl flex items-center justify-center mb-4">
-                  <Sparkles className="w-8 h-8 text-blue-500" />
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 overflow-hidden">
+                  <img src="/onsite-icon.png" alt="OnSite" className="w-16 h-16 object-contain" />
                 </div>
                 <h3 className={`text-lg font-semibold ${themeClasses.text.primary} mb-2`}>How can I help?</h3>
                 <p className={`text-sm ${themeClasses.text.secondary} max-w-xs`}>
@@ -413,10 +483,27 @@ const GlobalAISearchBar: React.FC = () => {
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="Ask anything..."
-                  className={`w-full px-4 py-3 ${themeClasses.bg.card} ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} rounded-xl border ${theme === 'light' ? 'border-blue-300 focus:border-blue-500' : 'border-blue-500/30 focus:border-blue-500'} focus:outline-none text-sm`}
+                  placeholder={isListening ? "Listening..." : "Ask anything..."}
+                  className={`w-full px-4 py-3 ${themeClasses.bg.card} ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} rounded-xl border ${isListening ? 'border-red-500 ring-2 ring-red-500/30' : theme === 'light' ? 'border-blue-300 focus:border-blue-500' : 'border-blue-500/30 focus:border-blue-500'} focus:outline-none text-sm transition-all`}
                 />
               </div>
+              <button
+                type="button"
+                onClick={toggleListening}
+                className={`w-11 h-11 rounded-xl flex items-center justify-center active:scale-95 transition-all ${
+                  isListening
+                    ? 'bg-red-500 animate-pulse'
+                    : theme === 'light'
+                      ? 'bg-gray-200 hover:bg-gray-300'
+                      : 'bg-zinc-700 hover:bg-zinc-600'
+                }`}
+              >
+                {isListening ? (
+                  <MicOff className="w-5 h-5 text-white" />
+                ) : (
+                  <Mic className={`w-5 h-5 ${theme === 'light' ? 'text-gray-600' : 'text-zinc-300'}`} />
+                )}
+              </button>
               <button
                 type="submit"
                 disabled={!input.trim() || isLoading}

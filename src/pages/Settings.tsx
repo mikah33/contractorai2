@@ -5,7 +5,7 @@ import {
   Clock, RefreshCw, ChevronRight, Mail, Building2, Phone, MapPin, FileText,
   Settings as SettingsIcon, LogOut, Eye, BookOpen, Home, ClipboardList, Moon, Megaphone, Users, History, MessageSquare
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { useData } from '../contexts/DataContext';
@@ -28,10 +28,11 @@ interface StripeConnectStatus {
   businessName?: string;
 }
 
-type SettingsSection = 'main' | 'profile' | 'notifications' | 'security' | 'payments' | 'language' | 'email' | 'tutorials' | 'theme' | 'danger' | 'marketing' | 'team' | 'chatHistory';
+type SettingsSection = 'main' | 'profile' | 'notifications' | 'security' | 'payments' | 'language' | 'email' | 'theme' | 'danger' | 'marketing' | 'team' | 'chatHistory';
 
 const Settings = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { t, i18n } = useTranslation();
   const { user, signOut } = useAuthStore();
   const { profile, loading: dataLoading, refreshProfile } = useData();
@@ -114,6 +115,16 @@ const Settings = () => {
       checkMarketingTutorial(user.id);
     }
   }, [user?.id]);
+
+  // Handle navigation state to open specific section
+  useEffect(() => {
+    const state = location.state as { section?: SettingsSection } | null;
+    if (state?.section) {
+      setActiveSection(state.section);
+      // Clear the state so it doesn't persist on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   // Sync state when Supabase values change
   useEffect(() => {
@@ -619,7 +630,6 @@ const Settings = () => {
       items: [
         { id: 'notifications' as SettingsSection, icon: Bell, label: 'Notifications', description: 'Calendar reminders, alerts', iconColor: 'text-[#043d6b]' },
         { id: 'theme' as SettingsSection, icon: Moon, label: 'Appearance', description: theme === 'light' ? 'Light mode' : 'Dark mode', iconColor: 'text-[#043d6b]', hasToggle: true },
-        { id: 'tutorials' as SettingsSection, icon: BookOpen, label: 'Tutorials', description: 'Reset onboarding guides', iconColor: 'text-[#043d6b]' },
       ]
     },
     {
@@ -1065,388 +1075,6 @@ const Settings = () => {
           <div className="space-y-6">
             <BusinessEmailSetup />
             <EmailPreferences />
-          </div>
-        );
-
-      case 'tutorials':
-        return (
-          <div className="space-y-4">
-            <p className={`text-sm ${themeClasses.text.secondary} px-1`}>
-              Re-enable tutorials to see the onboarding guides again when using features.
-            </p>
-
-            {/* Dashboard Tutorial */}
-            <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-[#043d6b]/20 rounded-lg flex items-center justify-center">
-                    <Home className="w-5 h-5 text-[#043d6b]" />
-                  </div>
-                  <div>
-                    <p className={`font-semibold ${themeClasses.text.primary}`}>Dashboard Tutorial</p>
-                    <p className={`text-sm ${themeClasses.text.secondary}`}>Learn about your dashboard overview</p>
-                  </div>
-                </div>
-                <button
-                  onClick={async () => {
-                    const newValue = !showDashboardTutorial;
-                    setShowDashboardTutorial(newValue);
-                    if (user?.id) {
-                      await setDashboardTutorialCompleted(user.id, !newValue);
-                    }
-                  }}
-                  className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
-                    showDashboardTutorial ? 'bg-[#043d6b] hover:bg-[#035291]' : 'bg-zinc-700'
-                  }`}
-                >
-                  <span
-                    className={`pointer-events-none inline-block h-6 w-6 transform rounded-full shadow-lg ring-0 transition duration-200 ease-in-out mt-0.5 ${
-                      showDashboardTutorial ? 'translate-x-5 ml-0.5 bg-white' : 'translate-x-0.5 bg-zinc-400'
-                    }`}
-                  />
-                </button>
-              </div>
-            </div>
-
-            {/* Vision Cam Tutorial */}
-            <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-r from-purple-500/20 to-[#043d6b]/20 rounded-lg flex items-center justify-center">
-                    <Eye className="w-5 h-5 text-purple-400" />
-                  </div>
-                  <div>
-                    <p className={`font-semibold ${themeClasses.text.primary}`}>Vision Cam Tutorial</p>
-                    <p className={`text-sm ${themeClasses.text.secondary}`}>Learn how to use AI visualization</p>
-                  </div>
-                </div>
-                <button
-                  onClick={async () => {
-                    const newValue = !showVisionCamTutorial;
-                    setShowVisionCamTutorial(newValue);
-                    // Save to both localStorage and Supabase
-                    if (newValue) {
-                      localStorage.removeItem('visionCamTutorialHidden');
-                    } else {
-                      localStorage.setItem('visionCamTutorialHidden', 'true');
-                    }
-                    if (user?.id) {
-                      await setVisionCamTutorialCompleted(user.id, !newValue);
-                    }
-                  }}
-                  className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
-                    showVisionCamTutorial ? 'bg-[#043d6b] hover:bg-[#035291]' : 'bg-zinc-700'
-                  }`}
-                >
-                  <span
-                    className={`pointer-events-none inline-block h-6 w-6 transform rounded-full shadow-lg ring-0 transition duration-200 ease-in-out mt-0.5 ${
-                      showVisionCamTutorial ? 'translate-x-5 ml-0.5 bg-white' : 'translate-x-0.5 bg-zinc-400'
-                    }`}
-                  />
-                </button>
-              </div>
-            </div>
-
-            {/* Tasks Tutorial */}
-            <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-[#043d6b]/20 rounded-lg flex items-center justify-center">
-                    <ClipboardList className="w-5 h-5 text-[#043d6b]" />
-                  </div>
-                  <div>
-                    <p className={`font-semibold ${themeClasses.text.primary}`}>Tasks Tutorial</p>
-                    <p className={`text-sm ${themeClasses.text.secondary}`}>Learn to manage tasks & calendar</p>
-                  </div>
-                </div>
-                <button
-                  onClick={async () => {
-                    const newValue = !showTasksTutorial;
-                    setShowTasksTutorial(newValue);
-                    if (user?.id) {
-                      await setTasksTutorialCompleted(user.id, !newValue);
-                    }
-                  }}
-                  className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
-                    showTasksTutorial ? 'bg-[#043d6b] hover:bg-[#035291]' : 'bg-zinc-700'
-                  }`}
-                >
-                  <span
-                    className={`pointer-events-none inline-block h-6 w-6 transform rounded-full shadow-lg ring-0 transition duration-200 ease-in-out mt-0.5 ${
-                      showTasksTutorial ? 'translate-x-5 ml-0.5 bg-white' : 'translate-x-0.5 bg-zinc-400'
-                    }`}
-                  />
-                </button>
-              </div>
-            </div>
-
-            {/* Estimating Tutorial */}
-            <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-[#043d6b]/20 rounded-lg flex items-center justify-center">
-                    <FileText className="w-5 h-5 text-[#043d6b]" />
-                  </div>
-                  <div>
-                    <p className={`font-semibold ${themeClasses.text.primary}`}>Estimating Tutorial</p>
-                    <p className={`text-sm ${themeClasses.text.secondary}`}>Learn to create & send estimates</p>
-                  </div>
-                </div>
-                <button
-                  onClick={async () => {
-                    const newValue = !showEstimatingTutorial;
-                    setShowEstimatingTutorial(newValue);
-                    if (user?.id) {
-                      await setEstimatingTutorialCompleted(user.id, !newValue);
-                    }
-                  }}
-                  className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
-                    showEstimatingTutorial ? 'bg-[#043d6b] hover:bg-[#035291]' : 'bg-zinc-700'
-                  }`}
-                >
-                  <span
-                    className={`pointer-events-none inline-block h-6 w-6 transform rounded-full shadow-lg ring-0 transition duration-200 ease-in-out mt-0.5 ${
-                      showEstimatingTutorial ? 'translate-x-5 ml-0.5 bg-white' : 'translate-x-0.5 bg-zinc-400'
-                    }`}
-                  />
-                </button>
-              </div>
-            </div>
-
-            {/* Projects Tutorial */}
-            <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-[#043d6b]/20 rounded-lg flex items-center justify-center">
-                    <Building2 className="w-5 h-5 text-[#043d6b]" />
-                  </div>
-                  <div>
-                    <p className={`font-semibold ${themeClasses.text.primary}`}>Projects Tutorial</p>
-                    <p className={`text-sm ${themeClasses.text.secondary}`}>Learn to manage projects & teams</p>
-                  </div>
-                </div>
-                <button
-                  onClick={async () => {
-                    const newValue = !showProjectsTutorial;
-                    setShowProjectsTutorial(newValue);
-                    if (user?.id) {
-                      await setProjectsTutorialCompleted(user.id, !newValue);
-                    }
-                  }}
-                  className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
-                    showProjectsTutorial ? 'bg-[#043d6b] hover:bg-[#035291]' : 'bg-zinc-700'
-                  }`}
-                >
-                  <span
-                    className={`pointer-events-none inline-block h-6 w-6 transform rounded-full shadow-lg ring-0 transition duration-200 ease-in-out mt-0.5 ${
-                      showProjectsTutorial ? 'translate-x-5 ml-0.5 bg-white' : 'translate-x-0.5 bg-zinc-400'
-                    }`}
-                  />
-                </button>
-              </div>
-            </div>
-
-            {/* Finance Tutorial */}
-            <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-[#043d6b]/20 rounded-lg flex items-center justify-center">
-                    <CreditCard className="w-5 h-5 text-[#043d6b]" />
-                  </div>
-                  <div>
-                    <p className={`font-semibold ${themeClasses.text.primary}`}>Finance Tutorial</p>
-                    <p className={`text-sm ${themeClasses.text.secondary}`}>Learn P&L, revenue & expenses</p>
-                  </div>
-                </div>
-                <button
-                  onClick={async () => {
-                    const newValue = !showFinanceTutorial;
-                    setShowFinanceTutorial(newValue);
-                    if (user?.id) {
-                      await setFinanceTutorialCompleted(user.id, !newValue);
-                    }
-                  }}
-                  className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
-                    showFinanceTutorial ? 'bg-[#043d6b] hover:bg-[#035291]' : 'bg-zinc-700'
-                  }`}
-                >
-                  <span
-                    className={`pointer-events-none inline-block h-6 w-6 transform rounded-full shadow-lg ring-0 transition duration-200 ease-in-out mt-0.5 ${
-                      showFinanceTutorial ? 'translate-x-5 ml-0.5 bg-white' : 'translate-x-0.5 bg-zinc-400'
-                    }`}
-                  />
-                </button>
-              </div>
-            </div>
-
-            {/* Payments Tutorial */}
-            <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-[#043d6b]/20 rounded-lg flex items-center justify-center">
-                    <FileText className="w-5 h-5 text-[#043d6b]" />
-                  </div>
-                  <div>
-                    <p className={`font-semibold ${themeClasses.text.primary}`}>Invoices Tutorial</p>
-                    <p className={`text-sm ${themeClasses.text.secondary}`}>Learn invoicing & payment links</p>
-                  </div>
-                </div>
-                <button
-                  onClick={async () => {
-                    const newValue = !showPaymentsTutorial;
-                    setShowPaymentsTutorial(newValue);
-                    if (user?.id) {
-                      await setPaymentsTutorialCompleted(user.id, !newValue);
-                    }
-                  }}
-                  className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
-                    showPaymentsTutorial ? 'bg-[#043d6b] hover:bg-[#035291]' : 'bg-zinc-700'
-                  }`}
-                >
-                  <span
-                    className={`pointer-events-none inline-block h-6 w-6 transform rounded-full shadow-lg ring-0 transition duration-200 ease-in-out mt-0.5 ${
-                      showPaymentsTutorial ? 'translate-x-5 ml-0.5 bg-white' : 'translate-x-0.5 bg-zinc-400'
-                    }`}
-                  />
-                </button>
-              </div>
-            </div>
-
-            {/* Teams Tutorial */}
-            <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-[#043d6b]/20 rounded-lg flex items-center justify-center">
-                    <User className="w-5 h-5 text-[#043d6b]" />
-                  </div>
-                  <div>
-                    <p className={`font-semibold ${themeClasses.text.primary}`}>Teams Tutorial</p>
-                    <p className={`text-sm ${themeClasses.text.secondary}`}>Learn to manage employees</p>
-                  </div>
-                </div>
-                <button
-                  onClick={async () => {
-                    const newValue = !showTeamsTutorial;
-                    setShowTeamsTutorial(newValue);
-                    if (user?.id) {
-                      await setTeamsTutorialCompleted(user.id, !newValue);
-                    }
-                  }}
-                  className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
-                    showTeamsTutorial ? 'bg-[#043d6b] hover:bg-[#035291]' : 'bg-zinc-700'
-                  }`}
-                >
-                  <span
-                    className={`pointer-events-none inline-block h-6 w-6 transform rounded-full shadow-lg ring-0 transition duration-200 ease-in-out mt-0.5 ${
-                      showTeamsTutorial ? 'translate-x-5 ml-0.5 bg-white' : 'translate-x-0.5 bg-zinc-400'
-                    }`}
-                  />
-                </button>
-              </div>
-            </div>
-
-            {/* Email Tutorial */}
-            <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-[#043d6b]/20 rounded-lg flex items-center justify-center">
-                    <Mail className="w-5 h-5 text-[#043d6b]" />
-                  </div>
-                  <div>
-                    <p className={`font-semibold ${themeClasses.text.primary}`}>Email Tutorial</p>
-                    <p className={`text-sm ${themeClasses.text.secondary}`}>Learn to send emails & attachments</p>
-                  </div>
-                </div>
-                <button
-                  onClick={async () => {
-                    const newValue = !showEmailTutorial;
-                    setShowEmailTutorial(newValue);
-                    if (user?.id) {
-                      await setEmailTutorialCompleted(user.id, !newValue);
-                    }
-                  }}
-                  className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
-                    showEmailTutorial ? 'bg-[#043d6b] hover:bg-[#035291]' : 'bg-zinc-700'
-                  }`}
-                >
-                  <span
-                    className={`pointer-events-none inline-block h-6 w-6 transform rounded-full shadow-lg ring-0 transition duration-200 ease-in-out mt-0.5 ${
-                      showEmailTutorial ? 'translate-x-5 ml-0.5 bg-white' : 'translate-x-0.5 bg-zinc-400'
-                    }`}
-                  />
-                </button>
-              </div>
-            </div>
-
-            {/* Photos Tutorial */}
-            <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-[#043d6b]/20 rounded-lg flex items-center justify-center">
-                    <Eye className="w-5 h-5 text-[#043d6b]" />
-                  </div>
-                  <div>
-                    <p className={`font-semibold ${themeClasses.text.primary}`}>Photos Tutorial</p>
-                    <p className={`text-sm ${themeClasses.text.secondary}`}>Learn to capture & organize photos</p>
-                  </div>
-                </div>
-                <button
-                  onClick={async () => {
-                    const newValue = !showPhotosTutorial;
-                    setShowPhotosTutorial(newValue);
-                    if (user?.id) {
-                      await setPhotosTutorialCompleted(user.id, !newValue);
-                    }
-                  }}
-                  className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
-                    showPhotosTutorial ? 'bg-[#043d6b] hover:bg-[#035291]' : 'bg-zinc-700'
-                  }`}
-                >
-                  <span
-                    className={`pointer-events-none inline-block h-6 w-6 transform rounded-full shadow-lg ring-0 transition duration-200 ease-in-out mt-0.5 ${
-                      showPhotosTutorial ? 'translate-x-5 ml-0.5 bg-white' : 'translate-x-0.5 bg-zinc-400'
-                    }`}
-                  />
-                </button>
-              </div>
-            </div>
-
-            {/* Marketing Tutorial */}
-            <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-[#043d6b]/20 rounded-lg flex items-center justify-center">
-                    <Eye className="w-5 h-5 text-[#043d6b]" />
-                  </div>
-                  <div>
-                    <p className={`font-semibold ${themeClasses.text.primary}`}>Marketing Tutorial</p>
-                    <p className={`text-sm ${themeClasses.text.secondary}`}>Learn about marketing services</p>
-                  </div>
-                </div>
-                <button
-                  onClick={async () => {
-                    const newValue = !showMarketingTutorial;
-                    setShowMarketingTutorial(newValue);
-                    if (user?.id) {
-                      await setMarketingTutorialCompleted(user.id, !newValue);
-                    }
-                  }}
-                  className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
-                    showMarketingTutorial ? 'bg-[#043d6b] hover:bg-[#035291]' : 'bg-zinc-700'
-                  }`}
-                >
-                  <span
-                    className={`pointer-events-none inline-block h-6 w-6 transform rounded-full shadow-lg ring-0 transition duration-200 ease-in-out mt-0.5 ${
-                      showMarketingTutorial ? 'translate-x-5 ml-0.5 bg-white' : 'translate-x-0.5 bg-zinc-400'
-                    }`}
-                  />
-                </button>
-              </div>
-            </div>
-
-            <p className={`text-xs ${themeClasses.text.muted} px-1`}>
-              When enabled, the tutorial will show the next time you visit that feature.
-            </p>
           </div>
         );
 

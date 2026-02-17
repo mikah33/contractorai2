@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Globe, MessageSquare, Star, Smartphone, Target, CheckCircle, ArrowRight, Zap, Users, TrendingUp, X, Crown, Megaphone, BarChart3, MousePointer, DollarSign, PieChart, Rocket, Loader2, Send } from 'lucide-react';
-import { MarketingTutorialModal } from '../components/marketing/MarketingTutorialModal';
-import { useOnboardingStore } from '../stores/onboardingStore';
 import { supabase } from '../lib/supabase';
 import { Capacitor } from '@capacitor/core';
 import { useTheme, getThemeClasses } from '../contexts/ThemeContext';
@@ -13,8 +11,7 @@ const AdAnalyzer = () => {
   const themeClasses = getThemeClasses(theme);
   const [showModal, setShowModal] = useState(false);
   const [showAdsModal, setShowAdsModal] = useState(false);
-  const [showMarketingTutorial, setShowMarketingTutorial] = useState(false);
-  const [tutorialUserId, setTutorialUserId] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const [purchasing, setPurchasing] = useState<string | null>(null);
   const [purchaseError, setPurchaseError] = useState<string | null>(null);
   const [hasPremium, setHasPremium] = useState(false);
@@ -25,19 +22,15 @@ const AdAnalyzer = () => {
   const [noteSent, setNoteSent] = useState(false);
   const isIOS = Capacitor.getPlatform() === 'ios';
 
-  const { marketingTutorialCompleted, checkMarketingTutorial, setMarketingTutorialCompleted } = useOnboardingStore();
-
-  // Check tutorial status and subscription status on mount
+  // Check subscription status on mount and mark marketing as viewed
   useEffect(() => {
+    // Mark marketing page as viewed for onboarding checklist
+    localStorage.setItem('onsite_marketing_viewed', 'true');
+
     const initialize = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        setTutorialUserId(user.id);
-        const completed = await checkMarketingTutorial(user.id);
-        if (!completed) {
-          setShowMarketingTutorial(true);
-        }
-
+        setUserId(user.id);
         // Check subscription status
         try {
           if (isIOS) {
@@ -59,13 +52,6 @@ const AdAnalyzer = () => {
     };
     initialize();
   }, []);
-
-  const handleMarketingTutorialComplete = async (dontShowAgain: boolean) => {
-    setShowMarketingTutorial(false);
-    if (dontShowAgain && tutorialUserId) {
-      await setMarketingTutorialCompleted(tutorialUserId, true);
-    }
-  };
 
   const handlePurchasePremium = async () => {
     try {
@@ -148,7 +134,7 @@ const AdAnalyzer = () => {
   };
 
   const handleSendContactNote = async () => {
-    if (!contactNote.trim() || !tutorialUserId) return;
+    if (!contactNote.trim() || !userId) return;
 
     setSendingNote(true);
     try {
@@ -158,7 +144,7 @@ const AdAnalyzer = () => {
 
       const { data, error } = await supabase.functions.invoke('notify-marketing-signup', {
         body: {
-          userId: tutorialUserId,
+          userId: userId,
           productId,
           productName: `${packageType} - Contact Request`,
           price,
@@ -192,13 +178,6 @@ const AdAnalyzer = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-40">
-      {/* Marketing Tutorial Modal */}
-      <MarketingTutorialModal
-        isOpen={showMarketingTutorial}
-        onClose={() => setShowMarketingTutorial(false)}
-        onComplete={handleMarketingTutorialComplete}
-      />
-
       {/* Fixed Header with safe area background */}
       <div className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
         <div className="pt-[env(safe-area-inset-top)]">

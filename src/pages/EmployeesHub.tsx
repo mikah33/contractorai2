@@ -19,9 +19,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import useProjectStore from '../stores/projectStore';
-import { useOnboardingStore } from '../stores/onboardingStore';
 import AIChatPopup from '../components/ai/AIChatPopup';
-import TeamsTutorialModal from '../components/employees/TeamsTutorialModal';
 import { useTheme, getThemeClasses } from '../contexts/ThemeContext';
 
 interface Employee {
@@ -43,12 +41,9 @@ const EmployeesHub: React.FC = () => {
   const { theme } = useTheme();
   const themeClasses = getThemeClasses(theme);
   const { projects, fetchProjects } = useProjectStore();
-  const { teamsTutorialCompleted, checkTeamsTutorial, setTeamsTutorialCompleted } = useOnboardingStore();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [showTutorial, setShowTutorial] = useState(false);
-  const [tutorialUserId, setTutorialUserId] = useState<string | null>(null);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [showManualForm, setShowManualForm] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -93,19 +88,6 @@ const EmployeesHub: React.FC = () => {
   useEffect(() => {
     fetchEmployees();
     fetchProjects();
-
-    // Check tutorial status
-    const checkTutorial = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user?.id) {
-        setTutorialUserId(user.id);
-        const completed = await checkTeamsTutorial(user.id);
-        if (!completed) {
-          setShowTutorial(true);
-        }
-      }
-    };
-    checkTutorial();
   }, []);
 
   // Auto-select employee from URL params
@@ -934,17 +916,6 @@ const EmployeesHub: React.FC = () => {
           </div>
         </div>
       )}
-
-      {/* Teams Tutorial Modal */}
-      <TeamsTutorialModal
-        isOpen={showTutorial}
-        onComplete={(dontShowAgain) => {
-          setShowTutorial(false);
-          if (dontShowAgain && tutorialUserId) {
-            setTeamsTutorialCompleted(tutorialUserId, true);
-          }
-        }}
-      />
 
       {/* AI Chat Popup */}
       <AIChatPopup

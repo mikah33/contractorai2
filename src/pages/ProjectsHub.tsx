@@ -31,12 +31,10 @@ import useProjectStore from '../stores/projectStore';
 import { useEmployeesStore } from '../stores/employeesStore';
 import { useClientsStore } from '../stores/clientsStore';
 import usePhotosStore from '../stores/photosStore';
-import { useOnboardingStore } from '../stores/onboardingStore';
 import AIChatPopup from '../components/ai/AIChatPopup';
 import AddChoiceModal from '../components/common/AddChoiceModal';
 import PhotoGallery from '../components/photos/PhotoGallery';
 import { useTheme, getThemeClasses } from '../contexts/ThemeContext';
-import ProjectsTutorialModal from '../components/projects/ProjectsTutorialModal';
 import VisionCamModal from '../components/vision/VisionCamModal';
 import { estimateService } from '../services/estimateService';
 import { supabase } from '../lib/supabase';
@@ -68,12 +66,10 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
     addProgressUpdate
   } = useProjectStore();
   const { photos: projectPhotos, fetchPhotos: fetchProjectPhotos } = usePhotosStore();
-  const { projectsTutorialCompleted, checkProjectsTutorial, setProjectsTutorialCompleted } = useOnboardingStore();
   const [showAddChoice, setShowAddChoice] = useState(false);
   const [showAIChat, setShowAIChat] = useState(false);
   const [showVisionCam, setShowVisionCam] = useState(false);
   const [internalSearchQuery, setInternalSearchQuery] = useState('');
-  const [showTutorial, setShowTutorial] = useState(false);
 
   // Use external search query if provided (embedded mode)
   const searchQuery = externalSearchQuery !== undefined ? externalSearchQuery : internalSearchQuery;
@@ -162,27 +158,16 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
     };
   }, [showManualForm, showEditProjectModal, showAddChoice, showPhotoGallery]);
 
-  // Check tutorial status on mount
+  // Get user ID for project operations
   useEffect(() => {
-    const checkTutorial = async () => {
+    const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user?.id) {
         setUserId(user.id);
-        const completed = await checkProjectsTutorial(user.id);
-        if (!completed) {
-          setShowTutorial(true);
-        }
       }
     };
-    checkTutorial();
+    getUser();
   }, []);
-
-  const handleTutorialComplete = async (dontShowAgain: boolean) => {
-    setShowTutorial(false);
-    if (dontShowAgain && userId) {
-      await setProjectsTutorialCompleted(userId, true);
-    }
-  };
 
   // Handle returning from estimate editor or Dashboard - auto-select the project
   useEffect(() => {
@@ -463,12 +448,6 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
 
   return (
     <div className={`${embedded ? '' : 'min-h-screen'} ${themeClasses.bg.primary} ${embedded ? '' : 'pb-40'}`}>
-      {/* Projects Tutorial Modal */}
-      <ProjectsTutorialModal
-        isOpen={showTutorial}
-        onComplete={handleTutorialComplete}
-      />
-
       {/* Header - hidden when embedded */}
       {!embedded && (
         <>
@@ -486,7 +465,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                     </div>
                   </div>
                   <button
-                    onClick={() => setShowAddChoice(true)}
+                    onClick={() => setShowManualForm(true)}
                     className="flex items-center gap-2 px-4 py-2.5 bg-[#043d6b] text-white rounded-lg font-medium hover:bg-[#035291] active:scale-95 transition-all"
                   >
                     <Plus className="w-5 h-5" />
@@ -537,7 +516,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
 
             <div className="space-y-3 mt-auto">
               <button
-                onClick={() => setShowAddChoice(true)}
+                onClick={() => setShowManualForm(true)}
                 className="w-full flex items-center justify-center gap-2 px-5 py-4 bg-[#043d6b] text-white rounded-xl font-semibold text-lg hover:bg-[#035291] active:scale-[0.98] transition-all"
               >
                 <Plus className="w-6 h-6" />
@@ -1551,13 +1530,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                 Cancel
               </button>
               <h2 className={`text-lg font-semibold ${themeClasses.text.primary}`}>New Project</h2>
-              <button
-                onClick={handleCreateProject}
-                disabled={!newProjectForm.name.trim() || isCreatingProject}
-                className={`text-[#043d6b] text-base font-semibold active:text-[#043d6b] disabled:${themeClasses.text.muted} disabled:cursor-not-allowed`}
-              >
-                {isCreatingProject ? 'Saving...' : 'Save'}
-              </button>
+              <div className="w-16"></div>
             </div>
             <div className="p-4 space-y-4">
               {/* Project Name */}
@@ -1910,6 +1883,18 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                   <option value="completed">Completed</option>
                 </select>
               </div>
+
+              {/* Save Button */}
+              <div className="pt-6 pb-6">
+                <button
+                  onClick={handleCreateProject}
+                  disabled={!newProjectForm.name.trim() || isCreatingProject}
+                  className="w-full py-4 text-base font-medium rounded-2xl text-white bg-[#043d6b] hover:bg-[#035291] disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2"
+                >
+                  <Plus className="w-5 h-5" />
+                  {isCreatingProject ? 'Saving...' : 'Add Project'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1931,13 +1916,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                 Cancel
               </button>
               <h2 className={`text-lg font-semibold ${themeClasses.text.primary}`}>Edit Project</h2>
-              <button
-                onClick={handleUpdateProject}
-                disabled={!editProjectForm.name.trim()}
-                className={`text-[#043d6b] text-base font-semibold active:text-[#043d6b] disabled:${themeClasses.text.muted} disabled:cursor-not-allowed`}
-              >
-                Save
-              </button>
+              <div className="w-16"></div>
             </div>
             <div className="p-4 space-y-4">
               {/* Project Name */}
@@ -2288,6 +2267,17 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                   <option value="on-hold">On Hold</option>
                   <option value="completed">Completed</option>
                 </select>
+              </div>
+
+              {/* Save Button */}
+              <div className="pt-4 pb-4">
+                <button
+                  onClick={handleUpdateProject}
+                  disabled={!editProjectForm.name.trim()}
+                  className="w-full py-4 text-base font-semibold rounded-xl text-white bg-[#043d6b] hover:bg-[#035291] disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed shadow-lg transition-all duration-200"
+                >
+                  Save Changes
+                </button>
               </div>
             </div>
           </div>

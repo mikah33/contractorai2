@@ -20,12 +20,10 @@ import {
   Mail
 } from 'lucide-react';
 import useEstimateStore from '../stores/estimateStore';
-import { useOnboardingStore } from '../stores/onboardingStore';
 import { supabase } from '../lib/supabase';
 import AIChatPopup from '../components/ai/AIChatPopup';
 import FloatingAIChatButton from '../components/ai/FloatingAIChatButton';
 import AddChoiceModal from '../components/common/AddChoiceModal';
-import EstimatingTutorialModal from '../components/estimates/EstimatingTutorialModal';
 import SendEstimateModal from '../components/estimates/SendEstimateModal';
 import EstimateRealtimeTest from '../components/estimates/EstimateRealtimeTest';
 import { useTheme, getThemeClasses } from '../contexts/ThemeContext';
@@ -69,7 +67,6 @@ const EstimatesHub: React.FC<EstimatesHubProps> = ({ embedded = false, searchQue
   const themeClasses = getThemeClasses(theme);
   const { profile } = useData();
   const { estimates, fetchEstimates, loading, deleteEstimate, updateEstimate } = useEstimateStore();
-  const { estimatingTutorialCompleted, checkEstimatingTutorial, setEstimatingTutorialCompleted } = useOnboardingStore();
   const [showAddChoice, setShowAddChoice] = useState(false);
   const [showAIChat, setShowAIChat] = useState(false);
   const [internalSearchQuery, setInternalSearchQuery] = useState('');
@@ -77,7 +74,6 @@ const EstimatesHub: React.FC<EstimatesHubProps> = ({ embedded = false, searchQue
   // Use external search query if provided (embedded mode)
   const searchQuery = externalSearchQuery !== undefined ? externalSearchQuery : internalSearchQuery;
   const setSearchQuery = externalSearchQuery !== undefined ? () => {} : setInternalSearchQuery;
-  const [showTutorial, setShowTutorial] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [selectedEstimate, setSelectedEstimate] = useState<Estimate | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -102,27 +98,16 @@ const EstimatesHub: React.FC<EstimatesHubProps> = ({ embedded = false, searchQue
     fetchEstimates();
   }, [fetchEstimates]);
 
-  // Check tutorial status on mount
+  // Get user ID on mount
   useEffect(() => {
-    const checkTutorial = async () => {
+    const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user?.id) {
         setUserId(user.id);
-        const completed = await checkEstimatingTutorial(user.id);
-        if (!completed) {
-          setShowTutorial(true);
-        }
       }
     };
-    checkTutorial();
+    getUser();
   }, []);
-
-  const handleTutorialComplete = async (dontShowAgain: boolean) => {
-    setShowTutorial(false);
-    if (dontShowAgain && userId) {
-      await setEstimatingTutorialCompleted(userId, true);
-    }
-  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -181,12 +166,6 @@ const EstimatesHub: React.FC<EstimatesHubProps> = ({ embedded = false, searchQue
 
   return (
     <div className={`${embedded ? '' : 'min-h-screen'} ${themeClasses.bg.primary} ${embedded ? '' : 'pb-40'}`}>
-      {/* Estimating Tutorial Modal */}
-      <EstimatingTutorialModal
-        isOpen={showTutorial}
-        onComplete={handleTutorialComplete}
-      />
-
       {/* Header - hidden when embedded */}
       {!embedded && (
         <>

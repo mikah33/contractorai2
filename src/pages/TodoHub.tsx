@@ -35,7 +35,6 @@ import {
 import { format, startOfWeek, addDays, isSameDay, parseISO, isToday, isTomorrow, isPast, addMonths, subMonths, startOfMonth, endOfMonth, endOfWeek } from 'date-fns';
 import { useCalendarStoreSupabase } from '../stores/calendarStoreSupabase';
 import useProjectStore from '../stores/projectStore';
-import { useOnboardingStore } from '../stores/onboardingStore';
 import { useClientsStore } from '../stores/clientsStore';
 import { useEmployeesStore } from '../stores/employeesStore';
 // Finance store for future invoice creation
@@ -43,7 +42,6 @@ import { useEmployeesStore } from '../stores/employeesStore';
 import { supabase } from '../lib/supabase';
 import { notificationService } from '../services/notifications/notificationService';
 import AIChatPopup from '../components/ai/AIChatPopup';
-import TasksTutorialModal from '../components/tasks/TasksTutorialModal';
 import { useTheme, getThemeClasses } from '../contexts/ThemeContext';
 import { estimateService } from '../services/estimateService';
 
@@ -91,12 +89,10 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
   const themeClasses = getThemeClasses(theme);
   const { events, fetchEvents } = useCalendarStoreSupabase();
   const { projects, fetchProjects, addProject } = useProjectStore();
-  const { tasksTutorialCompleted, checkTasksTutorial, setTasksTutorialCompleted } = useOnboardingStore();
   const { clients, fetchClients, addClient } = useClientsStore();
   const { employees, fetchEmployees } = useEmployeesStore();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showTutorial, setShowTutorial] = useState(false);
   const [showAIChat, setShowAIChat] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -175,19 +171,15 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
     fetchEmployees();
   }, []);
 
-  // Check tutorial status on mount
+  // Get user ID on mount
   useEffect(() => {
-    const checkTutorial = async () => {
+    const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user?.id) {
         setUserId(user.id);
-        const completed = await checkTasksTutorial(user.id);
-        if (!completed) {
-          setShowTutorial(true);
-        }
       }
     };
-    checkTutorial();
+    getUser();
   }, []);
 
   // Handle navigation from Projects to create task with project pre-selected
@@ -216,13 +208,6 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
       window.history.replaceState({}, document.title);
     }
   }, [location.state]);
-
-  const handleTutorialComplete = async (dontShowAgain: boolean) => {
-    setShowTutorial(false);
-    if (dontShowAgain && userId) {
-      await setTasksTutorialCompleted(userId, true);
-    }
-  };
 
   const handleAIChat = () => {
     setShowAIChat(true);
@@ -704,12 +689,6 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
 
   return (
     <div className={`${embedded ? '' : 'min-h-screen'} ${themeClasses.bg.primary} ${embedded ? '' : 'pb-40'}`}>
-      {/* Tasks Tutorial Modal */}
-      <TasksTutorialModal
-        isOpen={showTutorial}
-        onComplete={handleTutorialComplete}
-      />
-
       {/* Header - hidden when embedded */}
       {!embedded && (
         <>
@@ -795,20 +774,13 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
               Create tasks with due dates, priorities, and project assignments to keep your work on track.
             </p>
 
-            <div className="space-y-3 mt-auto">
+            <div className="mt-auto">
               <button
                 onClick={() => setShowAddTask(true)}
-                className="w-full flex items-center justify-center gap-2 px-5 py-4 bg-[#043d6b] text-white rounded-xl font-semibold text-lg hover:bg-[#035291] active:scale-[0.98] transition-all shadow-lg shadow-[#043d6b]/20"
+                className="w-full flex items-center justify-center gap-2 px-5 py-4 bg-[#043d6b] text-white rounded-2xl font-medium text-base hover:bg-[#035291] active:scale-[0.98] transition-all"
               >
-                <Plus className="w-6 h-6" />
+                <Plus className="w-5 h-5" />
                 Add Task
-              </button>
-              <button
-                onClick={() => setShowAIChat(true)}
-                className={`w-full flex items-center justify-center gap-2 px-5 py-4 ${theme === 'light' ? 'bg-purple-500 hover:bg-purple-600' : 'bg-purple-600 hover:bg-purple-700'} text-white rounded-xl font-semibold text-lg active:scale-[0.98] transition-all`}
-              >
-                <Sparkles className="w-6 h-6" />
-                AI Assistant
               </button>
             </div>
           </div>

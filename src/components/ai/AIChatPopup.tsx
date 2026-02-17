@@ -718,10 +718,10 @@ const AIChatPopup: React.FC<AIChatPopupProps> = ({ isOpen, onClose, mode, onEsti
               {messages.map((message) => (
                 <div
                   key={message.id}
-                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} w-full`}
                 >
                   <div
-                    className={`max-w-[85%] px-4 py-2.5 rounded-2xl text-sm ${
+                    className={`${message.role === 'user' ? 'max-w-[85%]' : 'max-w-[95%]'} px-4 py-2.5 rounded-2xl text-sm ${
                       message.role === 'user'
                         ? theme === 'light'
                           ? 'bg-[#043d6b] text-white rounded-br-md'

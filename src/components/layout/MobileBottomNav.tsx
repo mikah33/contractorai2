@@ -25,7 +25,8 @@ import {
   Eye,
   Scan,
   MoreHorizontal,
-  Search
+  Search,
+  Mic
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../stores/authStore';
@@ -71,6 +72,22 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loadingEvents, setLoadingEvents] = useState(false);
+
+  // Listen for openVisionCam and closeVisionCam events from OnSiteSetup
+  useEffect(() => {
+    const handleOpenVisionCam = () => {
+      setShowVisionCamModal(true);
+    };
+    const handleCloseVisionCam = () => {
+      setShowVisionCamModal(false);
+    };
+    window.addEventListener('openVisionCam', handleOpenVisionCam);
+    window.addEventListener('closeVisionCam', handleCloseVisionCam);
+    return () => {
+      window.removeEventListener('openVisionCam', handleOpenVisionCam);
+      window.removeEventListener('closeVisionCam', handleCloseVisionCam);
+    };
+  }, []);
 
   // Fetch events when event picker is opened
   useEffect(() => {
@@ -294,18 +311,28 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
 
         {/* AI Search Bar Row */}
         <div className="px-4 pb-2">
-          <button
-            onClick={() => window.dispatchEvent(new CustomEvent('openAIChat'))}
-            className={`w-full flex items-center gap-3 px-4 py-2.5 ${themeClasses.bg.card} rounded-xl border ${theme === 'light' ? 'border-[#043d6b]/50' : 'border-[#043d6b]/30'} active:scale-[0.98] transition-transform`}
+          <div
+            className={`w-full flex items-center gap-3 px-4 py-2.5 ${themeClasses.bg.card} rounded-xl border ${theme === 'light' ? 'border-[#043d6b]/50' : 'border-[#043d6b]/30'}`}
           >
-            <div className="w-7 h-7 bg-[#043d6b]/20 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Sparkles className="w-4 h-4 text-[#043d6b]" />
-            </div>
-            <span className={`flex-1 text-left text-sm ${themeClasses.text.secondary}`}>Ask Contractor AI anything...</span>
-            <div className={`flex items-center gap-1 px-2 py-0.5 rounded-md ${theme === 'light' ? 'bg-gray-200' : 'bg-zinc-800'} text-[#043d6b]`}>
-              <Sparkles className="w-4 h-4" />
-            </div>
-          </button>
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent('openAIChat'))}
+              className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden"
+            >
+              <img src="/onsite-icon.png" alt="OnSite" className="w-10 h-10 object-contain" />
+            </button>
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent('openAIChat'))}
+              className={`flex-1 text-left text-sm ${themeClasses.text.secondary}`}
+            >
+              Ask OnSite AI anything...
+            </button>
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent('openAIChatWithVoice'))}
+              className={`flex items-center gap-1 p-2.5 rounded-lg ${theme === 'light' ? 'bg-gray-200 hover:bg-gray-300' : 'bg-zinc-800 hover:bg-zinc-700'} text-[#043d6b] active:scale-95 transition-all`}
+            >
+              <Mic className="w-6 h-6" />
+            </button>
+          </div>
         </div>
       </nav>
 

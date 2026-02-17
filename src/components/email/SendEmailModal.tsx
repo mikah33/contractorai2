@@ -10,14 +10,18 @@ import { supabase } from '../../lib/supabase';
 import jsPDF from 'jspdf';
 import { useAuthStore } from '../../stores/authStore';
 import usePhotosStore, { ProjectPhoto } from '../../stores/photosStore';
-import { useOnboardingStore } from '../../stores/onboardingStore';
-import EmailTutorialModal from './EmailTutorialModal';
 
 interface SendEmailModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialAttachments?: { type: 'image' | 'file'; url: string; name: string }[];
   draftId?: string;
+  preAttachedEstimate?: {
+    id: string;
+    title: string;
+    total: number;
+    clientName?: string;
+  };
 }
 
 interface Recipient {
@@ -64,13 +68,11 @@ interface EmailDraft {
   updated_at: string;
 }
 
-const SendEmailModal = ({ isOpen, onClose, initialAttachments = [], draftId }: SendEmailModalProps) => {
+const SendEmailModal = ({ isOpen, onClose, initialAttachments = [], draftId, preAttachedEstimate }: SendEmailModalProps) => {
   const { user } = useAuthStore();
   const { photos: galleryPhotos, fetchPhotos: fetchGalleryPhotos, isLoading: loadingGallery } = usePhotosStore();
-  const { emailTutorialCompleted, checkEmailTutorial, setEmailTutorialCompleted } = useOnboardingStore();
   const [step, setStep] = useState<'recipients' | 'compose' | 'approval' | 'confirm'>('recipients');
   const [recipientTab, setRecipientTab] = useState<'employees' | 'clients'>('employees');
-  const [showTutorial, setShowTutorial] = useState(false);
 
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
@@ -121,19 +123,6 @@ const SendEmailModal = ({ isOpen, onClose, initialAttachments = [], draftId }: S
   const fileInputRef = useRef<HTMLInputElement>(null);
   const autoSaveTimeout = useRef<NodeJS.Timeout | null>(null);
 
-  // Check tutorial status when modal opens
-  useEffect(() => {
-    if (isOpen && user?.id) {
-      const checkTutorial = async () => {
-        const completed = await checkEmailTutorial(user.id);
-        if (!completed) {
-          setShowTutorial(true);
-        }
-      };
-      checkTutorial();
-    }
-  }, [isOpen, user?.id]);
-
   // Fetch employees, clients, and drafts when modal opens
   useEffect(() => {
     if (isOpen && user) {
@@ -170,6 +159,29 @@ const SendEmailModal = ({ isOpen, onClose, initialAttachments = [], draftId }: S
       setStep('compose');
     }
   }, [initialAttachments]);
+
+  // Pre-attach estimate if provided
+  useEffect(() => {
+    if (isOpen && preAttachedEstimate && preAttachedEstimate.id) {
+      // Check if not already attached
+      const alreadyAttached = attachedDocuments.some(d => d.id === preAttachedEstimate.id);
+      if (!alreadyAttached) {
+        const estimateName = `${preAttachedEstimate.title || 'Estimate'} - $${(preAttachedEstimate.total || 0).toFixed(2)}`;
+        setAttachedDocuments(prev => [...prev, {
+          type: 'estimate',
+          id: preAttachedEstimate.id,
+          name: estimateName,
+          pdfUrl: '' // Will be generated when sending
+        }]);
+        // Set a default subject line
+        if (!subject) {
+          setSubject(`Estimate: ${preAttachedEstimate.title || 'Your Estimate'}`);
+        }
+        // Stay on recipients step (1. To) so user can select who to send to
+        setStep('recipients');
+      }
+    }
+  }, [isOpen, preAttachedEstimate]);
 
   // Auto-save draft
   useEffect(() => {
@@ -2227,16 +2239,6 @@ const SendEmailModal = ({ isOpen, onClose, initialAttachments = [], draftId }: S
         </div>
       )}
 
-      {/* Email Tutorial Modal */}
-      <EmailTutorialModal
-        isOpen={showTutorial}
-        onComplete={(dontShowAgain) => {
-          setShowTutorial(false);
-          if (dontShowAgain && user?.id) {
-            setEmailTutorialCompleted(user.id, true);
-          }
-        }}
-      />
     </div>
   );
 };

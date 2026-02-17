@@ -19,7 +19,12 @@ interface ChatMessageContentProps {
 const ChatMessageContent: React.FC<ChatMessageContentProps> = ({ content, isUser = false }) => {
   // Parse and render the content
   const renderContent = () => {
-    const lines = content.split('\n');
+    // Normalize the content - remove extra whitespace and normalize line breaks
+    const normalizedContent = content
+      .split('\n')
+      .map(line => line.trim()) // Trim each line
+      .join('\n');
+    const lines = normalizedContent.split('\n');
     const elements: React.ReactNode[] = [];
     let currentList: { type: 'bullet' | 'numbered'; items: string[] } | null = null;
 
@@ -27,24 +32,24 @@ const ChatMessageContent: React.FC<ChatMessageContentProps> = ({ content, isUser
       if (currentList) {
         if (currentList.type === 'bullet') {
           elements.push(
-            <ul key={`list-${elements.length}`} className="space-y-1.5 my-2">
+            <ul key={`list-${elements.length}`} className="space-y-1 my-2 pl-1">
               {currentList.items.map((item, idx) => (
-                <li key={idx} className="flex items-start gap-2">
-                  <span className={`mt-2 w-1.5 h-1.5 rounded-full flex-shrink-0 ${isUser ? 'bg-white/70' : 'bg-amber-500'}`} />
-                  <span className="flex-1">{parseInlineFormatting(item)}</span>
+                <li key={idx} className="flex items-baseline gap-2 text-left">
+                  <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5 ${isUser ? 'bg-white/70' : 'bg-blue-500'}`} />
+                  <span className="flex-1 break-words">{parseInlineFormatting(item)}</span>
                 </li>
               ))}
             </ul>
           );
         } else {
           elements.push(
-            <ol key={`list-${elements.length}`} className="space-y-1.5 my-2">
+            <ol key={`list-${elements.length}`} className="space-y-1 my-2 pl-1">
               {currentList.items.map((item, idx) => (
-                <li key={idx} className="flex items-start gap-2">
-                  <span className={`font-semibold flex-shrink-0 min-w-[1.25rem] ${isUser ? 'text-white/80' : 'text-amber-500'}`}>
+                <li key={idx} className="flex items-baseline gap-2 text-left">
+                  <span className={`font-semibold flex-shrink-0 min-w-[1.5rem] ${isUser ? 'text-white/80' : 'text-blue-500'}`}>
                     {idx + 1}.
                   </span>
-                  <span className="flex-1">{parseInlineFormatting(item)}</span>
+                  <span className="flex-1 break-words">{parseInlineFormatting(item)}</span>
                 </li>
               ))}
             </ol>
@@ -91,7 +96,7 @@ const ChatMessageContent: React.FC<ChatMessageContentProps> = ({ content, isUser
 
       // Regular paragraph
       elements.push(
-        <p key={`p-${i}`} className="leading-relaxed">
+        <p key={`p-${i}`} className="leading-relaxed text-left break-words">
           {parseInlineFormatting(trimmedLine)}
         </p>
       );
@@ -178,7 +183,7 @@ const ChatMessageContent: React.FC<ChatMessageContentProps> = ({ content, isUser
   };
 
   return (
-    <div className="text-[15px] space-y-1">
+    <div className="text-[15px] space-y-1 text-left w-full">
       {renderContent()}
     </div>
   );

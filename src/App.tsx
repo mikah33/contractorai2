@@ -76,13 +76,23 @@ import { PricingProvider } from './contexts/PricingContext';
 import { ProjectProvider } from './contexts/ProjectContext';
 import { DataProvider } from './contexts/DataContext';
 import { CalculatorTabProvider } from './contexts/CalculatorTabContext';
-import { ThemeProvider } from './contexts/ThemeContext';
+import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { useAuthStore } from './stores/authStore';
 import { useAppInitialization } from './hooks/useAppInitialization';
 import { supabase } from './lib/supabase';
 import { revenueCatService } from './services/revenueCatService';
 import { revenueCatWebService } from './services/revenueCatWebService';
 import { subscriptionService } from './services/subscriptionService';
+
+// Themed wrapper component that can access ThemeContext
+const ThemedAppWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { theme } = useTheme();
+  return (
+    <div className={`flex h-screen w-screen max-w-full overflow-x-hidden ${theme === 'light' ? 'bg-gray-50' : 'bg-[#0F0F0F]'}`}>
+      {children}
+    </div>
+  );
+};
 
 function App() {
   const { user, initialized } = useAuthStore();
@@ -372,7 +382,7 @@ function App() {
               onComplete={handleOnboardingComplete}
             />
 
-            <div className="flex h-screen bg-[#0F0F0F] w-screen max-w-full overflow-x-hidden">
+            <ThemedAppWrapper>
               <div className="flex flex-col flex-1 overflow-hidden min-w-0">
                 <main className="flex-1 overflow-y-auto overflow-x-hidden pb-40 w-full">
                   <Routes>
@@ -442,7 +452,7 @@ function App() {
                 {/* Bottom Navigation */}
                 <MobileBottomNav />
               </div>
-            </div>
+            </ThemedAppWrapper>
           </ProjectProvider>
         </PricingProvider>
       </CalculatorTabProvider>

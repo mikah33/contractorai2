@@ -40,11 +40,8 @@ import {
 import { useFinanceStore, type Invoice, type Receipt as ReceiptType, type RecurringExpense } from '../stores/financeStoreSupabase';
 import { useClientsStore } from '../stores/clientsStore';
 import useProjectStore from '../stores/projectStore';
-import { useOnboardingStore } from '../stores/onboardingStore';
 import AIChatPopup from '../components/ai/AIChatPopup';
 import AddChoiceModal from '../components/common/AddChoiceModal';
-import PaymentsTutorialModal from '../components/finance/PaymentsTutorialModal';
-import FinanceTutorialModal from '../components/finance/FinanceTutorialModal';
 import { supabase } from '../lib/supabase';
 import { useTheme, getThemeClasses } from '../contexts/ThemeContext';
 
@@ -89,19 +86,7 @@ const FinanceHub: React.FC<FinanceHubProps> = ({ embedded = false, searchQuery: 
   // Theme context
   const { theme } = useTheme();
   const themeClasses = getThemeClasses(theme);
-  const {
-    paymentsTutorialCompleted,
-    checkPaymentsTutorial,
-    setPaymentsTutorialCompleted,
-    financeTutorialCompleted,
-    checkFinanceTutorial,
-    setFinanceTutorialCompleted
-  } = useOnboardingStore();
-
   const [showAddChoice, setShowAddChoice] = useState(false);
-  const [showFinanceTutorial, setShowFinanceTutorial] = useState(false);
-  const [showPaymentsTutorial, setShowPaymentsTutorial] = useState(false);
-  const [tutorialUserId, setTutorialUserId] = useState<string | null>(null);
   const [showAIChat, setShowAIChat] = useState(false);
   const [internalSearchQuery, setInternalSearchQuery] = useState('');
   const [activeSection, setActiveSection] = useState<ActiveSection>('dashboard');
@@ -242,36 +227,11 @@ const FinanceHub: React.FC<FinanceHubProps> = ({ embedded = false, searchQuery: 
     fetchClients();
     fetchProjects();
 
-    // Check tutorial status - Finance tutorial shows on dashboard
-    const checkTutorial = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user?.id) {
-        setTutorialUserId(user.id);
-        const financeCompleted = await checkFinanceTutorial(user.id);
-        if (!financeCompleted) {
-          setShowFinanceTutorial(true);
-        }
-      }
-    };
-    checkTutorial();
   }, []);
 
   useEffect(() => {
     calculateFinancialSummary();
   }, [payments, receipts]);
-
-  // Show payments tutorial when switching to invoices tab
-  useEffect(() => {
-    const checkInvoiceTutorial = async () => {
-      if (activeSection === 'invoices' && tutorialUserId) {
-        const completed = await checkPaymentsTutorial(tutorialUserId);
-        if (!completed) {
-          setShowPaymentsTutorial(true);
-        }
-      }
-    };
-    checkInvoiceTutorial();
-  }, [activeSection, tutorialUserId]);
 
   const totalExpenses = (receipts || []).reduce((sum, exp) => sum + (exp.amount || 0), 0);
   const totalRevenue = (payments || []).reduce((sum, rev) => sum + (rev.amount || 0), 0);
@@ -2200,27 +2160,6 @@ const FinanceHub: React.FC<FinanceHubProps> = ({ embedded = false, searchQuery: 
         </div>
       )}
 
-      {/* Finance Tutorial Modal - shows on dashboard */}
-      <FinanceTutorialModal
-        isOpen={showFinanceTutorial}
-        onComplete={(dontShowAgain) => {
-          setShowFinanceTutorial(false);
-          if (dontShowAgain && tutorialUserId) {
-            setFinanceTutorialCompleted(tutorialUserId, true);
-          }
-        }}
-      />
-
-      {/* Payments Tutorial Modal - shows on invoices tab */}
-      <PaymentsTutorialModal
-        isOpen={showPaymentsTutorial}
-        onComplete={(dontShowAgain) => {
-          setShowPaymentsTutorial(false);
-          if (dontShowAgain && tutorialUserId) {
-            setPaymentsTutorialCompleted(tutorialUserId, true);
-          }
-        }}
-      />
     </div>
   );
 };

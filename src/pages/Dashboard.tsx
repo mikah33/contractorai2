@@ -34,10 +34,10 @@ import { useCalendarStoreSupabase } from '../stores/calendarStoreSupabase';
 import { useData } from '../contexts/DataContext';
 import { useAuthStore } from '../stores/authStore';
 import { useOnboardingStore } from '../stores/onboardingStore';
-import DashboardTutorialModal from '../components/dashboard/DashboardTutorialModal';
 import AddChoiceModal from '../components/common/AddChoiceModal';
 import AIChatPopup from '../components/ai/AIChatPopup';
 import VisionCamModal from '../components/vision/VisionCamModal';
+import OnSiteSetup from '../components/dashboard/OnSiteSetup';
 import { useTheme, getThemeClasses } from '../contexts/ThemeContext';
 import { supabase } from '../lib/supabase';
 import { format, parseISO, isToday, isTomorrow } from 'date-fns';
@@ -52,8 +52,6 @@ const Dashboard: React.FC = () => {
   const { events, fetchEvents, updateEvent, getEventsByDateRange } = useCalendarStoreSupabase();
   const { profile } = useData();
   const { user } = useAuthStore();
-  const { dashboardTutorialCompleted, checkDashboardTutorial, setDashboardTutorialCompleted } = useOnboardingStore();
-  const [showTutorial, setShowTutorial] = useState(false);
   const [showAddChoice, setShowAddChoice] = useState(false);
   const [showAIChat, setShowAIChat] = useState(false);
   const [showVisionCam, setShowVisionCam] = useState(false);
@@ -66,6 +64,63 @@ const Dashboard: React.FC = () => {
   const [declinedEstimates, setDeclinedEstimates] = useState<any[]>([]);
   const [dismissedNotifications, setDismissedNotifications] = useState<Set<string>>(new Set());
   const [showApprovalsDropdown, setShowApprovalsDropdown] = useState(false);
+  const [showEstimateTutorial, setShowEstimateTutorial] = useState(false);
+  const [showSetupNotifications, setShowSetupNotifications] = useState(false);
+
+  // Track incomplete setup tasks
+  const [setupTasksStatus, setSetupTasksStatus] = useState({
+    profile: false,
+    gmail: false,
+    stripe: false,
+    estimate: false,
+    onSiteAI: false,
+    visionCam: false,
+    client: false,
+    team: false,
+    task: false,
+    marketing: false
+  });
+
+  // Check setup task completion status
+  useEffect(() => {
+    const checkSetupStatus = () => {
+      const isProfileComplete = Boolean(profile?.company_name && profile?.phone && profile?.address);
+      const isGmailConnected = Boolean(profile?.gmail_access_token);
+      const isStripeConnected = Boolean(profile?.stripe_customer_id);
+
+      setSetupTasksStatus({
+        profile: isProfileComplete,
+        gmail: isGmailConnected,
+        stripe: isStripeConnected,
+        estimate: localStorage.getItem('onsite_estimate_opened') === 'true',
+        onSiteAI: localStorage.getItem('onsite_ai_used') === 'true',
+        visionCam: localStorage.getItem('onsite_vision_cam_opened') === 'true',
+        client: localStorage.getItem('onsite_client_modal_opened') === 'true',
+        team: localStorage.getItem('onsite_team_page_opened') === 'true',
+        task: localStorage.getItem('onsite_task_modal_opened') === 'true',
+        marketing: localStorage.getItem('onsite_marketing_viewed') === 'true'
+      });
+    };
+
+    checkSetupStatus();
+    // Re-check when profile changes
+  }, [profile]);
+
+  // Get incomplete setup tasks
+  const incompleteSetupTasks = useMemo(() => {
+    const tasks = [];
+    if (!setupTasksStatus.profile) tasks.push({ id: 'profile', title: 'Set up Profile & Business', step: 1 });
+    if (!setupTasksStatus.gmail) tasks.push({ id: 'gmail', title: 'Connect Gmail', step: 1 });
+    if (!setupTasksStatus.stripe) tasks.push({ id: 'stripe', title: 'Connect Stripe', step: 1 });
+    if (!setupTasksStatus.estimate) tasks.push({ id: 'estimate', title: 'Create an Estimate', step: 2 });
+    if (!setupTasksStatus.onSiteAI) tasks.push({ id: 'onSiteAI', title: 'Try OnSite AI', step: 2 });
+    if (!setupTasksStatus.visionCam) tasks.push({ id: 'visionCam', title: 'Use Vision Cam', step: 2 });
+    if (!setupTasksStatus.client) tasks.push({ id: 'client', title: 'Add Your First Client', step: 3 });
+    if (!setupTasksStatus.team) tasks.push({ id: 'team', title: 'Set up Your Team', step: 3 });
+    if (!setupTasksStatus.task) tasks.push({ id: 'task', title: 'Create Your First Task', step: 3 });
+    if (!setupTasksStatus.marketing) tasks.push({ id: 'marketing', title: 'View Marketing Services', step: 3 });
+    return tasks;
+  }, [setupTasksStatus]);
 
   // Create custom clipboard marker icon with label
   const createMarkerIcon = (label: string) => new L.DivIcon({
@@ -154,26 +209,6 @@ const Dashboard: React.FC = () => {
 
   // Get display name from profile (company name or full name)
   const displayName = profile?.company || profile?.full_name || 'there';
-
-  // Check if tutorial should be shown
-  useEffect(() => {
-    const checkTutorial = async () => {
-      if (user?.id) {
-        const completed = await checkDashboardTutorial(user.id);
-        if (!completed) {
-          setShowTutorial(true);
-        }
-      }
-    };
-    checkTutorial();
-  }, [user?.id]);
-
-  const handleTutorialComplete = async (dontShowAgain: boolean) => {
-    setShowTutorial(false);
-    if (dontShowAgain && user?.id) {
-      await setDashboardTutorialCompleted(user.id, true);
-    }
-  };
 
   useEffect(() => {
     fetchProjects();
@@ -455,12 +490,6 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className={`min-h-full ${themeClasses.bg.primary} pb-60`}>
-      {/* Dashboard Tutorial Modal */}
-      <DashboardTutorialModal
-        isOpen={showTutorial}
-        onComplete={handleTutorialComplete}
-      />
-
       {/* Fixed Header with solid background */}
       <div className={`fixed top-0 left-0 right-0 z-40 ${theme === 'light' ? 'bg-white' : 'bg-zinc-900'}`}>
         <div className="pt-[env(safe-area-inset-top)]">
@@ -474,6 +503,75 @@ const Dashboard: React.FC = () => {
                   Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {displayName}!
                 </h1>
               </div>
+
+              {/* Setup Tasks Notification Bell */}
+              {incompleteSetupTasks.length > 0 && (
+                <div className="relative">
+                  <button
+                    onClick={() => setShowSetupNotifications(!showSetupNotifications)}
+                    className={`relative p-3 rounded-xl ${theme === 'light' ? 'bg-gray-100 hover:bg-gray-200' : 'bg-zinc-800 hover:bg-zinc-700'} transition-colors`}
+                  >
+                    <Bell className={`w-7 h-7 ${theme === 'light' ? 'text-gray-600' : 'text-zinc-300'}`} />
+                    {/* Red notification badge */}
+                    <span className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center border-2 border-white">
+                      <span className="text-white text-sm font-bold">!</span>
+                    </span>
+                  </button>
+
+                  {/* Dropdown */}
+                  {showSetupNotifications && (
+                    <>
+                      {/* Backdrop */}
+                      <div
+                        className="fixed inset-0 z-40"
+                        onClick={() => setShowSetupNotifications(false)}
+                      />
+                      {/* Dropdown Content */}
+                      <div className={`absolute right-0 mt-3 w-80 ${theme === 'light' ? 'bg-white' : 'bg-zinc-800'} rounded-2xl shadow-2xl border ${theme === 'light' ? 'border-gray-200' : 'border-zinc-700'} z-50 overflow-hidden`}>
+                        <div className={`px-5 py-4 border-b ${theme === 'light' ? 'border-gray-200 bg-gray-50' : 'border-zinc-700 bg-zinc-900'}`}>
+                          <h3 className={`font-bold text-lg ${themeClasses.text.primary}`}>Setup Tasks</h3>
+                          <p className={`text-sm ${themeClasses.text.muted}`}>{incompleteSetupTasks.length} remaining</p>
+                        </div>
+                        <div className="max-h-80 overflow-y-auto">
+                          {incompleteSetupTasks.map((task) => (
+                            <button
+                              key={task.id}
+                              onClick={() => {
+                                setShowSetupNotifications(false);
+                                // Scroll to OnSite Setup section
+                                const section = document.getElementById('onsite-setup-section');
+                                if (section) {
+                                  section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                }
+                              }}
+                              className={`w-full px-5 py-4 flex items-center gap-4 ${theme === 'light' ? 'hover:bg-gray-50' : 'hover:bg-zinc-700'} transition-colors text-left border-b ${theme === 'light' ? 'border-gray-100' : 'border-zinc-700/50'} last:border-b-0`}
+                            >
+                              <div className={`w-8 h-8 rounded-full border-2 ${theme === 'light' ? 'border-gray-300' : 'border-zinc-500'} flex items-center justify-center flex-shrink-0`}>
+                                <span className={`text-sm font-bold ${themeClasses.text.muted}`}>{task.step}</span>
+                              </div>
+                              <span className={`text-base ${themeClasses.text.primary}`}>{task.title}</span>
+                            </button>
+                          ))}
+                        </div>
+                        <div className={`px-5 py-4 border-t ${theme === 'light' ? 'border-gray-200 bg-gray-50' : 'border-zinc-700 bg-zinc-900'}`}>
+                          <button
+                            onClick={() => {
+                              setShowSetupNotifications(false);
+                              const section = document.getElementById('onsite-setup-section');
+                              if (section) {
+                                section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                              }
+                            }}
+                            className="w-full py-3 bg-[#043d6b] text-white rounded-xl text-base font-semibold hover:bg-[#035291] transition-colors"
+                          >
+                            View All Setup Tasks
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -794,110 +892,16 @@ const Dashboard: React.FC = () => {
           </div>
         )}
 
-        <div className="pt-6 pb-2 space-y-2 max-w-5xl mx-auto px-4">
-        {/* Feature Cards Carousel */}
-        <div
-          className="overflow-x-auto scrollbar-hide snap-x snap-mandatory py-2"
-          onScroll={(e) => {
-            const container = e.currentTarget;
-            const scrollLeft = container.scrollLeft;
-            const cardWidth = container.offsetWidth;
-            const newIndex = Math.round(scrollLeft / cardWidth);
-            if (newIndex !== topCardIndex) {
-              setTopCardIndex(newIndex);
-            }
+        <div id="onsite-setup-section" className="pt-6 pb-2 space-y-2 max-w-5xl mx-auto">
+        {/* OnSite Setup - Full Width Centered */}
+        <OnSiteSetup
+          profile={profile}
+          userId={user?.id}
+          onShowEstimateTutorial={() => {
+            setShowEstimateTutorial(true);
+            setShowAIChat(true);
           }}
-        >
-          <div className="flex gap-4 px-4" style={{ width: 'max-content' }}>
-            {/* Create Estimate Card */}
-            <div
-              className={`${themeClasses.bg.card} rounded-xl border ${theme === 'light' ? 'border-gray-200 shadow-[0_4px_20px_rgba(0,0,0,0.12)]' : 'border-zinc-600 shadow-xl shadow-black/30'} p-5 text-left transition-colors flex-shrink-0 flex flex-col relative overflow-hidden snap-center`}
-              style={{ width: 'calc(100vw - 48px)', maxWidth: '380px', minHeight: '240px' }}
-            >
-              {/* Background payment card visual */}
-              <div className="absolute top-4 right-4 w-36 h-24 bg-gradient-to-br from-[#043d6b] to-[#032b4d] rounded-xl shadow-lg transform rotate-6 opacity-20">
-                <div className="absolute bottom-2 left-2 flex gap-1">
-                  <div className="w-6 h-4 bg-white/30 rounded"></div>
-                </div>
-              </div>
-              <div className="absolute top-10 right-10 w-36 h-24 bg-gradient-to-br from-green-400 to-green-600 rounded-xl shadow-lg transform -rotate-3 opacity-15">
-                <CreditCard className="absolute top-2 right-2 w-6 h-6 text-white/50" />
-              </div>
-
-              <div className="flex items-center gap-3 mb-3 relative z-10">
-                <div className="w-14 h-14 bg-[#043d6b] rounded-xl flex items-center justify-center shadow-[0_4px_12px_rgba(4,61,107,0.3)]">
-                  <Calculator className="w-7 h-7 text-white" />
-                </div>
-                <div>
-                  <p className={`font-bold ${themeClasses.text.primary} text-xl`}>Create Estimate</p>
-                  <p className={`text-sm ${themeClasses.text.muted}`}>Send & get paid</p>
-                </div>
-              </div>
-
-              <div className="flex-1" />
-
-              <p className={`text-lg ${themeClasses.text.secondary} mb-4 relative z-10 leading-snug font-semibold italic`}>
-                Create professional estimates and collect payments directly in the app.
-              </p>
-
-              <div className="relative z-10">
-                <button
-                  onClick={() => setShowAddChoice(true)}
-                  className="w-full py-3.5 px-4 bg-[#043d6b] hover:bg-[#035291] text-white text-base font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 shadow-[0_4px_12px_rgba(4,61,107,0.3)]"
-                >
-                  <Calculator className="w-5 h-5" />
-                  Create an Estimate
-                </button>
-              </div>
-            </div>
-
-            {/* Vision Cam Card */}
-            <div
-              className={`${themeClasses.bg.card} rounded-xl border ${theme === 'light' ? 'border-gray-200 shadow-[0_4px_20px_rgba(0,0,0,0.12)]' : 'border-zinc-600 shadow-xl shadow-black/30'} p-5 text-left transition-colors flex-shrink-0 flex flex-col relative overflow-hidden snap-center`}
-              style={{ width: 'calc(100vw - 48px)', maxWidth: '380px', minHeight: '240px' }}
-            >
-              {/* Background camera visuals */}
-              <div className="absolute top-2 right-2 opacity-25">
-                <Camera className="w-24 h-24 text-[#043d6b] transform rotate-12" />
-              </div>
-              <div className="absolute top-12 right-12 opacity-30">
-                <Camera className="w-20 h-20 text-[#032b4d] transform -rotate-6" />
-              </div>
-
-              <div className="flex items-center gap-3 mb-3 relative z-10">
-                <div className="w-14 h-14 bg-[#043d6b] rounded-xl flex items-center justify-center shadow-[0_4px_12px_rgba(4,61,107,0.3)]">
-                  <Camera className="w-7 h-7 text-white" />
-                </div>
-                <div>
-                  <p className={`font-bold ${themeClasses.text.primary} text-xl`}>Vision Cam</p>
-                  <p className={`text-sm ${themeClasses.text.muted}`}>AI-powered visualization</p>
-                </div>
-              </div>
-
-              <div className="flex-1" />
-
-              <p className={`text-lg ${themeClasses.text.secondary} mb-4 relative z-10 leading-snug font-semibold italic`}>
-                Use AI to show your customer their vision for their project.
-              </p>
-
-              <div className="mt-auto relative z-10">
-                <button
-                  onClick={() => setShowVisionCam(true)}
-                  className="w-full py-3.5 px-4 bg-[#043d6b] hover:bg-[#035291] text-white text-base font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 shadow-[0_4px_12px_rgba(4,61,107,0.3)]"
-                >
-                  <Camera className="w-5 h-5" />
-                  Use Vision Cam Now
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-          {/* Carousel Dots Indicator */}
-          <div className="flex justify-center gap-2 pb-2">
-            <div className={`w-2 h-2 rounded-full transition-colors ${topCardIndex === 0 ? 'bg-[#043d6b]' : theme === 'light' ? 'bg-gray-300' : 'bg-zinc-600'}`}></div>
-            <div className={`w-2 h-2 rounded-full transition-colors ${topCardIndex === 1 ? 'bg-[#043d6b]' : theme === 'light' ? 'bg-gray-300' : 'bg-zinc-600'}`}></div>
-          </div>
+        />
 
           {/* Discover More Section */}
           <div className="mt-6">
@@ -945,9 +949,84 @@ const Dashboard: React.FC = () => {
       {showAIChat && (
         <AIChatPopup
           isOpen={showAIChat}
-          onClose={() => setShowAIChat(false)}
+          onClose={() => {
+            setShowAIChat(false);
+            setShowEstimateTutorial(false);
+          }}
           mode="estimating"
         />
+      )}
+
+      {/* Estimate Tutorial Popup */}
+      {showEstimateTutorial && showAIChat && (
+        <div className="fixed inset-0 z-[210] flex items-center justify-center">
+          {/* Opaque backdrop */}
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+          <div
+            className={`relative max-w-2xl w-full mx-4 ${theme === 'light' ? 'bg-white' : 'bg-zinc-800'} rounded-3xl shadow-2xl border ${theme === 'light' ? 'border-gray-200' : 'border-zinc-700'} p-8 animate-in slide-in-from-bottom-4 duration-300`}
+          >
+            <div className="flex items-start justify-between mb-6">
+              <div className="flex items-center gap-4">
+                <div className="w-20 h-20 bg-gradient-to-br from-[#022a4a] to-[#043d6b] rounded-2xl flex items-center justify-center shadow-lg">
+                  <Calculator className="w-10 h-10 text-white" />
+                </div>
+                <div>
+                  <h3 className={`font-bold text-3xl ${themeClasses.text.primary}`}>Pro Tips for Best Results</h3>
+                  <p className={`text-lg ${themeClasses.text.muted} mt-1`}>Get the most accurate estimates</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowEstimateTutorial(false)}
+                className={`p-2 rounded-xl ${theme === 'light' ? 'hover:bg-gray-100' : 'hover:bg-zinc-700'}`}
+              >
+                <XIcon className="w-6 h-6 text-gray-400" />
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              <p className={`text-xl ${themeClasses.text.secondary} leading-relaxed`}>
+                Use as many details as possible to get the best quote. The more you describe, the more accurate your estimate will be.
+              </p>
+
+              <div className={`p-6 rounded-2xl ${theme === 'light' ? 'bg-[#e8f0f8] border-2 border-[#043d6b]/20' : 'bg-[#043d6b]/30 border-2 border-[#043d6b]/50'}`}>
+                <p className={`font-bold text-xl ${theme === 'light' ? 'text-[#022a4a]' : 'text-blue-200'} mb-5`}>What you can do:</p>
+                <ul className={`space-y-5 text-lg ${theme === 'light' ? 'text-[#043d6b]' : 'text-blue-300'}`}>
+                  <li className="flex items-start gap-4">
+                    <div className={`w-9 h-9 rounded-full ${theme === 'light' ? 'bg-[#043d6b]' : 'bg-[#065a9e]'} flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                      <span className="text-white font-bold">1</span>
+                    </div>
+                    <span><strong className={theme === 'light' ? 'text-[#022a4a]' : 'text-white'}>Remove or add line items</strong> after the AI generates your estimate</span>
+                  </li>
+                  <li className="flex items-start gap-4">
+                    <div className={`w-9 h-9 rounded-full ${theme === 'light' ? 'bg-[#043d6b]' : 'bg-[#065a9e]'} flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                      <span className="text-white font-bold">2</span>
+                    </div>
+                    <span><strong className={theme === 'light' ? 'text-[#022a4a]' : 'text-white'}>Paste links from Lowe's or Home Depot</strong> to use specific products and their exact prices</span>
+                  </li>
+                  <li className="flex items-start gap-4">
+                    <div className={`w-9 h-9 rounded-full ${theme === 'light' ? 'bg-[#043d6b]' : 'bg-[#065a9e]'} flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                      <span className="text-white font-bold">3</span>
+                    </div>
+                    <span><strong className={theme === 'light' ? 'text-[#022a4a]' : 'text-white'}>Review & edit everything</strong> before sending to your customer</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className={`p-5 rounded-2xl ${theme === 'light' ? 'bg-amber-100 border-2 border-amber-400' : 'bg-amber-900/30 border-2 border-amber-700'}`}>
+                <p className={`text-lg ${theme === 'light' ? 'text-amber-900' : 'text-amber-200'} leading-relaxed`}>
+                  <strong>Final step:</strong> After you're done, review your estimate, set your terms and conditions, then send it directly to your customer via email.
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowEstimateTutorial(false)}
+              className="w-full mt-8 py-4 bg-gradient-to-r from-[#043d6b] to-[#065a9e] text-white font-bold text-xl rounded-2xl hover:from-[#035291] hover:to-[#054a7a] active:scale-[0.98] transition-all shadow-lg"
+            >
+              Got it, let's build an estimate!
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Vision Cam Modal */}

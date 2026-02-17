@@ -356,23 +356,16 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
             </div>
 
             <p className={`${themeClasses.text.secondary} italic text-base flex-1`}>
-              Add new clients manually or use AI to help organize your customer information.
+              Add and manage your customer information.
             </p>
 
-            <div className="space-y-3 mt-auto">
+            <div className="mt-auto">
               <button
                 onClick={() => setShowManualForm(true)}
-                className="w-full flex items-center justify-center gap-2 px-5 py-4 bg-[#043d6b] text-white rounded-xl font-semibold text-lg hover:bg-[#035291] active:scale-[0.98] transition-all"
+                className="w-full flex items-center justify-center gap-2 px-5 py-4 bg-[#043d6b] text-white rounded-2xl font-medium text-base hover:bg-[#035291] active:scale-[0.98] transition-all"
               >
-                <Plus className="w-6 h-6" />
+                <Plus className="w-5 h-5" />
                 Add Client
-              </button>
-              <button
-                onClick={() => setShowAIChat(true)}
-                className={`w-full flex items-center justify-center gap-2 px-5 py-4 ${theme === 'light' ? 'bg-purple-500 hover:bg-purple-600' : 'bg-purple-600 hover:bg-purple-700'} text-white rounded-xl font-semibold text-lg active:scale-[0.98] transition-all`}
-              >
-                <Sparkles className="w-6 h-6" />
-                AI Assistant
               </button>
             </div>
           </div>

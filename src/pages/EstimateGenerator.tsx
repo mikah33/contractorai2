@@ -11,7 +11,7 @@ import { useFinanceStore } from '../stores/financeStoreSupabase';
 import EstimateEditor from '../components/estimates/EstimateEditor';
 import EstimatePreview from '../components/estimates/EstimatePreview';
 import AIEstimateAssistant from '../components/estimates/AIEstimateAssistant';
-import SendEstimateModal from '../components/estimates/SendEstimateModal';
+import SendEmailModal from '../components/email/SendEmailModal';
 import AIChatPopup from '../components/ai/AIChatPopup';
 import { Estimate, EstimateItem } from '../types/estimates';
 import { estimateService } from '../services/estimateService';
@@ -77,7 +77,7 @@ const EstimateGenerator = () => {
               expiresAt: est.expires_at || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
               items: est.items || [],
               subtotal: est.subtotal || 0,
-              taxRate: est.tax_rate || 0,
+              taxRate: est.tax_rate ?? 8,
               taxAmount: est.tax_amount || 0,
               total: est.total || 0,
               notes: est.notes || '',
@@ -157,7 +157,7 @@ const EstimateGenerator = () => {
             expiresAt: location.state.calculatorData.expiresAt || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
             items: location.state.calculatorData.items || [],
             subtotal: location.state.calculatorData.subtotal || 0,
-            taxRate: location.state.calculatorData.taxRate || 0,
+            taxRate: location.state.calculatorData.taxRate ?? 8,
             taxAmount: location.state.calculatorData.taxAmount || 0,
             total: location.state.calculatorData.total || 0,
             notes: location.state.calculatorData.notes || '',
@@ -200,9 +200,9 @@ const EstimateGenerator = () => {
 
         // Calculate totals
         const subtotal = items.reduce((sum, item) => sum + item.totalPrice, 0);
-        const taxRate = 0;
-        const taxAmount = 0;
-        const total = subtotal;
+        const taxRate = 8;
+        const taxAmount = subtotal * (taxRate / 100);
+        const total = subtotal + taxAmount;
 
         // Create new estimate from calculator results
         // Format trade name properly (remove 'trades.' prefix and capitalize)
@@ -376,7 +376,7 @@ const EstimateGenerator = () => {
       expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       items: [],
       subtotal: 0,
-      taxRate: 0,
+      taxRate: 8,
       taxAmount: 0,
       total: 0,
       notes: '',
@@ -405,7 +405,7 @@ const EstimateGenerator = () => {
       expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       items: [],
       subtotal: 0,
-      taxRate: 0,
+      taxRate: 8,
       taxAmount: 0,
       total: 0,
       notes: '',
@@ -955,42 +955,8 @@ const EstimateGenerator = () => {
       <div className="px-4 py-4 space-y-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div></div>
-        
-        {currentEstimate ? (
-          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-            {/* Send to Customer Button */}
-            <button
-              onClick={() => setShowSendModal(true)}
-              className="flex-1 sm:flex-none inline-flex items-center justify-center px-4 py-2.5 text-sm font-semibold rounded-lg text-white bg-[#043d6b] hover:bg-[#035291] shadow-lg transition-all duration-200"
-            >
-              <Mail className="w-4 h-4 mr-2" />
-              Send to Customer
-            </button>
 
-            {/* Convert to Invoice Button - always show but disabled if not approved or already converted */}
-            <button
-              onClick={handleConvertToInvoice}
-              disabled={currentEstimate.status !== 'approved' || currentEstimate.convertedToInvoice}
-              className={`flex-1 sm:flex-none inline-flex items-center justify-center px-4 py-2.5 text-sm font-semibold rounded-lg shadow-md transition-all duration-200 ${
-                currentEstimate.convertedToInvoice
-                  ? 'bg-gray-400 text-white cursor-not-allowed'
-                  : currentEstimate.status === 'approved'
-                    ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white'
-                    : 'bg-gray-200 text-gray-500 cursor-not-allowed'
-              }`}
-              title={
-                currentEstimate.convertedToInvoice
-                  ? 'Already converted to invoice'
-                  : currentEstimate.status !== 'approved'
-                    ? 'Estimate must be approved first'
-                    : 'Convert to Invoice'
-              }
-            >
-              <Receipt className="w-4 h-4 mr-2" />
-              {currentEstimate.convertedToInvoice ? 'Already Invoiced' : 'Convert to Invoice'}
-            </button>
-          </div>
-        ) : (
+        {!currentEstimate && (
           <button
             onClick={handleCreateFromScratch}
             className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-[#043d6b] hover:bg-[#035291] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#043d6b]"
@@ -1109,20 +1075,20 @@ const EstimateGenerator = () => {
           {currentEstimate ? (
             <>
               {/* Edit with AI Banner */}
-              <div className="bg-gradient-to-r from-[#043d6b]/10 to-amber-50 rounded-lg shadow-md p-4 sm:p-6 mb-6 border-2 border-[#043d6b]/30">
+              <div className={`rounded-lg shadow-md p-4 sm:p-6 mb-6 border-2 ${theme === 'light' ? 'bg-blue-50 border-[#043d6b]/30' : 'bg-[#043d6b]/20 border-[#043d6b]/50'}`}>
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div className="flex items-start gap-3 sm:gap-4 w-full sm:w-auto">
-                    <div className="bg-gradient-to-r from-[#043d6b] to-amber-500 rounded-full p-2 sm:p-3 flex-shrink-0">
+                    <div className="bg-[#043d6b] rounded-full p-2 sm:p-3 flex-shrink-0">
                       <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-base sm:text-lg font-semibold text-gray-900">Edit This Estimate with AI</h3>
-                      <p className="text-xs sm:text-sm text-gray-600 mt-1">Let AI help you modify line items, adjust pricing, add materials, or make changes to this estimate</p>
+                      <h3 className={`text-base sm:text-lg font-semibold ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>Edit This Estimate with AI</h3>
+                      <p className={`text-xs sm:text-sm mt-1 ${theme === 'light' ? 'text-gray-600' : 'text-gray-300'}`}>Let AI help you modify line items, adjust pricing, add materials, or make changes to this estimate</p>
                     </div>
                   </div>
                   <button
                     onClick={() => setShowAIEditChat(true)}
-                    className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold rounded-lg text-white bg-gradient-to-r from-[#043d6b] to-amber-500 hover:from-[#035291] hover:to-amber-600 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 whitespace-nowrap"
+                    className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold rounded-lg text-white bg-[#043d6b] hover:bg-[#035291] shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 whitespace-nowrap"
                   >
                     <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                     Edit with AI
@@ -1202,19 +1168,57 @@ const EstimateGenerator = () => {
         </div>
       )}
 
-      {/* Send Estimate Modal */}
-      <SendEstimateModal
+      {/* Bottom Action Buttons - Full Width Stacked */}
+      {currentEstimate && (
+        <div className="mt-6 mb-4 px-4">
+          <div className="flex flex-col gap-3">
+            {/* Send to Customer Button */}
+            <button
+              onClick={() => setShowSendModal(true)}
+              className="w-full flex items-center justify-center px-6 py-4 text-base font-semibold rounded-xl text-white bg-[#043d6b] hover:bg-[#035291] shadow-lg transition-all duration-200"
+            >
+              <Mail className="w-5 h-5 mr-3" />
+              Send to Customer
+            </button>
+
+            {/* Convert to Invoice Button */}
+            <button
+              onClick={handleConvertToInvoice}
+              disabled={currentEstimate.status !== 'approved' || currentEstimate.convertedToInvoice}
+              className={`w-full flex items-center justify-center px-6 py-4 text-base font-semibold rounded-xl shadow-lg transition-all duration-200 ${
+                currentEstimate.convertedToInvoice
+                  ? 'bg-gray-400 text-white cursor-not-allowed'
+                  : currentEstimate.status === 'approved'
+                    ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white'
+                    : theme === 'light'
+                      ? 'bg-gray-100 text-gray-500 border-2 border-gray-300 cursor-not-allowed'
+                      : 'bg-gray-700 text-gray-400 border-2 border-gray-600 cursor-not-allowed'
+              }`}
+              title={
+                currentEstimate.convertedToInvoice
+                  ? 'Already converted to invoice'
+                  : currentEstimate.status !== 'approved'
+                    ? 'Estimate must be approved first'
+                    : 'Convert to Invoice'
+              }
+            >
+              <Receipt className="w-5 h-5 mr-3" />
+              {currentEstimate.convertedToInvoice ? 'Already Invoiced' : 'Convert to Invoice'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Send Email Modal */}
+      <SendEmailModal
         isOpen={showSendModal}
         onClose={() => setShowSendModal(false)}
-        estimate={currentEstimate}
-        companyInfo={{
-          name: profile?.company_name || profile?.company || profile?.full_name || 'Your Company',
-          email: profile?.email || '',
-          phone: profile?.phone || '',
-          address: profile?.address || ''
-        }}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        preAttachedEstimate={currentEstimate ? {
+          id: currentEstimate.id,
+          title: currentEstimate.title,
+          total: currentEstimate.total,
+          clientName: currentEstimate.clientName
+        } : undefined}
       />
 
       {/* AI Edit Chat Popup */}

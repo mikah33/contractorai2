@@ -23,9 +23,7 @@ import {
 } from 'lucide-react';
 import usePhotosStore, { ProjectPhoto } from '../stores/photosStore';
 import useProjectStore from '../stores/projectStore';
-import { useOnboardingStore } from '../stores/onboardingStore';
 import SendEmailModal from '../components/email/SendEmailModal';
-import PhotosTutorialModal from '../components/photos/PhotosTutorialModal';
 import VisionCamModal from '../components/vision/VisionCamModal';
 import { supabase } from '../lib/supabase';
 import { useTheme, getThemeClasses } from '../contexts/ThemeContext';
@@ -38,7 +36,6 @@ const PhotosGallery: React.FC = () => {
   const themeClasses = getThemeClasses(theme);
   const { photos, isLoading, fetchAllPhotos, deletePhoto } = usePhotosStore();
   const { projects, fetchProjects } = useProjectStore();
-  const { photosTutorialCompleted, checkPhotosTutorial, setPhotosTutorialCompleted } = useOnboardingStore();
   const [filter, setFilter] = useState<FilterType>('all');
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [selectedPhoto, setSelectedPhoto] = useState<ProjectPhoto | null>(null);
@@ -46,27 +43,12 @@ const PhotosGallery: React.FC = () => {
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [emailAttachment, setEmailAttachment] = useState<{ url: string; name: string } | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  const [showTutorial, setShowTutorial] = useState(false);
-  const [tutorialUserId, setTutorialUserId] = useState<string | null>(null);
   const [showVisionCam, setShowVisionCam] = useState(false);
   const [visionCamImage, setVisionCamImage] = useState<string | null>(null);
 
   useEffect(() => {
     fetchAllPhotos();
     fetchProjects();
-
-    // Check tutorial status
-    const checkTutorial = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user?.id) {
-        setTutorialUserId(user.id);
-        const completed = await checkPhotosTutorial(user.id);
-        if (!completed) {
-          setShowTutorial(true);
-        }
-      }
-    };
-    checkTutorial();
   }, []);
 
   const filteredPhotos = photos.filter(photo => {
@@ -540,17 +522,6 @@ const PhotosGallery: React.FC = () => {
           setEmailAttachment(null);
         }}
         initialAttachments={emailAttachment ? [emailAttachment] : undefined}
-      />
-
-      {/* Photos Tutorial Modal */}
-      <PhotosTutorialModal
-        isOpen={showTutorial}
-        onComplete={(dontShowAgain) => {
-          setShowTutorial(false);
-          if (dontShowAgain && tutorialUserId) {
-            setPhotosTutorialCompleted(tutorialUserId, true);
-          }
-        }}
       />
 
       {/* Vision Cam Modal */}

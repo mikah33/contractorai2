@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>ContractorAI</string>
+	<string>OnSite</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -23,19 +23,19 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCalendarsUsageDescription</key>
-	<string>ContractorAI needs access to your calendar to sync appointments and job schedules with your business calendar.</string>
+	<string>OnSite needs access to your calendar to sync appointments and job schedules with your business calendar.</string>
 	<key>NSCalendarsWriteOnlyAccessUsageDescription</key>
-	<string>ContractorAI needs permission to add appointments and job schedules to your calendar.</string>
+	<string>OnSite needs permission to add appointments and job schedules to your calendar.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>ContractorAI needs access to your camera to capture receipts, job site photos, and 3D room scans for accurate estimates.</string>
+	<string>OnSite needs access to your camera to capture receipts, job site photos, and 3D room scans for accurate estimates.</string>
 	<key>NSWorldSensingUsageDescription</key>
-	<string>ContractorAI uses world sensing to create 3D scans of rooms and job sites for accurate measurements and estimates.</string>
+	<string>OnSite uses world sensing to create 3D scans of rooms and job sites for accurate measurements and estimates.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>ContractorAI uses your location to help you track job sites and calculate travel distances for estimates.</string>
+	<string>OnSite uses your location to help you track job sites and calculate travel distances for estimates.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>ContractorAI needs permission to save job site photos and receipts to your photo library.</string>
+	<string>OnSite needs permission to save job site photos and receipts to your photo library.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>ContractorAI needs access to your photo library to attach photos to projects and save receipts.</string>
+	<string>OnSite needs access to your photo library to attach photos to projects and save receipts.</string>
 	<key>NSPrivacyAccessedAPITypes</key>
 	<array>
 		<dict>

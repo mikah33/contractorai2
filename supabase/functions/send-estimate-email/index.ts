@@ -100,27 +100,50 @@ serve(async (req) => {
 
       // Build HTML body for the estimate email with approve/decline buttons
       const htmlBody = `
-        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto;">
-          <div style="background: #043d6b; padding: 24px; text-align: center; border-radius: 12px 12px 0 0;">
-            <h1 style="color: white; margin: 0; font-size: 24px;">OnSite</h1>
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
+          <!-- Header with Business Name -->
+          <div style="background: #f8fafc; padding: 20px 24px; border-bottom: 1px solid #e2e8f0;">
+            <p style="margin: 0; font-size: 14px; color: #64748b;">From</p>
+            <p style="margin: 4px 0 0 0; font-size: 16px; font-weight: 600; color: #1e293b;">${customerName ? 'Your Contractor' : 'OnSite'}</p>
           </div>
-          <div style="background: #ffffff; padding: 32px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
-            <p style="color: #374151; line-height: 1.6; white-space: pre-wrap;">${body}</p>
-            ${pdfUrl ? `
-              <div style="margin-top: 24px; padding: 16px; background: #f3f4f6; border-radius: 8px;">
-                <p style="margin: 0 0 12px 0; font-weight: 600; color: #1f2937;">📎 Estimate Attached</p>
-                <a href="${pdfUrl}" style="display: inline-block; padding: 12px 24px; background: #043d6b; color: white; text-decoration: none; border-radius: 8px; font-weight: 500;">View Estimate PDF</a>
-              </div>
-            ` : ''}
 
-            <!-- Approve/Decline Buttons -->
-            <div style="margin-top: 32px; padding: 24px; background: #f9fafb; border-radius: 12px; text-align: center;">
-              <p style="margin: 0 0 16px 0; font-weight: 600; color: #1f2937; font-size: 16px;">Ready to proceed?</p>
-              <div style="display: inline-block;">
-                <a href="${approveLink}" style="display: inline-block; padding: 14px 32px; background: #22c55e; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; margin-right: 12px;">✓ Approve Estimate</a>
-                <a href="${declineLink}" style="display: inline-block; padding: 14px 32px; background: #ef4444; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">✗ Decline</a>
-              </div>
+          <!-- Email Subject -->
+          <div style="padding: 24px;">
+            <h1 style="margin: 0 0 8px 0; font-size: 22px; font-weight: 700; color: #1e293b;">Your ${subject.includes('Estimate') ? subject.replace('Your ', '').replace(' Estimate', '') : 'Project'} Estimate</h1>
+            <p style="margin: 0 0 20px 0; color: #64748b; font-size: 14px;">Hi ${customerName?.split(' ')[0] || 'there'},</p>
+            <p style="margin: 0 0 24px 0; color: #475569; font-size: 15px; line-height: 1.6;">${body}</p>
+          </div>
+
+          <!-- Estimate Card -->
+          <div style="margin: 0 24px 24px; padding: 20px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+              <span style="font-size: 16px; font-weight: 600; color: #1e293b;">📋 Estimate Details</span>
+              <span style="font-size: 12px; color: #64748b;">Valid 30 days</span>
             </div>
+
+            ${pdfUrl ? `
+              <a href="${pdfUrl}" style="display: block; width: 100%; padding: 14px 20px; background: #e0e7ff; color: #3730a3; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 15px; text-align: center; margin-bottom: 16px;">📄 View Full Estimate PDF</a>
+            ` : ''}
+          </div>
+
+          <!-- Approve/Decline Section -->
+          <div style="margin: 0 24px 24px; padding: 24px; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-radius: 12px; border: 2px solid #86efac; text-align: center;">
+            <p style="margin: 0 0 16px 0; font-weight: 600; color: #166534; font-size: 18px;">Ready to proceed?</p>
+
+            <div style="margin-bottom: 12px;">
+              <a href="${approveLink}" style="display: inline-block; width: 80%; max-width: 280px; padding: 16px 32px; background: #22c55e; color: white; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 16px;">✓ Approve Estimate</a>
+            </div>
+
+            <div>
+              <a href="${declineLink}" style="display: inline-block; width: 80%; max-width: 280px; padding: 14px 32px; background: #1f2937; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 15px;">✗ Decline</a>
+            </div>
+
+            <p style="margin: 16px 0 0 0; font-size: 13px; color: #64748b;">💳 Approve to receive a secure payment link via Stripe</p>
+          </div>
+
+          <!-- Footer -->
+          <div style="padding: 20px 24px; background: #f8fafc; border-top: 1px solid #e2e8f0; text-align: center;">
+            <p style="margin: 0; font-size: 12px; color: #94a3b8;">Sent via OnSite • Professional Contractor Software</p>
           </div>
         </div>
       `
