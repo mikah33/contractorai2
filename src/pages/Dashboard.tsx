@@ -538,7 +538,7 @@ const Dashboard: React.FC = () => {
                           <p className={`text-sm ${themeClasses.text.muted}`}>{incompleteSetupTasks.length} remaining</p>
                         </div>
                         <div className="max-h-80 overflow-y-auto">
-                          {incompleteSetupTasks.map((task) => (
+                          {incompleteSetupTasks.map((task, index) => (
                             <button
                               key={task.id}
                               onClick={() => {
@@ -552,7 +552,7 @@ const Dashboard: React.FC = () => {
                               className={`w-full px-5 py-4 flex items-center gap-4 ${theme === 'light' ? 'hover:bg-gray-50' : 'hover:bg-zinc-700'} transition-colors text-left border-b ${theme === 'light' ? 'border-gray-100' : 'border-zinc-700/50'} last:border-b-0`}
                             >
                               <div className={`w-8 h-8 rounded-full border-2 ${theme === 'light' ? 'border-gray-300' : 'border-zinc-500'} flex items-center justify-center flex-shrink-0`}>
-                                <span className={`text-sm font-bold ${themeClasses.text.muted}`}>{task.step}</span>
+                                <span className={`text-sm font-bold ${themeClasses.text.muted}`}>{index + 1}</span>
                               </div>
                               <span className={`text-base ${themeClasses.text.primary}`}>{task.title}</span>
                             </button>
