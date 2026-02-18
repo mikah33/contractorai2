@@ -8,14 +8,14 @@ PODS:
   - CapacitorCommunityAppleSignIn (7.1.0):
     - Capacitor
   - CapacitorCordova (7.4.4)
-  - CapacitorGeolocation (8.1.0):
+  - CapacitorGeolocation (7.1.8):
     - Capacitor
-    - IONGeolocationLib (= 2.0.0)
+    - IONGeolocationLib (= 1.0.1)
   - CapacitorLocalNotifications (7.0.3):
     - Capacitor
   - CapacitorPushNotifications (7.0.3):
     - Capacitor
-  - IONGeolocationLib (2.0.0)
+  - IONGeolocationLib (1.0.1)
   - PurchasesHybridCommon (17.19.1):
     - RevenueCat (= 5.48.0)
   - PurchasesHybridCommonUI (17.19.1):
@@ -79,10 +79,10 @@ SPEC CHECKSUMS:
   CapacitorBrowser: b98aa3db018a2ce4c68242d27e596c344f3b81b3
   CapacitorCommunityAppleSignIn: 271cb2860576fd2961508bbfa7a82117d93eadca
   CapacitorCordova: bf648a636f3c153f652d312ae145fb508b6ffced
-  CapacitorGeolocation: 7132de914f9d853ec4642dc1d36e4e2018a4e8a8
+  CapacitorGeolocation: ab54d708e2fcf99a7bafe0219eaa6f7a932f001a
   CapacitorLocalNotifications: 0811aef56ab2e5f7f9ae72f47d3473ab50c29038
   CapacitorPushNotifications: bdd621fbd562be34a41f4a7b1750efa000447d5a
-  IONGeolocationLib: a5e40b54edc2ee9902036eda5aaa41ddf07bb68d
+  IONGeolocationLib: 20f9d0248a0b5264511fb57a37e25dd2badf797a
   PurchasesHybridCommon: a4837eebc889b973668af685d6c23b89a038461d
   PurchasesHybridCommonUI: bf5566763f906429584534a117a7862537b92c0c
   RevenueCat: 1e61140a343a77dc286f171b3ffab99ca09a4b57

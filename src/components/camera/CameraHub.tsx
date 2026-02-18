@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   X,
@@ -9,7 +9,8 @@ import {
   Loader2,
   Check,
   ChevronRight,
-  Search
+  Search,
+  SwitchCamera
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import useProjectStore from '../../stores/projectStore';
@@ -40,18 +41,63 @@ const CameraHub: React.FC<CameraHubProps> = ({ isOpen, onClose }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
 
+  const [streamActive, setStreamActive] = useState(false);
+  const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
+
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+
+  const stopStream = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    setStreamActive(false);
+  }, []);
+
+  const startStream = useCallback(async () => {
+    try {
+      // Stop any existing stream first
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: facingMode,
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
+        },
+        audio: false
+      });
+
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
+      setStreamActive(true);
+    } catch {
+      // getUserMedia not supported or denied — fall back to file input
+      setStreamActive(false);
+    }
+  }, [facingMode]);
 
   useEffect(() => {
     if (isOpen) {
       fetchProjects();
-      // Auto-trigger camera when modal opens
-      setTimeout(() => {
-        cameraInputRef.current?.click();
-      }, 100);
+      startStream();
     }
-  }, [isOpen, fetchProjects]);
+    return () => {
+      stopStream();
+    };
+  }, [isOpen, fetchProjects, startStream, stopStream]);
 
   const resetState = () => {
     setMode('regular');
@@ -67,14 +113,64 @@ const CameraHub: React.FC<CameraHubProps> = ({ isOpen, onClose }) => {
   };
 
   const handleClose = () => {
+    stopStream();
     resetState();
     onClose();
+  };
+
+  const handleCapture = () => {
+    if (!streamActive || !videoRef.current || !canvasRef.current) {
+      // Fallback to file input if stream isn't active
+      cameraInputRef.current?.click();
+      return;
+    }
+
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    ctx.drawImage(video, 0, 0);
+
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      const file = new File([blob], `photo-${Date.now()}.jpg`, { type: 'image/jpeg' });
+      const url = URL.createObjectURL(blob);
+      setCapturedPhoto(url);
+      setCapturedFile(file);
+      stopStream();
+    }, 'image/jpeg', 0.92);
+  };
+
+  const handleFlipCamera = async () => {
+    const next = facingMode === 'environment' ? 'user' : 'environment';
+    setFacingMode(next);
+    // Stream will restart via the facingMode dependency in startStream
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: next, width: { ideal: 1920 }, height: { ideal: 1080 } },
+        audio: false
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
+      setStreamActive(true);
+    } catch {
+      setStreamActive(false);
+    }
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) {
-      // User cancelled - close if no photo taken yet
       if (!capturedPhoto) {
         handleClose();
       }
@@ -84,6 +180,7 @@ const CameraHub: React.FC<CameraHubProps> = ({ isOpen, onClose }) => {
     const url = URL.createObjectURL(file);
     setCapturedPhoto(url);
     setCapturedFile(file);
+    stopStream();
     e.target.value = '';
   };
 
@@ -141,8 +238,7 @@ const CameraHub: React.FC<CameraHubProps> = ({ isOpen, onClose }) => {
         setCapturedPhoto(null);
         setCapturedFile(null);
         setUploadSuccess(false);
-        // Trigger camera again for next photo
-        cameraInputRef.current?.click();
+        startStream();
       }, 1500);
 
     } catch (error) {
@@ -166,7 +262,7 @@ const CameraHub: React.FC<CameraHubProps> = ({ isOpen, onClose }) => {
     }
     setCapturedPhoto(null);
     setCapturedFile(null);
-    cameraInputRef.current?.click();
+    startStream();
   };
 
   const handleOpenGallery = () => {
@@ -223,7 +319,7 @@ const CameraHub: React.FC<CameraHubProps> = ({ isOpen, onClose }) => {
       </div>
 
       {/* Camera View Area */}
-      <div className="flex-1 flex items-center justify-center bg-zinc-900 relative">
+      <div className="flex-1 flex items-center justify-center bg-black relative overflow-hidden">
         {capturedPhoto ? (
           // Preview captured photo
           <div className="relative w-full h-full">
@@ -246,12 +342,34 @@ const CameraHub: React.FC<CameraHubProps> = ({ isOpen, onClose }) => {
             )}
           </div>
         ) : (
-          // Placeholder when no photo
-          <div className="flex flex-col items-center gap-4 text-white/50">
-            <Camera className="w-20 h-20" />
-            <p className="text-lg">Tap capture to take a photo</p>
-          </div>
+          // Live camera viewfinder or fallback placeholder
+          <>
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className={`w-full h-full object-cover ${streamActive ? 'block' : 'hidden'}`}
+              style={{ transform: facingMode === 'user' ? 'scaleX(-1)' : 'none' }}
+            />
+            {!streamActive && (
+              <div className="flex flex-col items-center gap-4 text-white/50">
+                <Camera className="w-20 h-20" />
+                <p className="text-lg">Tap capture to take a photo</p>
+              </div>
+            )}
+            {/* Flip camera button */}
+            {streamActive && (
+              <button
+                onClick={handleFlipCamera}
+                className="absolute top-4 right-4 p-2.5 bg-black/40 backdrop-blur-sm rounded-full text-white active:scale-90 transition-transform"
+              >
+                <SwitchCamera className="w-6 h-6" />
+              </button>
+            )}
+          </>
         )}
+        <canvas ref={canvasRef} className="hidden" />
       </div>
 
       {/* Bottom Controls */}
@@ -302,7 +420,7 @@ const CameraHub: React.FC<CameraHubProps> = ({ isOpen, onClose }) => {
 
             {/* Center: Capture Button */}
             <button
-              onClick={() => cameraInputRef.current?.click()}
+              onClick={handleCapture}
               className="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center active:scale-95 transition-transform"
             >
               <div className="w-16 h-16 bg-white rounded-full" />

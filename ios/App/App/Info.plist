@@ -49,6 +49,8 @@
 	<string>OnSite needs permission to add appointments and job schedules to your calendar.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>OnSite needs access to your camera to capture receipts, job site photos, and 3D room scans for accurate estimates.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>OnSite uses your location to help you track job sites and navigate to appointments.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>OnSite uses your location to help you track job sites and calculate travel distances for estimates.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
