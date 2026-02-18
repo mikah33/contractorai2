@@ -15,6 +15,9 @@ import SendEmailModal from '../components/email/SendEmailModal';
 import AIChatPopup from '../components/ai/AIChatPopup';
 import { Estimate, EstimateItem } from '../types/estimates';
 import { estimateService } from '../services/estimateService';
+import { uploadEstimatePDF } from '../services/supabaseStorage';
+import { supabase } from '../lib/supabase';
+import autoTable from 'jspdf-autotable';
 import { estimateResponseService } from '../services/estimateResponseService';
 import { useData } from '../contexts/DataContext';
 import { usePricing } from '../contexts/PricingContext';
@@ -121,7 +124,107 @@ const EstimateGenerator = () => {
         
         if (savedEstimate) {
           console.log('Estimate saved to database:', savedEstimate);
-          
+
+          // Auto-generate PDF for the new estimate
+          try {
+            const items = location.state.calculatorData.items || [];
+            const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+            const pageWidth = 210;
+
+            pdf.setFontSize(22);
+            pdf.setFont('helvetica', 'bold');
+            pdf.text(savedEstimate.title || 'Estimate', 20, 25);
+
+            pdf.setFontSize(10);
+            pdf.setFont('helvetica', 'normal');
+            pdf.setTextColor(100);
+            let yPos = 35;
+
+            if (savedEstimate.client_name) {
+              pdf.text(`Client: ${savedEstimate.client_name}`, 20, yPos);
+              yPos += 6;
+            }
+            if (savedEstimate.project_name) {
+              pdf.text(`Project: ${savedEstimate.project_name}`, 20, yPos);
+              yPos += 6;
+            }
+            pdf.text(`Date: ${new Date().toLocaleDateString()}`, 20, yPos);
+            yPos += 6;
+            if (savedEstimate.expires_at) {
+              pdf.text(`Valid Until: ${new Date(savedEstimate.expires_at).toLocaleDateString()}`, 20, yPos);
+              yPos += 6;
+            }
+
+            yPos += 4;
+            pdf.setDrawColor(200);
+            pdf.line(20, yPos, pageWidth - 20, yPos);
+            yPos += 8;
+
+            const tableItems = items.map((item: EstimateItem) => [
+              item.description || '',
+              String(item.quantity || 0),
+              item.unit || '',
+              `$${(item.unitPrice || 0).toFixed(2)}`,
+              `$${(item.totalPrice || 0).toFixed(2)}`
+            ]);
+
+            if (tableItems.length > 0) {
+              autoTable(pdf, {
+                startY: yPos,
+                head: [['Description', 'Qty', 'Unit', 'Unit Price', 'Total']],
+                body: tableItems,
+                margin: { left: 20, right: 20 },
+                headStyles: { fillColor: [4, 61, 107], fontSize: 9, fontStyle: 'bold' },
+                bodyStyles: { fontSize: 9 },
+                columnStyles: {
+                  0: { cellWidth: 70 },
+                  3: { halign: 'right' },
+                  4: { halign: 'right', fontStyle: 'bold' }
+                }
+              });
+              yPos = (pdf as any).lastAutoTable.finalY + 10;
+            }
+
+            const totalsX = pageWidth - 20;
+            pdf.setFontSize(10);
+            pdf.setTextColor(80);
+            pdf.setFont('helvetica', 'normal');
+            pdf.text(`Subtotal: $${(savedEstimate.subtotal || 0).toFixed(2)}`, totalsX, yPos, { align: 'right' });
+            yPos += 6;
+            if (savedEstimate.tax_rate) {
+              pdf.text(`Tax (${savedEstimate.tax_rate}%): $${(savedEstimate.tax_amount || 0).toFixed(2)}`, totalsX, yPos, { align: 'right' });
+              yPos += 6;
+            }
+            pdf.setFontSize(13);
+            pdf.setFont('helvetica', 'bold');
+            pdf.setTextColor(0);
+            pdf.text(`Total: $${(savedEstimate.total || 0).toFixed(2)}`, totalsX, yPos, { align: 'right' });
+
+            if (savedEstimate.notes) {
+              yPos += 14;
+              pdf.setFontSize(10);
+              pdf.setFont('helvetica', 'bold');
+              pdf.setTextColor(60);
+              pdf.text('Notes:', 20, yPos);
+              yPos += 6;
+              pdf.setFont('helvetica', 'normal');
+              const noteLines = pdf.splitTextToSize(savedEstimate.notes, pageWidth - 40);
+              pdf.text(noteLines, 20, yPos);
+            }
+
+            const pdfBlob = pdf.output('blob');
+            const uploadResult = await uploadEstimatePDF(pdfBlob, savedEstimate.id);
+            if (uploadResult.success && uploadResult.publicUrl) {
+              await supabase
+                .from('estimates')
+                .update({ pdf_url: uploadResult.publicUrl })
+                .eq('id', savedEstimate.id);
+              console.log('✅ PDF auto-generated for calculator estimate:', uploadResult.publicUrl);
+            }
+          } catch (pdfError) {
+            console.warn('PDF auto-generation failed (estimate still saved):', pdfError);
+          }
+
           // Create display estimate with simple schema format
           const calculatorEstimate = {
             id: savedEstimate.id,
@@ -596,6 +699,111 @@ const EstimateGenerator = () => {
       await updateEstimate(currentEstimate.id, estimateData);
 
       console.log('✅ Database operation completed');
+
+      // Auto-generate PDF and upload to storage
+      try {
+        const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        const pageWidth = 210;
+
+        // Header
+        pdf.setFontSize(22);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(currentEstimate.title || 'Estimate', 20, 25);
+
+        pdf.setFontSize(10);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setTextColor(100);
+        let yPos = 35;
+
+        if (currentEstimate.clientName) {
+          pdf.text(`Client: ${currentEstimate.clientName}`, 20, yPos);
+          yPos += 6;
+        }
+        if (currentEstimate.projectName) {
+          pdf.text(`Project: ${currentEstimate.projectName}`, 20, yPos);
+          yPos += 6;
+        }
+        pdf.text(`Date: ${new Date().toLocaleDateString()}`, 20, yPos);
+        yPos += 6;
+        if (currentEstimate.expiresAt) {
+          pdf.text(`Valid Until: ${new Date(currentEstimate.expiresAt).toLocaleDateString()}`, 20, yPos);
+          yPos += 6;
+        }
+
+        // Line separator
+        yPos += 4;
+        pdf.setDrawColor(200);
+        pdf.line(20, yPos, pageWidth - 20, yPos);
+        yPos += 8;
+
+        // Items table
+        const tableItems = (currentEstimate.items || []).map((item: EstimateItem) => [
+          item.description || '',
+          String(item.quantity || 0),
+          item.unit || '',
+          `$${(item.unitPrice || 0).toFixed(2)}`,
+          `$${(item.totalPrice || 0).toFixed(2)}`
+        ]);
+
+        if (tableItems.length > 0) {
+          autoTable(pdf, {
+            startY: yPos,
+            head: [['Description', 'Qty', 'Unit', 'Unit Price', 'Total']],
+            body: tableItems,
+            margin: { left: 20, right: 20 },
+            headStyles: { fillColor: [4, 61, 107], fontSize: 9, fontStyle: 'bold' },
+            bodyStyles: { fontSize: 9 },
+            columnStyles: {
+              0: { cellWidth: 70 },
+              3: { halign: 'right' },
+              4: { halign: 'right', fontStyle: 'bold' }
+            }
+          });
+          yPos = (pdf as any).lastAutoTable.finalY + 10;
+        }
+
+        // Totals
+        const totalsX = pageWidth - 20;
+        pdf.setFontSize(10);
+        pdf.setTextColor(80);
+        pdf.setFont('helvetica', 'normal');
+        pdf.text(`Subtotal: $${(currentEstimate.subtotal || 0).toFixed(2)}`, totalsX, yPos, { align: 'right' });
+        yPos += 6;
+        if (currentEstimate.taxRate) {
+          pdf.text(`Tax (${currentEstimate.taxRate}%): $${(currentEstimate.taxAmount || 0).toFixed(2)}`, totalsX, yPos, { align: 'right' });
+          yPos += 6;
+        }
+        pdf.setFontSize(13);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setTextColor(0);
+        pdf.text(`Total: $${(currentEstimate.total || 0).toFixed(2)}`, totalsX, yPos, { align: 'right' });
+
+        // Notes
+        if (currentEstimate.notes) {
+          yPos += 14;
+          pdf.setFontSize(10);
+          pdf.setFont('helvetica', 'bold');
+          pdf.setTextColor(60);
+          pdf.text('Notes:', 20, yPos);
+          yPos += 6;
+          pdf.setFont('helvetica', 'normal');
+          const noteLines = pdf.splitTextToSize(currentEstimate.notes, pageWidth - 40);
+          pdf.text(noteLines, 20, yPos);
+        }
+
+        // Upload PDF
+        const pdfBlob = pdf.output('blob');
+        const uploadResult = await uploadEstimatePDF(pdfBlob, currentEstimate.id);
+        if (uploadResult.success && uploadResult.publicUrl) {
+          await supabase
+            .from('estimates')
+            .update({ pdf_url: uploadResult.publicUrl })
+            .eq('id', currentEstimate.id);
+          console.log('✅ PDF generated and uploaded:', uploadResult.publicUrl);
+        }
+      } catch (pdfError) {
+        console.warn('PDF auto-generation failed (estimate still saved):', pdfError);
+      }
 
       // Verify the save by fetching the estimate back
       const result = await estimateService.getEstimate(currentEstimate.id);

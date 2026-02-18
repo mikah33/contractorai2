@@ -564,13 +564,13 @@ const PrePaywallOnboarding: React.FC<PrePaywallOnboardingProps> = ({ onComplete 
   // Step 1: Business Setup
   const renderBusinessSetup = () => (
     <div className="flex flex-col h-full">
-      <div className="px-6 pt-8 pb-4">
-        <h1 className="text-2xl font-bold text-gray-900">Welcome to OnSite</h1>
-        <p className="text-gray-500 mt-2">Let's set up your business profile</p>
+      <div className="px-5 pt-4 pb-2">
+        <h1 className="text-xl font-bold text-gray-900">Welcome to OnSite</h1>
+        <p className="text-gray-500 mt-1 text-sm">Let's set up your business profile</p>
       </div>
 
-      <div className="flex-1 px-6 overflow-y-auto pb-4">
-        <div className="mb-6">
+      <div className="flex-1 px-5 overflow-y-auto pb-4">
+        <div className="mb-4">
           <label className="flex items-center gap-2 text-sm font-medium text-gray-600 mb-2">
             <Building2 className="w-4 h-4" />
             Business Name
@@ -579,18 +579,18 @@ const PrePaywallOnboarding: React.FC<PrePaywallOnboardingProps> = ({ onComplete 
             type="text"
             value={businessName}
             onChange={(e) => setBusinessName(e.target.value)}
-            className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             placeholder="Smith Roofing LLC"
             autoFocus
           />
         </div>
 
-        <div className="mb-4">
-          <label className="text-sm font-medium text-gray-600 mb-3 block">
+        <div className="mb-3">
+          <label className="text-sm font-medium text-gray-600 mb-2 block">
             What type of work do you do?
           </label>
 
-          <div className="grid grid-cols-2 gap-3 mb-3">
+          <div className="grid grid-cols-2 gap-2 mb-2">
             {TOP_TRADES.map((trade) => {
               const Icon = trade.icon;
               const isSelected = selectedTrade === trade.id;
@@ -601,14 +601,14 @@ const PrePaywallOnboarding: React.FC<PrePaywallOnboardingProps> = ({ onComplete 
                     setSelectedTrade(trade.id);
                     setShowOtherTrades(false);
                   }}
-                  className={`flex items-center gap-3 p-4 rounded-xl border transition-all ${
+                  className={`flex items-center gap-2.5 p-3 rounded-xl border transition-all ${
                     isSelected
                       ? 'bg-blue-50 border-blue-500 text-blue-700'
                       : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
                   }`}
                 >
-                  <Icon className={`w-5 h-5 ${isSelected ? 'text-blue-500' : 'text-gray-400'}`} />
-                  <span className="font-medium">{trade.name}</span>
+                  <Icon className={`w-4 h-4 ${isSelected ? 'text-blue-500' : 'text-gray-400'}`} />
+                  <span className="font-medium text-sm">{trade.name}</span>
                 </button>
               );
             })}
@@ -650,11 +650,11 @@ const PrePaywallOnboarding: React.FC<PrePaywallOnboardingProps> = ({ onComplete 
         </div>
       </div>
 
-      <div className="px-6 py-4 bg-white border-t border-gray-200">
+      <div className="px-5 py-3 bg-white border-t border-gray-200">
         <button
           onClick={handleNext}
           disabled={!businessName.trim() || !selectedTrade}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Continue
           <ChevronRight className="w-5 h-5" />
@@ -666,9 +666,9 @@ const PrePaywallOnboarding: React.FC<PrePaywallOnboardingProps> = ({ onComplete 
   // Step 2: Send Email Compose View - Matches real app modal
   const renderEmailPreview = () => (
     <div className="flex flex-col h-full">
-      <div className="px-6 pt-6 pb-4">
-        <h1 className="text-2xl font-bold text-gray-900">Send Professional Estimates</h1>
-        <p className="text-gray-500 text-base mt-2">See how easy it is to send estimates and collect payments</p>
+      <div className="px-5 pt-4 pb-2">
+        <h1 className="text-xl font-bold text-gray-900">Send Professional Estimates</h1>
+        <p className="text-gray-500 text-sm mt-1">See how easy it is to send estimates and collect payments</p>
       </div>
 
       <div className="flex-1 px-4 overflow-y-auto pb-4">
@@ -783,7 +783,7 @@ const PrePaywallOnboarding: React.FC<PrePaywallOnboardingProps> = ({ onComplete 
       </div>
 
       {/* Footer */}
-      <div className="px-6 py-4 bg-white border-t border-gray-200">
+      <div className="px-5 py-3 bg-white border-t border-gray-200">
         <div className="flex gap-3">
           <button
             onClick={handleBack}
@@ -816,9 +816,9 @@ const PrePaywallOnboarding: React.FC<PrePaywallOnboardingProps> = ({ onComplete 
   // Step 3: Customer View - Shows the full email preview customers receive
   const renderCustomerView = () => (
     <div className="flex flex-col h-full overflow-hidden">
-      <div className="px-6 pt-6 pb-4 flex-shrink-0">
-        <h1 className="text-2xl font-bold text-gray-900">Email Sent!</h1>
-        <p className="text-gray-500 text-base mt-2">Here's what your customer receives</p>
+      <div className="px-5 pt-4 pb-2 flex-shrink-0">
+        <h1 className="text-xl font-bold text-gray-900">Email Sent!</h1>
+        <p className="text-gray-500 text-sm mt-1">Here's what your customer receives</p>
       </div>
 
       <div className="flex-1 px-4 overflow-y-auto pb-4">
@@ -901,7 +901,7 @@ const PrePaywallOnboarding: React.FC<PrePaywallOnboardingProps> = ({ onComplete 
       </div>
 
       {/* Footer */}
-      <div className="px-6 py-4 bg-white border-t border-gray-200">
+      <div className="px-5 py-3 bg-white border-t border-gray-200">
         <div className="flex gap-3">
           <button
             onClick={handleBack}
@@ -924,7 +924,7 @@ const PrePaywallOnboarding: React.FC<PrePaywallOnboardingProps> = ({ onComplete 
   // Step 4: Vision Cam Preview
   const renderVisionCam = () => (
     <div className="flex flex-col h-full bg-white">
-      <div className="px-6 pt-6 pb-4">
+      <div className="px-5 pt-4 pb-2">
         <div className="flex items-center gap-2 mb-2">
           <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-600 rounded-lg flex items-center justify-center">
             <Eye className="w-5 h-5 text-white" />
@@ -997,7 +997,7 @@ const PrePaywallOnboarding: React.FC<PrePaywallOnboardingProps> = ({ onComplete 
       </div>
 
       {/* Footer */}
-      <div className="px-6 py-4 bg-white border-t border-gray-200">
+      <div className="px-5 py-3 bg-white border-t border-gray-200">
         <div className="flex gap-3">
           <button
             onClick={handleBack}
@@ -1029,9 +1029,9 @@ const PrePaywallOnboarding: React.FC<PrePaywallOnboardingProps> = ({ onComplete 
 
   return (
     <div className="fixed inset-0 z-50 bg-gray-50">
-      <div className="h-full w-full flex flex-col">
+      <div className="h-full w-full flex flex-col" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
         {/* Step Indicator */}
-        <div className="flex items-center justify-between px-6 pt-4">
+        <div className="flex items-center justify-between px-6" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 8px)' }}>
           <div className="flex gap-2">
             {[1, 2, 3, 4].map((s) => (
               <div

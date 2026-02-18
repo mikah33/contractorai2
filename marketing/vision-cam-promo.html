@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OnSite Vision Cam - App Store Screenshots</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0a0a0a;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 20px 60px;
+      min-height: 100vh;
+    }
+
+    .controls {
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .controls h2 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .controls p {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 12px;
+    }
+
+    .controls button {
+      padding: 8px 20px;
+      background: #222;
+      color: #fff;
+      border: 1px solid #333;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      margin: 0 4px;
+      transition: all 0.2s;
+    }
+
+    .controls button:hover { background: #333; }
+    .controls button.active { background: #8b5cf6; border-color: #8b5cf6; }
+
+    /* Viewport wrapper — scales the canvas to fit browser */
+    .viewport {
+      width: 100%;
+      max-width: 1200px;
+      overflow: hidden;
+      border-radius: 0;
+      border: 1px solid #222;
+      position: relative;
+    }
+
+    .scale-wrapper {
+      transform-origin: top left;
+      /* default scale will be set by JS */
+    }
+
+    /* The actual canvas at App Store dimensions */
+    .canvas {
+      width: 2580px;
+      height: 2796px;
+      display: flex;
+      position: relative;
+    }
+
+    /* Cut guide */
+    .cut-guide {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      width: 3px;
+      height: 100%;
+      background: repeating-linear-gradient(
+        to bottom,
+        rgba(255, 60, 60, 0.7) 0px,
+        rgba(255, 60, 60, 0.7) 14px,
+        transparent 14px,
+        transparent 28px
+      );
+      z-index: 100;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+
+    .cut-label {
+      position: absolute;
+      top: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #e53e3e;
+      color: white;
+      font-size: 16px;
+      font-weight: 700;
+      padding: 6px 18px;
+      border-radius: 6px;
+      z-index: 101;
+      white-space: nowrap;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      transition: opacity 0.3s;
+    }
+
+    .canvas.hide-guide .cut-guide,
+    .canvas.hide-guide .cut-label { opacity: 0; }
+
+    /* Each panel = one App Store screenshot (1290 x 2796) */
+    .panel {
+      width: 1290px;
+      height: 2796px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .panel-1 {
+      background: linear-gradient(170deg, #065a9e 0%, #043d6b 40%, #032d50 100%);
+    }
+
+    .panel-2 {
+      background: linear-gradient(170deg, #043d6b 0%, #032d50 40%, #021f37 100%);
+    }
+
+    /* Decorative orbs */
+    .panel-1::before {
+      content: '';
+      position: absolute;
+      top: -300px;
+      right: -250px;
+      width: 900px;
+      height: 900px;
+      background: radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, transparent 65%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .panel-1::after {
+      content: '';
+      position: absolute;
+      bottom: 200px;
+      left: -200px;
+      width: 700px;
+      height: 700px;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.06) 0%, transparent 65%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .panel-2::before {
+      content: '';
+      position: absolute;
+      top: -200px;
+      left: -250px;
+      width: 800px;
+      height: 800px;
+      background: radial-gradient(circle, rgba(34, 197, 94, 0.08) 0%, transparent 65%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .panel-2::after {
+      content: '';
+      position: absolute;
+      bottom: 100px;
+      right: -250px;
+      width: 800px;
+      height: 800px;
+      background: radial-gradient(circle, rgba(139, 92, 246, 0.08) 0%, transparent 65%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    /* Top text content */
+    .top-content {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      padding: 180px 80px 50px;
+      flex-shrink: 0;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 36px;
+      border-radius: 100px;
+      font-size: 26px;
+      font-weight: 600;
+      margin-bottom: 52px;
+      backdrop-filter: blur(12px);
+    }
+
+    .pill.purple {
+      background: rgba(139, 92, 246, 0.15);
+      border: 2px solid rgba(139, 92, 246, 0.25);
+      color: #c4b5fd;
+    }
+
+    .pill.green {
+      background: rgba(34, 197, 94, 0.15);
+      border: 2px solid rgba(34, 197, 94, 0.25);
+      color: #86efac;
+    }
+
+    .pill svg {
+      width: 30px;
+      height: 30px;
+    }
+
+    .headline {
+      font-size: 108px;
+      font-weight: 900;
+      line-height: 1.0;
+      margin-bottom: 36px;
+      letter-spacing: -3px;
+    }
+
+    .headline .purple {
+      background: linear-gradient(135deg, #c084fc, #8b5cf6, #7c3aed);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .headline .green {
+      background: linear-gradient(135deg, #86efac, #22c55e, #16a34a);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtext {
+      font-size: 36px;
+      color: rgba(255, 255, 255, 0.5);
+      line-height: 1.5;
+    }
+
+    /* Phone mockup */
+    .phone-area {
+      flex: 1;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      position: relative;
+      z-index: 2;
+      padding-top: 40px;
+    }
+
+    .phone-outer {
+      position: relative;
+    }
+
+    .phone-frame {
+      width: 640px;
+      background: #1c1c1e;
+      border-radius: 76px;
+      padding: 16px;
+      box-shadow:
+        0 100px 200px rgba(0, 0, 0, 0.6),
+        0 0 0 2px rgba(255, 255, 255, 0.08),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+    }
+
+    .phone-screen {
+      border-radius: 62px;
+      overflow: hidden;
+      aspect-ratio: 393 / 852;
+      background: #f8f8f8;
+    }
+
+    .phone-screen img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top;
+      display: block;
+    }
+
+    /* Glow under phone */
+    .phone-glow {
+      position: absolute;
+      bottom: -60px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 520px;
+      height: 250px;
+      pointer-events: none;
+      border-radius: 50%;
+    }
+
+    .phone-glow.purple-glow {
+      background: radial-gradient(ellipse, rgba(139, 92, 246, 0.25) 0%, transparent 70%);
+    }
+
+    .phone-glow.green-glow {
+      background: radial-gradient(ellipse, rgba(34, 197, 94, 0.25) 0%, transparent 70%);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="controls">
+    <h2>OnSite — Vision Cam App Store Screenshots</h2>
+    <p>2580 x 2796px total &bull; Splits into two 1290 x 2796px screens</p>
+    <button onclick="toggleGuide()" id="guideBtn">Hide Cut Guide</button>
+    <button onclick="exportScreenshots()">How to Export</button>
+  </div>
+
+  <div class="viewport" id="viewport">
+    <div class="scale-wrapper" id="scaleWrapper">
+      <div class="canvas hide-guide" id="canvas">
+        <!-- Cut guide (hidden by default) -->
+        <div class="cut-guide"></div>
+        <div class="cut-label">Split Here</div>
+
+        <!-- SCREEN 1: Describe Your Vision -->
+        <div class="panel panel-1">
+          <div class="top-content">
+            <div class="pill purple">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              Vision Cam
+            </div>
+
+            <div class="headline">
+              Describe<br>Your <span class="purple">Vision</span>
+            </div>
+
+            <div class="subtext">
+              Snap a photo of any job site.<br>
+              Tell the AI what it should look like.
+            </div>
+          </div>
+
+          <div class="phone-area">
+            <div class="phone-outer">
+              <div class="phone-frame">
+                <div class="phone-screen">
+                  <img src="vision-before.png" alt="Before - describing renovation vision">
+                </div>
+              </div>
+              <div class="phone-glow purple-glow"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SCREEN 2: AI Brings It to Life -->
+        <div class="panel panel-2">
+          <div class="top-content">
+            <div class="pill green">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+              </svg>
+              AI Result
+            </div>
+
+            <div class="headline">
+              AI Brings It<br>to <span class="green">Life</span>
+            </div>
+
+            <div class="subtext">
+              Photorealistic render in seconds.<br>
+              Email it directly to your client.
+            </div>
+          </div>
+
+          <div class="phone-area">
+            <div class="phone-outer">
+              <div class="phone-frame">
+                <div class="phone-screen">
+                  <img src="vision-after.png" alt="After - AI generated renovation">
+                </div>
+              </div>
+              <div class="phone-glow green-glow"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Scale canvas to fit viewport
+    function scaleCanvas() {
+      const viewport = document.getElementById('viewport');
+      const wrapper = document.getElementById('scaleWrapper');
+      const vw = viewport.clientWidth;
+      const scale = vw / 2580;
+      wrapper.style.transform = `scale(${scale})`;
+      // Set viewport height to match scaled canvas
+      viewport.style.height = (2796 * scale) + 'px';
+    }
+
+    scaleCanvas();
+    window.addEventListener('resize', scaleCanvas);
+
+    function toggleGuide() {
+      const canvas = document.getElementById('canvas');
+      const btn = document.getElementById('guideBtn');
+      canvas.classList.toggle('hide-guide');
+      btn.textContent = canvas.classList.contains('hide-guide') ? 'Show Cut Guide' : 'Hide Cut Guide';
+    }
+
+    function exportScreenshots() {
+      alert(
+        'To export as App Store screenshots:\\n\\n' +
+        '1. In Chrome: Right-click > Inspect > Cmd+Shift+P > "Capture full size screenshot"\\n' +
+        '2. Or use a tool like CleanShot X or Shottr\\n' +
+        '3. Hide the cut guide first (button above)\\n' +
+        '4. Crop the exported image in half:\\n' +
+        '   - Left half (0-1290px) = Screenshot 1\\n' +
+        '   - Right half (1290-2580px) = Screenshot 2\\n\\n' +
+        'Each half will be exactly 1290 x 2796px — the required iPhone 6.7" size.'
+      );
+    }
+  </script>
+
+</body>
+</html>

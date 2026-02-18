@@ -185,8 +185,11 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
     }
 
     // Then check location state
-    const state = location.state as { selectedProjectId?: string } | null;
-    if (state?.selectedProjectId) {
+    const state = location.state as { selectedProjectId?: string; openNewProject?: boolean } | null;
+    if (state?.openNewProject) {
+      setShowManualForm(true);
+      window.history.replaceState({}, document.title);
+    } else if (state?.selectedProjectId) {
       const project = projects.find(p => p.id === state.selectedProjectId);
       if (project) {
         setSelectedProject(project);
@@ -707,30 +710,6 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
               <div className="mt-3">
                 <h1 className="text-xl font-bold text-gray-900">{selectedProject.name || 'Untitled Project'}</h1>
 
-                {/* Client Name - Prominent Display */}
-                {(selectedProject.client_name || selectedProject.client) ? (
-                  <div className="mt-2 flex items-center gap-2">
-                    <div className="w-8 h-8 bg-[#043d6b]/20 rounded-full flex items-center justify-center">
-                      <Users className="w-4 h-4 text-[#035291]" />
-                    </div>
-                    <button
-                      onClick={() => {
-                        navigate('/clients', {
-                          state: {
-                            editClientId: selectedProject.client_id || selectedProject.clientId,
-                            editClientName: selectedProject.client_name || selectedProject.client
-                          }
-                        });
-                      }}
-                      className="text-base font-semibold text-[#035291] active:text-[#4d565a] flex items-center gap-1"
-                    >
-                      {selectedProject.client_name || selectedProject.client}
-                      <Pencil className="w-3 h-3" />
-                    </button>
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-500 mt-1">No client assigned</p>
-                )}
 
                 {/* Address Display */}
                 {selectedProject.address && (

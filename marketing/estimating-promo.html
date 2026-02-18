@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OnSite - Estimating App Store Screenshot</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0a0a0a;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 20px 60px;
+      min-height: 100vh;
+    }
+
+    .controls {
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .controls h2 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .controls p {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 12px;
+    }
+
+    .controls button {
+      padding: 8px 20px;
+      background: #222;
+      color: #fff;
+      border: 1px solid #333;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      margin: 0 4px;
+      transition: all 0.2s;
+    }
+
+    .controls button:hover { background: #333; }
+
+    /* Viewport wrapper */
+    .viewport {
+      width: 100%;
+      max-width: 700px;
+      overflow: hidden;
+      border: 1px solid #222;
+      position: relative;
+    }
+
+    .scale-wrapper {
+      transform-origin: top left;
+    }
+
+    /* Single App Store screenshot: 1290 x 2796 */
+    .panel {
+      width: 1290px;
+      height: 2796px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(170deg, #065a9e 0%, #043d6b 40%, #032d50 100%);
+    }
+
+    /* Decorative orbs */
+    .panel::before {
+      content: '';
+      position: absolute;
+      top: -300px;
+      right: -250px;
+      width: 900px;
+      height: 900px;
+      background: radial-gradient(circle, rgba(245, 158, 11, 0.12) 0%, transparent 65%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .panel::after {
+      content: '';
+      position: absolute;
+      bottom: 200px;
+      left: -200px;
+      width: 700px;
+      height: 700px;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 65%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    /* Top text content */
+    .top-content {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      padding: 180px 80px 50px;
+      flex-shrink: 0;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 36px;
+      border-radius: 100px;
+      font-size: 26px;
+      font-weight: 600;
+      margin-bottom: 52px;
+      backdrop-filter: blur(12px);
+      background: rgba(245, 158, 11, 0.15);
+      border: 2px solid rgba(245, 158, 11, 0.25);
+      color: #fcd34d;
+    }
+
+    .pill svg {
+      width: 30px;
+      height: 30px;
+    }
+
+    .headline {
+      font-size: 108px;
+      font-weight: 900;
+      line-height: 1.0;
+      margin-bottom: 36px;
+      letter-spacing: -3px;
+    }
+
+    .headline .accent {
+      background: linear-gradient(135deg, #fcd34d, #f59e0b, #d97706);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtext {
+      font-size: 36px;
+      color: rgba(255, 255, 255, 0.5);
+      line-height: 1.5;
+    }
+
+    /* Phone mockup */
+    .phone-area {
+      flex: 1;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      position: relative;
+      z-index: 2;
+      padding-top: 40px;
+    }
+
+    .phone-outer {
+      position: relative;
+    }
+
+    .phone-frame {
+      width: 1000px;
+      background: #1c1c1e;
+      border-radius: 96px;
+      padding: 20px;
+      box-shadow:
+        0 100px 200px rgba(0, 0, 0, 0.6),
+        0 0 0 2px rgba(255, 255, 255, 0.08),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+    }
+
+    .phone-screen {
+      border-radius: 80px;
+      overflow: hidden;
+      aspect-ratio: 393 / 852;
+      background: #f8f8f8;
+    }
+
+    .phone-screen img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top;
+      display: block;
+    }
+
+    /* Glow under phone */
+    .phone-glow {
+      position: absolute;
+      bottom: -60px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 840px;
+      height: 350px;
+      pointer-events: none;
+      border-radius: 50%;
+      background: radial-gradient(ellipse, rgba(245, 158, 11, 0.25) 0%, transparent 70%);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="controls">
+    <h2>OnSite — Estimating App Store Screenshot</h2>
+    <p>1290 x 2796px — iPhone 6.7" size</p>
+    <button onclick="exportScreenshots()">How to Export</button>
+  </div>
+
+  <div class="viewport" id="viewport">
+    <div class="scale-wrapper" id="scaleWrapper">
+      <div class="panel">
+        <div class="top-content">
+          <div class="pill">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 7h6l2 5H7l2-5Z"/>
+              <path d="M3 12h18v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7Z"/>
+              <path d="M12 17v.01"/>
+            </svg>
+            AI Estimating
+          </div>
+
+          <div class="headline">
+            Get Accurate<br>Quotes in<br><span class="accent">Seconds</span>
+          </div>
+
+          <div class="subtext">
+            Describe any job. Get instant<br>
+            material costs and estimates.
+          </div>
+        </div>
+
+        <div class="phone-area">
+          <div class="phone-outer">
+            <div class="phone-frame">
+              <div class="phone-screen">
+                <img src="estimating-screenshot.png" alt="AI Estimating Assistant">
+              </div>
+            </div>
+            <div class="phone-glow"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function scaleCanvas() {
+      const viewport = document.getElementById('viewport');
+      const wrapper = document.getElementById('scaleWrapper');
+      const vw = viewport.clientWidth;
+      const scale = vw / 1290;
+      wrapper.style.transform = `scale(${scale})`;
+      viewport.style.height = (2796 * scale) + 'px';
+    }
+
+    scaleCanvas();
+    window.addEventListener('resize', scaleCanvas);
+
+    function exportScreenshots() {
+      alert(
+        'To export as App Store screenshot:\n\n' +
+        '1. In Chrome: Right-click > Inspect > Cmd+Shift+P > "Capture full size screenshot"\n' +
+        '2. Or use a tool like CleanShot X or Shottr\n\n' +
+        'The output will be exactly 1290 x 2796px — the required iPhone 6.7" size.'
+      );
+    }
+  </script>
+
+</body>
+</html>

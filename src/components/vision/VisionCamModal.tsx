@@ -554,89 +554,93 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose, initia
 
       {/* Prompt Step */}
       {step === 'prompt' && (
-        <div className="flex-1 flex flex-col bg-white">
-          {/* Image Preview */}
-          {capturedImage && (
-            <div className="relative aspect-video bg-gray-100">
-              <img
-                src={capturedImage}
-                alt="Captured"
-                className="w-full h-full object-contain"
-              />
-              <button
-                onClick={() => {
-                  setCapturedImage(null);
-                  setCapturedFile(null);
-                  setStep('capture');
-                }}
-                className="absolute top-3 right-3 p-2 bg-black/60 rounded-full text-white"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-          )}
-
-          <div className="flex-1 p-4 space-y-4">
-            {/* Prompt Input */}
-            <div>
-              <label className="block text-sm font-medium text-gray-600 mb-2">
-                Describe your vision
-              </label>
-              <textarea
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                placeholder="e.g., Renovated with modern siding, new windows, and a landscaped front yard"
-                rows={3}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
-              />
-            </div>
-
-            {/* Prompt Suggestions */}
-            <div>
-              <p className="text-xs text-gray-500 mb-2">Suggestions:</p>
-              <div className="flex flex-wrap gap-2">
-                {VISION_PROMPT_SUGGESTIONS.slice(0, 4).map((suggestion, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setPrompt(suggestion)}
-                    className="px-3 py-1.5 bg-gray-100 rounded-full text-xs text-gray-600 hover:bg-gray-200 active:scale-95 transition-all"
-                  >
-                    {suggestion.slice(0, 30)}...
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Transformation Strength */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-medium text-gray-600">
-                  Transformation Strength
-                </label>
-                <span className="text-sm text-purple-500">{Math.round(strength * 100)}%</span>
-              </div>
-              <input
-                type="range"
-                min="0.5"
-                max="0.95"
-                step="0.05"
-                value={strength}
-                onChange={(e) => setStrength(parseFloat(e.target.value))}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-500"
-              />
-              <div className="flex justify-between text-xs text-gray-500 mt-1">
-                <span>Subtle changes</span>
-                <span>Full renovation</span>
-              </div>
-            </div>
-
-            {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-sm text-red-600">{error}</p>
+        <div className="flex-1 flex flex-col bg-white overflow-hidden">
+          <div className="flex-1 overflow-y-auto">
+            {/* Image Preview */}
+            {capturedImage && (
+              <div className="relative aspect-video bg-gray-100">
+                <img
+                  src={capturedImage}
+                  alt="Captured"
+                  className="w-full h-full object-contain"
+                />
+                <button
+                  onClick={() => {
+                    setCapturedImage(null);
+                    setCapturedFile(null);
+                    setStep('capture');
+                  }}
+                  className="absolute top-3 right-3 p-2 bg-black/60 rounded-full text-white"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
             )}
 
-            {/* Generate Button */}
+            <div className="p-4 space-y-4">
+              {/* Prompt Input */}
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-2">
+                  Describe your vision
+                </label>
+                <textarea
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  placeholder="e.g., Renovated with modern siding, new windows, and a landscaped front yard"
+                  rows={3}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                />
+              </div>
+
+              {/* Prompt Suggestions */}
+              <div>
+                <p className="text-xs text-gray-500 mb-2">Suggestions:</p>
+                <div className="flex flex-wrap gap-2">
+                  {VISION_PROMPT_SUGGESTIONS.slice(0, 4).map((suggestion, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setPrompt(suggestion)}
+                      className="px-3 py-1.5 bg-gray-100 rounded-full text-xs text-gray-600 hover:bg-gray-200 active:scale-95 transition-all"
+                    >
+                      {suggestion.slice(0, 30)}...
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Transformation Strength */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm font-medium text-gray-600">
+                    Transformation Strength
+                  </label>
+                  <span className="text-sm text-purple-500">{Math.round(strength * 100)}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0.5"
+                  max="0.95"
+                  step="0.05"
+                  value={strength}
+                  onChange={(e) => setStrength(parseFloat(e.target.value))}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                />
+                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>Subtle changes</span>
+                  <span>Full renovation</span>
+                </div>
+              </div>
+
+              {error && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-600">{error}</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Generate Button - pinned to bottom */}
+          <div className="flex-shrink-0 p-4 pt-2 bg-white border-t border-gray-100" style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}>
             <button
               onClick={handleGenerate}
               disabled={!prompt.trim() || isGenerating}

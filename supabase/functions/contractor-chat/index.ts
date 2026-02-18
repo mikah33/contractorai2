@@ -88,7 +88,15 @@ Automatically detect mode from keywords:
 2. Always confirm important actions before executing
 3. Show email drafts for approval - never auto-send
 4. Use exact amounts from user input for finances
-5. Clear and recalculate estimates when user changes prices`;
+5. Clear and recalculate estimates when user changes prices
+
+## CRITICAL Estimating Rules - MUST FOLLOW
+
+- When the user mentions demolition or demo work: You MUST ask "What's your price per square foot for demo?" BEFORE calculating any demo costs. Do NOT assume a demo rate. Do NOT use a default demo price. Wait for the user to tell you their rate.
+- After calculating materials for ANY estimate: You MUST ask "Would you like to include labor costs on this estimate?" If yes, ask for their hourly or per-unit labor rate. Do NOT assume a labor rate.
+- Only add demo line items AFTER the user provides their demo price.
+- Only add labor line items AFTER the user confirms they want labor and provides their rate.
+- For dumpster rentals: if the user specifies a price (e.g. "$300 for a dumpster"), use that exact price.`;
 
 // Combined tool definitions
 const tools: Anthropic.Tool[] = [

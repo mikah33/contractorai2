@@ -162,6 +162,28 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
   const [editAiPrompt, setEditAiPrompt] = useState('');
   const [editAiLoading, setEditAiLoading] = useState(false);
   const [showEditInlineAI, setShowEditInlineAI] = useState(false);
+  const [showEditDatePicker, setShowEditDatePicker] = useState(false);
+  const [editDatePickerMonth, setEditDatePickerMonth] = useState(new Date());
+  // New Project modal state
+  const [showNewProjectModal, setShowNewProjectModal] = useState(false);
+  const [isCreatingProject, setIsCreatingProject] = useState(false);
+  const [newProjectFormData, setNewProjectFormData] = useState({
+    name: '',
+    clientId: '',
+    client: '',
+    address: '',
+    description: '',
+    budget: '',
+    startDate: '',
+    endDate: '',
+    status: 'active' as 'active' | 'completed' | 'on-hold'
+  });
+  const [npStartDatePicker, setNpStartDatePicker] = useState(false);
+  const [npEndDatePicker, setNpEndDatePicker] = useState(false);
+  const [npStartMonth, setNpStartMonth] = useState(new Date());
+  const [npEndMonth, setNpEndMonth] = useState(new Date());
+  const [showNpAddClient, setShowNpAddClient] = useState(false);
+  const [npNewClient, setNpNewClient] = useState({ first_name: '', last_name: '', email: '', phone: '', address: '' });
 
   useEffect(() => {
     fetchTasks();
@@ -461,6 +483,8 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
     });
     setShowEditLineItems(false);
     setShowEditInlineAI(false);
+    setShowEditDatePicker(false);
+    setEditDatePickerMonth(task.due_date ? parseISO(task.due_date) : new Date());
     setShowEditTask(true);
   };
 
@@ -1386,7 +1410,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
 
                     <button
                       type="button"
-                      onClick={() => setShowQuickAddProject(true)}
+                      onClick={() => setShowNewProjectModal(true)}
                       className="flex items-center gap-2 text-[#043d6b] text-sm font-medium"
                     >
                       <Plus className="w-4 h-4" />
@@ -2055,26 +2079,83 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                 </div>
               </div>
 
-              {/* Due Date & Time - Simple inputs for edit */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Due Date</label>
-                  <input
-                    type="date"
-                    value={editTask.due_date}
-                    onChange={(e) => setEditTask({ ...editTask, due_date: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
-                  />
-                </div>
-                <div>
-                  <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Time</label>
-                  <input
-                    type="time"
-                    value={editTask.due_time}
-                    onChange={(e) => setEditTask({ ...editTask, due_time: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
-                  />
-                </div>
+              {/* Due Date & Time */}
+              <div>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Due Date & Time</label>
+                <button
+                  type="button"
+                  onClick={() => setShowEditDatePicker(!showEditDatePicker)}
+                  className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} flex items-center justify-between`}
+                >
+                  <div className="flex items-center gap-2">
+                    <CalendarIcon className="w-5 h-5 text-[#043d6b]" />
+                    <span className={editTask.due_date ? themeClasses.text.primary : themeClasses.text.muted}>
+                      {editTask.due_date
+                        ? `${format(parseISO(editTask.due_date), 'MMM d, yyyy')} at ${editTask.due_time || '09:00'}`
+                        : 'Select date and time...'}
+                    </span>
+                  </div>
+                  {showEditDatePicker ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                </button>
+
+                {showEditDatePicker && (
+                  <div className={`mt-2 p-4 ${themeClasses.bg.input} rounded-xl border ${themeClasses.border.input}`}>
+                    <div className="flex items-center justify-between mb-4">
+                      <button type="button" onClick={() => setEditDatePickerMonth(subMonths(editDatePickerMonth, 1))} className={`p-2 rounded-lg ${themeClasses.hover.bg}`}><ChevronLeft className="w-5 h-5" /></button>
+                      <span className={`font-semibold ${themeClasses.text.primary}`}>{format(editDatePickerMonth, 'MMMM yyyy')}</span>
+                      <button type="button" onClick={() => setEditDatePickerMonth(addMonths(editDatePickerMonth, 1))} className={`p-2 rounded-lg ${themeClasses.hover.bg}`}><ChevronRight className="w-5 h-5" /></button>
+                    </div>
+                    <div className="grid grid-cols-7 gap-1 mb-2">
+                      {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+                        <div key={i} className={`text-center text-xs font-medium ${themeClasses.text.muted} py-1`}>{day}</div>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-7 gap-1">
+                      {(() => {
+                        const ms = startOfMonth(editDatePickerMonth);
+                        const me = endOfMonth(editDatePickerMonth);
+                        const cs = startOfWeek(ms);
+                        const ce = endOfWeek(me);
+                        const days = [];
+                        let d = cs;
+                        while (d <= ce) {
+                          const cd = d;
+                          const isCur = cd.getMonth() === editDatePickerMonth.getMonth();
+                          const isSel = editTask.due_date && isSameDay(cd, parseISO(editTask.due_date));
+                          const isTod = isToday(cd);
+                          const ds = format(cd, 'yyyy-MM-dd');
+                          days.push(
+                            <button key={ds} type="button" onClick={() => setEditTask(prev => ({ ...prev, due_date: ds }))}
+                              className={`aspect-square flex items-center justify-center text-sm rounded-lg transition-colors ${isSel ? 'bg-[#043d6b] text-white font-semibold' : isTod ? `${themeClasses.bg.tertiary} ${themeClasses.text.primary} font-semibold` : isCur ? `${themeClasses.text.primary} ${themeClasses.hover.bg}` : `${themeClasses.text.muted} opacity-50`}`}
+                            >{format(cd, 'd')}</button>
+                          );
+                          d = addDays(d, 1);
+                        }
+                        return days;
+                      })()}
+                    </div>
+                    <div className="flex gap-2 mt-4 pt-3 border-t border-dashed" style={{ borderColor: theme === 'light' ? '#e5e7eb' : '#3f3f46' }}>
+                      <button type="button" onClick={() => setEditTask(prev => ({ ...prev, due_date: format(new Date(), 'yyyy-MM-dd') }))}
+                        className={`flex-1 py-2 text-xs font-medium rounded-lg ${editTask.due_date === format(new Date(), 'yyyy-MM-dd') ? 'bg-[#043d6b] text-white' : `${themeClasses.bg.tertiary} ${themeClasses.text.secondary}`}`}>Today</button>
+                      <button type="button" onClick={() => setEditTask(prev => ({ ...prev, due_date: format(addDays(new Date(), 1), 'yyyy-MM-dd') }))}
+                        className={`flex-1 py-2 text-xs font-medium rounded-lg ${editTask.due_date === format(addDays(new Date(), 1), 'yyyy-MM-dd') ? 'bg-[#043d6b] text-white' : `${themeClasses.bg.tertiary} ${themeClasses.text.secondary}`}`}>Tomorrow</button>
+                      <button type="button" onClick={() => setEditTask(prev => ({ ...prev, due_date: format(addDays(new Date(), 7), 'yyyy-MM-dd') }))}
+                        className={`flex-1 py-2 text-xs font-medium rounded-lg ${editTask.due_date === format(addDays(new Date(), 7), 'yyyy-MM-dd') ? 'bg-[#043d6b] text-white' : `${themeClasses.bg.tertiary} ${themeClasses.text.secondary}`}`}>Next Week</button>
+                    </div>
+                    {editTask.due_date && (
+                      <div className="mt-4 pt-3 border-t border-dashed" style={{ borderColor: theme === 'light' ? '#e5e7eb' : '#3f3f46' }}>
+                        <label className={`block text-xs font-medium ${themeClasses.text.muted} mb-2`}>Select Time</label>
+                        <div className="grid grid-cols-4 gap-2">
+                          {['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00'].map((time) => (
+                            <button key={time} type="button" onClick={() => setEditTask(prev => ({ ...prev, due_time: time }))}
+                              className={`py-2 text-xs font-medium rounded-lg transition-colors ${editTask.due_time === time ? 'bg-[#043d6b] text-white' : `${themeClasses.bg.tertiary} ${themeClasses.text.secondary} ${themeClasses.hover.bg}`}`}
+                            >{format(new Date(`2000-01-01T${time}`), 'h:mm a')}</button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Project */}
@@ -2581,6 +2662,382 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* New Project Modal */}
+      {showNewProjectModal && (
+        <div className="fixed inset-0 z-[200] flex items-end justify-center">
+          <div
+            className={`absolute inset-0 ${theme === 'light' ? 'bg-black/50' : 'bg-black/70'}`}
+            onClick={() => setShowNewProjectModal(false)}
+          />
+          <div className={`relative ${themeClasses.bg.modal} rounded-t-3xl w-full max-h-[90vh] overflow-y-auto animate-slide-up pb-safe`}>
+            <div className={`sticky top-0 ${themeClasses.bg.modal} px-4 py-4 border-b border-[#043d6b]/30 flex items-center justify-between z-10`}>
+              <button
+                onClick={() => setShowNewProjectModal(false)}
+                className={`${themeClasses.text.secondary} text-base font-medium ${themeClasses.hover.text}`}
+              >
+                Cancel
+              </button>
+              <h2 className={`text-lg font-semibold ${themeClasses.text.primary}`}>New Project</h2>
+              <div className="w-16"></div>
+            </div>
+            <div className="p-4 space-y-4">
+              <div>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Project Name <span className="text-red-400">*</span></label>
+                <input
+                  type="text"
+                  value={newProjectFormData.name}
+                  onChange={(e) => setNewProjectFormData({ ...newProjectFormData, name: e.target.value })}
+                  placeholder="e.g., Kitchen Renovation"
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${themeClasses.focus.border} focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                />
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Client</label>
+                {!showNpAddClient ? (
+                  <div className="space-y-2">
+                    <select
+                      value={newProjectFormData.clientId}
+                      onChange={(e) => {
+                        const selectedId = e.target.value;
+                        const selectedClient = clients.find(c => c.id === selectedId);
+                        setNewProjectFormData({
+                          ...newProjectFormData,
+                          clientId: selectedId,
+                          client: selectedClient?.name || selectedClient?.email || ''
+                        });
+                      }}
+                      className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${themeClasses.focus.border} focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                    >
+                      <option value="">Select a client (optional)...</option>
+                      {clients.map((c) => (
+                        <option key={c.id} value={c.id}>{c.name || c.email || 'Unnamed Client'}</option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      onClick={() => setShowNpAddClient(true)}
+                      className="flex items-center gap-2 text-[#043d6b] text-sm font-medium"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add New Client
+                    </button>
+                  </div>
+                ) : (
+                  <div className={`space-y-3 p-4 ${themeClasses.bg.input} rounded-xl border ${themeClasses.border.input}`}>
+                    <div className="grid grid-cols-2 gap-3">
+                      <input
+                        type="text"
+                        value={npNewClient.first_name}
+                        onChange={(e) => setNpNewClient({ ...npNewClient, first_name: e.target.value })}
+                        className={`px-3 py-2 ${themeClasses.bg.secondary} border ${themeClasses.border.input} rounded-lg ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} text-sm`}
+                        placeholder="First Name"
+                      />
+                      <input
+                        type="text"
+                        value={npNewClient.last_name}
+                        onChange={(e) => setNpNewClient({ ...npNewClient, last_name: e.target.value })}
+                        className={`px-3 py-2 ${themeClasses.bg.secondary} border ${themeClasses.border.input} rounded-lg ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} text-sm`}
+                        placeholder="Last Name"
+                      />
+                    </div>
+                    <input
+                      type="email"
+                      value={npNewClient.email}
+                      onChange={(e) => setNpNewClient({ ...npNewClient, email: e.target.value })}
+                      className={`w-full px-3 py-2 ${themeClasses.bg.secondary} border ${themeClasses.border.input} rounded-lg ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} text-sm`}
+                      placeholder="Email"
+                    />
+                    <input
+                      type="tel"
+                      value={npNewClient.phone}
+                      onChange={(e) => setNpNewClient({ ...npNewClient, phone: e.target.value })}
+                      className={`w-full px-3 py-2 ${themeClasses.bg.secondary} border ${themeClasses.border.input} rounded-lg ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} text-sm`}
+                      placeholder="Phone"
+                    />
+                    <input
+                      type="text"
+                      value={npNewClient.address}
+                      onChange={(e) => setNpNewClient({ ...npNewClient, address: e.target.value })}
+                      className={`w-full px-3 py-2 ${themeClasses.bg.secondary} border ${themeClasses.border.input} rounded-lg ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} text-sm`}
+                      placeholder="Property Address"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (npNewClient.first_name.trim() && npNewClient.last_name.trim()) {
+                            try {
+                              const fullName = `${npNewClient.first_name.trim()} ${npNewClient.last_name.trim()}`;
+                              await addClient({
+                                name: fullName,
+                                email: npNewClient.email.trim(),
+                                phone: npNewClient.phone.trim(),
+                                address: npNewClient.address.trim(),
+                                company: '',
+                                notes: '',
+                                status: 'active'
+                              } as any);
+                              await fetchClients();
+                              const updatedClients = useClientsStore.getState().clients;
+                              const createdClient = updatedClients.find(c =>
+                                c.name === fullName
+                              );
+                              if (createdClient) {
+                                setNewProjectFormData(prev => ({
+                                  ...prev,
+                                  clientId: createdClient.id,
+                                  client: createdClient.name || `${createdClient.first_name || ''} ${createdClient.last_name || ''}`.trim()
+                                }));
+                              }
+                              setNpNewClient({ first_name: '', last_name: '', email: '', phone: '', address: '' });
+                              setShowNpAddClient(false);
+                            } catch (error) {
+                              console.error('Error adding client:', error);
+                              alert('Failed to create client');
+                            }
+                          }
+                        }}
+                        className="flex-1 py-2 bg-[#043d6b] text-white rounded-lg font-medium text-sm"
+                      >
+                        Create Client
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNpNewClient({ first_name: '', last_name: '', email: '', phone: '', address: '' });
+                          setShowNpAddClient(false);
+                        }}
+                        className={`px-4 py-2 ${themeClasses.bg.tertiary} ${themeClasses.text.secondary} rounded-lg font-medium text-sm`}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Project Address</label>
+                <input
+                  type="text"
+                  value={newProjectFormData.address}
+                  onChange={(e) => setNewProjectFormData({ ...newProjectFormData, address: e.target.value })}
+                  placeholder="e.g., 123 Main St, City, State 12345"
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${themeClasses.focus.border} focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                />
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Description</label>
+                <textarea
+                  value={newProjectFormData.description}
+                  onChange={(e) => setNewProjectFormData({ ...newProjectFormData, description: e.target.value })}
+                  placeholder="Brief description of the project..."
+                  rows={3}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${themeClasses.focus.border} focus:ring-2 focus:ring-[#043d6b]/20 outline-none resize-none`}
+                />
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Budget</label>
+                <div className="relative">
+                  <span className={`absolute left-4 top-1/2 -translate-y-1/2 ${themeClasses.text.muted}`}>$</span>
+                  <input
+                    type="number"
+                    value={newProjectFormData.budget}
+                    onChange={(e) => setNewProjectFormData({ ...newProjectFormData, budget: e.target.value })}
+                    placeholder="0"
+                    className={`w-full pl-8 pr-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${themeClasses.focus.border} focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                  />
+                </div>
+              </div>
+
+              {/* Start Date */}
+              <div>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Start Date</label>
+                <button
+                  type="button"
+                  onClick={() => setNpStartDatePicker(!npStartDatePicker)}
+                  className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} flex items-center justify-between`}
+                >
+                  <div className="flex items-center gap-2">
+                    <CalendarIcon className="w-5 h-5 text-[#043d6b]" />
+                    <span className={newProjectFormData.startDate ? themeClasses.text.primary : themeClasses.text.muted}>
+                      {newProjectFormData.startDate
+                        ? format(parseISO(newProjectFormData.startDate), 'MMM d, yyyy')
+                        : 'Select start date...'}
+                    </span>
+                  </div>
+                  {npStartDatePicker ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                </button>
+                {npStartDatePicker && (
+                  <div className={`mt-2 p-4 ${themeClasses.bg.input} rounded-xl border ${themeClasses.border.input}`}>
+                    <div className="flex items-center justify-between mb-4">
+                      <button type="button" onClick={() => setNpStartMonth(subMonths(npStartMonth, 1))} className={`p-2 rounded-lg ${themeClasses.hover.bg}`}><ChevronLeft className="w-5 h-5" /></button>
+                      <span className={`font-semibold ${themeClasses.text.primary}`}>{format(npStartMonth, 'MMMM yyyy')}</span>
+                      <button type="button" onClick={() => setNpStartMonth(addMonths(npStartMonth, 1))} className={`p-2 rounded-lg ${themeClasses.hover.bg}`}><ChevronRight className="w-5 h-5" /></button>
+                    </div>
+                    <div className="grid grid-cols-7 gap-1 mb-2">
+                      {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+                        <div key={i} className={`text-center text-xs font-medium ${themeClasses.text.muted} py-1`}>{day}</div>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-7 gap-1">
+                      {(() => {
+                        const ms = startOfMonth(npStartMonth);
+                        const me = endOfMonth(npStartMonth);
+                        const cs = startOfWeek(ms);
+                        const ce = endOfWeek(me);
+                        const days = [];
+                        let d = cs;
+                        while (d <= ce) {
+                          const cd = d;
+                          const isCur = cd.getMonth() === npStartMonth.getMonth();
+                          const isSel = newProjectFormData.startDate && isSameDay(cd, parseISO(newProjectFormData.startDate));
+                          const isTod = isToday(cd);
+                          const ds = format(cd, 'yyyy-MM-dd');
+                          days.push(
+                            <button key={ds} type="button" onClick={() => { setNewProjectFormData(prev => ({ ...prev, startDate: ds })); setNpStartDatePicker(false); }}
+                              className={`aspect-square flex items-center justify-center text-sm rounded-lg transition-colors ${isSel ? 'bg-[#043d6b] text-white font-semibold' : isTod ? `${themeClasses.bg.tertiary} ${themeClasses.text.primary} font-semibold` : isCur ? `${themeClasses.text.primary} ${themeClasses.hover.bg}` : `${themeClasses.text.muted} opacity-50`}`}
+                            >{format(cd, 'd')}</button>
+                          );
+                          d = addDays(d, 1);
+                        }
+                        return days;
+                      })()}
+                    </div>
+                    <div className="flex gap-2 mt-4 pt-3 border-t border-dashed" style={{ borderColor: theme === 'light' ? '#e5e7eb' : '#3f3f46' }}>
+                      <button type="button" onClick={() => { setNewProjectFormData(prev => ({ ...prev, startDate: format(new Date(), 'yyyy-MM-dd') })); setNpStartDatePicker(false); }} className={`flex-1 py-2 text-xs font-medium rounded-lg ${themeClasses.bg.tertiary} ${themeClasses.text.secondary}`}>Today</button>
+                      <button type="button" onClick={() => { setNewProjectFormData(prev => ({ ...prev, startDate: format(addDays(new Date(), 7), 'yyyy-MM-dd') })); setNpStartDatePicker(false); }} className={`flex-1 py-2 text-xs font-medium rounded-lg ${themeClasses.bg.tertiary} ${themeClasses.text.secondary}`}>Next Week</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* End Date */}
+              <div>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>End Date</label>
+                <button
+                  type="button"
+                  onClick={() => setNpEndDatePicker(!npEndDatePicker)}
+                  className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} flex items-center justify-between`}
+                >
+                  <div className="flex items-center gap-2">
+                    <CalendarIcon className="w-5 h-5 text-green-500" />
+                    <span className={newProjectFormData.endDate ? themeClasses.text.primary : themeClasses.text.muted}>
+                      {newProjectFormData.endDate
+                        ? format(parseISO(newProjectFormData.endDate), 'MMM d, yyyy')
+                        : 'Select end date...'}
+                    </span>
+                  </div>
+                  {npEndDatePicker ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                </button>
+                {npEndDatePicker && (
+                  <div className={`mt-2 p-4 ${themeClasses.bg.input} rounded-xl border ${themeClasses.border.input}`}>
+                    <div className="flex items-center justify-between mb-4">
+                      <button type="button" onClick={() => setNpEndMonth(subMonths(npEndMonth, 1))} className={`p-2 rounded-lg ${themeClasses.hover.bg}`}><ChevronLeft className="w-5 h-5" /></button>
+                      <span className={`font-semibold ${themeClasses.text.primary}`}>{format(npEndMonth, 'MMMM yyyy')}</span>
+                      <button type="button" onClick={() => setNpEndMonth(addMonths(npEndMonth, 1))} className={`p-2 rounded-lg ${themeClasses.hover.bg}`}><ChevronRight className="w-5 h-5" /></button>
+                    </div>
+                    <div className="grid grid-cols-7 gap-1 mb-2">
+                      {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+                        <div key={i} className={`text-center text-xs font-medium ${themeClasses.text.muted} py-1`}>{day}</div>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-7 gap-1">
+                      {(() => {
+                        const ms = startOfMonth(npEndMonth);
+                        const me = endOfMonth(npEndMonth);
+                        const cs = startOfWeek(ms);
+                        const ce = endOfWeek(me);
+                        const days = [];
+                        let d = cs;
+                        while (d <= ce) {
+                          const cd = d;
+                          const isCur = cd.getMonth() === npEndMonth.getMonth();
+                          const isSel = newProjectFormData.endDate && isSameDay(cd, parseISO(newProjectFormData.endDate));
+                          const isTod = isToday(cd);
+                          const ds = format(cd, 'yyyy-MM-dd');
+                          days.push(
+                            <button key={ds} type="button" onClick={() => { setNewProjectFormData(prev => ({ ...prev, endDate: ds })); setNpEndDatePicker(false); }}
+                              className={`aspect-square flex items-center justify-center text-sm rounded-lg transition-colors ${isSel ? 'bg-green-500 text-white font-semibold' : isTod ? `${themeClasses.bg.tertiary} ${themeClasses.text.primary} font-semibold` : isCur ? `${themeClasses.text.primary} ${themeClasses.hover.bg}` : `${themeClasses.text.muted} opacity-50`}`}
+                            >{format(cd, 'd')}</button>
+                          );
+                          d = addDays(d, 1);
+                        }
+                        return days;
+                      })()}
+                    </div>
+                    <div className="flex gap-2 mt-4 pt-3 border-t border-dashed" style={{ borderColor: theme === 'light' ? '#e5e7eb' : '#3f3f46' }}>
+                      <button type="button" onClick={() => { setNewProjectFormData(prev => ({ ...prev, endDate: format(addDays(new Date(), 30), 'yyyy-MM-dd') })); setNpEndDatePicker(false); }} className={`flex-1 py-2 text-xs font-medium rounded-lg ${themeClasses.bg.tertiary} ${themeClasses.text.secondary}`}>+30 Days</button>
+                      <button type="button" onClick={() => { setNewProjectFormData(prev => ({ ...prev, endDate: format(addDays(new Date(), 60), 'yyyy-MM-dd') })); setNpEndDatePicker(false); }} className={`flex-1 py-2 text-xs font-medium rounded-lg ${themeClasses.bg.tertiary} ${themeClasses.text.secondary}`}>+60 Days</button>
+                      <button type="button" onClick={() => { setNewProjectFormData(prev => ({ ...prev, endDate: format(addDays(new Date(), 90), 'yyyy-MM-dd') })); setNpEndDatePicker(false); }} className={`flex-1 py-2 text-xs font-medium rounded-lg ${themeClasses.bg.tertiary} ${themeClasses.text.secondary}`}>+90 Days</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Status */}
+              <div>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Status</label>
+                <select
+                  value={newProjectFormData.status}
+                  onChange={(e) => setNewProjectFormData({ ...newProjectFormData, status: e.target.value as 'active' | 'completed' | 'on-hold' })}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${themeClasses.focus.border} focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                >
+                  <option value="active">Active</option>
+                  <option value="on-hold">On Hold</option>
+                  <option value="completed">Completed</option>
+                </select>
+              </div>
+
+              {/* Save Button */}
+              <div className="pt-6 pb-6">
+                <button
+                  onClick={async () => {
+                    if (!newProjectFormData.name.trim() || isCreatingProject) return;
+                    setIsCreatingProject(true);
+                    try {
+                      await addProject({
+                        name: newProjectFormData.name.trim(),
+                        clientId: newProjectFormData.clientId || undefined,
+                        client: newProjectFormData.client.trim() || undefined,
+                        address: newProjectFormData.address.trim() || undefined,
+                        description: newProjectFormData.description.trim() || undefined,
+                        budget: newProjectFormData.budget ? parseFloat(newProjectFormData.budget) : 0,
+                        startDate: newProjectFormData.startDate || undefined,
+                        endDate: newProjectFormData.endDate || undefined,
+                        status: newProjectFormData.status
+                      });
+                      await fetchProjects();
+                      // Auto-select the newly created project in the task form
+                      const updatedProjects = useProjectStore.getState().projects;
+                      const created = updatedProjects.find(p => p.name === newProjectFormData.name.trim());
+                      if (created) {
+                        setNewTask(prev => ({ ...prev, project_id: created.id }));
+                      }
+                      setNewProjectFormData({ name: '', clientId: '', client: '', address: '', description: '', budget: '', startDate: '', endDate: '', status: 'active' });
+                      setShowNewProjectModal(false);
+                    } catch (error) {
+                      console.error('Error creating project:', error);
+                      alert('Failed to create project');
+                    } finally {
+                      setIsCreatingProject(false);
+                    }
+                  }}
+                  disabled={!newProjectFormData.name.trim() || isCreatingProject}
+                  className="w-full py-4 text-base font-medium rounded-2xl text-white bg-[#043d6b] hover:bg-[#035291] disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2"
+                >
+                  <Plus className="w-5 h-5" />
+                  {isCreatingProject ? 'Saving...' : 'Add Project'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

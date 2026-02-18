@@ -24,7 +24,7 @@ import { supabase } from '../lib/supabase';
 import AIChatPopup from '../components/ai/AIChatPopup';
 import FloatingAIChatButton from '../components/ai/FloatingAIChatButton';
 import AddChoiceModal from '../components/common/AddChoiceModal';
-import SendEstimateModal from '../components/estimates/SendEstimateModal';
+import SendEmailModal from '../components/email/SendEmailModal';
 import EstimateRealtimeTest from '../components/estimates/EstimateRealtimeTest';
 import { useTheme, getThemeClasses } from '../contexts/ThemeContext';
 import { useData } from '../contexts/DataContext';
@@ -536,17 +536,16 @@ const EstimatesHub: React.FC<EstimatesHubProps> = ({ embedded = false, searchQue
         </div>
       )}
 
-      {/* Send Estimate Modal */}
+      {/* Send Email Modal - full email flow with estimate pre-attached */}
       {showSendEmail && selectedEstimate && (
-        <SendEstimateModal
+        <SendEmailModal
           isOpen={showSendEmail}
           onClose={() => setShowSendEmail(false)}
-          estimate={selectedEstimate}
-          companyInfo={{
-            name: profile?.company_name || profile?.full_name || 'Your Company',
-            email: profile?.email || '',
-            phone: profile?.phone || '',
-            address: profile?.business_address || ''
+          preAttachedEstimate={{
+            id: selectedEstimate.id,
+            title: selectedEstimate.title,
+            total: selectedEstimate.total,
+            clientName: selectedEstimate.clientName
           }}
         />
       )}

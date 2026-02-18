@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Geolocation } from '@capacitor/geolocation';
 import {
   Home,
   DollarSign,
@@ -226,22 +227,25 @@ const Dashboard: React.FC = () => {
     fetchReceipts();
     fetchEvents();
 
-    // Get user's current location
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
+    // Get user's current location using native Capacitor plugin
+    const getLocation = async () => {
+      try {
+        const permStatus = await Geolocation.requestPermissions();
+        if (permStatus.location === 'granted') {
+          const position = await Geolocation.getCurrentPosition();
           setUserLocation({
             lat: position.coords.latitude,
             lng: position.coords.longitude
           });
-        },
-        (error) => {
-          console.error('Error getting location:', error);
-          // Default to a fallback location if geolocation fails
+        } else {
           setUserLocation({ lat: 33.8361, lng: -81.1637 }); // Default SC location
         }
-      );
-    }
+      } catch (error) {
+        console.error('Error getting location:', error);
+        setUserLocation({ lat: 33.8361, lng: -81.1637 }); // Default SC location
+      }
+    };
+    getLocation();
 
     // Fetch tasks from tasks table
     const fetchTasks = async () => {
@@ -299,41 +303,40 @@ const Dashboard: React.FC = () => {
     calculateFinancialSummary();
   }, [payments, receipts]);
 
-  // Geocode task addresses
+  // Geocode next task address using US Census Geocoder (exact street-level US data)
   useEffect(() => {
-    const geocodeAddresses = async () => {
-      const tasksWithAddresses = todayTasks.filter(t => t.projects?.address);
-      if (tasksWithAddresses.length === 0) return;
+    const geocodeAddress = async () => {
+      const nextTask = tasks[0];
+      if (!nextTask?.projects?.address) return;
 
-      const locations: {lat: number, lng: number, name: string, address: string}[] = [];
+      const addr = nextTask.projects.address;
+      let result: {lat: number, lng: number} | null = null;
 
-      for (const task of tasksWithAddresses) {
-        try {
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(task.projects.address)}&limit=1`,
-            { headers: { 'User-Agent': 'ContractorAI-App' } }
-          );
-          const data = await response.json();
-          if (data && data[0]) {
-            locations.push({
-              lat: parseFloat(data[0].lat),
-              lng: parseFloat(data[0].lon),
-              name: task.projects.name || task.title,
-              address: task.projects.address
-            });
-          }
-        } catch (error) {
-          console.error('Geocoding error:', error);
+      // US Census Geocoder via CORS proxy - exact street-level data for all US addresses
+      try {
+        const censusUrl = `https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?address=${encodeURIComponent(addr)}&benchmark=Public_AR_Current&format=json`;
+        const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(censusUrl)}`);
+        const data = await res.json();
+        const match = data?.result?.addressMatches?.[0];
+        if (match?.coordinates) {
+          result = { lat: match.coordinates.y, lng: match.coordinates.x };
         }
-      }
+      } catch {}
 
-      setTaskLocations(locations);
+      if (result) {
+        setTaskLocations([{
+          lat: result.lat,
+          lng: result.lng,
+          name: nextTask.projects.name || nextTask.title,
+          address: addr
+        }]);
+      }
     };
 
-    if (todayTasks.length > 0) {
-      geocodeAddresses();
+    if (tasks.length > 0) {
+      geocodeAddress();
     }
-  }, [todayTasks]);
+  }, [tasks]);
 
   // Fetch approved and declined estimates for notifications
   useEffect(() => {
@@ -589,114 +592,78 @@ const Dashboard: React.FC = () => {
 
       {/* Full-Bleed Map Section - Only shows after completing at least 1 setup task */}
       {completedTasksCount >= 1 && (
-      <div className="absolute top-0 left-0 right-0 z-0" style={{ height: '72vh', minHeight: '520px', maxHeight: '650px' }}>
+      <div className="absolute top-0 left-0 right-0 z-0" style={{ height: '80vh', minHeight: '580px', maxHeight: '750px' }}>
         {/* Map Container */}
         <div className="h-full w-full">
-          {taskLocations.length > 0 ? (
-            <MapContainer
-              center={[taskLocations[0].lat, taskLocations[0].lng]}
-              zoom={12}
-              style={{ height: '100%', width: '100%' }}
-              zoomControl={false}
-              attributionControl={false}
-              dragging={false}
-              touchZoom={true}
-              scrollWheelZoom={true}
-              doubleClickZoom={true}
-            >
-              <TileLayer
-                url={theme === 'light'
-                  ? "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-                  : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-                }
-              />
-              {/* Business location home marker */}
-              {businessLocation && (
-                <Marker
-                  position={[businessLocation.lat, businessLocation.lng]}
-                  icon={createHomeMarkerIcon()}
-                >
-                  <Popup>
-                    <div className="text-center p-1">
-                      <p className="font-bold text-gray-900 text-base">Home Base</p>
-                      <p className="text-gray-600 text-sm mt-1">{businessLocation.address}</p>
-                    </div>
-                  </Popup>
-                </Marker>
-              )}
-              {taskLocations.map((location, index) => (
-                <Marker
-                  key={index}
-                  position={[location.lat, location.lng]}
-                  icon={createMarkerIcon(location.name)}
-                >
-                  <Popup>
-                    <div className="text-center p-1">
-                      <p className="font-bold text-gray-900 text-base">{location.name}</p>
-                      <p className="text-gray-600 text-sm mt-1">{location.address}</p>
-                    </div>
-                  </Popup>
-                </Marker>
-              ))}
-            </MapContainer>
-          ) : businessLocation ? (
-            <MapContainer
-              center={[businessLocation.lat, businessLocation.lng]}
-              zoom={13}
-              style={{ height: '100%', width: '100%' }}
-              zoomControl={false}
-              attributionControl={false}
-              dragging={false}
-              touchZoom={true}
-              scrollWheelZoom={true}
-              doubleClickZoom={true}
-            >
-              <TileLayer
-                url={theme === 'light'
-                  ? "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-                  : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-                }
-              />
-              {/* Business location home marker */}
-              <Marker
-                position={[businessLocation.lat, businessLocation.lng]}
-                icon={createHomeMarkerIcon()}
-              >
-                <Popup>
-                  <div className="text-center p-1">
-                    <p className="font-bold text-gray-900 text-base">Home Base</p>
-                    <p className="text-gray-600 text-sm mt-1">{businessLocation.address}</p>
+          {(() => {
+            const mapCenter = taskLocations.length > 0
+              ? [taskLocations[0].lat, taskLocations[0].lng] as [number, number]
+              : businessLocation
+                ? [businessLocation.lat, businessLocation.lng] as [number, number]
+                : userLocation
+                  ? [userLocation.lat, userLocation.lng] as [number, number]
+                  : null;
+
+            if (!mapCenter) {
+              return (
+                <div className={`flex items-center justify-center h-full ${theme === 'light' ? 'bg-gray-50' : 'bg-zinc-800'}`}>
+                  <div className="text-center">
+                    <Navigation className={`w-10 h-10 ${themeClasses.text.muted} mx-auto mb-3 animate-pulse`} />
+                    <p className={`text-sm ${themeClasses.text.muted}`}>Loading map...</p>
                   </div>
-                </Popup>
-              </Marker>
-            </MapContainer>
-          ) : userLocation ? (
-            <MapContainer
-              center={[userLocation.lat, userLocation.lng]}
-              zoom={11}
-              style={{ height: '100%', width: '100%' }}
-              zoomControl={false}
-              attributionControl={false}
-              dragging={false}
-              touchZoom={true}
-              scrollWheelZoom={true}
-              doubleClickZoom={true}
-            >
-              <TileLayer
-                url={theme === 'light'
-                  ? "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-                  : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-                }
-              />
-            </MapContainer>
-          ) : (
-            <div className={`flex items-center justify-center h-full ${theme === 'light' ? 'bg-gray-50' : 'bg-zinc-800'}`}>
-              <div className="text-center">
-                <Navigation className={`w-10 h-10 ${themeClasses.text.muted} mx-auto mb-3 animate-pulse`} />
-                <p className={`text-sm ${themeClasses.text.muted}`}>Loading map...</p>
-              </div>
-            </div>
-          )}
+                </div>
+              );
+            }
+
+            return (
+              <MapContainer
+                key={`map-${taskLocations.length}-${mapCenter[0]}-${mapCenter[1]}`}
+                center={mapCenter}
+                zoom={taskLocations.length > 0 ? 13 : 12}
+                style={{ height: '100%', width: '100%' }}
+                zoomControl={false}
+                attributionControl={false}
+                dragging={false}
+                touchZoom={true}
+                scrollWheelZoom={true}
+                doubleClickZoom={true}
+              >
+                <TileLayer
+                  url={theme === 'light'
+                    ? "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+                    : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                  }
+                />
+                {businessLocation && (
+                  <Marker
+                    position={[businessLocation.lat, businessLocation.lng]}
+                    icon={createHomeMarkerIcon()}
+                  >
+                    <Popup>
+                      <div className="text-center p-1">
+                        <p className="font-bold text-gray-900 text-base">Home Base</p>
+                        <p className="text-gray-600 text-sm mt-1">{businessLocation.address}</p>
+                      </div>
+                    </Popup>
+                  </Marker>
+                )}
+                {taskLocations.map((location, index) => (
+                  <Marker
+                    key={index}
+                    position={[location.lat, location.lng]}
+                    icon={createMarkerIcon(location.name)}
+                  >
+                    <Popup>
+                      <div className="text-center p-1">
+                        <p className="font-bold text-gray-900 text-base">{location.name}</p>
+                        <p className="text-gray-600 text-sm mt-1">{location.address}</p>
+                      </div>
+                    </Popup>
+                  </Marker>
+                ))}
+              </MapContainer>
+            );
+          })()}
         </div>
 
         {/* Bottom Fade Gradient */}
@@ -721,12 +688,12 @@ const Dashboard: React.FC = () => {
         <div style={{ height: '100px' }} />
       )}
 
-      {/* Today's Tasks Section - Transparent so map shows behind */}
+      {/* Next Task Section - Transparent so map shows behind */}
       <div className="relative z-20">
         <div className="px-4 pt-4">
           {/* Section Header with View All */}
           <div className="flex items-center justify-between mb-4">
-            <h2 className={`text-xl font-bold ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>Today's Tasks</h2>
+            <h2 className={`text-xl font-bold ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>Next Task</h2>
             <button
               onClick={() => navigate('/search', { state: { initialCategory: 'tasks' } })}
               className={`flex items-center gap-1 px-3 py-1.5 rounded-lg ${theme === 'light' ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'} text-sm font-medium active:scale-95 transition-all`}
@@ -736,68 +703,54 @@ const Dashboard: React.FC = () => {
             </button>
           </div>
 
-          <div
-            ref={taskCarouselRef}
-            className="flex gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-4"
-            style={{ scrollPaddingLeft: '16px' }}
-          >
-            {todayTasks.length === 0 ? (
-              <div
-                className={`flex-shrink-0 snap-start ${theme === 'light' ? 'bg-stone-100 border-stone-200' : 'bg-zinc-800/95 border-zinc-700'} border rounded-2xl`}
-                style={{ width: 'calc(100vw - 80px)', minWidth: '280px', maxWidth: '340px' }}
+          {(() => {
+            const nextTask = tasks[0];
+            if (!nextTask) {
+              return (
+                <div className={`${theme === 'light' ? 'bg-stone-100 border-stone-200' : 'bg-zinc-800/95 border-zinc-700'} border rounded-2xl`}>
+                  <div className="p-6 flex items-center justify-center" style={{ minHeight: '120px' }}>
+                    <p className={`text-base font-medium ${theme === 'light' ? 'text-gray-500' : 'text-zinc-400'}`}>No upcoming tasks</p>
+                  </div>
+                </div>
+              );
+            }
+            return (
+              <button
+                onClick={() => navigate('/search', { state: { initialCategory: 'tasks' } })}
+                className={`w-full ${theme === 'light' ? 'bg-white border border-gray-200' : 'bg-zinc-800/95 border border-zinc-700'} rounded-2xl text-left overflow-hidden active:scale-[0.98] transition-all`}
+                style={{ boxShadow: theme === 'light' ? '0 4px 20px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.08)' : '0 4px 20px rgba(0,0,0,0.4)' }}
               >
-                <div className="p-6 flex items-center justify-center" style={{ minHeight: '120px' }}>
-                  <p className={`text-base font-medium ${theme === 'light' ? 'text-gray-500' : 'text-zinc-400'}`}>No visits scheduled today</p>
-                </div>
-              </div>
-            ) : (
-              todayTasks.map((task, index) => (
-                <div
-                  key={task.id}
-                  className={`flex-shrink-0 snap-start ${theme === 'light' ? 'bg-white border border-gray-200 shadow-sm' : 'bg-zinc-800/95 border border-zinc-700'} rounded-2xl text-left overflow-hidden`}
-                  style={{ width: 'calc(100vw - 80px)', minWidth: '280px', maxWidth: '340px' }}
-                >
-                  <button
-                    onClick={() => navigate('/search', { state: { initialCategory: 'tasks' } })}
-                    className="w-full p-4 flex items-start gap-3 active:scale-[0.98] transition-all"
-                  >
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${theme === 'light' ? 'bg-[#043d6b]/20' : 'bg-[#043d6b]/20'}`}>
-                      <ClipboardList className="w-6 h-6 text-[#043d6b]" />
-                    </div>
-                    <div className="flex-1 min-w-0 text-left">
-                      <p className={`text-lg font-bold ${themeClasses.text.primary} line-clamp-1`}>{task.title}</p>
-                      <p className={`text-sm ${theme === 'light' ? 'text-gray-500' : 'text-zinc-400'} mt-0.5`}>
-                        {task.projects?.name || 'No project assigned'}
+                <div className="p-4 flex items-start gap-3">
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 bg-[#043d6b]/20`}>
+                    <ClipboardList className="w-6 h-6 text-[#043d6b]" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-lg font-bold ${themeClasses.text.primary} line-clamp-1`}>{nextTask.title}</p>
+                    {nextTask.due_date && (
+                      <p className={`text-sm ${theme === 'light' ? 'text-[#043d6b]' : 'text-[#5b9bd5]'} font-medium mt-0.5`}>
+                        {new Date(nextTask.due_date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                        {nextTask.due_time && ` at ${new Date('2000-01-01T' + nextTask.due_time).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`}
                       </p>
-                    </div>
-                  </button>
-                  {task.projects?.address && (
-                    <a
-                      href={`https://maps.apple.com/?q=${encodeURIComponent(task.projects.address)}`}
-                      onClick={(e) => e.stopPropagation()}
-                      className={`flex items-center gap-1.5 px-4 pb-4 -mt-2 ${theme === 'light' ? 'text-[#043d6b] hover:text-[#035291]' : 'text-[#043d6b] hover:text-[#035291]'} text-sm`}
-                    >
-                      <MapPin className="w-4 h-4 flex-shrink-0" />
-                      <span className="truncate underline">{task.projects.address}</span>
-                    </a>
-                  )}
+                    )}
+                    <p className={`text-sm ${theme === 'light' ? 'text-gray-500' : 'text-zinc-400'} mt-0.5`}>
+                      {nextTask.projects?.name || 'No project assigned'}
+                    </p>
+                  </div>
                 </div>
-              ))
-            )}
-
-            {/* Add Task Card - Partially Visible */}
-            <button
-              onClick={() => navigate('/search', { state: { initialCategory: 'tasks' } })}
-              className={`flex-shrink-0 snap-start border border-dashed ${theme === 'light' ? 'border-green-400 bg-green-50/50 hover:bg-green-100/50' : 'border-green-600 bg-green-900/20 hover:bg-green-900/30'} rounded-2xl flex flex-col items-center justify-center gap-2 active:scale-[0.98] transition-all`}
-              style={{ width: '100px', minHeight: '100px' }}
-            >
-              <Plus className={`w-8 h-8 ${theme === 'light' ? 'text-green-600' : 'text-green-500'}`} />
-            </button>
-          </div>
+                {nextTask.projects?.address && (
+                  <div className={`flex items-center gap-1.5 px-4 pb-4 -mt-2 text-sm ${theme === 'light' ? 'text-[#043d6b]' : 'text-[#043d6b]'}`}>
+                    <MapPin className="w-4 h-4 flex-shrink-0" />
+                    <span className="truncate underline">{nextTask.projects.address}</span>
+                  </div>
+                )}
+              </button>
+            );
+          })()}
         </div>
       </div>
 
-      {/* Content below tasks - Solid background */}
+      {/* Content below tasks - Solid background with gap to show map */}
+      <div className="relative z-20 h-6"></div>
       <div className={`relative z-20 ${themeClasses.bg.primary}`}>
         {/* Approvals & Denials Dropdown */}
         {(approvedEstimates.length > 0 || declinedEstimates.length > 0) && (

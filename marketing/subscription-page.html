@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OnSite Pro - Subscription Page</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f8f8f8;
+      color: #111;
+      min-height: 100vh;
+      padding: 48px 16px;
+    }
+
+    .container {
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      font-weight: 800;
+      color: #111;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      font-size: 16px;
+      color: #666;
+    }
+
+    .features-card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      padding: 28px 24px;
+      margin-bottom: 24px;
+    }
+
+    .features-card h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #111;
+      margin-bottom: 20px;
+    }
+
+    .feature-list {
+      list-style: none;
+    }
+
+    .feature-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 10px 0;
+    }
+
+    .feature-list li + li {
+      border-top: 1px solid #f0f0f0;
+    }
+
+    .check-icon {
+      width: 22px;
+      height: 22px;
+      color: #22c55e;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .feature-list span {
+      font-size: 16px;
+      color: #333;
+      line-height: 1.4;
+    }
+
+    .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 16px 24px;
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-primary:hover { background: #1d4ed8; }
+
+    .btn-secondary {
+      width: 100%;
+      padding: 14px 24px;
+      background: #e5e7eb;
+      color: #374151;
+      border: none;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-secondary:hover { background: #d1d5db; }
+
+    .trial-note {
+      text-align: center;
+      font-size: 14px;
+      color: #888;
+      margin-top: 8px;
+      margin-bottom: 24px;
+    }
+
+    .details-card {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .details-card h3 {
+      font-size: 17px;
+      font-weight: 700;
+      color: #111;
+      margin-bottom: 14px;
+    }
+
+    .details-card .detail-row {
+      margin-bottom: 12px;
+      font-size: 14px;
+      color: #444;
+      line-height: 1.5;
+    }
+
+    .details-card .detail-row strong {
+      color: #111;
+    }
+
+    .details-card ul {
+      margin: 6px 0 0 20px;
+    }
+
+    .details-card ul li {
+      margin-bottom: 4px;
+    }
+
+    .legal {
+      text-align: center;
+      font-size: 13px;
+      color: #888;
+      margin-top: 20px;
+      line-height: 1.6;
+    }
+
+    .legal a {
+      color: #2563eb;
+      text-decoration: underline;
+      font-weight: 600;
+    }
+
+    .support {
+      text-align: center;
+      margin-top: 24px;
+    }
+
+    .support p {
+      font-size: 14px;
+      color: #888;
+      margin-bottom: 4px;
+    }
+
+    .support a {
+      color: #2563eb;
+      font-weight: 600;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">
+      <h1>Subscribe to OnSite Pro</h1>
+      <p>Unlock all premium features for your contracting business</p>
+    </div>
+
+    <div class="features-card">
+      <h2>What's Included:</h2>
+      <ul class="feature-list">
+        <li>
+          <svg class="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+          <span>Unlimited job estimates & invoices</span>
+        </li>
+        <li>
+          <svg class="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+          <span>Real-time profit tracking</span>
+        </li>
+        <li>
+          <svg class="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+          <span>Crew scheduling & management</span>
+        </li>
+        <li>
+          <svg class="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+          <span>Professional roofing reports</span>
+        </li>
+        <li>
+          <svg class="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+          <span>Mobile app (iOS & Android)</span>
+        </li>
+        <li>
+          <svg class="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+          <span>Customer database & CRM</span>
+        </li>
+        <li>
+          <svg class="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+          <span>Payment tracking</span>
+        </li>
+        <li>
+          <svg class="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+          <span>Priority support</span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="actions">
+      <button class="btn-primary">View Subscription Plans</button>
+      <button class="btn-secondary">Restore Previous Purchases</button>
+    </div>
+
+    <p class="trial-note">All plans include a 7-day free trial</p>
+
+    <div class="details-card">
+      <h3>Auto-Renewable Subscription</h3>
+      <div class="detail-row">
+        <strong>Subscription Name:</strong> OnSite Pro
+      </div>
+      <div class="detail-row">
+        <strong>Pricing & Duration:</strong>
+        <ul>
+          <li>Monthly Plan: $34.99 per month</li>
+          <li>Quarterly Plan: $84.99 every 3 months</li>
+          <li>Annual Plan: $349.99 per year</li>
+        </ul>
+      </div>
+      <div class="detail-row">
+        <strong>Free Trial:</strong> 7 days
+      </div>
+      <div class="detail-row">
+        <strong>Auto-Renewal:</strong> Your subscription automatically renews unless cancelled at least 24 hours before the end of the current period. You will be charged for renewal within 24 hours prior to the end of the current period.
+      </div>
+      <div class="detail-row">
+        <strong>Payment:</strong> Payment will be charged to your Apple ID at confirmation of purchase.
+      </div>
+      <div class="detail-row">
+        <strong>Manage Subscription:</strong> You can manage and cancel subscriptions in your Apple ID Account Settings after purchase.
+      </div>
+    </div>
+
+    <div class="legal">
+      By subscribing, you agree to our
+      <a href="#">Terms of Service (EULA)</a>
+      and
+      <a href="#">Privacy Policy</a>
+    </div>
+
+    <div class="support">
+      <p>Need help?</p>
+      <a href="mailto:admin@elevatedsystems.info">Contact Support</a>
+    </div>
+  </div>
+
+</body>
+</html>

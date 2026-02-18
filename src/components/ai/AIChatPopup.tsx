@@ -232,6 +232,7 @@ const AIChatPopup: React.FC<AIChatPopupProps> = ({ isOpen, onClose, mode, onEsti
         content: welcomeMessage,
         timestamp: new Date()
       }]);
+      setCurrentEstimate([]);
       setIsMinimized(false);
       setTimeout(() => inputRef.current?.focus(), 300);
     }
@@ -555,9 +556,57 @@ const AIChatPopup: React.FC<AIChatPopupProps> = ({ isOpen, onClose, mode, onEsti
       category: item.type
     }));
 
+    // Generate a descriptive title from the estimate items
+    const itemDescriptions = currentEstimate.map(item => item.name.toLowerCase());
+    const allText = itemDescriptions.join(' ');
+    const projectKeywords: [string, string][] = [
+      ['deck', 'Deck'],
+      ['concrete', 'Concrete'],
+      ['roof', 'Roofing'],
+      ['siding', 'Siding'],
+      ['fence', 'Fencing'],
+      ['fencing', 'Fencing'],
+      ['drywall', 'Drywall'],
+      ['paint', 'Painting'],
+      ['flooring', 'Flooring'],
+      ['plumbing', 'Plumbing'],
+      ['electrical', 'Electrical'],
+      ['hvac', 'HVAC'],
+      ['foundation', 'Foundation'],
+      ['framing', 'Framing'],
+      ['demolition', 'Demolition'],
+      ['demo', 'Demolition'],
+      ['remodel', 'Remodel'],
+      ['renovation', 'Renovation'],
+      ['addition', 'Addition'],
+      ['bathroom', 'Bathroom'],
+      ['kitchen', 'Kitchen'],
+      ['garage', 'Garage'],
+      ['patio', 'Patio'],
+      ['dumpster', 'Demolition'],
+      ['rebar', 'Concrete'],
+      ['shingle', 'Roofing'],
+      ['tile', 'Tile'],
+      ['carpet', 'Carpet'],
+      ['insulation', 'Insulation'],
+      ['gutter', 'Gutters'],
+      ['window', 'Windows'],
+      ['door', 'Doors'],
+      ['landscaping', 'Landscaping'],
+      ['grading', 'Grading'],
+      ['excavation', 'Excavation'],
+    ];
+    const detected = new Set<string>();
+    for (const [keyword, label] of projectKeywords) {
+      if (allText.includes(keyword)) detected.add(label);
+    }
+    const estimateTitle = detected.size > 0
+      ? `${[...detected].slice(0, 3).join(' & ')} Estimate`
+      : (currentEstimate[0]?.name ? `${currentEstimate[0].name} Estimate` : 'Estimate');
+
     const newEstimate = {
       id: crypto.randomUUID(),
-      title: 'AI Generated Estimate',
+      title: estimateTitle,
       items,
       subtotal: totalEstimate,
       taxRate: 0,

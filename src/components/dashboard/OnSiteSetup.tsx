@@ -9,7 +9,6 @@ import {
   Users,
   ChevronRight,
   ChevronDown,
-  Rocket,
   Megaphone,
   ClipboardList,
   UserPlus,
@@ -275,11 +274,6 @@ export const OnSiteSetup: React.FC<OnSiteSetupProps> = ({ profile, userId, onSho
       ) : (
         <Circle className={`w-5 h-5 ${themeClasses.text.muted} flex-shrink-0`} />
       )}
-      <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
-        item.isComplete ? 'bg-green-500/20' : 'bg-[#043d6b]/20'
-      }`}>
-        <item.icon className={`w-4 h-4 ${item.isComplete ? 'text-green-500' : 'text-[#043d6b]'}`} />
-      </div>
       <div className="flex-1 text-left min-w-0">
         <p className={`text-sm font-medium ${item.isComplete ? 'text-green-600 dark:text-green-400' : themeClasses.text.primary} truncate`}>
           {item.title}

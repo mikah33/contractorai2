@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import OnboardingModal from './components/onboarding/OnboardingModal';
 import PrePaywallOnboarding from './components/onboarding/PrePaywallOnboarding';
 import { useOnboardingStore } from './stores/onboardingStore';
@@ -116,6 +116,12 @@ function App() {
 
   // Handle deep links on iOS/Android
   useDeepLinks();
+
+  // Scroll to top on every route change
+  const location = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
   // Check pre-paywall onboarding status when user is authenticated
   useEffect(() => {

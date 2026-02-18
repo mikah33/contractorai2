@@ -32,10 +32,10 @@ const ChatMessageContent: React.FC<ChatMessageContentProps> = ({ content, isUser
       if (currentList) {
         if (currentList.type === 'bullet') {
           elements.push(
-            <ul key={`list-${elements.length}`} className="space-y-1 my-2 pl-1">
+            <ul key={`list-${elements.length}`} className="space-y-0.5 my-1 pl-0">
               {currentList.items.map((item, idx) => (
                 <li key={idx} className="flex items-baseline gap-2 text-left">
-                  <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5 ${isUser ? 'bg-white/70' : 'bg-blue-500'}`} />
+                  <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5 ${isUser ? 'bg-white/70' : 'bg-gray-800'}`} />
                   <span className="flex-1 break-words">{parseInlineFormatting(item)}</span>
                 </li>
               ))}
@@ -43,7 +43,7 @@ const ChatMessageContent: React.FC<ChatMessageContentProps> = ({ content, isUser
           );
         } else {
           elements.push(
-            <ol key={`list-${elements.length}`} className="space-y-1 my-2 pl-1">
+            <ol key={`list-${elements.length}`} className="space-y-0.5 my-1 pl-0">
               {currentList.items.map((item, idx) => (
                 <li key={idx} className="flex items-baseline gap-2 text-left">
                   <span className={`font-semibold flex-shrink-0 min-w-[1.5rem] ${isUser ? 'text-white/80' : 'text-blue-500'}`}>
@@ -62,6 +62,21 @@ const ChatMessageContent: React.FC<ChatMessageContentProps> = ({ content, isUser
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
       const trimmedLine = line.trim();
+
+      // Strip markdown headings (##, ###, etc.) - just show the text
+      const headingMatch = trimmedLine.match(/^#{1,6}\s*(.*)$/);
+      if (headingMatch) {
+        flushList();
+        const headingText = headingMatch[1].trim();
+        if (headingText) {
+          elements.push(
+            <p key={`h-${i}`} className="font-bold leading-relaxed text-left break-words mt-1">
+              {parseInlineFormatting(headingText)}
+            </p>
+          );
+        }
+        continue;
+      }
 
       // Check for bullet points (-, •, *)
       const bulletMatch = trimmedLine.match(/^[-•*]\s+(.+)$/);
@@ -90,7 +105,7 @@ const ChatMessageContent: React.FC<ChatMessageContentProps> = ({ content, isUser
 
       // Empty line creates spacing
       if (trimmedLine === '') {
-        elements.push(<div key={`space-${i}`} className="h-2" />);
+        elements.push(<div key={`space-${i}`} className="h-1" />);
         continue;
       }
 
@@ -145,7 +160,7 @@ const ChatMessageContent: React.FC<ChatMessageContentProps> = ({ content, isUser
         const matchedText = firstMatch.match[1];
         if (firstMatch.type === 'bold') {
           parts.push(
-            <strong key={`bold-${keyCounter++}`} className={`font-semibold ${isUser ? 'text-white' : 'text-white'}`}>
+            <strong key={`bold-${keyCounter++}`} className="font-semibold">
               {matchedText}
             </strong>
           );

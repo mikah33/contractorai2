@@ -18,8 +18,29 @@
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
 	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>OAuth Callback</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>contractorai</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>Google Sign-In</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.244912967505-dca35jhgoirkgfc5sfkm2kq7eha57s5u</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>GIDClientID</key>
+	<string>244912967505-dca35jhgoirkgfc5sfkm2kq7eha57s5u.apps.googleusercontent.com</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCalendarsUsageDescription</key>
@@ -28,8 +49,6 @@
 	<string>OnSite needs permission to add appointments and job schedules to your calendar.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>OnSite needs access to your camera to capture receipts, job site photos, and 3D room scans for accurate estimates.</string>
-	<key>NSWorldSensingUsageDescription</key>
-	<string>OnSite uses world sensing to create 3D scans of rooms and job sites for accurate measurements and estimates.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>OnSite uses your location to help you track job sites and calculate travel distances for estimates.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
@@ -124,6 +143,8 @@
 	<false/>
 	<key>NSPrivacyTrackingDomains</key>
 	<array/>
+	<key>NSWorldSensingUsageDescription</key>
+	<string>OnSite uses world sensing to create 3D scans of rooms and job sites for accurate measurements and estimates.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>
@@ -151,26 +172,5 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
-	<key>CFBundleURLTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>contractorai</string>
-			</array>
-			<key>CFBundleURLName</key>
-			<string>OAuth Callback</string>
-		</dict>
-		<dict>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>com.googleusercontent.apps.244912967505-dca35jhgoirkgfc5sfkm2kq7eha57s5u</string>
-			</array>
-			<key>CFBundleURLName</key>
-			<string>Google Sign-In</string>
-		</dict>
-	</array>
-	<key>GIDClientID</key>
-	<string>244912967505-dca35jhgoirkgfc5sfkm2kq7eha57s5u.apps.googleusercontent.com</string>
 </dict>
 </plist>

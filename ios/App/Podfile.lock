@@ -8,10 +8,14 @@ PODS:
   - CapacitorCommunityAppleSignIn (7.1.0):
     - Capacitor
   - CapacitorCordova (7.4.4)
+  - CapacitorGeolocation (8.1.0):
+    - Capacitor
+    - IONGeolocationLib (= 2.0.0)
   - CapacitorLocalNotifications (7.0.3):
     - Capacitor
   - CapacitorPushNotifications (7.0.3):
     - Capacitor
+  - IONGeolocationLib (2.0.0)
   - PurchasesHybridCommon (17.19.1):
     - RevenueCat (= 5.48.0)
   - PurchasesHybridCommonUI (17.19.1):
@@ -33,6 +37,7 @@ DEPENDENCIES:
   - "CapacitorBrowser (from `../../node_modules/@capacitor/browser`)"
   - "CapacitorCommunityAppleSignIn (from `../../node_modules/@capacitor-community/apple-sign-in`)"
   - "CapacitorCordova (from `../../node_modules/@capacitor/ios`)"
+  - "CapacitorGeolocation (from `../../node_modules/@capacitor/geolocation`)"
   - "CapacitorLocalNotifications (from `../../node_modules/@capacitor/local-notifications`)"
   - "CapacitorPushNotifications (from `../../node_modules/@capacitor/push-notifications`)"
   - "RevenuecatPurchasesCapacitor (from `../../node_modules/@revenuecat/purchases-capacitor`)"
@@ -40,6 +45,7 @@ DEPENDENCIES:
 
 SPEC REPOS:
   trunk:
+    - IONGeolocationLib
     - PurchasesHybridCommon
     - PurchasesHybridCommonUI
     - RevenueCat
@@ -56,6 +62,8 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor-community/apple-sign-in"
   CapacitorCordova:
     :path: "../../node_modules/@capacitor/ios"
+  CapacitorGeolocation:
+    :path: "../../node_modules/@capacitor/geolocation"
   CapacitorLocalNotifications:
     :path: "../../node_modules/@capacitor/local-notifications"
   CapacitorPushNotifications:
@@ -71,8 +79,10 @@ SPEC CHECKSUMS:
   CapacitorBrowser: b98aa3db018a2ce4c68242d27e596c344f3b81b3
   CapacitorCommunityAppleSignIn: 271cb2860576fd2961508bbfa7a82117d93eadca
   CapacitorCordova: bf648a636f3c153f652d312ae145fb508b6ffced
+  CapacitorGeolocation: 7132de914f9d853ec4642dc1d36e4e2018a4e8a8
   CapacitorLocalNotifications: 0811aef56ab2e5f7f9ae72f47d3473ab50c29038
   CapacitorPushNotifications: bdd621fbd562be34a41f4a7b1750efa000447d5a
+  IONGeolocationLib: a5e40b54edc2ee9902036eda5aaa41ddf07bb68d
   PurchasesHybridCommon: a4837eebc889b973668af685d6c23b89a038461d
   PurchasesHybridCommonUI: bf5566763f906429584534a117a7862537b92c0c
   RevenueCat: 1e61140a343a77dc286f171b3ffab99ca09a4b57
@@ -80,6 +90,6 @@ SPEC CHECKSUMS:
   RevenuecatPurchasesCapacitorUi: a9593c2b69256088a0b855b2b6d33ca9d5c3f8b8
   RevenueCatUI: 625b2b2f4ee8c052d2e9939c2b906cdaecded253
 
-PODFILE CHECKSUM: 7abb478b91b34004819da0f61a7c94f51f8e544c
+PODFILE CHECKSUM: c275d794a577e07d1da864f7af692d834785e433
 
 COCOAPODS: 1.16.2

@@ -153,6 +153,19 @@ const TrackerHub: React.FC = () => {
     notes: ''
   });
 
+  // Add employee state
+  const [showAddEmployee, setShowAddEmployee] = useState(false);
+  const [isCreatingEmployee, setIsCreatingEmployee] = useState(false);
+  const [newEmployeeForm, setNewEmployeeForm] = useState({
+    name: '',
+    job_title: '',
+    email: '',
+    phone: '',
+    hourly_rate: 25,
+    status: 'active' as 'active' | 'inactive',
+    notes: ''
+  });
+
   // Mileage tracking state
   const [mileageTrips, setMileageTrips] = useState<MileageTrip[]>([]);
   const [loadingTrips, setLoadingTrips] = useState(false);
@@ -215,6 +228,37 @@ const TrackerHub: React.FC = () => {
       console.error('Error fetching employees:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCreateEmployee = async () => {
+    if (isCreatingEmployee || !newEmployeeForm.name.trim()) return;
+    setIsCreatingEmployee(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const { error } = await supabase
+        .from('employees')
+        .insert({
+          user_id: user.id,
+          name: newEmployeeForm.name.trim(),
+          job_title: newEmployeeForm.job_title.trim(),
+          email: newEmployeeForm.email.trim(),
+          phone: newEmployeeForm.phone.trim(),
+          hourly_rate: newEmployeeForm.hourly_rate,
+          status: newEmployeeForm.status,
+          notes: newEmployeeForm.notes.trim() || null
+        });
+
+      if (error) throw error;
+      await fetchEmployees();
+      setShowAddEmployee(false);
+      setNewEmployeeForm({ name: '', job_title: '', email: '', phone: '', hourly_rate: 25, status: 'active', notes: '' });
+    } catch (error) {
+      console.error('Error creating employee:', error);
+    } finally {
+      setIsCreatingEmployee(false);
     }
   };
 
@@ -887,13 +931,13 @@ const TrackerHub: React.FC = () => {
         </div>
       </div>
       {/* Spacer for fixed header */}
-      <div className="pt-[calc(env(safe-area-inset-top)+155px)]" />
+      <div className="pt-[calc(env(safe-area-inset-top)+120px)]" />
 
       {activeTab === 'timesheets' && (
         <>
-          {/* Search */}
-          <div className="px-4 pb-3">
-            <div className="relative">
+          {/* Search + Add */}
+          <div className="px-4 pb-3 flex items-center gap-2">
+            <div className="relative flex-1">
               <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 ${themeClasses.text.muted}`} />
               <input
                 type="text"
@@ -903,6 +947,12 @@ const TrackerHub: React.FC = () => {
                 className={`w-full pl-10 pr-4 py-2.5 ${themeClasses.bg.input} rounded-lg border ${themeClasses.border.input} ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} focus:ring-2 focus:ring-[#043d6b] transition-all`}
               />
             </div>
+            <button
+              onClick={() => setShowAddEmployee(true)}
+              className="w-10 h-10 bg-[#043d6b] rounded-xl flex items-center justify-center text-white active:scale-95 transition-transform flex-shrink-0"
+            >
+              <Plus className="w-5 h-5" />
+            </button>
           </div>
 
           {/* Employee List */}
@@ -915,12 +965,13 @@ const TrackerHub: React.FC = () => {
               <div className="text-center py-12">
                 <Users className={`w-12 h-12 ${themeClasses.text.muted} mx-auto mb-3`} />
                 <p className={`${themeClasses.text.secondary} font-medium`}>No employees found</p>
-                <p className={`text-sm ${themeClasses.text.muted} mt-1`}>Add team members in the Team tab</p>
+                <p className={`text-sm ${themeClasses.text.muted} mt-1`}>Add your first team member to get started</p>
                 <button
-                  onClick={() => navigate('/employees-hub')}
+                  onClick={() => setShowAddEmployee(true)}
                   className="mt-4 px-4 py-2 bg-[#043d6b] text-white rounded-lg font-medium"
                 >
-                  Go to Team
+                  <Plus className="w-4 h-4 inline mr-1" />
+                  Add Team Member
                 </button>
               </div>
             ) : (
@@ -2176,6 +2227,125 @@ const TrackerHub: React.FC = () => {
                 <textarea
                   value={editForm.notes}
                   onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                  rows={3}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none resize-none`}
+                  placeholder="Additional notes..."
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Add Team Member Modal */}
+      {showAddEmployee && (
+        <div className="fixed inset-0 z-[200] flex items-end justify-center">
+          <div
+            className="absolute inset-0 bg-black/70"
+            onClick={() => setShowAddEmployee(false)}
+          />
+          <div className={`relative ${themeClasses.bg.secondary} rounded-t-3xl w-full max-h-[90vh] overflow-y-auto animate-slide-up`}>
+            {/* Header */}
+            <div className={`flex items-center justify-between p-4 border-b ${themeClasses.border.primary}`}>
+              <button
+                onClick={() => setShowAddEmployee(false)}
+                className={`${themeClasses.text.secondary} text-base font-medium`}
+              >
+                Cancel
+              </button>
+              <h2 className={`text-lg font-semibold ${themeClasses.text.primary}`}>New Team Member</h2>
+              <button
+                onClick={handleCreateEmployee}
+                disabled={!newEmployeeForm.name.trim() || isCreatingEmployee}
+                className="text-[#043d6b] text-base font-semibold active:text-[#035291] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isCreatingEmployee ? 'Saving...' : 'Save'}
+              </button>
+            </div>
+
+            <div className="p-4 space-y-4 pb-8">
+              {/* Name */}
+              <div>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Name <span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  value={newEmployeeForm.name}
+                  onChange={(e) => setNewEmployeeForm({ ...newEmployeeForm, name: e.target.value })}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                  placeholder="Full name"
+                  autoFocus
+                />
+              </div>
+
+              {/* Job Title */}
+              <div>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Job Title</label>
+                <input
+                  type="text"
+                  value={newEmployeeForm.job_title}
+                  onChange={(e) => setNewEmployeeForm({ ...newEmployeeForm, job_title: e.target.value })}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                  placeholder="e.g., Foreman, Carpenter, Electrician"
+                />
+              </div>
+
+              {/* Email + Phone */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Email</label>
+                  <input
+                    type="email"
+                    value={newEmployeeForm.email}
+                    onChange={(e) => setNewEmployeeForm({ ...newEmployeeForm, email: e.target.value })}
+                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                    placeholder="email@example.com"
+                  />
+                </div>
+                <div>
+                  <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Phone</label>
+                  <input
+                    type="tel"
+                    value={newEmployeeForm.phone}
+                    onChange={(e) => setNewEmployeeForm({ ...newEmployeeForm, phone: e.target.value })}
+                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                    placeholder="(555) 123-4567"
+                  />
+                </div>
+              </div>
+
+              {/* Hourly Rate + Status */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Hourly Rate</label>
+                  <div className="relative">
+                    <DollarSign className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${themeClasses.text.muted}`} />
+                    <input
+                      type="number"
+                      value={newEmployeeForm.hourly_rate}
+                      onChange={(e) => setNewEmployeeForm({ ...newEmployeeForm, hourly_rate: parseFloat(e.target.value) || 0 })}
+                      className={`w-full pl-8 pr-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                      placeholder="25"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Status</label>
+                  <select
+                    value={newEmployeeForm.status}
+                    onChange={(e) => setNewEmployeeForm({ ...newEmployeeForm, status: e.target.value as 'active' | 'inactive' })}
+                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                  >
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Notes */}
+              <div>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Notes</label>
+                <textarea
+                  value={newEmployeeForm.notes}
+                  onChange={(e) => setNewEmployeeForm({ ...newEmployeeForm, notes: e.target.value })}
                   rows={3}
                   className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none resize-none`}
                   placeholder="Additional notes..."

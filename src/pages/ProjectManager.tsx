@@ -392,7 +392,6 @@ const ProjectManager: React.FC = () => {
                   <div className="flex items-start justify-between mb-4">
                     <div>
                       <h3 className="font-semibold text-gray-900 mb-1">{project.name}</h3>
-                      <p className="text-sm text-gray-600">{project.client}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <Flag className={`w-4 h-4 ${getPriorityColor(project.priority)}`} />
@@ -504,7 +503,6 @@ const ProjectManager: React.FC = () => {
                 {/* Project Title */}
                 <div className="mt-3">
                   <h1 className="text-xl font-bold text-gray-900">{selectedProject.name}</h1>
-                  <p className="text-sm text-gray-500">{selectedProject.client}</p>
                 </div>
               </div>
 
