@@ -50,9 +50,11 @@
 	<key>NSCameraUsageDescription</key>
 	<string>OnSite needs access to your camera to capture receipts, job site photos, and 3D room scans for accurate estimates.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>OnSite uses your location to help you track job sites and navigate to appointments.</string>
+	<string>OnSite uses your location to automatically track business mileage for tax deductions, and to help you navigate to job sites. Background location is used to detect and record driving trips even when the app is closed.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>OnSite uses your location to help you track job sites and calculate travel distances for estimates.</string>
+	<string>OnSite uses your location to track business mileage, help you navigate to job sites, and calculate travel distances for estimates.</string>
+	<key>NSSiriUsageDescription</key>
+	<string>OnSite uses Siri to let you manage your contracting business hands-free — create tasks, log mileage, track expenses, and more with your voice.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>OnSite needs permission to save job site photos and receipts to your photo library.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
@@ -150,6 +152,7 @@
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>
+		<string>location</string>
 	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>

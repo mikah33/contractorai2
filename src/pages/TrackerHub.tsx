@@ -29,9 +29,16 @@ import {
   Check,
   Building2
 } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
 import { supabase } from '../lib/supabase';
 import useProjectStore from '../stores/projectStore';
 import { useTheme, getThemeClasses } from '../contexts/ThemeContext';
+import AutoMileageTracker, {
+  getAutoTrackPreference,
+  setAutoTrackPreference,
+  type CompletedTrip as AutoTrip,
+  type TrackingStatus
+} from '../services/autoMileageService';
 import { format, differenceInSeconds, startOfDay, endOfDay, startOfWeek, endOfWeek, parseISO } from 'date-fns';
 import FinanceHub from './FinanceHub';
 
@@ -89,6 +96,8 @@ interface MileageTrip {
   irs_rate: number;
   tax_deduction: number | null;
   created_at: string;
+  source?: 'manual' | 'auto';
+  status?: 'confirmed' | 'pending';
   // Joined data
   employee_name?: string;
   project_name?: string;
@@ -187,6 +196,12 @@ const TrackerHub: React.FC = () => {
   const [newStop, setNewStop] = useState('');
   const [showProjectPicker, setShowProjectPicker] = useState<'start' | 'end' | 'stop' | null>(null);
 
+  // Auto mileage tracking state
+  const [autoTrackEnabled, setAutoTrackEnabled] = useState(false);
+  const [trackingStatus, setTrackingStatus] = useState<TrackingStatus | null>(null);
+  const [pendingAutoTrips, setPendingAutoTrips] = useState<AutoTrip[]>([]);
+  const [savingTripId, setSavingTripId] = useState<string | null>(null);
+
   // Start timer every second for running timers
   useEffect(() => {
     const hasRunningTimers = timeEntries.some(e => e.status === 'running');
@@ -207,6 +222,38 @@ const TrackerHub: React.FC = () => {
     fetchTimeEntries();
     fetchProjects();
     fetchMileageTrips();
+  }, []);
+
+  // Initialize auto mileage tracking
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    const initAutoTracking = async () => {
+      try {
+        const pref = getAutoTrackPreference();
+        setAutoTrackEnabled(pref);
+
+        const status = await AutoMileageTracker.getTrackingStatus();
+        setTrackingStatus(status);
+
+        const result = await AutoMileageTracker.getCompletedTrips();
+        if (result.trips.length > 0) {
+          setPendingAutoTrips(result.trips);
+        }
+      } catch (err) {
+        console.error('Error initializing auto tracking:', err);
+      }
+    };
+
+    initAutoTracking();
+
+    let listener: { remove: () => void } | null = null;
+    AutoMileageTracker.addListener('tripCompleted', (trip) => {
+      setPendingAutoTrips(prev => [...prev, trip]);
+      fetchMileageTrips();
+    }).then(l => { listener = l; });
+
+    return () => { listener?.remove(); };
   }, []);
 
   const fetchEmployees = async () => {
@@ -857,6 +904,89 @@ const TrackerHub: React.FC = () => {
     };
   };
 
+  // Auto mileage tracking handlers
+  const toggleAutoTracking = async () => {
+    try {
+      if (!autoTrackEnabled) {
+        if (Capacitor.isNativePlatform()) {
+          // Native: request Always permission and start tracking
+          const permStatus = await AutoMileageTracker.getPermissionStatus();
+          if (permStatus.status !== 'authorizedAlways') {
+            await AutoMileageTracker.requestAlwaysPermission();
+            const newStatus = await AutoMileageTracker.getPermissionStatus();
+            if (newStatus.status !== 'authorizedAlways') {
+              alert('Always-on location permission is required for automatic mileage tracking. Please enable it in Settings.');
+              return;
+            }
+          }
+          const result = await AutoMileageTracker.startTracking();
+          if (result.success) {
+            setAutoTrackEnabled(true);
+            setAutoTrackPreference(true);
+          }
+        } else {
+          // Web: toggle the UI state (tracking won't actually run)
+          setAutoTrackEnabled(true);
+          setAutoTrackPreference(true);
+        }
+      } else {
+        if (Capacitor.isNativePlatform()) {
+          await AutoMileageTracker.stopTracking();
+        }
+        setAutoTrackEnabled(false);
+        setAutoTrackPreference(false);
+      }
+
+      if (Capacitor.isNativePlatform()) {
+        const status = await AutoMileageTracker.getTrackingStatus();
+        setTrackingStatus(status);
+      }
+    } catch (err) {
+      console.error('Error toggling auto tracking:', err);
+    }
+  };
+
+  const saveAutoTrip = async (autoTrip: AutoTrip) => {
+    try {
+      setSavingTripId(autoTrip.id);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const tripData = {
+        user_id: user.id,
+        start_address: autoTrip.startAddress,
+        end_address: autoTrip.endAddress,
+        stops: [],
+        trip_date: autoTrip.startTime.split('T')[0],
+        total_miles: parseFloat(autoTrip.totalMiles.toFixed(1)),
+        calculated_miles: parseFloat(autoTrip.totalMiles.toFixed(1)),
+        purpose: null,
+        notes: 'Auto-detected trip',
+        employee_id: null,
+        project_id: null,
+        is_business: true,
+        irs_rate: IRS_MILEAGE_RATE,
+        source: 'auto',
+        status: 'confirmed'
+      };
+
+      const { error } = await supabase.from('mileage_trips').insert(tripData);
+      if (error) throw error;
+
+      setPendingAutoTrips(prev => prev.filter(t => t.id !== autoTrip.id));
+      await fetchMileageTrips();
+    } catch (error) {
+      console.error('Error saving auto trip:', error);
+      alert('Failed to save trip');
+    } finally {
+      setSavingTripId(null);
+    }
+  };
+
+  const dismissAutoTrip = (tripId: string) => {
+    setPendingAutoTrips(prev => prev.filter(t => t.id !== tripId));
+  };
+
   // Calculate quick stats for each employee
   const getEmployeeQuickStats = (employeeId: string) => {
     const today = format(new Date(), 'yyyy-MM-dd');
@@ -1192,6 +1322,76 @@ const TrackerHub: React.FC = () => {
             );
           })()}
 
+          {/* Auto Track Toggle */}
+          <div className={`flex items-center justify-between p-4 rounded-xl ${themeClasses.bg.card} border ${themeClasses.border.secondary}`}>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-[#043d6b]/20 rounded-lg flex items-center justify-center">
+                  <Navigation className="w-5 h-5 text-[#043d6b]" />
+                </div>
+                <div>
+                  <p className={`font-semibold ${themeClasses.text.primary}`}>Auto Track</p>
+                  <p className={`text-xs ${themeClasses.text.muted}`}>
+                    {trackingStatus?.isInTrip
+                      ? 'Recording trip...'
+                      : autoTrackEnabled
+                        ? 'Monitoring for trips'
+                        : 'Tap to enable'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={toggleAutoTracking}
+                className={`relative w-12 h-7 rounded-full transition-colors ${
+                  autoTrackEnabled ? 'bg-[#043d6b]' : theme === 'light' ? 'bg-gray-300' : 'bg-zinc-600'
+                }`}
+              >
+                <div className={`absolute top-0.5 w-6 h-6 bg-white rounded-full shadow transition-transform ${
+                  autoTrackEnabled ? 'translate-x-5' : 'translate-x-0.5'
+                }`} />
+              </button>
+          </div>
+
+          {/* Pending Auto-Detected Trips */}
+          {pendingAutoTrips.length > 0 && (
+            <div>
+              <h3 className={`text-sm font-medium ${themeClasses.text.muted} mb-2`}>
+                Auto-Detected Trips ({pendingAutoTrips.length})
+              </h3>
+              <div className="space-y-2">
+                {pendingAutoTrips.map((trip) => (
+                  <div key={trip.id} className={`p-3 rounded-xl border-2 border-[#043d6b]/30 ${themeClasses.bg.card}`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="px-2 py-0.5 bg-[#043d6b]/20 text-[#043d6b] text-xs font-semibold rounded-full">
+                        Auto-Detected
+                      </span>
+                      <span className={`text-lg font-bold ${themeClasses.text.primary}`}>
+                        {trip.totalMiles.toFixed(1)} mi
+                      </span>
+                    </div>
+                    <p className={`text-sm ${themeClasses.text.secondary} truncate`}>
+                      {trip.startAddress} &rarr; {trip.endAddress}
+                    </p>
+                    <div className="flex gap-2 mt-3">
+                      <button
+                        onClick={() => saveAutoTrip(trip)}
+                        disabled={savingTripId === trip.id}
+                        className="flex-1 py-2 bg-emerald-500 text-white rounded-lg text-sm font-semibold disabled:opacity-50"
+                      >
+                        {savingTripId === trip.id ? 'Saving...' : 'Save as Business'}
+                      </button>
+                      <button
+                        onClick={() => dismissAutoTrip(trip.id)}
+                        className={`px-4 py-2 rounded-lg text-sm ${themeClasses.bg.tertiary} ${themeClasses.text.secondary}`}
+                      >
+                        Dismiss
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Action Buttons */}
           <div className="flex gap-3">
             <button
@@ -1241,6 +1441,11 @@ const TrackerHub: React.FC = () => {
                           {trip.is_business && (
                             <span className="px-2 py-0.5 bg-[#043d6b]/20 text-[#043d6b] text-xs font-medium rounded-full">
                               Business
+                            </span>
+                          )}
+                          {trip.source === 'auto' && (
+                            <span className="px-2 py-0.5 bg-purple-500/20 text-purple-500 text-xs font-medium rounded-full">
+                              Auto
                             </span>
                           )}
                         </div>

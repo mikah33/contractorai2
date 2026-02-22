@@ -1,7 +1,9 @@
 import { create } from 'zustand';
+import { Capacitor } from '@capacitor/core';
 import { supabase } from '../lib/supabase';
 import { User, Session } from '@supabase/supabase-js';
 import { subscriptionService } from '../services/subscriptionService';
+import { SiriIntent } from '../plugins/siriIntent';
 
 // TypeScript declaration for Google reCAPTCHA
 declare global {
@@ -108,6 +110,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           session: data.session,
           loading: false
         });
+
+        // Sync auth tokens to Keychain for Siri intents
+        if (Capacitor.isNativePlatform() && data.session) {
+          SiriIntent.syncAuthToken({
+            accessToken: data.session.access_token,
+            refreshToken: data.session.refresh_token ?? '',
+            userId: data.user.id,
+          }).then(() => {
+            console.log('[AuthStore] Synced auth tokens to Keychain on signIn');
+          }).catch((e: any) => {
+            console.warn('[AuthStore] Failed to sync on signIn:', e);
+          });
+        }
 
         // Initialize subscription service for cross-platform sync
         await subscriptionService.initialize(data.user.id);
@@ -224,6 +239,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signOut: async () => {
     set({ loading: true });
     try {
+      // Clear Siri Keychain tokens before sign out
+      if (Capacitor.isNativePlatform()) {
+        try {
+          await SiriIntent.clearAuthToken();
+        } catch (e) {
+          console.warn('Failed to clear Keychain tokens:', e);
+        }
+      }
+
       await supabase.auth.signOut();
 
       // Clear all localStorage data on sign out
@@ -320,6 +344,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                 initialized: true
               });
 
+              // Sync auth tokens to Keychain for Siri intents
+              if (Capacitor.isNativePlatform()) {
+                SiriIntent.syncAuthToken({
+                  accessToken: session.access_token,
+                  refreshToken: session.refresh_token ?? '',
+                  userId: session.user.id,
+                }).then(() => {
+                  console.log('[AuthStore] Synced auth tokens to Keychain for Siri');
+                }).catch((e: any) => {
+                  console.warn('[AuthStore] Failed to sync auth token to Keychain:', e);
+                });
+              }
+
               // Initialize subscription service for cross-platform sync
               subscriptionService.initialize(session.user.id).catch(err =>
                 console.error('Failed to initialize subscription service:', err)
@@ -330,6 +367,29 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                 get().fetchProfile().catch(err =>
                   console.error('Failed to fetch profile:', err)
                 );
+              }
+
+              // Send webhook for new OAuth signups (Google/Apple)
+              // Only fires on SIGNED_IN (not INITIAL_SESSION which is page reload)
+              // and only if the account was created in the last 60 seconds
+              if (event === 'SIGNED_IN' && session.user.app_metadata?.provider !== 'email') {
+                const createdAt = new Date(session.user.created_at).getTime();
+                const now = Date.now();
+                if (now - createdAt < 60000) {
+                  try {
+                    await fetch('https://contractorai.app.n8n.cloud/webhook/47e9a815-fbd7-4ac7-a3d0-0ec212d977fc', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        email: session.user.email,
+                        timestamp: new Date().toISOString(),
+                        platform: session.user.app_metadata?.provider || 'oauth',
+                      }),
+                    });
+                  } catch (webhookError) {
+                    console.error('OAuth signup webhook failed:', webhookError);
+                  }
+                }
               }
             } else if (event === 'SIGNED_OUT') {
               set({
@@ -363,6 +423,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
               session,
               initialized: true
             });
+
+            // Sync auth tokens to Keychain for Siri intents
+            if (Capacitor.isNativePlatform()) {
+              SiriIntent.syncAuthToken({
+                accessToken: session.access_token,
+                refreshToken: session.refresh_token ?? '',
+                userId: session.user.id,
+              }).then(() => {
+                console.log('[AuthStore] Synced auth tokens to Keychain on getSession');
+              }).catch((e: any) => {
+                console.warn('[AuthStore] Failed to sync on getSession:', e);
+              });
+            }
 
             // Initialize subscription service for cross-platform sync
             subscriptionService.initialize(session.user.id).catch(err =>

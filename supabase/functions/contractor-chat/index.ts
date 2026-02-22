@@ -60,10 +60,34 @@ Manage clients and customer relationships:
 
 ### 4. FINANCE MANAGEMENT
 Track finances and make informed decisions:
-- **Expense Tracking**: Record expenses with categories, vendors, and project links
+- **Expense Tracking**: Record, update, and delete expenses with categories, vendors, and project links
 - **Revenue Tracking**: Log payments and income from projects
 - **Budget Management**: Set budgets and track spending
 - **Financial Reports**: Generate P&L statements, expense breakdowns, PDF reports
+
+### 5. TASK MANAGEMENT
+Create, update, and manage tasks:
+- Create tasks with titles, due dates, priorities
+- Assign tasks to projects, clients, employees
+- Update task status (todo, in-progress, done)
+- Delete completed or cancelled tasks
+
+### 6. ESTIMATE & INVOICE MANAGEMENT
+Full lifecycle management:
+- Create and edit estimates with line items
+- Convert estimates to invoices
+- Create invoices, track payment status
+- Update invoice status and amounts
+
+### 7. EMPLOYEE MANAGEMENT
+Manage your team:
+- Add, update, and remove employees
+- Set hourly rates and contact info
+
+### 8. TIME & MILEAGE TRACKING
+Track work hours and business mileage:
+- Log time entries for employees
+- Record mileage trips with tax deduction calculation
 
 ## Response Guidelines
 
@@ -77,8 +101,8 @@ Track finances and make informed decisions:
 ## Context Detection
 
 Automatically detect mode from keywords:
-- Mentions of "estimate", "materials", "deck", "roof", "concrete", "cost", "price" → Estimating
-- Mentions of "employee", "schedule", "project", "assign", "team", "calendar" → Projects
+- Mentions of "estimate", "bid", "proposal", "materials", "deck", "roof", "concrete", "cost", "price" → Estimating
+- Mentions of "employee", "schedule", "project", "assign", "team", "calendar", "todo", "task", "reminder", "mileage", "miles", "trip", "drive", "timesheet", "hours", "clock" → Projects
 - Mentions of "client", "customer", "contact", "CRM", "lead" → CRM
 - Mentions of "expense", "revenue", "budget", "invoice", "profit", "payment" → Finance
 
@@ -391,6 +415,422 @@ const tools: Anthropic.Tool[] = [
       },
       required: ['reportType']
     }
+  },
+  // ============ PROJECT UPDATE/DELETE TOOLS ============
+  {
+    name: 'update_project',
+    description: 'Update an existing project (name, status, priority, budget, dates, description)',
+    input_schema: {
+      type: 'object',
+      properties: {
+        projectId: { type: 'string', description: 'Project ID to update' },
+        name: { type: 'string', description: 'New project name' },
+        status: { type: 'string', enum: ['active', 'completed', 'scheduled', 'on_hold', 'cancelled'], description: 'New status' },
+        priority: { type: 'string', enum: ['low', 'medium', 'high'], description: 'New priority' },
+        budget: { type: 'number', description: 'New budget amount' },
+        startDate: { type: 'string', description: 'New start date (YYYY-MM-DD)' },
+        endDate: { type: 'string', description: 'New end date (YYYY-MM-DD)' },
+        description: { type: 'string', description: 'New description' }
+      },
+      required: ['projectId']
+    }
+  },
+  {
+    name: 'delete_project',
+    description: 'Delete a project. Ask the user to confirm before calling this.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        projectId: { type: 'string', description: 'Project ID to delete' }
+      },
+      required: ['projectId']
+    }
+  },
+  // ============ TASK/TODO TOOLS ============
+  {
+    name: 'get_tasks',
+    description: 'Get tasks/todos with optional filters (status, priority, project)',
+    input_schema: {
+      type: 'object',
+      properties: {
+        status: { type: 'string', enum: ['todo', 'in-progress', 'done', 'all'], description: 'Filter by status' },
+        priority: { type: 'string', enum: ['low', 'medium', 'high'], description: 'Filter by priority' },
+        projectId: { type: 'string', description: 'Filter by project ID' }
+      },
+      required: []
+    }
+  },
+  {
+    name: 'create_task',
+    description: 'Create a new task/todo item',
+    input_schema: {
+      type: 'object',
+      properties: {
+        title: { type: 'string', description: 'Task title' },
+        description: { type: 'string', description: 'Task description' },
+        dueDate: { type: 'string', description: 'Due date (YYYY-MM-DD)' },
+        dueTime: { type: 'string', description: 'Due time (HH:MM)' },
+        priority: { type: 'string', enum: ['low', 'medium', 'high'], description: 'Priority level' },
+        status: { type: 'string', enum: ['todo', 'in-progress', 'done'], description: 'Initial status' },
+        projectId: { type: 'string', description: 'Link to a project' },
+        clientId: { type: 'string', description: 'Link to a client' },
+        employeeId: { type: 'string', description: 'Assign to an employee' }
+      },
+      required: ['title']
+    }
+  },
+  {
+    name: 'update_task',
+    description: 'Update an existing task/todo',
+    input_schema: {
+      type: 'object',
+      properties: {
+        taskId: { type: 'string', description: 'Task ID to update' },
+        title: { type: 'string', description: 'New title' },
+        description: { type: 'string', description: 'New description' },
+        dueDate: { type: 'string', description: 'New due date (YYYY-MM-DD)' },
+        dueTime: { type: 'string', description: 'New due time (HH:MM)' },
+        priority: { type: 'string', enum: ['low', 'medium', 'high'], description: 'New priority' },
+        status: { type: 'string', enum: ['todo', 'in-progress', 'done'], description: 'New status' },
+        projectId: { type: 'string', description: 'Link to a project' },
+        employeeId: { type: 'string', description: 'Reassign to employee' }
+      },
+      required: ['taskId']
+    }
+  },
+  {
+    name: 'delete_task',
+    description: 'Delete a task. Ask the user to confirm before calling this.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        taskId: { type: 'string', description: 'Task ID to delete' }
+      },
+      required: ['taskId']
+    }
+  },
+  // ============ ESTIMATE TOOLS ============
+  {
+    name: 'get_estimates',
+    description: 'Get saved estimates with optional status filter',
+    input_schema: {
+      type: 'object',
+      properties: {
+        status: { type: 'string', enum: ['draft', 'sent', 'accepted', 'rejected', 'all'], description: 'Filter by status' },
+        clientId: { type: 'string', description: 'Filter by client' }
+      },
+      required: []
+    }
+  },
+  {
+    name: 'create_estimate',
+    description: 'Create and save a new estimate with line items',
+    input_schema: {
+      type: 'object',
+      properties: {
+        title: { type: 'string', description: 'Estimate title' },
+        clientId: { type: 'string', description: 'Client ID' },
+        clientName: { type: 'string', description: 'Client name (if no client ID)' },
+        items: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              name: { type: 'string' },
+              quantity: { type: 'number' },
+              unit: { type: 'string' },
+              unitPrice: { type: 'number' }
+            }
+          },
+          description: 'Line items array'
+        },
+        taxRate: { type: 'number', description: 'Tax rate as percentage (e.g. 8.5)' },
+        notes: { type: 'string', description: 'Estimate notes' },
+        terms: { type: 'string', description: 'Terms and conditions' },
+        validDays: { type: 'number', description: 'Days estimate is valid (default 30)' }
+      },
+      required: ['title']
+    }
+  },
+  {
+    name: 'update_estimate',
+    description: 'Update an existing estimate (status, items, notes, terms)',
+    input_schema: {
+      type: 'object',
+      properties: {
+        estimateId: { type: 'string', description: 'Estimate ID to update' },
+        title: { type: 'string', description: 'New title' },
+        status: { type: 'string', enum: ['draft', 'sent', 'accepted', 'rejected'], description: 'New status' },
+        items: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              name: { type: 'string' },
+              quantity: { type: 'number' },
+              unit: { type: 'string' },
+              unitPrice: { type: 'number' }
+            }
+          },
+          description: 'Updated line items'
+        },
+        taxRate: { type: 'number', description: 'New tax rate' },
+        notes: { type: 'string', description: 'Updated notes' },
+        terms: { type: 'string', description: 'Updated terms' }
+      },
+      required: ['estimateId']
+    }
+  },
+  {
+    name: 'delete_estimate',
+    description: 'Delete an estimate. Ask the user to confirm before calling this.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        estimateId: { type: 'string', description: 'Estimate ID to delete' }
+      },
+      required: ['estimateId']
+    }
+  },
+  // ============ INVOICE TOOLS ============
+  {
+    name: 'get_invoices',
+    description: 'Get invoices with optional status filter',
+    input_schema: {
+      type: 'object',
+      properties: {
+        status: { type: 'string', enum: ['draft', 'sent', 'paid', 'overdue', 'cancelled', 'all'], description: 'Filter by status' },
+        clientId: { type: 'string', description: 'Filter by client' }
+      },
+      required: []
+    }
+  },
+  {
+    name: 'create_invoice',
+    description: 'Create a new invoice from scratch or from an existing estimate',
+    input_schema: {
+      type: 'object',
+      properties: {
+        title: { type: 'string', description: 'Invoice title' },
+        clientId: { type: 'string', description: 'Client ID' },
+        clientName: { type: 'string', description: 'Client name (if no client ID)' },
+        estimateId: { type: 'string', description: 'Convert from estimate ID (copies items)' },
+        items: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              name: { type: 'string' },
+              quantity: { type: 'number' },
+              unit: { type: 'string' },
+              unitPrice: { type: 'number' }
+            }
+          },
+          description: 'Line items (ignored if estimateId provided)'
+        },
+        totalAmount: { type: 'number', description: 'Total invoice amount' },
+        taxRate: { type: 'number', description: 'Tax rate as percentage' },
+        dueDate: { type: 'string', description: 'Due date (YYYY-MM-DD)' },
+        dueDays: { type: 'number', description: 'Days until due (alternative to dueDate, e.g. 30)' },
+        notes: { type: 'string', description: 'Invoice notes' },
+        projectId: { type: 'string', description: 'Link to project' }
+      },
+      required: ['title']
+    }
+  },
+  {
+    name: 'update_invoice',
+    description: 'Update an existing invoice (status, amount, due date, notes)',
+    input_schema: {
+      type: 'object',
+      properties: {
+        invoiceId: { type: 'string', description: 'Invoice ID to update' },
+        status: { type: 'string', enum: ['draft', 'sent', 'paid', 'overdue', 'cancelled'], description: 'New status' },
+        totalAmount: { type: 'number', description: 'New total amount' },
+        paidAmount: { type: 'number', description: 'Amount paid so far' },
+        dueDate: { type: 'string', description: 'New due date (YYYY-MM-DD)' },
+        notes: { type: 'string', description: 'Updated notes' }
+      },
+      required: ['invoiceId']
+    }
+  },
+  // ============ CLIENT UPDATE/DELETE TOOLS ============
+  {
+    name: 'update_client',
+    description: 'Update an existing client (name, email, phone, address, status, notes)',
+    input_schema: {
+      type: 'object',
+      properties: {
+        clientId: { type: 'string', description: 'Client ID to update' },
+        name: { type: 'string', description: 'New name' },
+        email: { type: 'string', description: 'New email' },
+        phone: { type: 'string', description: 'New phone' },
+        address: { type: 'string', description: 'New address' },
+        status: { type: 'string', enum: ['active', 'inactive', 'lead'], description: 'New status' },
+        notes: { type: 'string', description: 'Notes about the client' }
+      },
+      required: ['clientId']
+    }
+  },
+  {
+    name: 'delete_client',
+    description: 'Delete a client. Ask the user to confirm before calling this.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        clientId: { type: 'string', description: 'Client ID to delete' }
+      },
+      required: ['clientId']
+    }
+  },
+  // ============ EMPLOYEE CRUD TOOLS ============
+  {
+    name: 'create_employee',
+    description: 'Create a new employee',
+    input_schema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', description: 'Employee name' },
+        role: { type: 'string', description: 'Job title/role' },
+        email: { type: 'string', description: 'Email address' },
+        phone: { type: 'string', description: 'Phone number' },
+        hourlyRate: { type: 'number', description: 'Hourly pay rate' },
+        status: { type: 'string', enum: ['active', 'inactive'], description: 'Employment status' }
+      },
+      required: ['name']
+    }
+  },
+  {
+    name: 'update_employee',
+    description: 'Update an existing employee',
+    input_schema: {
+      type: 'object',
+      properties: {
+        employeeId: { type: 'string', description: 'Employee ID to update' },
+        name: { type: 'string', description: 'New name' },
+        role: { type: 'string', description: 'New role/title' },
+        email: { type: 'string', description: 'New email' },
+        phone: { type: 'string', description: 'New phone' },
+        hourlyRate: { type: 'number', description: 'New hourly rate' },
+        status: { type: 'string', enum: ['active', 'inactive'], description: 'New status' }
+      },
+      required: ['employeeId']
+    }
+  },
+  {
+    name: 'delete_employee',
+    description: 'Delete an employee. Ask the user to confirm before calling this.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        employeeId: { type: 'string', description: 'Employee ID to delete' }
+      },
+      required: ['employeeId']
+    }
+  },
+  // ============ MILEAGE TOOLS ============
+  {
+    name: 'add_mileage_trip',
+    description: 'Log a business mileage trip for tax deduction tracking',
+    input_schema: {
+      type: 'object',
+      properties: {
+        startAddress: { type: 'string', description: 'Starting address' },
+        endAddress: { type: 'string', description: 'Ending address' },
+        totalMiles: { type: 'number', description: 'Total miles driven' },
+        purpose: { type: 'string', description: 'Business purpose of the trip' },
+        date: { type: 'string', description: 'Trip date (YYYY-MM-DD)' },
+        projectId: { type: 'string', description: 'Associated project ID' },
+        isBusiness: { type: 'boolean', description: 'Is this a business trip (default true)' }
+      },
+      required: ['totalMiles', 'purpose']
+    }
+  },
+  {
+    name: 'get_mileage_trips',
+    description: 'Get mileage trips with optional date range filter',
+    input_schema: {
+      type: 'object',
+      properties: {
+        startDate: { type: 'string', description: 'Start date (YYYY-MM-DD)' },
+        endDate: { type: 'string', description: 'End date (YYYY-MM-DD)' },
+        projectId: { type: 'string', description: 'Filter by project' }
+      },
+      required: []
+    }
+  },
+  // ============ TIME TRACKING TOOLS ============
+  {
+    name: 'add_time_entry',
+    description: 'Log a time entry for an employee',
+    input_schema: {
+      type: 'object',
+      properties: {
+        employeeId: { type: 'string', description: 'Employee ID' },
+        employeeName: { type: 'string', description: 'Employee name (if no ID)' },
+        hours: { type: 'number', description: 'Number of hours worked' },
+        date: { type: 'string', description: 'Work date (YYYY-MM-DD)' },
+        hourlyRate: { type: 'number', description: 'Hourly rate for this entry' },
+        projectId: { type: 'string', description: 'Associated project ID' },
+        notes: { type: 'string', description: 'Work description/notes' }
+      },
+      required: ['hours']
+    }
+  },
+  // ============ EXPENSE UPDATE/DELETE TOOLS ============
+  {
+    name: 'update_expense',
+    description: 'Update an existing expense',
+    input_schema: {
+      type: 'object',
+      properties: {
+        expenseId: { type: 'string', description: 'Expense ID to update' },
+        amount: { type: 'number', description: 'New amount' },
+        category: { type: 'string', enum: ['materials', 'labor', 'equipment', 'fuel', 'office', 'insurance', 'utilities', 'other'], description: 'New category' },
+        vendor: { type: 'string', description: 'New vendor' },
+        description: { type: 'string', description: 'New description' },
+        date: { type: 'string', description: 'New date (YYYY-MM-DD)' }
+      },
+      required: ['expenseId']
+    }
+  },
+  {
+    name: 'delete_expense',
+    description: 'Delete an expense. Ask the user to confirm before calling this.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        expenseId: { type: 'string', description: 'Expense ID to delete' }
+      },
+      required: ['expenseId']
+    }
+  },
+  // ============ CALENDAR UPDATE/DELETE TOOLS ============
+  {
+    name: 'update_calendar_event',
+    description: 'Update an existing calendar event',
+    input_schema: {
+      type: 'object',
+      properties: {
+        eventId: { type: 'string', description: 'Event ID to update' },
+        title: { type: 'string', description: 'New title' },
+        startTime: { type: 'string', description: 'New start time (ISO format)' },
+        endTime: { type: 'string', description: 'New end time (ISO format)' },
+        description: { type: 'string', description: 'New description' }
+      },
+      required: ['eventId']
+    }
+  },
+  {
+    name: 'delete_calendar_event',
+    description: 'Delete a calendar event. Ask the user to confirm before calling this.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        eventId: { type: 'string', description: 'Event ID to delete' }
+      },
+      required: ['eventId']
+    }
   }
 ];
 
@@ -399,8 +839,8 @@ function detectMode(message: string): ContractorMode {
   const lowerMessage = message.toLowerCase();
 
   const modeKeywords: Record<ContractorMode, string[]> = {
-    estimating: ['estimate', 'material', 'deck', 'roof', 'concrete', 'siding', 'foundation', 'flooring', 'paint', 'drywall', 'electrical', 'plumbing', 'hvac', 'calculator', 'cost', 'price', 'quote'],
-    projects: ['employee', 'schedule', 'project', 'assign', 'team', 'task', 'calendar', 'availability', 'meeting', 'deadline'],
+    estimating: ['estimate', 'bid', 'proposal', 'material', 'deck', 'roof', 'concrete', 'siding', 'foundation', 'flooring', 'paint', 'drywall', 'electrical', 'plumbing', 'hvac', 'calculator', 'cost', 'price', 'quote'],
+    projects: ['employee', 'schedule', 'project', 'assign', 'team', 'task', 'todo', 'reminder', 'calendar', 'availability', 'meeting', 'deadline', 'mileage', 'miles', 'trip', 'drive', 'timesheet', 'hours', 'clock'],
     crm: ['client', 'customer', 'contact', 'lead', 'prospect', 'relationship', 'follow-up'],
     finance: ['expense', 'revenue', 'budget', 'invoice', 'payment', 'profit', 'loss', 'report', 'receipt', 'tax', 'financial'],
     general: []
@@ -839,6 +1279,491 @@ serve(async (req) => {
               toolResultContent = `Financial Summary:\n• Revenue: $${totalRevenue.toFixed(2)}\n• Expenses: $${totalExpenses.toFixed(2)}\n• Profit: $${profit.toFixed(2)}\n• Margin: ${totalRevenue > 0 ? ((profit / totalRevenue) * 100).toFixed(1) : 0}%`;
             } else if (toolName === 'generate_report') {
               toolResultContent = `Report generated for ${toolInput.reportType}. Format: ${toolInput.format || 'summary'}`;
+            }
+            // ============ PROJECT UPDATE/DELETE HANDLERS ============
+            else if (toolName === 'update_project') {
+              const updates: Record<string, any> = {};
+              if (toolInput.name) updates.name = toolInput.name;
+              if (toolInput.status) updates.status = toolInput.status;
+              if (toolInput.priority) updates.priority = toolInput.priority;
+              if (toolInput.budget !== undefined) updates.budget = toolInput.budget;
+              if (toolInput.startDate) updates.start_date = toolInput.startDate;
+              if (toolInput.endDate) updates.end_date = toolInput.endDate;
+              if (toolInput.description) updates.description = toolInput.description;
+
+              const { data, error } = await supabase.from('projects')
+                .update(updates)
+                .eq('id', toolInput.projectId)
+                .eq('user_id', userId)
+                .select().single();
+
+              if (error) {
+                toolResultContent = `Failed to update project: ${error.message}`;
+              } else {
+                toolResultContent = `Updated project: ${data.name} (Status: ${data.status}, Priority: ${data.priority})`;
+              }
+            } else if (toolName === 'delete_project') {
+              const { data, error } = await supabase.from('projects')
+                .delete()
+                .eq('id', toolInput.projectId)
+                .eq('user_id', userId)
+                .select().single();
+
+              if (error) {
+                toolResultContent = `Failed to delete project: ${error.message}`;
+              } else {
+                toolResultContent = `Deleted project: ${data.name}`;
+              }
+            }
+            // ============ TASK/TODO HANDLERS ============
+            else if (toolName === 'get_tasks') {
+              const query = supabase.from('tasks').select('*').eq('user_id', userId);
+              if (toolInput.status && toolInput.status !== 'all') query.eq('status', toolInput.status);
+              if (toolInput.priority) query.eq('priority', toolInput.priority);
+              if (toolInput.projectId) query.eq('project_id', toolInput.projectId);
+              const { data: tasks } = await query.order('due_date', { ascending: true });
+
+              let result = `Found ${tasks?.length || 0} tasks:\n`;
+              tasks?.forEach(task => {
+                result += `• [${task.status}] ${task.title}${task.priority ? ` (${task.priority})` : ''}${task.due_date ? ` - Due: ${task.due_date}` : ''} (ID: ${task.id})\n`;
+              });
+              toolResultContent = result;
+            } else if (toolName === 'create_task') {
+              const { data, error } = await supabase.from('tasks').insert({
+                user_id: userId,
+                title: toolInput.title,
+                description: toolInput.description || null,
+                due_date: toolInput.dueDate || null,
+                due_time: toolInput.dueTime || null,
+                priority: toolInput.priority || 'medium',
+                status: toolInput.status || 'todo',
+                project_id: toolInput.projectId || null,
+                client_id: toolInput.clientId || null,
+                employee_id: toolInput.employeeId || null
+              }).select().single();
+
+              if (error) {
+                toolResultContent = `Failed to create task: ${error.message}`;
+              } else {
+                toolResultContent = `Created task: "${data.title}" (Priority: ${data.priority}, Status: ${data.status}${data.due_date ? `, Due: ${data.due_date}` : ''})`;
+              }
+            } else if (toolName === 'update_task') {
+              const updates: Record<string, any> = {};
+              if (toolInput.title) updates.title = toolInput.title;
+              if (toolInput.description) updates.description = toolInput.description;
+              if (toolInput.dueDate) updates.due_date = toolInput.dueDate;
+              if (toolInput.dueTime) updates.due_time = toolInput.dueTime;
+              if (toolInput.priority) updates.priority = toolInput.priority;
+              if (toolInput.status) updates.status = toolInput.status;
+              if (toolInput.projectId) updates.project_id = toolInput.projectId;
+              if (toolInput.employeeId) updates.employee_id = toolInput.employeeId;
+
+              const { data, error } = await supabase.from('tasks')
+                .update(updates)
+                .eq('id', toolInput.taskId)
+                .eq('user_id', userId)
+                .select().single();
+
+              if (error) {
+                toolResultContent = `Failed to update task: ${error.message}`;
+              } else {
+                toolResultContent = `Updated task: "${data.title}" (Status: ${data.status}, Priority: ${data.priority})`;
+              }
+            } else if (toolName === 'delete_task') {
+              const { data, error } = await supabase.from('tasks')
+                .delete()
+                .eq('id', toolInput.taskId)
+                .eq('user_id', userId)
+                .select().single();
+
+              if (error) {
+                toolResultContent = `Failed to delete task: ${error.message}`;
+              } else {
+                toolResultContent = `Deleted task: "${data.title}"`;
+              }
+            }
+            // ============ ESTIMATE HANDLERS ============
+            else if (toolName === 'get_estimates') {
+              const query = supabase.from('estimates').select('*').eq('user_id', userId);
+              if (toolInput.status && toolInput.status !== 'all') query.eq('status', toolInput.status);
+              if (toolInput.clientId) query.eq('client_id', toolInput.clientId);
+              const { data: estimates } = await query.order('created_at', { ascending: false });
+
+              let result = `Found ${estimates?.length || 0} estimates:\n`;
+              estimates?.forEach(est => {
+                result += `• ${est.title} - ${est.status} - $${parseFloat(est.total_amount || 0).toFixed(2)}${est.client_name ? ` (${est.client_name})` : ''} (ID: ${est.id})\n`;
+              });
+              toolResultContent = result;
+            } else if (toolName === 'create_estimate') {
+              const items = toolInput.items || [];
+              const subtotal = items.reduce((sum: number, item: any) => sum + (item.quantity * item.unitPrice), 0);
+              const taxRate = toolInput.taxRate || 0;
+              const taxAmount = subtotal * (taxRate / 100);
+              const totalAmount = subtotal + taxAmount;
+              const validDays = toolInput.validDays || 30;
+              const validUntil = new Date(Date.now() + validDays * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+              const { data, error } = await supabase.from('estimates').insert({
+                user_id: userId,
+                title: toolInput.title,
+                client_id: toolInput.clientId || null,
+                client_name: toolInput.clientName || null,
+                items: items,
+                subtotal: subtotal,
+                tax_rate: taxRate,
+                tax_amount: taxAmount,
+                total_amount: totalAmount,
+                notes: toolInput.notes || null,
+                terms: toolInput.terms || null,
+                valid_until: validUntil,
+                status: 'draft'
+              }).select().single();
+
+              if (error) {
+                toolResultContent = `Failed to create estimate: ${error.message}`;
+              } else {
+                toolResultContent = `Created estimate: "${data.title}" - $${totalAmount.toFixed(2)} (Status: draft, Valid until: ${validUntil})`;
+              }
+            } else if (toolName === 'update_estimate') {
+              const updates: Record<string, any> = {};
+              if (toolInput.title) updates.title = toolInput.title;
+              if (toolInput.status) updates.status = toolInput.status;
+              if (toolInput.notes) updates.notes = toolInput.notes;
+              if (toolInput.terms) updates.terms = toolInput.terms;
+              if (toolInput.taxRate !== undefined) updates.tax_rate = toolInput.taxRate;
+
+              if (toolInput.items) {
+                updates.items = toolInput.items;
+                const subtotal = toolInput.items.reduce((sum: number, item: any) => sum + (item.quantity * item.unitPrice), 0);
+                const taxRate = toolInput.taxRate ?? 0;
+                updates.subtotal = subtotal;
+                updates.tax_amount = subtotal * (taxRate / 100);
+                updates.total_amount = subtotal + updates.tax_amount;
+              }
+
+              const { data, error } = await supabase.from('estimates')
+                .update(updates)
+                .eq('id', toolInput.estimateId)
+                .eq('user_id', userId)
+                .select().single();
+
+              if (error) {
+                toolResultContent = `Failed to update estimate: ${error.message}`;
+              } else {
+                toolResultContent = `Updated estimate: "${data.title}" - $${parseFloat(data.total_amount || 0).toFixed(2)} (Status: ${data.status})`;
+              }
+            } else if (toolName === 'delete_estimate') {
+              const { data, error } = await supabase.from('estimates')
+                .delete()
+                .eq('id', toolInput.estimateId)
+                .eq('user_id', userId)
+                .select().single();
+
+              if (error) {
+                toolResultContent = `Failed to delete estimate: ${error.message}`;
+              } else {
+                toolResultContent = `Deleted estimate: "${data.title}"`;
+              }
+            }
+            // ============ INVOICE HANDLERS ============
+            else if (toolName === 'get_invoices') {
+              const query = supabase.from('invoices').select('*').eq('user_id', userId);
+              if (toolInput.status && toolInput.status !== 'all') query.eq('status', toolInput.status);
+              if (toolInput.clientId) query.eq('client_id', toolInput.clientId);
+              const { data: invoices } = await query.order('created_at', { ascending: false });
+
+              let result = `Found ${invoices?.length || 0} invoices:\n`;
+              invoices?.forEach(inv => {
+                result += `• ${inv.title || 'Invoice'} - ${inv.status} - $${parseFloat(inv.total_amount || 0).toFixed(2)}${inv.due_date ? ` (Due: ${inv.due_date})` : ''} (ID: ${inv.id})\n`;
+              });
+              toolResultContent = result;
+            } else if (toolName === 'create_invoice') {
+              let items = toolInput.items || [];
+              let totalAmount = toolInput.totalAmount || 0;
+              let taxRate = toolInput.taxRate || 0;
+
+              // If converting from estimate, fetch the estimate data
+              if (toolInput.estimateId) {
+                const { data: estimate } = await supabase.from('estimates')
+                  .select('*')
+                  .eq('id', toolInput.estimateId)
+                  .eq('user_id', userId)
+                  .single();
+
+                if (estimate) {
+                  items = estimate.items || [];
+                  totalAmount = estimate.total_amount || 0;
+                  taxRate = estimate.tax_rate || 0;
+                  // Mark estimate as accepted
+                  await supabase.from('estimates')
+                    .update({ status: 'accepted' })
+                    .eq('id', toolInput.estimateId)
+                    .eq('user_id', userId);
+                }
+              }
+
+              if (!totalAmount && items.length > 0) {
+                const subtotal = items.reduce((sum: number, item: any) => sum + (item.quantity * item.unitPrice), 0);
+                const taxAmount = subtotal * (taxRate / 100);
+                totalAmount = subtotal + taxAmount;
+              }
+
+              const dueDate = toolInput.dueDate || (toolInput.dueDays
+                ? new Date(Date.now() + toolInput.dueDays * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+                : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+
+              const { data, error } = await supabase.from('invoices').insert({
+                user_id: userId,
+                title: toolInput.title,
+                client_id: toolInput.clientId || null,
+                client_name: toolInput.clientName || null,
+                estimate_id: toolInput.estimateId || null,
+                project_id: toolInput.projectId || null,
+                items: items,
+                total_amount: totalAmount,
+                paid_amount: 0,
+                tax_rate: taxRate,
+                due_date: dueDate,
+                notes: toolInput.notes || null,
+                status: 'draft'
+              }).select().single();
+
+              if (error) {
+                toolResultContent = `Failed to create invoice: ${error.message}`;
+              } else {
+                toolResultContent = `Created invoice: "${data.title}" - $${parseFloat(data.total_amount || 0).toFixed(2)} (Due: ${dueDate}, Status: draft)${toolInput.estimateId ? ' [Converted from estimate]' : ''}`;
+              }
+            } else if (toolName === 'update_invoice') {
+              const updates: Record<string, any> = {};
+              if (toolInput.status) updates.status = toolInput.status;
+              if (toolInput.totalAmount !== undefined) updates.total_amount = toolInput.totalAmount;
+              if (toolInput.paidAmount !== undefined) updates.paid_amount = toolInput.paidAmount;
+              if (toolInput.dueDate) updates.due_date = toolInput.dueDate;
+              if (toolInput.notes) updates.notes = toolInput.notes;
+
+              const { data, error } = await supabase.from('invoices')
+                .update(updates)
+                .eq('id', toolInput.invoiceId)
+                .eq('user_id', userId)
+                .select().single();
+
+              if (error) {
+                toolResultContent = `Failed to update invoice: ${error.message}`;
+              } else {
+                toolResultContent = `Updated invoice: "${data.title || 'Invoice'}" - $${parseFloat(data.total_amount || 0).toFixed(2)} (Status: ${data.status})`;
+              }
+            }
+            // ============ CLIENT UPDATE/DELETE HANDLERS ============
+            else if (toolName === 'update_client') {
+              const updates: Record<string, any> = {};
+              if (toolInput.name) updates.name = toolInput.name;
+              if (toolInput.email) updates.email = toolInput.email;
+              if (toolInput.phone) updates.phone = toolInput.phone;
+              if (toolInput.address) updates.address = toolInput.address;
+              if (toolInput.status) updates.status = toolInput.status;
+              if (toolInput.notes) updates.notes = toolInput.notes;
+
+              const { data, error } = await supabase.from('clients')
+                .update(updates)
+                .eq('id', toolInput.clientId)
+                .eq('user_id', userId)
+                .select().single();
+
+              if (error) {
+                toolResultContent = `Failed to update client: ${error.message}`;
+              } else {
+                toolResultContent = `Updated client: ${data.name}`;
+              }
+            } else if (toolName === 'delete_client') {
+              const { data, error } = await supabase.from('clients')
+                .delete()
+                .eq('id', toolInput.clientId)
+                .eq('user_id', userId)
+                .select().single();
+
+              if (error) {
+                toolResultContent = `Failed to delete client: ${error.message}`;
+              } else {
+                toolResultContent = `Deleted client: ${data.name}`;
+              }
+            }
+            // ============ EMPLOYEE CRUD HANDLERS ============
+            else if (toolName === 'create_employee') {
+              const { data, error } = await supabase.from('employees').insert({
+                user_id: userId,
+                name: toolInput.name,
+                role: toolInput.role || null,
+                email: toolInput.email || null,
+                phone: toolInput.phone || null,
+                hourly_rate: toolInput.hourlyRate || null,
+                status: toolInput.status || 'active'
+              }).select().single();
+
+              if (error) {
+                toolResultContent = `Failed to create employee: ${error.message}`;
+              } else {
+                toolResultContent = `Created employee: ${data.name}${data.role ? ` (${data.role})` : ''}${data.hourly_rate ? ` - $${data.hourly_rate}/hr` : ''}`;
+              }
+            } else if (toolName === 'update_employee') {
+              const updates: Record<string, any> = {};
+              if (toolInput.name) updates.name = toolInput.name;
+              if (toolInput.role) updates.role = toolInput.role;
+              if (toolInput.email) updates.email = toolInput.email;
+              if (toolInput.phone) updates.phone = toolInput.phone;
+              if (toolInput.hourlyRate !== undefined) updates.hourly_rate = toolInput.hourlyRate;
+              if (toolInput.status) updates.status = toolInput.status;
+
+              const { data, error } = await supabase.from('employees')
+                .update(updates)
+                .eq('id', toolInput.employeeId)
+                .eq('user_id', userId)
+                .select().single();
+
+              if (error) {
+                toolResultContent = `Failed to update employee: ${error.message}`;
+              } else {
+                toolResultContent = `Updated employee: ${data.name}${data.role ? ` (${data.role})` : ''}`;
+              }
+            } else if (toolName === 'delete_employee') {
+              const { data, error } = await supabase.from('employees')
+                .delete()
+                .eq('id', toolInput.employeeId)
+                .eq('user_id', userId)
+                .select().single();
+
+              if (error) {
+                toolResultContent = `Failed to delete employee: ${error.message}`;
+              } else {
+                toolResultContent = `Deleted employee: ${data.name}`;
+              }
+            }
+            // ============ MILEAGE HANDLERS ============
+            else if (toolName === 'add_mileage_trip') {
+              const irsRate = 0.67; // 2024 IRS standard mileage rate
+              const totalMiles = toolInput.totalMiles;
+              const isBusiness = toolInput.isBusiness !== false;
+              const taxDeduction = isBusiness ? totalMiles * irsRate : 0;
+
+              const { data, error } = await supabase.from('mileage_trips').insert({
+                user_id: userId,
+                start_address: toolInput.startAddress || null,
+                end_address: toolInput.endAddress || null,
+                total_miles: totalMiles,
+                purpose: toolInput.purpose,
+                date: toolInput.date || new Date().toISOString().split('T')[0],
+                project_id: toolInput.projectId || null,
+                is_business: isBusiness,
+                irs_rate: irsRate,
+                tax_deduction: taxDeduction
+              }).select().single();
+
+              if (error) {
+                toolResultContent = `Failed to log mileage trip: ${error.message}`;
+              } else {
+                toolResultContent = `Logged mileage trip: ${totalMiles} miles for "${data.purpose}"${data.start_address ? ` (${data.start_address} → ${data.end_address})` : ''}\nTax deduction: $${taxDeduction.toFixed(2)} (${totalMiles} mi × $${irsRate}/mi)`;
+              }
+            } else if (toolName === 'get_mileage_trips') {
+              const query = supabase.from('mileage_trips').select('*').eq('user_id', userId);
+              if (toolInput.startDate) query.gte('date', toolInput.startDate);
+              if (toolInput.endDate) query.lte('date', toolInput.endDate);
+              if (toolInput.projectId) query.eq('project_id', toolInput.projectId);
+              const { data: trips } = await query.order('date', { ascending: false });
+
+              const totalMiles = trips?.reduce((sum, t) => sum + parseFloat(t.total_miles || 0), 0) || 0;
+              const totalDeduction = trips?.reduce((sum, t) => sum + parseFloat(t.tax_deduction || 0), 0) || 0;
+
+              let result = `Found ${trips?.length || 0} mileage trips (${totalMiles.toFixed(1)} total miles, $${totalDeduction.toFixed(2)} total deduction):\n`;
+              trips?.forEach(trip => {
+                result += `• ${trip.date} - ${trip.total_miles} mi - ${trip.purpose}${trip.start_address ? ` (${trip.start_address} → ${trip.end_address})` : ''} - $${parseFloat(trip.tax_deduction || 0).toFixed(2)} deduction\n`;
+              });
+              toolResultContent = result;
+            }
+            // ============ TIME ENTRY HANDLER ============
+            else if (toolName === 'add_time_entry') {
+              const totalPay = toolInput.hourlyRate ? toolInput.hours * toolInput.hourlyRate : null;
+
+              const { data, error } = await supabase.from('time_entries').insert({
+                user_id: userId,
+                employee_id: toolInput.employeeId || null,
+                employee_name: toolInput.employeeName || null,
+                hours: toolInput.hours,
+                date: toolInput.date || new Date().toISOString().split('T')[0],
+                hourly_rate: toolInput.hourlyRate || null,
+                total_pay: totalPay,
+                project_id: toolInput.projectId || null,
+                notes: toolInput.notes || null
+              }).select().single();
+
+              if (error) {
+                toolResultContent = `Failed to log time entry: ${error.message}`;
+              } else {
+                toolResultContent = `Logged time entry: ${data.hours} hours${data.employee_name ? ` for ${data.employee_name}` : ''} on ${data.date}${totalPay ? ` ($${totalPay.toFixed(2)} at $${data.hourly_rate}/hr)` : ''}${data.notes ? ` - ${data.notes}` : ''}`;
+              }
+            }
+            // ============ EXPENSE UPDATE/DELETE HANDLERS ============
+            else if (toolName === 'update_expense') {
+              const updates: Record<string, any> = {};
+              if (toolInput.amount !== undefined) updates.amount = toolInput.amount;
+              if (toolInput.category) updates.category = toolInput.category;
+              if (toolInput.vendor) updates.vendor = toolInput.vendor;
+              if (toolInput.description) updates.notes = toolInput.description;
+              if (toolInput.date) updates.date = toolInput.date;
+
+              const { data, error } = await supabase.from('finance_expenses')
+                .update(updates)
+                .eq('id', toolInput.expenseId)
+                .eq('user_id', userId)
+                .select().single();
+
+              if (error) {
+                toolResultContent = `Failed to update expense: ${error.message}`;
+              } else {
+                toolResultContent = `Updated expense: $${data.amount} for ${data.category}`;
+              }
+            } else if (toolName === 'delete_expense') {
+              const { data, error } = await supabase.from('finance_expenses')
+                .delete()
+                .eq('id', toolInput.expenseId)
+                .eq('user_id', userId)
+                .select().single();
+
+              if (error) {
+                toolResultContent = `Failed to delete expense: ${error.message}`;
+              } else {
+                toolResultContent = `Deleted expense: $${data.amount} for ${data.category}`;
+              }
+            }
+            // ============ CALENDAR UPDATE/DELETE HANDLERS ============
+            else if (toolName === 'update_calendar_event') {
+              const updates: Record<string, any> = {};
+              if (toolInput.title) updates.title = toolInput.title;
+              if (toolInput.startTime) updates.start_time = toolInput.startTime;
+              if (toolInput.endTime) updates.end_time = toolInput.endTime;
+              if (toolInput.description) updates.description = toolInput.description;
+
+              const { data, error } = await supabase.from('calendar_events')
+                .update(updates)
+                .eq('id', toolInput.eventId)
+                .eq('user_id', userId)
+                .select().single();
+
+              if (error) {
+                toolResultContent = `Failed to update event: ${error.message}`;
+              } else {
+                toolResultContent = `Updated event: ${data.title}`;
+              }
+            } else if (toolName === 'delete_calendar_event') {
+              const { data, error } = await supabase.from('calendar_events')
+                .delete()
+                .eq('id', toolInput.eventId)
+                .eq('user_id', userId)
+                .select().single();
+
+              if (error) {
+                toolResultContent = `Failed to delete event: ${error.message}`;
+              } else {
+                toolResultContent = `Deleted event: ${data.title}`;
+              }
             } else {
               toolResultContent = `Tool ${toolName} executed successfully.`;
             }

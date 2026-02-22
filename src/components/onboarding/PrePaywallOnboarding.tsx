@@ -366,7 +366,7 @@ const PrePaywallOnboarding: React.FC<PrePaywallOnboardingProps> = ({ onComplete 
   const { user } = useAuthStore();
   const [step, setStep] = useState(1);
   const [businessName, setBusinessName] = useState('');
-  const [selectedTrade, setSelectedTrade] = useState<string | null>(null);
+  const [selectedTrades, setSelectedTrades] = useState<string[]>([]);
   const [showOtherTrades, setShowOtherTrades] = useState(false);
   const [saving, setSaving] = useState(false);
   const [emailSending, setEmailSending] = useState(false);
@@ -393,14 +393,14 @@ const PrePaywallOnboarding: React.FC<PrePaywallOnboardingProps> = ({ onComplete 
         step_name: STEP_NAMES[stepNumber - 1],
         action,
         business_name: businessName || null,
-        selected_trade: selectedTrade || null,
+        selected_trade: selectedTrades.length > 0 ? selectedTrades.join(',') : null,
         time_on_step_ms: timeOnStepMs || null,
         device_type: getDeviceType(),
       });
     } catch (error) {
       console.error('[OnboardingAnalytics] Track error:', error);
     }
-  }, [user?.id, businessName, selectedTrade]);
+  }, [user?.id, businessName, selectedTrades]);
 
   // Track step view on mount and step change
   useEffect(() => {
@@ -428,7 +428,7 @@ const PrePaywallOnboarding: React.FC<PrePaywallOnboardingProps> = ({ onComplete 
         step_name: STEP_NAMES[step - 1],
         action: 'dropped',
         business_name: businessName || null,
-        selected_trade: selectedTrade || null,
+        selected_trade: selectedTrades.length > 0 ? selectedTrades.join(',') : null,
         time_on_step_ms: timeOnStep,
         device_type: getDeviceType(),
       });
@@ -460,7 +460,7 @@ const PrePaywallOnboarding: React.FC<PrePaywallOnboardingProps> = ({ onComplete 
     cleanupListeners.current = cleanup;
 
     return cleanup;
-  }, [step, user?.id, businessName, selectedTrade, trackEvent]);
+  }, [step, user?.id, businessName, selectedTrades, trackEvent]);
 
   const handleNext = async () => {
     if (step === 1) {
@@ -468,8 +468,8 @@ const PrePaywallOnboarding: React.FC<PrePaywallOnboardingProps> = ({ onComplete 
         alert('Please enter your business name');
         return;
       }
-      if (!selectedTrade) {
-        alert('Please select your trade');
+      if (selectedTrades.length === 0) {
+        alert('Please select at least one trade');
         return;
       }
       // Track step 1 completion
@@ -526,7 +526,7 @@ const PrePaywallOnboarding: React.FC<PrePaywallOnboardingProps> = ({ onComplete 
           id: user.id,
           email: user.email,
           company_name: businessName.trim(),
-          business_type: selectedTrade,
+          business_type: selectedTrades.join(','),
           updated_at: new Date().toISOString()
         }, {
           onConflict: 'id'
@@ -559,7 +559,7 @@ const PrePaywallOnboarding: React.FC<PrePaywallOnboardingProps> = ({ onComplete 
     }
   };
 
-  const sampleEstimate = selectedTrade ? SAMPLE_ESTIMATES[selectedTrade] || SAMPLE_ESTIMATES.roofing : SAMPLE_ESTIMATES.roofing;
+  const sampleEstimate = selectedTrades.length > 0 ? SAMPLE_ESTIMATES[selectedTrades[0]] || SAMPLE_ESTIMATES.roofing : SAMPLE_ESTIMATES.roofing;
 
   // Step 1: Business Setup
   const renderBusinessSetup = () => (
@@ -586,20 +586,24 @@ const PrePaywallOnboarding: React.FC<PrePaywallOnboardingProps> = ({ onComplete 
         </div>
 
         <div className="mb-3">
-          <label className="text-sm font-medium text-gray-600 mb-2 block">
+          <label className="text-sm font-medium text-gray-600 mb-1 block">
             What type of work do you do?
           </label>
+          <p className="text-xs text-gray-400 mb-2">Select all that apply</p>
 
           <div className="grid grid-cols-2 gap-2 mb-2">
             {TOP_TRADES.map((trade) => {
               const Icon = trade.icon;
-              const isSelected = selectedTrade === trade.id;
+              const isSelected = selectedTrades.includes(trade.id);
               return (
                 <button
                   key={trade.id}
                   onClick={() => {
-                    setSelectedTrade(trade.id);
-                    setShowOtherTrades(false);
+                    setSelectedTrades(prev =>
+                      prev.includes(trade.id)
+                        ? prev.filter(t => t !== trade.id)
+                        : [...prev, trade.id]
+                    );
                   }}
                   className={`flex items-center gap-2.5 p-3 rounded-xl border transition-all ${
                     isSelected
@@ -617,7 +621,7 @@ const PrePaywallOnboarding: React.FC<PrePaywallOnboardingProps> = ({ onComplete 
           <button
             onClick={() => setShowOtherTrades(!showOtherTrades)}
             className={`w-full flex items-center justify-center gap-2 p-3 rounded-xl border transition-all ${
-              showOtherTrades || OTHER_TRADES.some(t => t.id === selectedTrade)
+              showOtherTrades || OTHER_TRADES.some(t => selectedTrades.includes(t.id))
                 ? 'bg-gray-100 border-gray-300 text-gray-700'
                 : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'
             }`}
@@ -630,11 +634,17 @@ const PrePaywallOnboarding: React.FC<PrePaywallOnboardingProps> = ({ onComplete 
           {showOtherTrades && (
             <div className="mt-3 grid grid-cols-2 gap-2">
               {OTHER_TRADES.map((trade) => {
-                const isSelected = selectedTrade === trade.id;
+                const isSelected = selectedTrades.includes(trade.id);
                 return (
                   <button
                     key={trade.id}
-                    onClick={() => setSelectedTrade(trade.id)}
+                    onClick={() => {
+                      setSelectedTrades(prev =>
+                        prev.includes(trade.id)
+                          ? prev.filter(t => t !== trade.id)
+                          : [...prev, trade.id]
+                      );
+                    }}
                     className={`p-3 rounded-lg border text-sm transition-all ${
                       isSelected
                         ? 'bg-blue-50 border-blue-500 text-blue-700'
@@ -653,7 +663,7 @@ const PrePaywallOnboarding: React.FC<PrePaywallOnboardingProps> = ({ onComplete 
       <div className="px-5 py-3 bg-white border-t border-gray-200">
         <button
           onClick={handleNext}
-          disabled={!businessName.trim() || !selectedTrade}
+          disabled={!businessName.trim() || selectedTrades.length === 0}
           className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Continue

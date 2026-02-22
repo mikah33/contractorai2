@@ -11,6 +11,8 @@
 		0696D9792EEA2A2E0069F933 /* ContractorAI-WORKING.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 0696D9782EEA2A2E0069F933 /* ContractorAI-WORKING.storekit */; };
 		06D96F2B2ED2090F00254DE3 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D96F2A2ED2090F00254DE3 /* StoreKit.framework */; };
 		06DCAB352EF241B500AC3586 /* LiDARScannerPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06DCAB332EF241B500AC3586 /* LiDARScannerPlugin.swift */; };
+		A1B2C3D4E5F647A800112233 /* AutoMileageTrackerPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F647A800112234 /* AutoMileageTrackerPlugin.swift */; };
+		B2C3D4E5F6A748B900223344 /* DocumentScannerPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E5F6A748B900223345 /* DocumentScannerPlugin.swift */; };
 		06DCAB382EF244A300AC3586 /* MyBridgeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06DCAB372EF244A300AC3586 /* MyBridgeViewController.swift */; };
 		2FAD9763203C412B000D30F8 /* config.xml in Resources */ = {isa = PBXBuildFile; fileRef = 2FAD9762203C412B000D30F8 /* config.xml */; };
 		50379B232058CBB4000EE86E /* capacitor.config.json in Resources */ = {isa = PBXBuildFile; fileRef = 50379B222058CBB4000EE86E /* capacitor.config.json */; };
@@ -22,6 +24,19 @@
 		8E83EDF4F7749BFFE00EECDA /* FloorPlanGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4326B21913F02BEC2205877F /* FloorPlanGenerator.swift */; };
 		A084ECDBA7D38E1E42DFC39D /* Pods_App.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AF277DCFFFF123FFC6DF26C7 /* Pods_App.framework */; };
 		AD98AEC34B77FE8FD10827B8 /* TextureMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB3C643086C2309E3164712C /* TextureMapper.swift */; };
+		C1A10001300000000000AA01 /* SiriIntentPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A10002300000000000AA01 /* SiriIntentPlugin.swift */; };
+		C1A10003300000000000AA02 /* KeychainHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A10004300000000000AA02 /* KeychainHelper.swift */; };
+		C1A10005300000000000AA03 /* OnSiteConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A10006300000000000AA03 /* OnSiteConfig.swift */; };
+		C1A10007300000000000AA04 /* OnSiteAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A10008300000000000AA04 /* OnSiteAPIClient.swift */; };
+		C1A10009300000000000AA05 /* AskOnSiteIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A1000A300000000000AA05 /* AskOnSiteIntent.swift */; };
+		C1A1000B300000000000AA06 /* CreateTaskIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A1000C300000000000AA06 /* CreateTaskIntent.swift */; };
+		C1A1000D300000000000AA07 /* LogMileageIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A1000E300000000000AA07 /* LogMileageIntent.swift */; };
+		C1A1000F300000000000AA08 /* LogTimeIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A10010300000000000AA08 /* LogTimeIntent.swift */; };
+		C1A10011300000000000AA09 /* AddExpenseIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A10012300000000000AA09 /* AddExpenseIntent.swift */; };
+		C1A10013300000000000AA0A /* CreateClientIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A10014300000000000AA0A /* CreateClientIntent.swift */; };
+		C1A10015300000000000AA0B /* GetProjectsIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A10016300000000000AA0B /* GetProjectsIntent.swift */; };
+		C1A10017300000000000AA0C /* MileageTrackingIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A10018300000000000AA0C /* MileageTrackingIntents.swift */; };
+		C1A10019300000000000AA0D /* OnSiteShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A1001A300000000000AA0D /* OnSiteShortcuts.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,6 +45,8 @@
 		06D801532F099AC9005D6C95 /* App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = App.entitlements; sourceTree = "<group>"; };
 		06D96F2A2ED2090F00254DE3 /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 		06DCAB332EF241B500AC3586 /* LiDARScannerPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiDARScannerPlugin.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F647A800112234 /* AutoMileageTrackerPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoMileageTrackerPlugin.swift; sourceTree = "<group>"; };
+		B2C3D4E5F6A748B900223345 /* DocumentScannerPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentScannerPlugin.swift; sourceTree = "<group>"; };
 		06DCAB362EF241CE00AC3586 /* App-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "App-Bridging-Header.h"; sourceTree = "<group>"; };
 		06DCAB372EF244A300AC3586 /* MyBridgeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyBridgeViewController.swift; sourceTree = "<group>"; };
 		2FAD9762203C412B000D30F8 /* config.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = config.xml; sourceTree = "<group>"; };
@@ -46,6 +63,19 @@
 		AF51FD2D460BCFE21FA515B2 /* Pods-App.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-App.release.xcconfig"; path = "Pods/Target Support Files/Pods-App/Pods-App.release.xcconfig"; sourceTree = "<group>"; };
 		CB3C643086C2309E3164712C /* TextureMapper.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TextureMapper.swift; sourceTree = "<group>"; };
 		FC68EB0AF532CFC21C3344DD /* Pods-App.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-App.debug.xcconfig"; path = "Pods/Target Support Files/Pods-App/Pods-App.debug.xcconfig"; sourceTree = "<group>"; };
+		C1A10002300000000000AA01 /* SiriIntentPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiriIntentPlugin.swift; sourceTree = "<group>"; };
+		C1A10004300000000000AA02 /* KeychainHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainHelper.swift; sourceTree = "<group>"; };
+		C1A10006300000000000AA03 /* OnSiteConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnSiteConfig.swift; sourceTree = "<group>"; };
+		C1A10008300000000000AA04 /* OnSiteAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnSiteAPIClient.swift; sourceTree = "<group>"; };
+		C1A1000A300000000000AA05 /* AskOnSiteIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AskOnSiteIntent.swift; sourceTree = "<group>"; };
+		C1A1000C300000000000AA06 /* CreateTaskIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateTaskIntent.swift; sourceTree = "<group>"; };
+		C1A1000E300000000000AA07 /* LogMileageIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogMileageIntent.swift; sourceTree = "<group>"; };
+		C1A10010300000000000AA08 /* LogTimeIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogTimeIntent.swift; sourceTree = "<group>"; };
+		C1A10012300000000000AA09 /* AddExpenseIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddExpenseIntent.swift; sourceTree = "<group>"; };
+		C1A10014300000000000AA0A /* CreateClientIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateClientIntent.swift; sourceTree = "<group>"; };
+		C1A10016300000000000AA0B /* GetProjectsIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetProjectsIntent.swift; sourceTree = "<group>"; };
+		C1A10018300000000000AA0C /* MileageTrackingIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MileageTrackingIntents.swift; sourceTree = "<group>"; };
+		C1A1001A300000000000AA0D /* OnSiteShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnSiteShortcuts.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -88,12 +118,43 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		C1A1FF01300000000000BB01 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				C1A10004300000000000AA02 /* KeychainHelper.swift */,
+				C1A10006300000000000AA03 /* OnSiteConfig.swift */,
+				C1A10008300000000000AA04 /* OnSiteAPIClient.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		C1A1FF02300000000000BB02 /* Intents */ = {
+			isa = PBXGroup;
+			children = (
+				C1A1000A300000000000AA05 /* AskOnSiteIntent.swift */,
+				C1A1000C300000000000AA06 /* CreateTaskIntent.swift */,
+				C1A1000E300000000000AA07 /* LogMileageIntent.swift */,
+				C1A10010300000000000AA08 /* LogTimeIntent.swift */,
+				C1A10012300000000000AA09 /* AddExpenseIntent.swift */,
+				C1A10014300000000000AA0A /* CreateClientIntent.swift */,
+				C1A10016300000000000AA0B /* GetProjectsIntent.swift */,
+				C1A10018300000000000AA0C /* MileageTrackingIntents.swift */,
+				C1A1001A300000000000AA0D /* OnSiteShortcuts.swift */,
+			);
+			path = Intents;
+			sourceTree = "<group>";
+		};
 		504EC3061FED79650016851F /* App */ = {
 			isa = PBXGroup;
 			children = (
+				C1A1FF01300000000000BB01 /* Shared */,
+				C1A1FF02300000000000BB02 /* Intents */,
 				06D801532F099AC9005D6C95 /* App.entitlements */,
 				06DCAB372EF244A300AC3586 /* MyBridgeViewController.swift */,
 				06DCAB332EF241B500AC3586 /* LiDARScannerPlugin.swift */,
+				A1B2C3D4E5F647A800112234 /* AutoMileageTrackerPlugin.swift */,
+				B2C3D4E5F6A748B900223345 /* DocumentScannerPlugin.swift */,
+				C1A10002300000000000AA01 /* SiriIntentPlugin.swift */,
 				0696D9782EEA2A2E0069F933 /* ContractorAI-WORKING.storekit */,
 				06792B9E2EE928FF00817EFC /* client_244912967505-dca35jhgoirkgfc5sfkm2kq7eha57s5u.apps.googleusercontent.com.plist */,
 				50379B222058CBB4000EE86E /* capacitor.config.json */,
@@ -236,10 +297,25 @@
 			buildActionMask = 2147483647;
 			files = (
 				06DCAB352EF241B500AC3586 /* LiDARScannerPlugin.swift in Sources */,
+				A1B2C3D4E5F647A800112233 /* AutoMileageTrackerPlugin.swift in Sources */,
+				B2C3D4E5F6A748B900223344 /* DocumentScannerPlugin.swift in Sources */,
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
 				06DCAB382EF244A300AC3586 /* MyBridgeViewController.swift in Sources */,
 				8E83EDF4F7749BFFE00EECDA /* FloorPlanGenerator.swift in Sources */,
 				AD98AEC34B77FE8FD10827B8 /* TextureMapper.swift in Sources */,
+				C1A10001300000000000AA01 /* SiriIntentPlugin.swift in Sources */,
+				C1A10003300000000000AA02 /* KeychainHelper.swift in Sources */,
+				C1A10005300000000000AA03 /* OnSiteConfig.swift in Sources */,
+				C1A10007300000000000AA04 /* OnSiteAPIClient.swift in Sources */,
+				C1A10009300000000000AA05 /* AskOnSiteIntent.swift in Sources */,
+				C1A1000B300000000000AA06 /* CreateTaskIntent.swift in Sources */,
+				C1A1000D300000000000AA07 /* LogMileageIntent.swift in Sources */,
+				C1A1000F300000000000AA08 /* LogTimeIntent.swift in Sources */,
+				C1A10011300000000000AA09 /* AddExpenseIntent.swift in Sources */,
+				C1A10013300000000000AA0A /* CreateClientIntent.swift in Sources */,
+				C1A10015300000000000AA0B /* GetProjectsIntent.swift in Sources */,
+				C1A10017300000000000AA0C /* MileageTrackingIntents.swift in Sources */,
+				C1A10019300000000000AA0D /* OnSiteShortcuts.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -313,7 +389,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
@@ -364,7 +440,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
@@ -387,7 +463,7 @@
 				INFOPLIST_FILE = App/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = ContractorAI;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MARKETING_VERSION = 1.37;
 				OTHER_SWIFT_FLAGS = "$(inherited) \"-D\" \"COCOAPODS\" \"-DDEBUG\"";
@@ -416,7 +492,7 @@
 				INFOPLIST_FILE = App/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = ContractorAI;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MARKETING_VERSION = 1.37;
 				PRODUCT_BUNDLE_IDENTIFIER = com.elevated.contractorai;

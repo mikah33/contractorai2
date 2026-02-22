@@ -1,6 +1,8 @@
-import { useState, useRef } from 'react';
-import { Camera, Upload, X, Check, Edit, Tag, FileText, Loader } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Camera, Upload, X, Check, Edit, Tag, FileText, Loader, ScanLine } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
 import { supabase } from '../../lib/supabase';
+import DocumentScanner from '../../services/documentScannerService';
 
 interface ReceiptData {
   id: string;
@@ -57,6 +59,139 @@ const ReceiptCapture: React.FC<ReceiptCaptureProps> = ({ onSave, projects }) => 
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const [scannerAvailable, setScannerAvailable] = useState(false);
+
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      DocumentScanner.isAvailable().then(({ available }) => setScannerAvailable(available));
+    }
+  }, []);
+
+  const handleDocumentScan = async () => {
+    try {
+      setIsProcessing(true);
+      setOcrStatus('processing');
+
+      const result = await DocumentScanner.scanDocument();
+
+      // Set the scanned image as preview
+      if (result.imagePath) {
+        setPreviewUrl(Capacitor.convertFileSrc(result.imagePath));
+      }
+
+      setIsEditing(true);
+
+      // Upload scanned image to Supabase and analyze with Claude
+      if (result.imagePath) {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) throw new Error('Not authenticated');
+
+          // Convert native file to blob
+          const imgResponse = await fetch(Capacitor.convertFileSrc(result.imagePath));
+          const blob = await imgResponse.blob();
+          const fileName = `${user.id}/${Date.now()}_scanned_receipt.jpg`;
+
+          // Upload to Supabase Storage
+          const { error: uploadError } = await supabase.storage
+            .from('receipt-images')
+            .upload(fileName, blob);
+
+          if (uploadError) throw uploadError;
+
+          const { data: { publicUrl } } = supabase.storage
+            .from('receipt-images')
+            .getPublicUrl(fileName);
+
+          setReceiptData(prev => ({ ...prev, imageUrl: publicUrl }));
+
+          // Send to Claude for analysis
+          const { data: { session } } = await supabase.auth.getSession();
+
+          const analyzeResponse = await fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-receipt`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session?.access_token}`,
+              },
+              body: JSON.stringify({ imageUrl: publicUrl }),
+            }
+          );
+
+          if (analyzeResponse.ok) {
+            const ocrData = await analyzeResponse.json();
+            console.log('✅ Claude OCR Result:', ocrData);
+
+            if (ocrData.lineItems && ocrData.lineItems.length > 0) {
+              setLineItems(ocrData.lineItems);
+            }
+
+            setReceiptData(prev => ({
+              ...prev,
+              vendor: ocrData.vendor || prev.vendor,
+              date: ocrData.date || prev.date,
+              amount: ocrData.amount ? parseFloat(ocrData.amount) : prev.amount,
+              taxAmount: ocrData.taxAmount ? parseFloat(ocrData.taxAmount) : prev.taxAmount,
+              subtotal: ocrData.subtotal ? parseFloat(ocrData.subtotal) : prev.subtotal,
+              receiptNumber: ocrData.receiptNumber || prev.receiptNumber,
+              supplierAddress: ocrData.supplierAddress || prev.supplierAddress,
+              supplierPhone: ocrData.supplierPhone || prev.supplierPhone,
+              imageUrl: publicUrl,
+              notes: ocrData.confidence?.overall
+                ? `AI-analyzed (${Math.round(ocrData.confidence.overall * 100)}% confidence)`
+                : prev.notes,
+            }));
+            setOcrStatus('complete');
+          } else {
+            console.error('Claude analysis failed:', await analyzeResponse.text());
+            setOcrStatus('error');
+          }
+        } catch (error) {
+          console.error('❌ Claude analysis failed:', error);
+          setOcrStatus('error');
+        }
+      } else {
+        setOcrStatus('error');
+      }
+    } catch (error: any) {
+      if (error?.message?.includes('cancelled')) {
+        setIsProcessing(false);
+        setOcrStatus('idle');
+        return;
+      }
+      console.error('Scan error:', error);
+      setOcrStatus('error');
+      setIsEditing(true);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const uploadScannedImage = async (filePath: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const response = await fetch(Capacitor.convertFileSrc(filePath));
+      const blob = await response.blob();
+      const fileName = `${user.id}/${Date.now()}_scanned_receipt.jpg`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('receipt-images')
+        .upload(fileName, blob);
+
+      if (!uploadError) {
+        const { data: { publicUrl } } = supabase.storage
+          .from('receipt-images')
+          .getPublicUrl(fileName);
+        setReceiptData(prev => ({ ...prev, imageUrl: publicUrl }));
+      }
+    } catch (err) {
+      console.error('Error uploading scanned image:', err);
+    }
+  };
 
   const categories = [
     'Materials', 'Labor', 'Subcontractors', 'Equipment Rental', 
@@ -144,71 +279,46 @@ const ReceiptCapture: React.FC<ReceiptCaptureProps> = ({ onSave, projects }) => 
       // Save imageUrl immediately
       setReceiptData(prev => ({ ...prev, imageUrl: publicUrl }));
 
-      // 3. Call n8n webhook to process receipt with OCR (runs in background)
-      console.log('📤 Sending to n8n webhook for OCR processing...');
-
-      const n8nWebhookUrl = 'https://contractorai.app.n8n.cloud/webhook/d718a3b9-fd46-4ce2-b885-f2a18ad4d98a';
-
-      const requestPayload = {
-        imageUrl: publicUrl
-      };
-
-      console.log('🔍 Webhook URL:', n8nWebhookUrl);
-      console.log('🔍 Request payload:', requestPayload);
-      console.log('🔍 Image URL being sent:', publicUrl);
+      // 3. Call Claude Vision via Supabase edge function for receipt analysis
+      console.log('📤 Sending to Claude Vision for receipt analysis...');
 
       let ocrData: any = {};
 
       try {
-        // Add timeout to prevent hanging forever
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => {
-          console.error('⏱️ Request timed out after 30 seconds');
-          controller.abort();
-        }, 30000); // 30 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout for AI
 
-        console.log('🚀 Making fetch request now...');
+        const { data: { session } } = await supabase.auth.getSession();
 
-        const webhookResponse = await fetch(n8nWebhookUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(requestPayload),
-          signal: controller.signal
-        });
-
-        console.log('✅ Fetch completed');
+        const analyzeResponse = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-receipt`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session?.access_token}`,
+            },
+            body: JSON.stringify({ imageUrl: publicUrl }),
+            signal: controller.signal,
+          }
+        );
 
         clearTimeout(timeoutId);
 
-        console.log('📥 Webhook response status:', webhookResponse.status);
-        console.log('📥 Webhook response headers:', Object.fromEntries(webhookResponse.headers.entries()));
+        console.log('📥 Claude response status:', analyzeResponse.status);
 
-        if (!webhookResponse.ok) {
-          console.error('❌ n8n webhook error:', webhookResponse.status, webhookResponse.statusText);
-          const errorText = await webhookResponse.text();
-          console.error('Error response body:', errorText);
-          throw new Error(`Webhook responded with ${webhookResponse.status}`);
+        if (!analyzeResponse.ok) {
+          const errorText = await analyzeResponse.text();
+          console.error('❌ Claude analysis error:', analyzeResponse.status, errorText);
+          throw new Error(`Analysis failed: ${analyzeResponse.status}`);
         }
 
-        // Get response as text first to debug
-        const responseText = await webhookResponse.text();
-        console.log('📥 Raw webhook response:', responseText);
-
-        // Try to parse as JSON
-        if (responseText.trim()) {
-          ocrData = JSON.parse(responseText);
-          console.log('✅ OCR Result from n8n:', ocrData);
-        } else {
-          console.warn('⚠️ Webhook returned empty response');
-          throw new Error('Empty response from webhook');
-        }
+        ocrData = await analyzeResponse.json();
+        console.log('✅ Claude OCR Result:', ocrData);
       } catch (error) {
-        console.error('❌ n8n webhook failed:', error);
+        console.error('❌ Receipt analysis failed:', error);
         console.log('⚠️ Continuing without OCR - user can enter data manually');
         setOcrStatus('error');
-        // Don't return - allow the user to continue manually
       }
 
       // Store line items if available
@@ -320,7 +430,7 @@ const ReceiptCapture: React.FC<ReceiptCaptureProps> = ({ onSave, projects }) => 
                 <span className="mt-1 block text-xs text-gray-500">Use your camera to capture a receipt</span>
               </div>
             </button>
-            
+
             <button
               onClick={handleFileUpload}
               className="flex items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
@@ -380,7 +490,7 @@ const ReceiptCapture: React.FC<ReceiptCaptureProps> = ({ onSave, projects }) => 
                         <>
                           <Loader className="w-4 h-4 text-blue-500 animate-spin mr-2" />
                           <span className="text-sm text-blue-700">
-                            🤖 AI is extracting data... You can start entering info now!
+                            Extracting receipt data... You can start entering info now!
                           </span>
                         </>
                       )}
@@ -388,13 +498,13 @@ const ReceiptCapture: React.FC<ReceiptCaptureProps> = ({ onSave, projects }) => 
                         <>
                           <Check className="w-4 h-4 text-green-500 mr-2" />
                           <span className="text-sm text-green-700">
-                            ✅ Receipt data extracted! Fields auto-filled below.
+                            Receipt data extracted! Fields auto-filled below.
                           </span>
                         </>
                       )}
                       {ocrStatus === 'error' && (
                         <span className="text-sm text-yellow-700">
-                          ⚠️ OCR couldn't process - please enter manually
+                          Could not extract all fields - please verify and fill in manually
                         </span>
                       )}
                     </div>

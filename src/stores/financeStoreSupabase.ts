@@ -356,7 +356,7 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
         projectId: expense.project_id || null,
         userId: expense.user_id,
         metadata: expense.metadata || undefined,
-        imageUrl: expense.image_url || undefined
+        imageUrl: expense.metadata?.image_url || undefined
       })) || [];
 
       console.log('✅ Transformed receipts:', receipts);
@@ -397,7 +397,7 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
           notes: receipt.notes || null,
           project_id: resolvedProjectId,
           user_id: userId,
-          image_url: receipt.imageUrl || null
+          metadata: receipt.imageUrl ? { image_url: receipt.imageUrl } : null
         })
         .select()
         .single();

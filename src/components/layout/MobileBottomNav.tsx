@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Home,
@@ -72,6 +72,17 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loadingEvents, setLoadingEvents] = useState(false);
+  const fabButtonRef = useRef<HTMLButtonElement>(null);
+  const [fabPos, setFabPos] = useState<{ top: number; left: number } | null>(null);
+
+  // Capture the + button's exact screen position before opening the modal
+  const captureAndOpenAI = useCallback(() => {
+    if (fabButtonRef.current) {
+      const rect = fabButtonRef.current.getBoundingClientRect();
+      setFabPos({ top: rect.top, left: rect.left });
+    }
+    handleAIClick();
+  }, []);
 
   // Listen for openVisionCam and closeVisionCam events from OnSiteSetup
   useEffect(() => {
@@ -289,8 +300,9 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
               <div key={item.name} className="relative flex-1 h-full flex items-center justify-center">
                 {item.hasFloatingButton && (
                   <button
-                    onClick={handleAIClick}
-                    className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 w-[60px] h-[60px] bg-[#043d6b] rounded-full flex items-center justify-center shadow-lg shadow-[#043d6b]/30 active:scale-95 transition-transform"
+                    ref={fabButtonRef}
+                    onClick={captureAndOpenAI}
+                    className={`absolute bottom-full mb-3 left-1/2 -translate-x-1/2 w-[60px] h-[60px] bg-[#043d6b] rounded-full flex items-center justify-center shadow-lg shadow-[#043d6b]/30 active:scale-95 transition-transform ${showAIModal ? 'invisible' : ''}`}
                   >
                     <Plus className="w-7 h-7 text-white" />
                   </button>
@@ -345,10 +357,13 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
             onClick={handleCloseAIModal}
           />
 
-          {/* FAB Menu - Positioned above the + button */}
+          {/* FAB Menu - Positioned above the X button */}
           <div
-            className="absolute right-4 flex flex-col items-end gap-4"
-            style={{ bottom: 'calc(160px + env(safe-area-inset-bottom))' }}
+            className="fixed flex flex-col items-end gap-4"
+            style={fabPos ? {
+              bottom: `calc(100vh - ${fabPos.top}px + 16px)`,
+              right: `calc(100vw - ${fabPos.left}px - 60px)`,
+            } : { bottom: '220px', right: '16px' }}
           >
             {[
               { id: 'plan', label: '3D Plan', icon: Scan, color: 'bg-cyan-600', delay: 0 },
@@ -412,16 +427,21 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ className = '' }) => 
             ))}
           </div>
 
-          {/* Close button (X) - positioned over the + button location */}
-          <button
-            onClick={handleCloseAIModal}
-            className={`absolute right-4 w-[60px] h-[60px] bg-[#043d6b] rounded-full flex items-center justify-center shadow-xl transition-all duration-300 ${
-              isAIModalVisible ? 'rotate-0 scale-100' : 'rotate-45 scale-90'
-            }`}
-            style={{ bottom: 'calc(84px + env(safe-area-inset-bottom))' }}
-          >
-            <X className="w-7 h-7 text-white" />
-          </button>
+          {/* Close button (X) - positioned using captured + button coordinates */}
+          {fabPos && (
+            <button
+              onClick={handleCloseAIModal}
+              className={`fixed w-[60px] h-[60px] bg-[#043d6b] rounded-full flex items-center justify-center shadow-xl transition-all duration-300 ${
+                isAIModalVisible ? 'rotate-0 scale-100 opacity-100' : 'rotate-45 scale-90 opacity-0'
+              }`}
+              style={{
+                top: fabPos.top,
+                left: fabPos.left,
+              }}
+            >
+              <X className="w-7 h-7 text-white" />
+            </button>
+          )}
         </div>
       )}
 

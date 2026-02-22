@@ -35,13 +35,19 @@ import {
   Edit,
   Check,
   ClipboardList,
-  PenLine
+  PenLine,
+  ScanLine,
+  Eye,
+  ChevronUp
 } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
+import { Camera as CapCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { useFinanceStore, type Invoice, type Receipt as ReceiptType, type RecurringExpense } from '../stores/financeStoreSupabase';
 import { useClientsStore } from '../stores/clientsStore';
 import useProjectStore from '../stores/projectStore';
 import AIChatPopup from '../components/ai/AIChatPopup';
 import AddChoiceModal from '../components/common/AddChoiceModal';
+import ReceiptScannerModal from '../components/finance/ReceiptScannerModal';
 import { supabase } from '../lib/supabase';
 import { useTheme, getThemeClasses } from '../contexts/ThemeContext';
 
@@ -100,6 +106,10 @@ const FinanceHub: React.FC<FinanceHubProps> = ({ embedded = false, searchQuery: 
   const [receiptPreviewUrl, setReceiptPreviewUrl] = useState<string | null>(null);
   const [isReceiptProcessing, setIsReceiptProcessing] = useState(false);
   const [ocrStatus, setOcrStatus] = useState<'idle' | 'processing' | 'complete' | 'error'>('idle');
+  const [showCamera, setShowCamera] = useState(false);
+  const [analyzingText, setAnalyzingText] = useState('Analyzing receipt...');
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const [receiptFormData, setReceiptFormData] = useState({
     vendor: '',
     date: new Date().toISOString().split('T')[0],
@@ -111,6 +121,17 @@ const FinanceHub: React.FC<FinanceHubProps> = ({ embedded = false, searchQuery: 
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+
+  // Receipt scanner modal state
+  const [showReceiptScanner, setShowReceiptScanner] = useState(false);
+  const [showSavedReceipts, setShowSavedReceipts] = useState(false);
+
+  const handleScannerCapture = (file: File, previewUrl: string) => {
+    setReceiptPreviewUrl(previewUrl);
+    setOcrStatus('processing');
+    setShowReceiptScanner(false);
+    processReceiptOCR(file);
+  };
 
   // Recurring expense form state
   const [showRecurringForm, setShowRecurringForm] = useState(false);
@@ -427,13 +448,68 @@ const FinanceHub: React.FC<FinanceHubProps> = ({ embedded = false, searchQuery: 
     }
   };
 
-  // Receipt upload handlers
-  const handleCameraCapture = () => {
-    setTimeout(() => {
-      if (cameraInputRef.current) {
-        cameraInputRef.current.click();
+  // In-app camera helpers
+  const openCamera = async () => {
+    setShowCamera(true);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
+        audio: false,
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
       }
-    }, 100);
+    } catch (err) {
+      console.error('Camera access failed:', err);
+      setShowCamera(false);
+      // Fallback to file input
+      if (fileInputRef.current) fileInputRef.current.click();
+    }
+  };
+
+  const closeCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(t => t.stop());
+      streamRef.current = null;
+    }
+    setShowCamera(false);
+  };
+
+  const capturePhoto = () => {
+    if (!videoRef.current) return;
+    const video = videoRef.current;
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.drawImage(video, 0, 0);
+    closeCamera();
+
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      setReceiptPreviewUrl(url);
+      setOcrStatus('processing');
+      setAnalyzingText('Analyzing receipt...');
+
+      // Cycle through status messages
+      const messages = ['Analyzing receipt...', 'Reading text...', 'Extracting details...', 'Almost done...'];
+      let i = 0;
+      const interval = setInterval(() => {
+        i = (i + 1) % messages.length;
+        setAnalyzingText(messages[i]);
+      }, 2000);
+
+      const file = new File([blob], `receipt_${Date.now()}.jpg`, { type: 'image/jpeg' });
+      processReceiptOCR(file).finally(() => clearInterval(interval));
+    }, 'image/jpeg', 0.9);
+  };
+
+  // Receipt upload handlers
+  const handleAnalyzeReceipt = async () => {
+    openCamera();
   };
 
   const handleFileUpload = () => {
@@ -486,43 +562,48 @@ const FinanceHub: React.FC<FinanceHubProps> = ({ embedded = false, searchQuery: 
 
       setReceiptFormData(prev => ({ ...prev, imageUrl: publicUrl }));
 
-      // Call n8n webhook for OCR
-      const n8nWebhookUrl = 'https://contractorai.app.n8n.cloud/webhook/d718a3b9-fd46-4ce2-b885-f2a18ad4d98a';
-
+      // Call Claude Vision via Supabase edge function
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 30000);
+        const timeoutId = setTimeout(() => controller.abort(), 60000);
 
-        const webhookResponse = await fetch(n8nWebhookUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ imageUrl: publicUrl }),
-          signal: controller.signal
-        });
+        const { data: { session } } = await supabase.auth.getSession();
+
+        const analyzeResponse = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-receipt`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session?.access_token}`,
+            },
+            body: JSON.stringify({ imageUrl: publicUrl }),
+            signal: controller.signal,
+          }
+        );
 
         clearTimeout(timeoutId);
 
-        if (webhookResponse.ok) {
-          const responseText = await webhookResponse.text();
-          if (responseText.trim()) {
-            const ocrData = JSON.parse(responseText);
-            setReceiptFormData(prev => ({
-              ...prev,
-              vendor: ocrData.vendor || prev.vendor,
-              date: ocrData.date || prev.date,
-              amount: ocrData.amount || prev.amount,
-              notes: ocrData.confidence?.overall
-                ? `Auto-extracted (${Math.round(ocrData.confidence.overall * 100)}% confidence)`
-                : prev.notes,
-              imageUrl: publicUrl
-            }));
-            setOcrStatus('complete');
-          }
+        if (analyzeResponse.ok) {
+          const ocrData = await analyzeResponse.json();
+          console.log('✅ Claude OCR Result:', ocrData);
+          setReceiptFormData(prev => ({
+            ...prev,
+            vendor: ocrData.vendor || prev.vendor,
+            date: ocrData.date || prev.date,
+            amount: ocrData.amount ? parseFloat(ocrData.amount) : prev.amount,
+            notes: ocrData.confidence?.overall
+              ? `AI-analyzed (${Math.round(ocrData.confidence.overall * 100)}% confidence)`
+              : prev.notes,
+            imageUrl: publicUrl
+          }));
+          setOcrStatus('complete');
         } else {
+          console.error('Claude analysis failed:', await analyzeResponse.text());
           setOcrStatus('error');
         }
       } catch (error) {
-        console.error('OCR webhook failed:', error);
+        console.error('Receipt analysis failed:', error);
         setOcrStatus('error');
       }
     } catch (error) {
@@ -927,13 +1008,14 @@ const FinanceHub: React.FC<FinanceHubProps> = ({ embedded = false, searchQuery: 
 
             {/* CTA Button(s) */}
             {activeSection === 'expenses' && expenseSubTab === 'upload' ? (
+              <>
               <div className="flex gap-3 relative z-10">
                 <button
-                  onClick={handleCameraCapture}
-                  className="flex-1 py-5 px-6 bg-red-500 hover:bg-red-600 text-white text-lg font-semibold rounded-xl shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-3"
+                  onClick={handleAnalyzeReceipt}
+                  className="flex-1 py-5 px-6 bg-[#043d6b] hover:bg-[#035291] text-white text-lg font-semibold rounded-xl shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-3"
                 >
-                  <Camera className="w-6 h-6" />
-                  Take Photo
+                  <ScanLine className="w-6 h-6" />
+                  Analyze Receipt
                 </button>
                 <button
                   onClick={handleFileUpload}
@@ -943,6 +1025,14 @@ const FinanceHub: React.FC<FinanceHubProps> = ({ embedded = false, searchQuery: 
                   Upload
                 </button>
               </div>
+              <button
+                onClick={() => setShowSavedReceipts(!showSavedReceipts)}
+                className={`w-full py-3 px-4 ${themeClasses.bg.secondary} border ${themeClasses.border.primary} rounded-xl text-sm font-medium ${themeClasses.text.secondary} flex items-center justify-center gap-2 active:scale-[0.98] transition-all`}
+              >
+                {showSavedReceipts ? <ChevronUp className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showSavedReceipts ? 'Hide Receipts' : `View Receipts (${(receipts || []).length})`}
+              </button>
+              </>
             ) : (
               <button
                 onClick={() => {
@@ -1185,75 +1275,77 @@ const FinanceHub: React.FC<FinanceHubProps> = ({ embedded = false, searchQuery: 
               <div className="space-y-4">
                 {receiptPreviewUrl && (
                   <div className={`${themeClasses.bg.secondary} rounded-xl border border-[#043d6b]/30 p-4 space-y-4`}>
-                    {/* OCR Status Banner */}
-                    {ocrStatus !== 'idle' && (
-                      <div className={`rounded-lg p-3 ${
-                        ocrStatus === 'processing' ? 'bg-[#043d6b]/30 border border-[#043d6b]/30' :
-                        ocrStatus === 'complete' ? 'bg-green-900/30 border border-green-500/30' :
-                        'bg-yellow-900/30 border border-yellow-500/30'
-                      }`}>
-                        <div className="flex items-center gap-2">
-                          {ocrStatus === 'processing' && (
-                            <>
-                              <Loader2 className="w-4 h-4 text-[#043d6b] animate-spin" />
-                              <span className="text-sm text-[#043d6b]">AI is extracting data...</span>
-                            </>
-                          )}
-                          {ocrStatus === 'complete' && (
-                            <>
-                              <CheckCircle className="w-4 h-4 text-green-400" />
-                              <span className="text-sm text-green-400">Receipt data extracted!</span>
-                            </>
-                          )}
-                          {ocrStatus === 'error' && (
-                            <span className="text-sm text-yellow-400">OCR failed - enter manually</span>
-                          )}
+                    {/* Analyzing Screen - shows while processing */}
+                    {ocrStatus === 'processing' && (
+                      <div className="flex flex-col items-center py-6">
+                        <div className="relative w-48 h-64 mb-4">
+                          <img src={receiptPreviewUrl} alt="Receipt" className="w-full h-full object-cover rounded-xl" />
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-xl">
+                            <div className="relative w-20 h-20">
+                              <svg className="w-20 h-20 animate-spin" viewBox="0 0 80 80">
+                                <circle cx="40" cy="40" r="35" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="4" />
+                                <circle cx="40" cy="40" r="35" fill="none" stroke="#22c55e" strokeWidth="4" strokeLinecap="round" strokeDasharray="164" strokeDashoffset="60" />
+                              </svg>
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <ScanLine className="w-8 h-8 text-white" />
+                              </div>
+                            </div>
+                          </div>
                         </div>
+                        <p className="text-sm font-medium text-green-400 animate-pulse">{analyzingText}</p>
                       </div>
                     )}
 
-                    {/* Preview + Form */}
-                    <div className="flex gap-4">
-                      <div className="w-24 h-32 bg-zinc-800 rounded-lg overflow-hidden flex-shrink-0">
+                    {/* OCR Status Banner (complete/error) */}
+                    {ocrStatus === 'complete' && (
+                      <div className="rounded-lg p-3 bg-green-500 border border-green-600">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="w-4 h-4 text-white" />
+                          <span className="text-sm font-semibold text-white">Receipt data extracted!</span>
+                        </div>
+                      </div>
+                    )}
+                    {ocrStatus === 'error' && (
+                      <div className="rounded-lg p-3 bg-yellow-900/30 border border-yellow-500/30">
+                        <span className="text-sm text-yellow-400">Analysis failed - enter manually</span>
+                      </div>
+                    )}
+
+                    {/* Preview + Form (hidden during processing) */}
+                    <div className={`space-y-3 ${ocrStatus === 'processing' ? 'hidden' : ''}`}>
+                      <div className="w-full h-48 bg-zinc-800 rounded-lg overflow-hidden">
                         <img src={receiptPreviewUrl} alt="Receipt" className="w-full h-full object-cover" />
                       </div>
-                      <div className="flex-1 space-y-3">
-                        <div>
-                          <label className={`block text-xs font-medium ${themeClasses.text.secondary} mb-1`}>Vendor</label>
-                          <input
-                            type="text"
-                            value={receiptFormData.vendor}
-                            onChange={(e) => setReceiptFormData(prev => ({ ...prev, vendor: e.target.value }))}
-                            className={`w-full px-3 py-2 ${themeClasses.bg.input} border ${themeClasses.border.primary} rounded-lg ${themeClasses.text.primary} text-sm placeholder-zinc-500 focus:ring-2 focus:ring-[#043d6b] focus:border-transparent`}
-                            placeholder="Store name"
-                          />
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <label className={`block text-xs font-medium ${themeClasses.text.secondary} mb-1`}>Amount</label>
-                            <input
-                              type="number"
-                              step="0.01"
-                              value={receiptFormData.amount || ''}
-                              onChange={(e) => setReceiptFormData(prev => ({ ...prev, amount: parseFloat(e.target.value) || 0 }))}
-                              className={`w-full px-3 py-2 ${themeClasses.bg.input} border ${themeClasses.border.primary} rounded-lg ${themeClasses.text.primary} text-sm placeholder-zinc-500 focus:ring-2 focus:ring-[#043d6b] focus:border-transparent`}
-                              placeholder="0.00"
-                            />
-                          </div>
-                          <div>
-                            <label className={`block text-xs font-medium ${themeClasses.text.secondary} mb-1`}>Date</label>
-                            <input
-                              type="date"
-                              value={receiptFormData.date}
-                              onChange={(e) => setReceiptFormData(prev => ({ ...prev, date: e.target.value }))}
-                              className={`w-full px-3 py-2 ${themeClasses.bg.input} border ${themeClasses.border.primary} rounded-lg ${themeClasses.text.primary} text-sm focus:ring-2 focus:ring-[#043d6b] focus:border-transparent`}
-                            />
-                          </div>
-                        </div>
+                      <div>
+                        <label className={`block text-xs font-medium ${themeClasses.text.secondary} mb-1`}>Vendor</label>
+                        <input
+                          type="text"
+                          value={receiptFormData.vendor}
+                          onChange={(e) => setReceiptFormData(prev => ({ ...prev, vendor: e.target.value }))}
+                          className={`w-full px-3 py-2 ${themeClasses.bg.input} border ${themeClasses.border.primary} rounded-lg ${themeClasses.text.primary} text-sm placeholder-zinc-500 focus:ring-2 focus:ring-[#043d6b] focus:border-transparent`}
+                          placeholder="Store name"
+                        />
                       </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className={`block text-xs font-medium ${themeClasses.text.secondary} mb-1`}>Amount</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={receiptFormData.amount || ''}
+                          onChange={(e) => setReceiptFormData(prev => ({ ...prev, amount: parseFloat(e.target.value) || 0 }))}
+                          className={`w-full px-3 py-2 ${themeClasses.bg.input} border ${themeClasses.border.primary} rounded-lg ${themeClasses.text.primary} text-sm placeholder-zinc-500 focus:ring-2 focus:ring-[#043d6b] focus:border-transparent`}
+                          placeholder="0.00"
+                        />
+                      </div>
+                      <div>
+                        <label className={`block text-xs font-medium ${themeClasses.text.secondary} mb-1`}>Date</label>
+                        <input
+                          type="date"
+                          value={receiptFormData.date}
+                          onChange={(e) => setReceiptFormData(prev => ({ ...prev, date: e.target.value }))}
+                          className={`w-full px-3 py-2 ${themeClasses.bg.input} border ${themeClasses.border.primary} rounded-lg ${themeClasses.text.primary} text-sm focus:ring-2 focus:ring-[#043d6b] focus:border-transparent`}
+                        />
+                      </div>
                       <div>
                         <label className={`block text-xs font-medium ${themeClasses.text.secondary} mb-1`}>Category</label>
                         <select
@@ -1282,17 +1374,17 @@ const FinanceHub: React.FC<FinanceHubProps> = ({ embedded = false, searchQuery: 
                       </div>
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className={`flex gap-2 ${ocrStatus === 'processing' ? 'hidden' : ''}`}>
                       <button
                         onClick={handleCancelReceipt}
-                        className={`flex-1 px-4 py-2.5 bg-zinc-700 ${themeClasses.text.primary} rounded-lg font-medium`}
+                        className="flex-1 px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium"
                       >
                         Cancel
                       </button>
                       <button
                         onClick={handleSaveReceipt}
-                        disabled={!receiptFormData.vendor || !receiptFormData.amount || !receiptFormData.category}
-                        className={`flex-1 px-4 py-2.5 bg-[#043d6b] ${themeClasses.text.primary} rounded-lg font-medium disabled:bg-zinc-600 disabled:${themeClasses.text.secondary}`}
+                        disabled={!receiptFormData.vendor || !receiptFormData.amount}
+                        className="flex-1 px-4 py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-lg font-semibold disabled:bg-zinc-600 disabled:text-white shadow-lg"
                       >
                         Save Receipt
                       </button>
@@ -1318,6 +1410,7 @@ const FinanceHub: React.FC<FinanceHubProps> = ({ embedded = false, searchQuery: 
                 />
 
                 {/* All Receipts/Expenses */}
+                {showSavedReceipts && (
                 <div className={`${themeClasses.bg.secondary} rounded-xl border border-[#043d6b]/30 p-4`}>
                   <h4 className={`font-semibold ${themeClasses.text.primary} mb-3`}>All Receipts ({(receipts || []).length})</h4>
                   {(receipts || []).length === 0 ? (
@@ -1329,26 +1422,23 @@ const FinanceHub: React.FC<FinanceHubProps> = ({ embedded = false, searchQuery: 
                   ) : (
                     <div className="space-y-2">
                       {(receipts || []).map((expense) => (
-                        <div key={expense.id} className={`flex items-center justify-between p-3 ${themeClasses.bg.input} rounded-lg`}>
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-zinc-700 rounded overflow-hidden flex items-center justify-center">
-                              {expense.imageUrl ? (
-                                <img src={expense.imageUrl} alt="" className="w-full h-full object-cover" />
-                              ) : (
-                                <Receipt className="w-5 h-5 text-zinc-500" />
-                              )}
-                            </div>
+                        <div key={expense.id} className={`${themeClasses.bg.input} rounded-lg overflow-hidden`}>
+                          {expense.imageUrl && (
+                            <img src={expense.imageUrl} alt="Receipt" className="w-full h-32 object-cover" />
+                          )}
+                          <div className="flex items-center justify-between p-3">
                             <div>
                               <p className={`text-sm font-medium ${themeClasses.text.primary}`}>{expense.vendor}</p>
-                              <p className="text-xs text-zinc-500">{expense.category} • {new Date(expense.date).toLocaleDateString()}</p>
+                              <p className="text-xs text-zinc-500">{expense.category ? `${expense.category} • ` : ''}{new Date(expense.date).toLocaleDateString()}</p>
                             </div>
+                            <span className="font-semibold text-red-400">-{formatCurrency(expense.amount)}</span>
                           </div>
-                          <span className="font-semibold text-red-400">-{formatCurrency(expense.amount)}</span>
                         </div>
                       ))}
                     </div>
                   )}
                 </div>
+                )}
               </div>
             )}
 
@@ -2156,6 +2246,43 @@ const FinanceHub: React.FC<FinanceHubProps> = ({ embedded = false, searchQuery: 
                 />
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Receipt Scanner Modal */}
+      <ReceiptScannerModal
+        isOpen={showReceiptScanner}
+        onClose={() => setShowReceiptScanner(false)}
+        onCapture={handleScannerCapture}
+      />
+
+      {/* In-App Camera */}
+      {showCamera && (
+        <div className="fixed inset-0 z-[300] bg-black flex flex-col">
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            className="flex-1 object-cover"
+          />
+          {/* Top bar */}
+          <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 pt-safe pb-2 bg-gradient-to-b from-black/60 to-transparent">
+            <button onClick={closeCamera} className="p-2">
+              <X className="w-7 h-7 text-white" />
+            </button>
+            <span className="text-white text-sm font-medium">Scan Receipt</span>
+            <div className="w-11" />
+          </div>
+          {/* Bottom capture button */}
+          <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center pb-safe pt-4 pb-8 bg-gradient-to-t from-black/60 to-transparent">
+            <button
+              onClick={capturePhoto}
+              className="w-[72px] h-[72px] rounded-full border-4 border-white flex items-center justify-center active:scale-95 transition-transform"
+            >
+              <div className="w-[60px] h-[60px] rounded-full bg-white" />
+            </button>
           </div>
         </div>
       )}

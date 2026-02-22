@@ -106,11 +106,11 @@ function App() {
   const [showSplash, setShowSplash] = useState(true);
   const [splashMinTimePassed, setSplashMinTimePassed] = useState(false);
 
-  // Splash screen timer - ensures animation completes (4.5 seconds)
+  // Splash screen timer - matches GIF duration exactly (4.23s)
   useEffect(() => {
     const timer = setTimeout(() => {
       setSplashMinTimePassed(true);
-    }, 4500);
+    }, 4230);
     return () => clearTimeout(timer);
   }, []);
 
@@ -293,11 +293,10 @@ function App() {
   if (shouldShowSplash) {
     return (
       <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ background: 'linear-gradient(180deg, #e8e8e8 0%, #e9e7e8 50%, #e9e8e6 100%)' }}
+        className="min-h-screen flex items-center justify-center bg-white"
       >
         <img
-          src="/onsite-logo.gif"
+          src="/onsite-logo.png"
           alt="Onsite"
           className="w-[300px] h-auto"
           key={Date.now()}
