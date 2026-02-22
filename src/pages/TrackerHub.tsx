@@ -112,7 +112,7 @@ const TrackerHub: React.FC = () => {
   const themeClasses = getThemeClasses(theme);
   const { projects, fetchProjects } = useProjectStore();
 
-  const [activeTab, setActiveTab] = useState<'timesheets' | 'mileage' | 'finance'>('timesheets');
+  const [activeTab, setActiveTab] = useState<'timesheets' | 'mileage' | 'finance'>('finance');
 
   // Handle navigation state for opening specific tabs
   React.useEffect(() => {
