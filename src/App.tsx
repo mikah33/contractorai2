@@ -13,6 +13,7 @@ import ProjectManager from './pages/ProjectManager';
 import Calendar from './pages/Calendar';
 import AdAnalyzer from './pages/AdAnalyzer';
 import Settings from './pages/Settings';
+import ViewEstimatePage from './pages/ViewEstimatePage';
 import Clients from './pages/Clients';
 import EmployeesManager from './pages/EmployeesManager';
 import EmployeesHub from './pages/EmployeesHub';
@@ -263,7 +264,8 @@ function App() {
   const isCustomerPage = pathname.startsWith('/estimate-response') ||
                          pathname.startsWith('/estimate-approval/') ||
                          pathname.startsWith('/pay/') ||
-                         pathname.startsWith('/unsubscribe');
+                         pathname.startsWith('/unsubscribe') ||
+                         pathname.startsWith('/view-estimate');
 
   if (isCustomerPage) {
     return (
@@ -273,6 +275,7 @@ function App() {
           <Route path="/estimate-approval/:id" element={<EstimateApprovalPage />} />
           <Route path="/pay/:shortCode" element={<PaymentRedirect />} />
           <Route path="/unsubscribe" element={<UnsubscribePage />} />
+          <Route path="/view-estimate" element={<ViewEstimatePage />} />
           <Route path="*" element={<EstimateResponsePage />} />
         </Routes>
       </ThemeProvider>
