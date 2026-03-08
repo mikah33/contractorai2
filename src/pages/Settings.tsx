@@ -3,7 +3,7 @@ import {
   Save, Bell, Lock, User, Loader2, Calendar, Upload, X, Globe, Code,
   Trash2, AlertTriangle, CreditCard, CheckCircle, ExternalLink, XCircle,
   Clock, RefreshCw, ChevronRight, Mail, Building2, Phone, MapPin, FileText,
-  Settings as SettingsIcon, LogOut, Eye, BookOpen, Home, ClipboardList, Moon, Megaphone, Users, History, MessageSquare
+  Settings as SettingsIcon, LogOut, Eye, BookOpen, Home, ClipboardList, Moon, Megaphone, Users, History, MessageSquare, Facebook, Globe
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -14,6 +14,8 @@ import { useOnboardingStore } from '../stores/onboardingStore';
 import { requestNotificationPermission, registerServiceWorker, showNotification } from '../utils/notifications';
 import { BusinessEmailSetup } from '../components/settings/BusinessEmailSetup';
 import EmailPreferences from '../components/settings/EmailPreferences';
+import FacebookPageSelector from '../components/settings/FacebookPageSelector';
+import WebsiteLeadSetup from '../components/settings/WebsiteLeadSetup';
 import { useTheme, getThemeClasses } from '../contexts/ThemeContext';
 import ThemeToggle from '../components/common/ThemeToggle';
 import { contractorChatHistoryManager, ContractorChatSession } from '../lib/ai/contractorChatHistory';
@@ -28,7 +30,7 @@ interface StripeConnectStatus {
   businessName?: string;
 }
 
-type SettingsSection = 'main' | 'profile' | 'notifications' | 'security' | 'payments' | 'language' | 'email' | 'theme' | 'danger' | 'marketing' | 'team' | 'chatHistory';
+type SettingsSection = 'main' | 'profile' | 'notifications' | 'security' | 'payments' | 'language' | 'email' | 'theme' | 'danger' | 'marketing' | 'team' | 'chatHistory' | 'facebookLeads' | 'websiteLeads';
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -48,6 +50,10 @@ const Settings = () => {
   const [loggingOut, setLoggingOut] = useState(false);
   const [chatHistory, setChatHistory] = useState<ContractorChatSession[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [fbConnectedPage, setFbConnectedPage] = useState<{ pageId: string; pageName: string } | null>(null);
+  const [showFbPageSelector, setShowFbPageSelector] = useState(false);
+  const [fbAccessToken, setFbAccessToken] = useState<string | null>(null);
+  const [fbLoading, setFbLoading] = useState(true);
   const {
     dashboardTutorialCompleted,
     visionCamTutorialCompleted,
@@ -118,13 +124,45 @@ const Settings = () => {
 
   // Handle navigation state to open specific section
   useEffect(() => {
-    const state = location.state as { section?: SettingsSection } | null;
+    const state = location.state as { section?: SettingsSection; fbAccessToken?: string; showPageSelector?: boolean } | null;
     if (state?.section) {
       setActiveSection(state.section);
-      // Clear the state so it doesn't persist on refresh
+    }
+    // Handle FB OAuth callback from deep link
+    if (state?.fbAccessToken && state?.showPageSelector) {
+      setFbAccessToken(state.fbAccessToken);
+      setShowFbPageSelector(true);
+      setActiveSection('facebookLeads');
+    }
+    // Clear the state so it doesn't persist on refresh
+    if (state) {
       window.history.replaceState({}, document.title);
     }
   }, [location.state]);
+
+  // Check Facebook Lead Ads connection
+  useEffect(() => {
+    const checkFbConnection = async () => {
+      if (!user?.id) return;
+      setFbLoading(true);
+      try {
+        const { data } = await supabase
+          .from('fb_page_subscriptions')
+          .select('page_id, page_name')
+          .eq('contractor_id', user.id)
+          .eq('is_active', true)
+          .maybeSingle();
+        if (data) {
+          setFbConnectedPage({ pageId: data.page_id, pageName: data.page_name });
+        }
+      } catch (err) {
+        console.error('Error checking FB connection:', err);
+      } finally {
+        setFbLoading(false);
+      }
+    };
+    checkFbConnection();
+  }, [user?.id]);
 
   // Sync state when Supabase values change
   useEffect(() => {
@@ -623,6 +661,8 @@ const Settings = () => {
       items: [
         { id: 'payments' as SettingsSection, icon: CreditCard, label: 'Payments', description: stripeStatus.connected ? 'Stripe connected' : 'Connect Stripe', iconColor: 'text-[#043d6b]' },
         { id: 'email' as SettingsSection, icon: Mail, label: 'Business Email', description: 'Professional email address', iconColor: 'text-[#043d6b]' },
+        { id: 'facebookLeads' as SettingsSection, icon: Facebook, label: 'Facebook Lead Ads', description: 'Capture leads from Facebook', iconColor: 'text-[#1877F2]' },
+        { id: 'websiteLeads' as SettingsSection, icon: Globe, label: 'Website Leads', description: 'Capture leads from your website', iconColor: 'text-[#043d6b]' },
       ]
     },
     {
@@ -1124,6 +1164,99 @@ const Settings = () => {
             )}
           </div>
         );
+
+      case 'facebookLeads':
+        return (
+          <div className="space-y-4">
+            {fbLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className={`w-8 h-8 animate-spin ${themeClasses.text.muted}`} />
+              </div>
+            ) : fbConnectedPage ? (
+              <div className="space-y-4">
+                <div className={`p-4 rounded-2xl border ${themeClasses.border.primary} ${themeClasses.bg.card}`}>
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 bg-[#1877F2]/10 rounded-xl flex items-center justify-center">
+                      <Facebook className="w-5 h-5 text-[#1877F2]" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className={`font-bold ${themeClasses.text.primary}`}>Connected</h3>
+                      <p className={`text-sm ${themeClasses.text.muted}`}>{fbConnectedPage.pageName}</p>
+                    </div>
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                  </div>
+                  <p className={`text-sm ${themeClasses.text.secondary} mb-3`}>
+                    Lead form submissions from this page will automatically appear in your Leads tab.
+                  </p>
+                  <button
+                    onClick={async () => {
+                      if (!window.confirm('Disconnect this Facebook page? You will stop receiving leads from it.')) return;
+                      await supabase
+                        .from('fb_page_subscriptions')
+                        .update({ is_active: false })
+                        .eq('contractor_id', user!.id)
+                        .eq('page_id', fbConnectedPage.pageId);
+                      setFbConnectedPage(null);
+                    }}
+                    className={`text-sm font-medium text-red-500 hover:text-red-600 transition-colors`}
+                  >
+                    Disconnect Page
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className={`p-4 rounded-2xl border ${themeClasses.border.primary} ${themeClasses.bg.card}`}>
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 bg-[#1877F2]/10 rounded-xl flex items-center justify-center">
+                      <Facebook className="w-5 h-5 text-[#1877F2]" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className={`font-bold ${themeClasses.text.primary}`}>Facebook Lead Ads</h3>
+                      <p className={`text-sm ${themeClasses.text.muted}`}>Automatically capture leads from your Facebook page</p>
+                    </div>
+                  </div>
+                  <p className={`text-sm ${themeClasses.text.secondary} mb-4`}>
+                    Connect your Facebook page to receive lead form submissions directly in your app with instant push notifications.
+                  </p>
+                  <button
+                    onClick={() => {
+                      const appId = import.meta.env.VITE_META_APP_ID;
+                      const redirectUri = 'https://contractorai.tools/meta-oauth-callback';
+                      const scope = 'pages_manage_metadata,leads_retrieval,pages_show_list';
+                      const isNative = typeof (window as any).Capacitor !== 'undefined' && (window as any).Capacitor.isNativePlatform();
+                      const state = isNative ? 'fb_leads_app' : 'fb_leads_web';
+                      const oauthUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${appId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&state=${state}&response_type=code`;
+                      if (isNative) {
+                        import('@capacitor/browser').then(({ Browser }) => Browser.open({ url: oauthUrl }));
+                      } else {
+                        window.location.href = oauthUrl;
+                      }
+                    }}
+                    className="w-full flex items-center justify-center gap-2 py-3 bg-[#1877F2] text-white rounded-xl font-medium active:scale-[0.98] transition-transform"
+                  >
+                    <Facebook className="w-5 h-5" />
+                    Connect Facebook Page
+                  </button>
+                </div>
+              </div>
+            )}
+            {showFbPageSelector && fbAccessToken && (
+              <FacebookPageSelector
+                accessToken={fbAccessToken}
+                onClose={() => setShowFbPageSelector(false)}
+                onConnected={(pageId, pageName) => {
+                  setFbConnectedPage({ pageId, pageName });
+                  setShowFbPageSelector(false);
+                  setFbAccessToken(null);
+                }}
+              />
+            )}
+          </div>
+        );
+
+      case 'websiteLeads':
+        return <WebsiteLeadSetup />;
 
       case 'danger':
         return (

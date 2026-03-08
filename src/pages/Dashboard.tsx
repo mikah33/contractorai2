@@ -25,7 +25,8 @@ import {
   X as XIcon,
   XCircle,
   AlertCircle,
-  BarChart3
+  BarChart3,
+  UserPlus
 } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
@@ -41,6 +42,7 @@ import AIChatPopup from '../components/ai/AIChatPopup';
 import VisionCamModal from '../components/vision/VisionCamModal';
 import OnSiteSetup from '../components/dashboard/OnSiteSetup';
 import { useTheme, getThemeClasses } from '../contexts/ThemeContext';
+import { useLeadsStore } from '../stores/leadsStore';
 import { supabase } from '../lib/supabase';
 import { format, parseISO, isToday, isTomorrow } from 'date-fns';
 
@@ -54,6 +56,7 @@ const Dashboard: React.FC = () => {
   const { events, fetchEvents, updateEvent, getEventsByDateRange } = useCalendarStoreSupabase();
   const { profile } = useData();
   const { user } = useAuthStore();
+  const { leads, newLeadsCount, fetchLeads: fetchLeadsData } = useLeadsStore();
   const [showAddChoice, setShowAddChoice] = useState(false);
   const [showAIChat, setShowAIChat] = useState(false);
   const [showVisionCam, setShowVisionCam] = useState(false);
@@ -226,6 +229,7 @@ const Dashboard: React.FC = () => {
     fetchPayments();
     fetchReceipts();
     fetchEvents();
+    fetchLeadsData();
 
     // Get user's current location using native Capacitor plugin
     const getLocation = async () => {
@@ -748,6 +752,45 @@ const Dashboard: React.FC = () => {
           })()}
         </div>
       </div>
+
+      {/* New Leads Card */}
+      {newLeadsCount > 0 && (
+        <div className="relative z-20 px-4 pt-4">
+          <button
+            onClick={() => navigate('/clients-hub', { state: { activeTab: 'leads' } })}
+            className={`w-full ${theme === 'light' ? 'bg-white border border-gray-200' : 'bg-zinc-800/95 border border-zinc-700'} rounded-2xl text-left overflow-hidden active:scale-[0.98] transition-all`}
+            style={{ boxShadow: theme === 'light' ? '0 4px 20px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.08)' : '0 4px 20px rgba(0,0,0,0.4)' }}
+          >
+            <div className="p-4 flex items-start gap-3">
+              <div className="relative w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 bg-[#043d6b]/20">
+                <UserPlus className="w-6 h-6 text-[#043d6b]" />
+                <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 bg-[#043d6b] text-white text-xs font-bold rounded-full flex items-center justify-center">
+                  {newLeadsCount}
+                </span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className={`text-lg font-bold ${themeClasses.text.primary}`}>New Leads</p>
+                <div className={`text-sm ${themeClasses.text.muted} mt-0.5`}>
+                  {leads
+                    .filter(l => l.status === 'new')
+                    .slice(0, 2)
+                    .map((lead, i) => (
+                      <span key={lead.id}>
+                        {i > 0 && ', '}
+                        {lead.name}
+                        <span className={`${themeClasses.text.muted}`}> ({lead.source.replace(/_/g, ' ')})</span>
+                      </span>
+                    ))}
+                  {newLeadsCount > 2 && (
+                    <span className={themeClasses.text.muted}> +{newLeadsCount - 2} more</span>
+                  )}
+                </div>
+              </div>
+              <ChevronRight className={`w-5 h-5 ${themeClasses.text.muted} flex-shrink-0 mt-1`} />
+            </div>
+          </button>
+        </div>
+      )}
 
       {/* Content below tasks - Solid background with gap to show map */}
       <div className="relative z-20 h-6"></div>

@@ -4,9 +4,11 @@ import { Capacitor } from '@capacitor/core';
 import { App, URLOpenListenerEvent } from '@capacitor/app';
 import { Browser } from '@capacitor/browser';
 import { supabase } from '../lib/supabase';
+import { useTimesheetStore } from '../stores/timesheetStore';
 
 export const useDeepLinks = () => {
   const navigate = useNavigate();
+  const timesheetStore = useTimesheetStore();
   const processedUrls = useRef<Set<string>>(new Set());
 
   useEffect(() => {
@@ -97,6 +99,85 @@ export const useDeepLinks = () => {
           }
         }
       }
+
+      // Handle Facebook OAuth callback: contractorai://fb-callback?code=XXX
+      if (url.host === 'fb-callback' || url.pathname === '/fb-callback') {
+        const code = url.searchParams.get('code');
+        console.log('[DeepLink] Facebook callback with code:', code ? 'present' : 'missing');
+        if (code) {
+          try {
+            // Exchange code for access token via edge function
+            const { data: tokenData, error: tokenError } = await supabase.functions.invoke(
+              'fb-connect-page',
+              {
+                body: {
+                  action: 'exchange_token',
+                  code,
+                  redirectUri: 'https://contractorai.tools/meta-oauth-callback',
+                },
+              }
+            );
+
+            if (tokenError || tokenData?.error) {
+              console.error('[DeepLink] Token exchange failed:', tokenData?.error || tokenError);
+              navigate('/settings', { state: { section: 'facebookLeads' } });
+              return;
+            }
+
+            // Navigate to settings with the access token to show page selector
+            navigate('/settings', {
+              state: {
+                section: 'facebookLeads',
+                fbAccessToken: tokenData.access_token,
+                showPageSelector: true,
+              }
+            });
+          } catch (e) {
+            console.error('[DeepLink] FB callback error:', e);
+            navigate('/settings', { state: { section: 'facebookLeads' } });
+          }
+        }
+        return;
+      }
+
+      // Handle leads deep link: contractorai://leads
+      if (url.pathname === '/leads' || url.host === 'leads') {
+        console.log('[DeepLink] Navigating to leads...');
+        navigate('/clients-hub', { state: { activeTab: 'leads' } });
+        return;
+      }
+
+      // Handle single lead deep link: contractorai://lead/{id}
+      const leadMatch = (url.pathname || '').match(/^\/lead\/(.+)$/) ||
+        (url.host === 'lead' && url.pathname ? url.pathname.match(/^\/(.+)$/) : null);
+      if (leadMatch) {
+        const leadId = leadMatch[1];
+        console.log('[DeepLink] Navigating to lead:', leadId);
+        navigate('/clients-hub', { state: { activeTab: 'leads', selectedLeadId: leadId } });
+        return;
+      }
+
+      // Handle timesheet stop deep link: contractorai://timesheet/stop/{id}
+      const timesheetStopMatch = (url.pathname || '').match(/^\/timesheet\/stop\/(.+)$/) ||
+        (url.host === 'timesheet' && url.pathname ? url.pathname.match(/^\/stop\/(.+)$/) : null);
+      if (timesheetStopMatch) {
+        const timesheetId = timesheetStopMatch[1];
+        console.log('[DeepLink] Stopping timesheet timer:', timesheetId);
+        await timesheetStore.stopTimer(timesheetId);
+        navigate('/tracker', { state: { activeTab: 'timesheets' } });
+        return;
+      }
+
+      // Handle timesheet pause deep link: contractorai://timesheet/pause/{id}
+      const timesheetPauseMatch = (url.pathname || '').match(/^\/timesheet\/pause\/(.+)$/) ||
+        (url.host === 'timesheet' && url.pathname ? url.pathname.match(/^\/pause\/(.+)$/) : null);
+      if (timesheetPauseMatch) {
+        const timesheetId = timesheetPauseMatch[1];
+        console.log('[DeepLink] Pausing timesheet timer:', timesheetId);
+        await timesheetStore.pauseTimer(timesheetId);
+        navigate('/tracker', { state: { activeTab: 'timesheets' } });
+        return;
+      }
     };
 
     // Listen for deep links when app is already open
@@ -105,5 +186,5 @@ export const useDeepLinks = () => {
     return () => {
       listener.then(l => l.remove());
     };
-  }, [navigate]);
+  }, [navigate, timesheetStore]);
 };

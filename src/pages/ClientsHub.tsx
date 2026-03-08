@@ -18,12 +18,15 @@ import {
   Building2,
   DollarSign,
   FileText,
-  Settings
+  Settings,
+  UserPlus
 } from 'lucide-react';
 import { useClientsStore } from '../stores/clientsStore';
 import useProjectStore from '../stores/projectStore';
+import { useLeadsStore } from '../stores/leadsStore';
 import AIChatPopup from '../components/ai/AIChatPopup';
 import AddChoiceModal from '../components/common/AddChoiceModal';
+import LeadsList from '../components/leads/LeadsList';
 import { useTheme, getThemeClasses } from '../contexts/ThemeContext';
 
 interface ClientsHubProps {
@@ -39,9 +42,16 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
   const themeClasses = getThemeClasses(theme);
   const { clients, fetchClients, loading, deleteClient, addClient, updateClient } = useClientsStore();
   const { projects, fetchProjects } = useProjectStore();
+  const { newLeadsCount, fetchLeads: fetchLeadsData } = useLeadsStore();
   const [showAddChoice, setShowAddChoice] = useState(false);
   const [showAIChat, setShowAIChat] = useState(false);
   const [internalSearchQuery, setInternalSearchQuery] = useState('');
+
+  // Tab state: default to 'clients' unless navigation state says 'leads'
+  const [activeTab, setActiveTab] = useState<'clients' | 'leads'>(() => {
+    const state = location.state as { activeTab?: string } | null;
+    return state?.activeTab === 'leads' ? 'leads' : 'clients';
+  });
 
   // Use external search query if provided (embedded mode)
   const searchQuery = externalSearchQuery !== undefined ? externalSearchQuery : internalSearchQuery;
@@ -77,12 +87,15 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
     status: 'prospect' as 'active' | 'inactive' | 'prospect'
   });
 
-  // Handle navigation state to open create form
+  // Handle navigation state to open create form or switch tab
   useEffect(() => {
-    const state = location.state as { openCreate?: boolean } | null;
+    const state = location.state as { openCreate?: boolean; activeTab?: string } | null;
     if (state?.openCreate) {
       setShowManualForm(true);
-      // Clear the state so it doesn't re-trigger
+      navigate(location.pathname, { replace: true });
+    }
+    if (state?.activeTab === 'leads') {
+      setActiveTab('leads');
       navigate(location.pathname, { replace: true });
     }
   }, [location.state]);
@@ -90,7 +103,8 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
   useEffect(() => {
     fetchClients();
     fetchProjects();
-  }, [fetchClients, fetchProjects]);
+    fetchLeadsData();
+  }, [fetchClients, fetchProjects, fetchLeadsData]);
 
   // Hide navbar when any modal is open
   useEffect(() => {
@@ -305,7 +319,7 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
         <>
           <div className={`fixed top-0 left-0 right-0 z-50 ${themeClasses.bg.secondary} border-b ${themeClasses.border.primary}`}>
             <div className="pt-[env(safe-area-inset-top)]">
-              <div className="px-4 pb-5 pt-4">
+              <div className="px-4 pb-4 pt-4">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-4">
                     <div className="w-14 h-14 bg-[#043d6b]/20 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -318,25 +332,72 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
                   </div>
                 </div>
 
-                {/* Search */}
-                <div className="relative">
-                  <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 ${themeClasses.text.muted}`} />
-                  <input
-                    type="text"
-                    placeholder="Search clients..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className={`w-full pl-10 pr-4 py-2.5 ${themeClasses.bg.input} rounded-lg border ${themeClasses.border.primary} ${themeClasses.text.primary} placeholder-gray-400 focus:ring-2 focus:ring-[#043d6b] transition-all`}
-                  />
+                {/* Tab Pills */}
+                <div className={`flex gap-2 p-1 rounded-xl ${themeClasses.bg.input} mb-3`}>
+                  <button
+                    onClick={() => setActiveTab('clients')}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-semibold transition-all ${
+                      activeTab === 'clients'
+                        ? 'bg-[#043d6b] text-white shadow-sm'
+                        : `${themeClasses.text.secondary}`
+                    }`}
+                  >
+                    <Users className="w-4 h-4" />
+                    Clients
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('leads')}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-semibold transition-all ${
+                      activeTab === 'leads'
+                        ? 'bg-[#043d6b] text-white shadow-sm'
+                        : `${themeClasses.text.secondary}`
+                    }`}
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    Leads
+                    {newLeadsCount > 0 && (
+                      <span className={`min-w-[20px] h-5 px-1.5 rounded-full text-xs font-bold flex items-center justify-center ${
+                        activeTab === 'leads'
+                          ? 'bg-white text-[#043d6b]'
+                          : 'bg-[#043d6b] text-white'
+                      }`}>
+                        {newLeadsCount}
+                      </span>
+                    )}
+                  </button>
                 </div>
+
+                {/* Search - only show for clients tab */}
+                {activeTab === 'clients' && (
+                  <div className="relative">
+                    <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 ${themeClasses.text.muted}`} />
+                    <input
+                      type="text"
+                      placeholder="Search clients..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className={`w-full pl-10 pr-4 py-2.5 ${themeClasses.bg.input} rounded-lg border ${themeClasses.border.primary} ${themeClasses.text.primary} placeholder-gray-400 focus:ring-2 focus:ring-[#043d6b] transition-all`}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           </div>
           {/* Spacer for fixed header */}
-          <div className="pt-[calc(env(safe-area-inset-top)+130px)]" />
+          <div className={activeTab === 'clients' ? 'pt-[calc(env(safe-area-inset-top)+190px)]' : 'pt-[calc(env(safe-area-inset-top)+150px)]'} />
         </>
       )}
 
+      {/* Leads Tab Content */}
+      {activeTab === 'leads' && (
+        <div className="px-4">
+          <LeadsList />
+        </div>
+      )}
+
+      {/* Clients Tab Content */}
+      {activeTab === 'clients' && (
+      <>
       {/* Add Client Card */}
       <div className="px-4 pb-4 -mt-1">
         <div className={`${themeClasses.bg.card} rounded-2xl border-2 ${theme === 'light' ? 'border-gray-300' : 'border-zinc-600'} p-6 relative overflow-hidden`}>
@@ -525,6 +586,8 @@ const ClientsHub: React.FC<ClientsHubProps> = ({ embedded = false, searchQuery: 
           })
         )}
       </div>
+      </>
+      )}
 
       {/* Add Choice Modal */}
       <AddChoiceModal

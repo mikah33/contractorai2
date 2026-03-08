@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useFinanceStore } from '../../stores/financeStoreSupabase';
-import { FileText, DollarSign, Calendar, CheckCircle, Clock, AlertCircle, History, Trash2 } from 'lucide-react';
-import type { InvoicePayment } from '../../stores/financeStoreSupabase';
+import { FileText, DollarSign, Calendar, CheckCircle, Clock, AlertCircle, History, Trash2, Pencil } from 'lucide-react';
+import type { Invoice, InvoicePayment } from '../../stores/financeStoreSupabase';
+import EditInvoiceModal from './EditInvoiceModal';
 
 export default function InvoiceManager() {
   const { invoices, fetchInvoices, recordInvoicePayment, fetchInvoicePayments, deleteInvoice, isLoading } = useFinanceStore();
@@ -13,6 +14,8 @@ export default function InvoiceManager() {
   const [paymentNotes, setPaymentNotes] = useState<string>('');
   const [paymentHistory, setPaymentHistory] = useState<InvoicePayment[]>([]);
   const [showHistory, setShowHistory] = useState<string | null>(null);
+  const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   useEffect(() => {
     fetchInvoices();
@@ -147,6 +150,16 @@ export default function InvoiceManager() {
                           History
                         </button>
                       )}
+                      <button
+                        onClick={() => {
+                          setEditingInvoice(invoice);
+                          setShowEditModal(true);
+                        }}
+                        className="w-full px-2 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-700 inline-flex items-center justify-center"
+                      >
+                        <Pencil className="w-3 h-3 mr-1" />
+                        Edit
+                      </button>
                       <button
                         onClick={() => handleDeleteInvoice(invoice.id)}
                         className="w-full px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700"
@@ -364,6 +377,17 @@ export default function InvoiceManager() {
             })()}
           </div>
         </div>
+      )}
+
+      {/* Edit Invoice Modal */}
+      {showEditModal && editingInvoice && (
+        <EditInvoiceModal
+          invoice={editingInvoice}
+          onClose={() => {
+            setShowEditModal(false);
+            setEditingInvoice(null);
+          }}
+        />
       )}
     </div>
   );

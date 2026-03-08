@@ -6,6 +6,7 @@
 import { Capacitor } from '@capacitor/core';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { PushNotifications } from '@capacitor/push-notifications';
+import { supabase } from '../../lib/supabase';
 import type {
   NotificationPermissionStatus,
   CalendarReminderOptions,
@@ -425,11 +426,26 @@ class NotificationService {
     this.listeners.get('action')?.call(null, received);
   }
 
-  private handlePushTokenRegistration(token: any): void {
-    // Store token for push notifications
-    // You would typically send this to your backend
+  private async handlePushTokenRegistration(token: any): Promise<void> {
+    // Store token locally for quick access
     console.log('Push token registered:', token.value);
     localStorage.setItem('push_token', token.value);
+
+    // Persist token to Supabase for server-side push delivery
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from('device_tokens').upsert({
+          user_id: user.id,
+          token: token.value,
+          platform: Capacitor.getPlatform(),
+          is_active: true,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'user_id,token' });
+      }
+    } catch (error) {
+      console.error('Failed to save device token:', error);
+    }
   }
 
   private handlePushNotificationReceived(notification: any): void {
@@ -438,6 +454,12 @@ class NotificationService {
 
   private handlePushNotificationAction(action: any): void {
     console.log('Push notification action:', action);
+
+    const data = action.notification?.data;
+    if (data?.type === 'new_lead' && data?.lead_id) {
+      // Navigate to the lead detail screen
+      window.location.href = `/leads/${data.lead_id}`;
+    }
   }
 }
 

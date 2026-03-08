@@ -107,11 +107,11 @@ function App() {
   const [showSplash, setShowSplash] = useState(true);
   const [splashMinTimePassed, setSplashMinTimePassed] = useState(false);
 
-  // Splash screen timer - matches GIF duration exactly (4.23s)
+  // Splash screen timer - minimum display before dismissing
   useEffect(() => {
     const timer = setTimeout(() => {
       setSplashMinTimePassed(true);
-    }, 4230);
+    }, 800);
     return () => clearTimeout(timer);
   }, []);
 
