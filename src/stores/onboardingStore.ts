@@ -64,6 +64,13 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
   checkPrePaywallStatus: async (userId: string): Promise<boolean> => {
     if (!userId) return false;
 
+    // Check localStorage first as a fast fallback
+    const localKey = `prePaywallCompleted_${userId}`;
+    if (localStorage.getItem(localKey) === 'true') {
+      set({ prePaywallCompleted: true });
+      return true;
+    }
+
     try {
       const { data, error } = await supabase
         .from('user_onboarding')
@@ -73,7 +80,6 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
 
       if (error) {
         if (error.code === 'PGRST116') {
-          // No record exists
           console.log('[Onboarding] No pre-paywall record found');
           set({ prePaywallCompleted: false });
           return false;
@@ -83,6 +89,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
       }
 
       const completed = data?.pre_paywall_completed || false;
+      if (completed) localStorage.setItem(localKey, 'true');
       console.log('[Onboarding] Pre-paywall status:', completed);
       set({ prePaywallCompleted: completed });
       return completed;
@@ -112,6 +119,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
       }
 
       console.log('[Onboarding] Pre-paywall marked as completed');
+      localStorage.setItem(`prePaywallCompleted_${userId}`, 'true');
       set({ prePaywallCompleted: true });
     } catch (error) {
       console.error('[Onboarding] Error:', error);
@@ -121,6 +129,13 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
 
   checkOnboardingStatus: async (userId: string): Promise<boolean> => {
     if (!userId) return false;
+
+    // Check localStorage first as a fast fallback
+    const localKey = `profileCompleted_${userId}`;
+    if (localStorage.getItem(localKey) === 'true') {
+      set({ profileCompleted: true, loading: false });
+      return true;
+    }
 
     set({ loading: true });
 
@@ -132,7 +147,6 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
         .single();
 
       if (error) {
-        // If no record exists, user hasn't completed onboarding
         if (error.code === 'PGRST116') {
           console.log('[Onboarding] No onboarding record found, needs setup');
           set({
@@ -149,6 +163,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
       }
 
       const completed = data?.profile_completed || false;
+      if (completed) localStorage.setItem(localKey, 'true');
       console.log('[Onboarding] Status:', completed ? 'completed' : 'needs setup');
       set({
         profileCompleted: completed,
@@ -185,6 +200,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
       }
 
       console.log('[Onboarding] Marked as completed');
+      localStorage.setItem(`profileCompleted_${userId}`, 'true');
       set({ profileCompleted: true });
     } catch (error) {
       console.error('[Onboarding] Error:', error);

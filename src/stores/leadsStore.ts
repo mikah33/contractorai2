@@ -128,8 +128,25 @@ const scheduleOutreachNotification = async (lead: Lead, nextDate: Date, attemptN
   }
 };
 
+let outreachRemindersScheduled = false;
+
 const scheduleAllOutreachReminders = async (leads: Lead[]) => {
   if (Capacitor.getPlatform() === 'web') return;
+  // Only schedule once per app session to avoid notification spam
+  if (outreachRemindersScheduled) return;
+  outreachRemindersScheduled = true;
+
+  // Cancel all pending outreach notifications first to avoid duplicates
+  try {
+    const pending = await LocalNotifications.getPending();
+    const outreachNotifs = pending.notifications.filter(
+      n => n.extra?.type === 'outreach_reminder'
+    );
+    if (outreachNotifs.length > 0) {
+      await LocalNotifications.cancel({ notifications: outreachNotifs.map(n => ({ id: n.id })) });
+    }
+  } catch { /* ignore */ }
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   let scheduled = 0;
@@ -143,8 +160,6 @@ const scheduleAllOutreachReminders = async (leads: Lead[]) => {
       const nextDateDay = new Date(nextDate);
       nextDateDay.setHours(0, 0, 0, 0);
       if (nextDateDay < today) { skipped++; continue; }
-    } else if (lead.status === 'new' && lead.outreachCount === 0) {
-      nextDate = new Date();
     } else {
       skipped++;
       continue;

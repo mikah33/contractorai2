@@ -154,6 +154,8 @@ function App() {
   // Handle pre-paywall onboarding completion
   const handlePrePaywallComplete = () => {
     setShowPrePaywallOnboarding(false);
+    // Also update store state so it won't re-check
+    useOnboardingStore.setState({ prePaywallCompleted: true });
   };
 
   // Check subscription status when user is authenticated AND pre-paywall is complete

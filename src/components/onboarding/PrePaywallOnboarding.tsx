@@ -523,6 +523,7 @@ const PrePaywallOnboarding: React.FC<PrePaywallOnboardingProps> = ({ onComplete 
       });
 
       // Mark pre-paywall completed
+      localStorage.setItem(`prePaywallCompleted_${user.id}`, 'true');
       await supabase
         .from('user_onboarding')
         .upsert(
