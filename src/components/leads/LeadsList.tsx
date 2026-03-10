@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, Filter, Plus, Users, ChevronRight } from 'lucide-react';
+import { Search, Filter, Plus, Users, ChevronRight, Phone } from 'lucide-react';
 import { useTheme, getThemeClasses } from '../../contexts/ThemeContext';
 import { useLeadsStore, type Lead } from '../../stores/leadsStore';
 import LeadStatusBadge from './LeadStatusBadge';
 import LeadDetailModal from './LeadDetailModal';
-import { format, formatDistanceToNow } from 'date-fns';
+import { format, formatDistanceToNow, isToday, isPast } from 'date-fns';
 
 const LeadsList: React.FC = () => {
   const { theme } = useTheme();
@@ -22,7 +22,7 @@ const LeadsList: React.FC = () => {
   }, []);
 
   const filteredLeads = useMemo(() => {
-    return leads.filter((lead) => {
+    const filtered = leads.filter((lead) => {
       const matchesSearch = searchTerm === '' ||
         lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         lead.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -31,6 +31,19 @@ const LeadsList: React.FC = () => {
       const matchesStatus = statusFilter === 'all' || lead.status === statusFilter;
 
       return matchesSearch && matchesStatus;
+    });
+
+    // Sort: action-needed leads first (overdue/due today), then new leads, then rest by date
+    return filtered.sort((a, b) => {
+      const aActionDue = a.nextOutreachDate && (isPast(new Date(a.nextOutreachDate)) || isToday(new Date(a.nextOutreachDate)));
+      const bActionDue = b.nextOutreachDate && (isPast(new Date(b.nextOutreachDate)) || isToday(new Date(b.nextOutreachDate)));
+      if (aActionDue && !bActionDue) return -1;
+      if (!aActionDue && bActionDue) return 1;
+      const aNew = a.status === 'new' && (a.outreachCount || 0) === 0;
+      const bNew = b.status === 'new' && (b.outreachCount || 0) === 0;
+      if (aNew && !bNew) return -1;
+      if (!aNew && bNew) return 1;
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
   }, [leads, searchTerm, statusFilter]);
 
@@ -47,6 +60,8 @@ const LeadsList: React.FC = () => {
     { key: 'quoted', label: 'Quoted' },
     { key: 'converted', label: 'Converted' },
     { key: 'lost', label: 'Lost' },
+    { key: 'cold', label: 'Cold' },
+    { key: 'dead', label: 'Dead' },
   ];
 
   return (
@@ -71,7 +86,7 @@ const LeadsList: React.FC = () => {
             onClick={() => setStatusFilter(tab.key)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
               statusFilter === tab.key
-                ? 'bg-[#043d6b] text-white'
+                ? 'bg-theme text-white'
                 : `${themeClasses.bg.secondary} ${themeClasses.text.secondary}`
             }`}
           >
@@ -88,7 +103,7 @@ const LeadsList: React.FC = () => {
       {/* Leads List */}
       {isLoading && leads.length === 0 ? (
         <div className="flex items-center justify-center py-12">
-          <div className="w-8 h-8 border-2 border-[#043d6b] border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-2 border-theme border-t-transparent rounded-full animate-spin" />
         </div>
       ) : filteredLeads.length === 0 ? (
         <div className={`text-center py-12 ${themeClasses.text.muted}`}>
@@ -107,21 +122,42 @@ const LeadsList: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className={`font-semibold ${themeClasses.text.primary} truncate`}>{lead.name}</span>
+                    <span className={`font-semibold ${themeClasses.text.primary} truncate`}>
+                      {(lead.name && lead.name !== 'Facebook Lead')
+                        ? lead.name
+                        : (lead.projectDetails?.raw_fields?.full_name
+                          || (lead.projectDetails?.raw_fields?.first_name ? `${lead.projectDetails.raw_fields.first_name} ${lead.projectDetails.raw_fields.last_name || ''}`.trim() : null)
+                          || lead.email
+                          || lead.phone
+                          || 'Unknown Lead')}
+                    </span>
                     <LeadStatusBadge status={lead.status} />
+                    {/* Outreach badge */}
+                    {lead.outreachCount != null && lead.outreachCount > 0 && lead.status !== 'converted' && lead.status !== 'dead' && (
+                      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-theme text-white">
+                        {lead.outreachCount}/{lead.outreachCount >= 5 ? 7 : 5}
+                      </span>
+                    )}
+                    {lead.nextOutreachDate && (isPast(new Date(lead.nextOutreachDate)) || isToday(new Date(lead.nextOutreachDate))) && lead.status !== 'converted' && lead.status !== 'dead' && (
+                      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-orange-500 text-white animate-pulse">
+                        <Phone className="w-2.5 h-2.5" />
+                        Today
+                      </span>
+                    )}
                   </div>
-                  <div className={`flex items-center gap-3 mt-1 text-sm ${themeClasses.text.muted}`}>
-                    <span>{lead.email}</span>
-                    {lead.phone && <span>{lead.phone}</span>}
+                  <div className={`flex items-center gap-3 mt-1 text-sm ${themeClasses.text.muted} truncate`}>
+                    {lead.email && <span className="truncate">{lead.email}</span>}
+                    {lead.phone && <span className="flex-shrink-0">{lead.phone}</span>}
                   </div>
-                  <div className={`flex items-center gap-3 mt-1.5 text-xs ${themeClasses.text.muted}`}>
+                  <div className={`flex items-center gap-2 mt-1.5 text-xs ${themeClasses.text.muted} flex-wrap`}>
                     <span className="capitalize">{lead.source.replace(/_/g, ' ')}</span>
-                    {lead.calculatorType && lead.calculatorType !== 'general' && (
-                      <span className="capitalize">{lead.calculatorType.replace(/_/g, ' ')}</span>
+                    {lead.projectDetails?.fb_ad_name && (
+                      <>
+                        <span>·</span>
+                        <span className="truncate max-w-[150px]">{lead.projectDetails.fb_ad_name}</span>
+                      </>
                     )}
-                    {lead.estimatedValue && (
-                      <span className="font-medium">${lead.estimatedValue.toLocaleString()}</span>
-                    )}
+                    <span>·</span>
                     <span>{formatDistanceToNow(new Date(lead.createdAt), { addSuffix: true })}</span>
                   </div>
                 </div>

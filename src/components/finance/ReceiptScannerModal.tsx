@@ -144,7 +144,7 @@ const ReceiptScannerModal: React.FC<ReceiptScannerModalProps> = ({ isOpen, onClo
 
         {/* Scanning animation line */}
         <div
-          className="absolute left-[12%] right-[12%] h-0.5 bg-[#043d6b] opacity-80"
+          className="absolute left-[12%] right-[12%] h-0.5 bg-theme opacity-80"
           style={{
             top: '15%',
             animation: 'scanLine 2.5s ease-in-out infinite',

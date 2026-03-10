@@ -4,6 +4,7 @@ import {
   FileText,
   Plus,
   Edit2,
+  ArrowLeft,
   ChevronRight,
   DollarSign,
   Clock,
@@ -114,7 +115,7 @@ const EstimatesHub: React.FC<EstimatesHubProps> = ({ embedded = false, searchQue
       case 'approved':
         return theme === 'light' ? 'bg-green-100 text-green-700' : 'bg-green-500/20 text-green-400';
       case 'sent':
-        return theme === 'light' ? 'bg-[#043d6b]/10 text-[#043d6b]' : 'bg-[#043d6b]/20 text-[#043d6b]';
+        return theme === 'light' ? 'bg-theme/10 text-theme' : 'bg-theme/20 text-theme';
       case 'declined':
       case 'rejected':
         return theme === 'light' ? 'bg-red-100 text-red-700' : 'bg-red-500/20 text-red-400';
@@ -173,9 +174,12 @@ const EstimatesHub: React.FC<EstimatesHubProps> = ({ embedded = false, searchQue
             <div className="pt-[env(safe-area-inset-top)]">
               <div className="px-4 pb-5 pt-4">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 bg-[#043d6b]/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <FileText className="w-7 h-7 text-[#043d6b]" />
+                  <div className="flex items-center gap-3">
+                    <button onClick={() => navigate('/search')} className={`w-9 h-9 rounded-lg flex items-center justify-center ${themeClasses.bg.input} active:scale-95 transition-transform`}>
+                      <ArrowLeft className={`w-5 h-5 ${themeClasses.text.primary}`} />
+                    </button>
+                    <div className="w-12 h-12 bg-theme/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <FileText className="w-6 h-6 text-theme" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h1 className={`text-2xl font-bold ${themeClasses.text.primary}`}>Estimates</h1>
@@ -184,7 +188,7 @@ const EstimatesHub: React.FC<EstimatesHubProps> = ({ embedded = false, searchQue
                   </div>
                   <button
                     onClick={() => setShowAddChoice(true)}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-[#043d6b] text-white rounded-lg font-medium hover:bg-[#035291] active:scale-95 transition-all"
+                    className="flex items-center gap-2 px-4 py-2.5 bg-theme text-white rounded-lg font-medium hover:bg-[#035291] active:scale-95 transition-all"
                   >
                     <Plus className="w-5 h-5" />
                     <span>Add</span>
@@ -199,7 +203,7 @@ const EstimatesHub: React.FC<EstimatesHubProps> = ({ embedded = false, searchQue
                     placeholder="Search estimates..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className={`w-full pl-10 pr-4 py-2.5 ${themeClasses.bg.input} rounded-lg border ${themeClasses.border.input} ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} focus:ring-2 focus:ring-[#043d6b] transition-all`}
+                    className={`w-full pl-10 pr-4 py-2.5 ${themeClasses.bg.input} rounded-lg border ${themeClasses.border.input} ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} focus:ring-2 focus:ring-theme transition-all`}
                   />
                 </div>
               </div>
@@ -209,41 +213,6 @@ const EstimatesHub: React.FC<EstimatesHubProps> = ({ embedded = false, searchQue
           <div className="pt-[calc(env(safe-area-inset-top)+135px)]" />
         </>
       )}
-      {/* Add Estimate Card */}
-      <div className="px-4 pb-4 -mt-1">
-        <div className={`${themeClasses.bg.card} rounded-2xl border-2 ${theme === 'light' ? 'border-gray-300' : 'border-zinc-600'} p-6 relative overflow-hidden`}>
-          {/* Background decorations */}
-          <div className="absolute -right-6 -top-6 w-44 h-44 bg-[#043d6b]/10 rounded-full" />
-          <div className="absolute right-16 top-20 w-28 h-28 bg-[#043d6b]/5 rounded-full" />
-
-          <div className="relative min-h-[240px] flex flex-col">
-            <div className="flex items-center gap-4 mb-5">
-              <div className="w-16 h-16 bg-[#043d6b]/20 rounded-2xl flex items-center justify-center">
-                <FileText className="w-8 h-8 text-[#043d6b]" />
-              </div>
-              <div>
-                <h3 className={`font-bold ${themeClasses.text.primary} text-xl`}>Add Estimate</h3>
-                <p className={`${themeClasses.text.secondary} text-base`}>Create professional quotes</p>
-              </div>
-            </div>
-
-            <p className={`${themeClasses.text.secondary} italic text-base flex-1`}>
-              Add new estimates manually or use AI to generate professional quotes, calculate costs, and send to clients.
-            </p>
-
-            <div className="space-y-3 mt-auto">
-              <button
-                onClick={() => setShowAddChoice(true)}
-                className="w-full flex items-center justify-center gap-2 px-5 py-4 bg-[#043d6b] text-white rounded-xl font-semibold text-lg hover:bg-[#035291] active:scale-[0.98] transition-all"
-              >
-                <Plus className="w-6 h-6" />
-                Add Estimate
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Estimates List */}
       <div className="px-4 space-y-3">
         {loading ? (
@@ -330,7 +299,7 @@ const EstimatesHub: React.FC<EstimatesHubProps> = ({ embedded = false, searchQue
           {/* Slide-up Modal */}
           <div className={`absolute inset-x-0 bottom-16 top-12 ${themeClasses.bg.primary} rounded-t-3xl shadow-2xl flex flex-col animate-slide-up overflow-hidden`}>
             {/* Header */}
-            <div className={`${themeClasses.bg.secondary} px-3 md:px-4 py-3 md:py-4 border-b border-[#043d6b]/30 flex items-center justify-between flex-shrink-0`}>
+            <div className={`${themeClasses.bg.secondary} px-3 md:px-4 py-3 md:py-4 border-b border-theme/30 flex items-center justify-between flex-shrink-0`}>
               <button
                 onClick={() => setSelectedEstimate(null)}
                 className={`${themeClasses.text.secondary} text-base font-medium`}
@@ -343,7 +312,7 @@ const EstimatesHub: React.FC<EstimatesHubProps> = ({ embedded = false, searchQue
                   handleEditEstimate(selectedEstimate.id);
                   setSelectedEstimate(null);
                 }}
-                className="text-[#043d6b] text-base font-semibold"
+                className="text-theme text-base font-semibold"
               >
                 Edit
               </button>
@@ -353,7 +322,7 @@ const EstimatesHub: React.FC<EstimatesHubProps> = ({ embedded = false, searchQue
             <div className="flex-1 overflow-y-auto">
               <div className="p-3 md:p-4 space-y-3 md:space-y-4">
                 {/* Title & Status */}
-                <div className={`${themeClasses.bg.secondary} rounded-lg border border-[#043d6b]/30 p-3 md:p-4`}>
+                <div className={`${themeClasses.bg.secondary} rounded-lg border border-theme/30 p-3 md:p-4`}>
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
                       <h3 className={`text-lg md:text-xl font-bold ${themeClasses.text.primary}`}>{selectedEstimate.title || 'Untitled Estimate'}</h3>
@@ -385,7 +354,7 @@ const EstimatesHub: React.FC<EstimatesHubProps> = ({ embedded = false, searchQue
                 </div>
 
                 {/* Totals */}
-                <div className={`${themeClasses.bg.secondary} rounded-lg border border-[#043d6b]/30 p-3 md:p-4`}>
+                <div className={`${themeClasses.bg.secondary} rounded-lg border border-theme/30 p-3 md:p-4`}>
                   <h4 className={`text-sm font-medium ${themeClasses.text.muted} mb-3`}>Summary</h4>
                   <div className="space-y-2">
                     <div className={`flex justify-between ${themeClasses.text.primary}`}>
@@ -398,20 +367,20 @@ const EstimatesHub: React.FC<EstimatesHubProps> = ({ embedded = false, searchQue
                         <span>{formatCurrency(selectedEstimate.tax_amount || 0)}</span>
                       </div>
                     )}
-                    <div className={`flex justify-between text-lg md:text-xl font-bold ${themeClasses.text.primary} pt-2 border-t border-[#043d6b]/20`}>
+                    <div className={`flex justify-between text-lg md:text-xl font-bold ${themeClasses.text.primary} pt-2 border-t border-theme/20`}>
                       <span>Total</span>
-                      <span className="text-[#043d6b]">{formatCurrency(selectedEstimate.total || 0)}</span>
+                      <span className="text-theme">{formatCurrency(selectedEstimate.total || 0)}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Line Items */}
                 {selectedEstimate.items && selectedEstimate.items.length > 0 && (
-                  <div className={`${themeClasses.bg.secondary} rounded-lg border border-[#043d6b]/30 p-3 md:p-4`}>
+                  <div className={`${themeClasses.bg.secondary} rounded-lg border border-theme/30 p-3 md:p-4`}>
                     <h4 className={`text-sm font-medium ${themeClasses.text.muted} mb-3`}>Line Items ({selectedEstimate.items.length})</h4>
                     <div className="space-y-3">
                       {selectedEstimate.items.map((item, index) => (
-                        <div key={item.id || index} className="flex justify-between items-start py-2 border-b border-[#043d6b]/10 last:border-0">
+                        <div key={item.id || index} className="flex justify-between items-start py-2 border-b border-theme/10 last:border-0">
                           <div className="flex-1">
                             <p className={`${themeClasses.text.primary} font-medium`}>{item.description}</p>
                             <p className={`text-sm ${themeClasses.text.muted}`}>
@@ -427,7 +396,7 @@ const EstimatesHub: React.FC<EstimatesHubProps> = ({ embedded = false, searchQue
 
                 {/* Notes */}
                 {selectedEstimate.notes && (
-                  <div className={`${themeClasses.bg.secondary} rounded-lg border border-[#043d6b]/30 p-3 md:p-4`}>
+                  <div className={`${themeClasses.bg.secondary} rounded-lg border border-theme/30 p-3 md:p-4`}>
                     <h4 className={`text-sm font-medium ${themeClasses.text.muted} mb-2`}>Notes</h4>
                     <p className={`${themeClasses.text.primary} whitespace-pre-wrap`}>{selectedEstimate.notes}</p>
                   </div>
@@ -435,7 +404,7 @@ const EstimatesHub: React.FC<EstimatesHubProps> = ({ embedded = false, searchQue
 
                 {/* Terms */}
                 {selectedEstimate.terms && (
-                  <div className={`${themeClasses.bg.secondary} rounded-lg border border-[#043d6b]/30 p-3 md:p-4`}>
+                  <div className={`${themeClasses.bg.secondary} rounded-lg border border-theme/30 p-3 md:p-4`}>
                     <h4 className={`text-sm font-medium ${themeClasses.text.muted} mb-2`}>Terms & Conditions</h4>
                     <p className={`${themeClasses.text.secondary} text-sm whitespace-pre-wrap`}>{selectedEstimate.terms}</p>
                   </div>
@@ -448,7 +417,7 @@ const EstimatesHub: React.FC<EstimatesHubProps> = ({ embedded = false, searchQue
                     onClick={() => {
                       setShowSendEmail(true);
                     }}
-                    className="w-full flex items-center justify-center gap-2 p-4 bg-[#043d6b] text-white rounded-xl font-semibold hover:bg-[#035291] transition-colors"
+                    className="w-full flex items-center justify-center gap-2 p-4 bg-theme text-white rounded-xl font-semibold hover:bg-[#035291] transition-colors"
                   >
                     <Mail className="w-5 h-5" />
                     Send to Customer
@@ -461,7 +430,7 @@ const EstimatesHub: React.FC<EstimatesHubProps> = ({ embedded = false, searchQue
                         setSelectedEstimate({ ...selectedEstimate, status: 'sent' });
                         fetchEstimates();
                       }}
-                      className="w-full flex items-center justify-center gap-2 p-4 bg-[#043d6b] text-white rounded-xl font-semibold"
+                      className="w-full flex items-center justify-center gap-2 p-4 bg-theme text-white rounded-xl font-semibold"
                     >
                       <Send className="w-5 h-5" />
                       Mark as Sent

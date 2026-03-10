@@ -773,7 +773,7 @@ const AIChatPopup: React.FC<AIChatPopupProps> = ({ isOpen, onClose, mode, onEsti
                     className={`${message.role === 'user' ? 'max-w-[85%]' : 'max-w-[95%]'} px-4 py-2.5 rounded-2xl text-sm ${
                       message.role === 'user'
                         ? theme === 'light'
-                          ? 'bg-[#043d6b] text-white rounded-br-md'
+                          ? 'bg-theme text-white rounded-br-md'
                           : 'bg-[#3A3A3A] text-white rounded-br-md'
                         : theme === 'light'
                           ? 'bg-white text-gray-900 rounded-bl-md border border-gray-200 shadow-sm'

@@ -1,40 +1,279 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
-  Building2,
-  ChevronRight,
-  ChevronLeft,
-  Warehouse,
-  Maximize,
-  Footprints,
+  Hammer,
+  Zap,
+  Wrench,
+  Wind,
+  Home,
   PaintBucket,
-  Thermometer,
-  Droplet,
-  Lightbulb,
+  Ruler,
+  TreePine,
   Construction,
+  Footprints,
+  Building2,
+  Warehouse,
+  Sun,
+  Droplet,
+  Truck,
+  Shield,
+  Thermometer,
   MoreHorizontal,
-  Send,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  DollarSign,
+  TrendingUp,
   FileText,
-  CreditCard,
-  Mail,
-  X,
-  Copy,
-  Upload,
-  Image,
-  Paperclip,
-  Plus,
-  CheckCircle2,
-  Eye,
+  AlertTriangle,
   Camera,
-  Sparkles,
-  ArrowRight
+  Eye,
+  BarChart3,
+  CheckCircle2,
+  Plus,
+  Minus,
+  type LucideIcon
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../stores/authStore';
+import { Capacitor } from '@capacitor/core';
+import { revenueCatService } from '../../services/revenueCatService';
+import { subscriptionService } from '../../services/subscriptionService';
 
-// Step names for analytics
-const STEP_NAMES = ['business_setup', 'email_compose', 'email_preview', 'vision_cam'];
+// ─── Color Palette (from Colors+Onsite.swift) ───────────────────────────────
 
-// Generate or retrieve session ID for tracking
+const C = {
+  darkNavy: '#022a4a',
+  primary: '#043d6b',
+  medium: '#035291',
+  lightBG: '#e8f0f8',
+  gray50: '#F9FAFB',
+  gray100: '#F3F4F6',
+  gray200: '#E5E7EB',
+  gray500: '#71717A',
+  gray900: '#111827',
+  green: '#16a34a',
+  amber: '#d97706',
+  violet: '#7c3aed',
+  red: '#dc2626',
+} as const;
+
+// ─── Trade Presets (from TradeSelectScreen.swift) ────────────────────────────
+
+interface TradePreset {
+  id: string;
+  name: string;
+  icon: LucideIcon;
+  avgProjectValue: number;
+  avgEstimateHours: number;
+  avgProjectsPerMonth: number;
+  hourlyRate: number;
+  painPoint: string;
+  productivityWin: string;
+}
+
+const TRADES: TradePreset[] = [
+  {
+    id: 'gc', name: 'General Contractor', icon: Hammer,
+    avgProjectValue: 18000, avgEstimateHours: 2.5, avgProjectsPerMonth: 4, hourlyRate: 95,
+    painPoint: 'GCs spend 3-4 hours per bid juggling subs, materials & markup',
+    productivityWin: 'Take on more projects without adding overhead',
+  },
+  {
+    id: 'electrician', name: 'Electrician', icon: Zap,
+    avgProjectValue: 4500, avgEstimateHours: 1.5, avgProjectsPerMonth: 10, hourlyRate: 105,
+    painPoint: 'Electricians lose billable hours calculating load schedules and material lists',
+    productivityWin: 'Quote more jobs in less time and increase close rate',
+  },
+  {
+    id: 'plumber', name: 'Plumber', icon: Wrench,
+    avgProjectValue: 3000, avgEstimateHours: 1.0, avgProjectsPerMonth: 14, hourlyRate: 100,
+    painPoint: 'Plumbers often underbid because fast estimates miss hidden costs',
+    productivityWin: 'Accurate bids in minutes — stop leaving money in the ground',
+  },
+  {
+    id: 'hvac', name: 'HVAC', icon: Wind,
+    avgProjectValue: 6500, avgEstimateHours: 2.5, avgProjectsPerMonth: 8, hourlyRate: 95,
+    painPoint: 'HVAC estimates require complex load calcs that eat hours every week',
+    productivityWin: 'Standardize your bids and win more commercial contracts',
+  },
+  {
+    id: 'roofer', name: 'Roofer', icon: Home,
+    avgProjectValue: 15000, avgEstimateHours: 2.5, avgProjectsPerMonth: 6, hourlyRate: 82,
+    painPoint: 'Storm season floods roofers with leads — slow estimates mean lost jobs',
+    productivityWin: 'Close 2x more storm jobs with same-day quotes',
+  },
+  {
+    id: 'painter', name: 'Painter', icon: PaintBucket,
+    avgProjectValue: 3500, avgEstimateHours: 1.0, avgProjectsPerMonth: 12, hourlyRate: 68,
+    painPoint: 'Painters waste time measuring, calculating paint quantities and labor',
+    productivityWin: 'Deliver polished quotes while competitors are still measuring',
+  },
+  {
+    id: 'carpenter', name: 'Carpenter / Framer', icon: Ruler,
+    avgProjectValue: 7000, avgEstimateHours: 2.5, avgProjectsPerMonth: 7, hourlyRate: 85,
+    painPoint: 'Carpenters lose time on material takeoffs and cutting calculations',
+    productivityWin: 'Spend less time on paper and more time building',
+  },
+  {
+    id: 'landscaper', name: 'Landscaper', icon: TreePine,
+    avgProjectValue: 4500, avgEstimateHours: 1.5, avgProjectsPerMonth: 12, hourlyRate: 72,
+    painPoint: 'Landscapers juggle seasonal demand with slow, manual quoting',
+    productivityWin: 'Quote spring cleanups and installs in the field instantly',
+  },
+  {
+    id: 'concrete', name: 'Concrete / Masonry', icon: Construction,
+    avgProjectValue: 10000, avgEstimateHours: 2.5, avgProjectsPerMonth: 5, hourlyRate: 82,
+    painPoint: 'Concrete bids require precise yardage and labor calcs — errors cost thousands',
+    productivityWin: 'Eliminate costly underbids with accurate automated takeoffs',
+  },
+  {
+    id: 'flooring', name: 'Tile & Flooring', icon: Footprints,
+    avgProjectValue: 5500, avgEstimateHours: 1.5, avgProjectsPerMonth: 9, hourlyRate: 76,
+    painPoint: 'Flooring contractors waste time calculating square footage, waste factor and grout',
+    productivityWin: 'Send professional quotes on-site before you leave the house',
+  },
+  {
+    id: 'remodeler', name: 'Remodeler', icon: Building2,
+    avgProjectValue: 25000, avgEstimateHours: 2.5, avgProjectsPerMonth: 3, hourlyRate: 92,
+    painPoint: "Remodelers lose entire days building detailed scopes for clients who don't close",
+    productivityWin: 'Create detailed, impressive scopes in 10 minutes flat',
+  },
+  {
+    id: 'drywall', name: 'Drywall', icon: Warehouse,
+    avgProjectValue: 5000, avgEstimateHours: 1.5, avgProjectsPerMonth: 9, hourlyRate: 72,
+    painPoint: 'Drywall contractors manually count sheets, mud, and tape every single bid',
+    productivityWin: 'Auto-calculate materials and labor in under a minute',
+  },
+  {
+    id: 'solar', name: 'Solar Installer', icon: Sun,
+    avgProjectValue: 22000, avgEstimateHours: 2.5, avgProjectsPerMonth: 4, hourlyRate: 110,
+    painPoint: 'Solar proposals take hours of design work before a single panel is sold',
+    productivityWin: 'Generate system quotes and proposals clients can sign on the spot',
+  },
+  {
+    id: 'pool', name: 'Pool & Spa', icon: Droplet,
+    avgProjectValue: 35000, avgEstimateHours: 2.5, avgProjectsPerMonth: 3, hourlyRate: 98,
+    painPoint: 'Pool builders write the same scope of work from scratch every single bid',
+    productivityWin: 'Close high-ticket pool projects with polished proposals',
+  },
+  {
+    id: 'excavator', name: 'Excavation / Grading', icon: Truck,
+    avgProjectValue: 12000, avgEstimateHours: 2.5, avgProjectsPerMonth: 5, hourlyRate: 120,
+    painPoint: 'Excavators struggle to accurately price haul distances, cut/fill and machine hours',
+    productivityWin: 'Win more site prep contracts with faster, accurate bids',
+  },
+  {
+    id: 'siding', name: 'Siding & Exteriors', icon: Shield,
+    avgProjectValue: 9000, avgEstimateHours: 1.5, avgProjectsPerMonth: 6, hourlyRate: 80,
+    painPoint: 'Siding crews re-measure the same walls on every job to estimate square footage',
+    productivityWin: 'Quote siding, trim and soffit jobs in the driveway',
+  },
+  {
+    id: 'fence', name: 'Fence & Gates', icon: Construction,
+    avgProjectValue: 4000, avgEstimateHours: 1.0, avgProjectsPerMonth: 12, hourlyRate: 72,
+    painPoint: 'Fence contractors lose time manually calculating linear feet, posts, and panels',
+    productivityWin: 'Text a quote before you back out of the driveway',
+  },
+  {
+    id: 'handyman', name: 'Handyman', icon: Hammer,
+    avgProjectValue: 800, avgEstimateHours: 0.5, avgProjectsPerMonth: 20, hourlyRate: 75,
+    painPoint: 'Handymen juggle dozens of small jobs and often undercharge for their time',
+    productivityWin: 'Track every job, charge properly, and stop giving free labor away',
+  },
+  {
+    id: 'insulation', name: 'Insulation', icon: Thermometer,
+    avgProjectValue: 6000, avgEstimateHours: 1.5, avgProjectsPerMonth: 8, hourlyRate: 78,
+    painPoint: 'Insulation contractors manually calculate R-values, coverage and board feet every bid',
+    productivityWin: 'Generate energy-efficiency quotes contractors can hand to homeowners on the spot',
+  },
+  {
+    id: 'other', name: 'Other Trade', icon: MoreHorizontal,
+    avgProjectValue: 6000, avgEstimateHours: 1.5, avgProjectsPerMonth: 8, hourlyRate: 80,
+    painPoint: 'Most trades spend 2+ hours per week on estimates that could take minutes',
+    productivityWin: 'Reclaim your evenings and weekends from paperwork',
+  },
+];
+
+// ─── Step names for analytics ────────────────────────────────────────────────
+
+const STEP_NAMES = [
+  'hook_trade_select',
+  'quiz_projects',
+  'quiz_estimate_time',
+  'quiz_project_value',
+  'results',
+  'features',
+];
+
+// ─── Estimate time options ───────────────────────────────────────────────────
+
+const ESTIMATE_TIME_OPTIONS: { label: string; hours: number; icon: LucideIcon }[] = [
+  { label: 'Under 30 minutes', hours: 0.5, icon: Zap },
+  { label: 'About 1 hour', hours: 1.0, icon: Clock },
+  { label: '1 - 2 hours', hours: 1.5, icon: Clock },
+  { label: '3 or more hours', hours: 3.0, icon: Clock },
+];
+
+// ─── Features ────────────────────────────────────────────────────────────────
+
+interface Feature {
+  icon: LucideIcon;
+  title: string;
+  tagline: string;
+  detail: string;
+  color: string;
+}
+
+const FEATURES: Feature[] = [
+  {
+    icon: Zap,
+    title: 'Estimates in 60 Seconds',
+    tagline: 'Stop spending hours on bids',
+    detail: 'Build professional estimates with your saved materials, labor rates, and markup — in under a minute. Send to clients directly from your phone.',
+    color: C.amber,
+  },
+  {
+    icon: FileText,
+    title: 'Auto Invoice Clients',
+    tagline: 'Get paid faster, every time',
+    detail: 'Convert any estimate to an invoice in one tap. Track payment status, send reminders, and know exactly who owes you money.',
+    color: C.green,
+  },
+  {
+    icon: Camera,
+    title: 'Photo Documentation',
+    tagline: 'Every job, fully documented',
+    detail: 'Attach before/after photos to any project, organize by job site, and share visual progress reports with clients and employees instantly.',
+    color: C.primary,
+  },
+  {
+    icon: Eye,
+    title: 'AI Vision Cam',
+    tagline: 'Transform spaces before you start',
+    detail: 'Show clients exactly what their space could look like. Our AI-powered cam visualizes the finished project before a single nail is hammered.',
+    color: C.violet,
+  },
+  {
+    icon: BarChart3,
+    title: 'Track Every Dollar',
+    tagline: 'Know your numbers at all times',
+    detail: 'Expenses, mileage, revenue, and profit all in one dashboard. Make smarter bids and stop undercharging for your work.',
+    color: C.red,
+  },
+];
+
+// ─── Project value presets ───────────────────────────────────────────────────
+
+const VALUE_PRESETS: { label: string; value: number }[] = [
+  { label: '$500', value: 500 },
+  { label: '$1K', value: 1000 },
+  { label: '$5K', value: 5000 },
+  { label: '$10K', value: 10000 },
+  { label: '$25K+', value: 25000 },
+];
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
 const getSessionId = () => {
   let sessionId = sessionStorage.getItem('onboarding_session_id');
   if (!sessionId) {
@@ -44,7 +283,6 @@ const getSessionId = () => {
   return sessionId;
 };
 
-// Detect device type
 const getDeviceType = () => {
   const width = window.innerWidth;
   if (width < 768) return 'mobile';
@@ -52,383 +290,105 @@ const getDeviceType = () => {
   return 'desktop';
 };
 
+const formatCurrency = (value: number): string => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 0,
+  }).format(value);
+};
+
+// ─── Component ───────────────────────────────────────────────────────────────
+
 interface PrePaywallOnboardingProps {
   onComplete: () => void;
 }
 
-// Top 8 trades based on calculator availability
-const TOP_TRADES = [
-  { id: 'roofing', name: 'Roofing', icon: Warehouse },
-  { id: 'concrete', name: 'Concrete', icon: Maximize },
-  { id: 'flooring', name: 'Flooring', icon: Footprints },
-  { id: 'paint', name: 'Painting', icon: PaintBucket },
-  { id: 'hvac', name: 'HVAC', icon: Thermometer },
-  { id: 'plumbing', name: 'Plumbing', icon: Droplet },
-  { id: 'electrical', name: 'Electrical', icon: Lightbulb },
-  { id: 'deck', name: 'Decks', icon: Construction },
-];
-
-// All other trades
-const OTHER_TRADES = [
-  { id: 'siding', name: 'Siding' },
-  { id: 'pavers', name: 'Pavers' },
-  { id: 'drywall', name: 'Drywall' },
-  { id: 'tile', name: 'Tile' },
-  { id: 'framing', name: 'Framing' },
-  { id: 'retaining_walls', name: 'Retaining Walls' },
-  { id: 'excavation', name: 'Excavation' },
-  { id: 'doors_windows', name: 'Doors & Windows' },
-  { id: 'fence', name: 'Fencing' },
-  { id: 'foundation', name: 'Foundation' },
-  { id: 'gutter', name: 'Gutters' },
-  { id: 'junk_removal', name: 'Junk Removal' },
-  { id: 'veneer', name: 'Veneer' },
-];
-
-// Sample estimates for each trade type
-const SAMPLE_ESTIMATES: Record<string, { title: string; customerName: string; customerEmail: string; items: { name: string; qty: string; price: number }[]; total: number }> = {
-  roofing: {
-    title: 'Roof Replacement',
-    customerName: 'Michael Johnson',
-    customerEmail: 'michael.j@email.com',
-    items: [
-      { name: 'Architectural Shingles (25 sq)', qty: '25 squares', price: 4500 },
-      { name: 'Underlayment & Ice Shield', qty: '25 squares', price: 875 },
-      { name: 'Ridge Vent Installation', qty: '45 LF', price: 450 },
-      { name: 'Old Roof Tear-Off & Disposal', qty: '1', price: 1800 },
-      { name: 'Labor', qty: '1', price: 3200 },
-    ],
-    total: 10825
-  },
-  concrete: {
-    title: 'Driveway Replacement',
-    customerName: 'Sarah Williams',
-    customerEmail: 'sarah.w@email.com',
-    items: [
-      { name: 'Concrete (4" thick)', qty: '650 sq ft', price: 3900 },
-      { name: 'Rebar Reinforcement', qty: '650 sq ft', price: 650 },
-      { name: 'Demolition & Removal', qty: '1', price: 1200 },
-      { name: 'Grading & Prep', qty: '1', price: 800 },
-      { name: 'Labor & Finishing', qty: '1', price: 2100 },
-    ],
-    total: 8650
-  },
-  flooring: {
-    title: 'Hardwood Floor Installation',
-    customerName: 'Jennifer Davis',
-    customerEmail: 'jennifer.d@email.com',
-    items: [
-      { name: 'Oak Hardwood Flooring', qty: '850 sq ft', price: 5100 },
-      { name: 'Underlayment', qty: '850 sq ft', price: 425 },
-      { name: 'Transitions & Trim', qty: '1', price: 350 },
-      { name: 'Old Floor Removal', qty: '850 sq ft', price: 680 },
-      { name: 'Installation Labor', qty: '1', price: 2550 },
-    ],
-    total: 9105
-  },
-  paint: {
-    title: 'Interior Painting',
-    customerName: 'Robert Miller',
-    customerEmail: 'robert.m@email.com',
-    items: [
-      { name: 'Premium Paint (Sherwin Williams)', qty: '12 gal', price: 720 },
-      { name: 'Primer', qty: '4 gal', price: 160 },
-      { name: 'Wall Prep & Repair', qty: '1', price: 450 },
-      { name: 'Ceiling Painting', qty: '1,200 sq ft', price: 840 },
-      { name: 'Labor (Walls & Trim)', qty: '1', price: 2400 },
-    ],
-    total: 4570
-  },
-  hvac: {
-    title: 'AC System Replacement',
-    customerName: 'David Anderson',
-    customerEmail: 'david.a@email.com',
-    items: [
-      { name: '3-Ton AC Unit (14 SEER)', qty: '1', price: 3200 },
-      { name: 'Air Handler', qty: '1', price: 1800 },
-      { name: 'Thermostat (Smart)', qty: '1', price: 250 },
-      { name: 'Refrigerant Lines', qty: '1', price: 400 },
-      { name: 'Installation & Startup', qty: '1', price: 2100 },
-    ],
-    total: 7750
-  },
-  plumbing: {
-    title: 'Bathroom Remodel Plumbing',
-    customerName: 'Lisa Thompson',
-    customerEmail: 'lisa.t@email.com',
-    items: [
-      { name: 'Toilet Installation', qty: '1', price: 450 },
-      { name: 'Vanity & Faucet Install', qty: '1', price: 380 },
-      { name: 'Shower Valve & Trim', qty: '1', price: 650 },
-      { name: 'Drain Lines', qty: '1', price: 520 },
-      { name: 'Water Supply Lines', qty: '1', price: 340 },
-    ],
-    total: 2340
-  },
-  electrical: {
-    title: 'Panel Upgrade',
-    customerName: 'James Wilson',
-    customerEmail: 'james.w@email.com',
-    items: [
-      { name: '200 Amp Panel', qty: '1', price: 850 },
-      { name: 'Main Breaker', qty: '1', price: 180 },
-      { name: 'Circuit Breakers', qty: '20', price: 400 },
-      { name: 'Permit & Inspection', qty: '1', price: 350 },
-      { name: 'Labor', qty: '1', price: 1800 },
-    ],
-    total: 3580
-  },
-  deck: {
-    title: 'Composite Deck Build',
-    customerName: 'Patricia Brown',
-    customerEmail: 'patricia.b@email.com',
-    items: [
-      { name: 'Trex Composite Decking', qty: '320 sq ft', price: 3840 },
-      { name: 'Pressure Treated Frame', qty: '1', price: 1200 },
-      { name: 'Composite Railing (32 LF)', qty: '32 LF', price: 1280 },
-      { name: 'Stairs (4 steps)', qty: '1', price: 650 },
-      { name: 'Labor', qty: '1', price: 2800 },
-    ],
-    total: 9770
-  },
-  siding: {
-    title: 'Vinyl Siding Installation',
-    customerName: 'Thomas Garcia',
-    customerEmail: 'thomas.g@email.com',
-    items: [
-      { name: 'Vinyl Siding', qty: '1,800 sq ft', price: 5400 },
-      { name: 'House Wrap', qty: '1,800 sq ft', price: 540 },
-      { name: 'J-Channel & Trim', qty: '1', price: 450 },
-      { name: 'Old Siding Removal', qty: '1', price: 1200 },
-      { name: 'Labor', qty: '1', price: 3600 },
-    ],
-    total: 11190
-  },
-  pavers: {
-    title: 'Paver Patio Installation',
-    customerName: 'Nancy Martinez',
-    customerEmail: 'nancy.m@email.com',
-    items: [
-      { name: 'Concrete Pavers', qty: '400 sq ft', price: 2400 },
-      { name: 'Base Material & Sand', qty: '1', price: 600 },
-      { name: 'Edge Restraints', qty: '80 LF', price: 240 },
-      { name: 'Excavation', qty: '1', price: 800 },
-      { name: 'Labor', qty: '1', price: 2000 },
-    ],
-    total: 6040
-  },
-  drywall: {
-    title: 'Drywall Installation',
-    customerName: 'Christopher Lee',
-    customerEmail: 'chris.l@email.com',
-    items: [
-      { name: 'Drywall Sheets (1/2")', qty: '50 sheets', price: 750 },
-      { name: 'Tape & Mud', qty: '1', price: 180 },
-      { name: 'Corner Bead', qty: '1', price: 85 },
-      { name: 'Hanging Labor', qty: '1', price: 1500 },
-      { name: 'Finishing (Level 4)', qty: '1', price: 1800 },
-    ],
-    total: 4315
-  },
-  tile: {
-    title: 'Bathroom Tile Installation',
-    customerName: 'Karen White',
-    customerEmail: 'karen.w@email.com',
-    items: [
-      { name: 'Porcelain Floor Tile', qty: '85 sq ft', price: 510 },
-      { name: 'Shower Wall Tile', qty: '120 sq ft', price: 840 },
-      { name: 'Thinset & Grout', qty: '1', price: 185 },
-      { name: 'Waterproofing Membrane', qty: '1', price: 320 },
-      { name: 'Labor', qty: '1', price: 1650 },
-    ],
-    total: 3505
-  },
-  framing: {
-    title: 'Room Addition Framing',
-    customerName: 'Daniel Harris',
-    customerEmail: 'daniel.h@email.com',
-    items: [
-      { name: 'Lumber Package', qty: '1', price: 4200 },
-      { name: 'Hardware & Fasteners', qty: '1', price: 380 },
-      { name: 'Headers & Beams', qty: '1', price: 650 },
-      { name: 'Sheathing', qty: '1', price: 720 },
-      { name: 'Labor', qty: '1', price: 4800 },
-    ],
-    total: 10750
-  },
-  retaining_walls: {
-    title: 'Block Retaining Wall',
-    customerName: 'Michelle Clark',
-    customerEmail: 'michelle.c@email.com',
-    items: [
-      { name: 'Retaining Wall Blocks', qty: '180', price: 1080 },
-      { name: 'Gravel Base', qty: '3 yards', price: 180 },
-      { name: 'Drainage Pipe', qty: '50 LF', price: 150 },
-      { name: 'Excavation', qty: '1', price: 600 },
-      { name: 'Labor', qty: '1', price: 2400 },
-    ],
-    total: 4410
-  },
-  excavation: {
-    title: 'Site Excavation',
-    customerName: 'Steven Lewis',
-    customerEmail: 'steven.l@email.com',
-    items: [
-      { name: 'Excavation (8" depth)', qty: '2,000 sq ft', price: 1600 },
-      { name: 'Grading & Leveling', qty: '1', price: 800 },
-      { name: 'Soil Removal', qty: '50 yards', price: 1500 },
-      { name: 'Equipment', qty: '1 day', price: 650 },
-      { name: 'Labor', qty: '1', price: 1200 },
-    ],
-    total: 5750
-  },
-  doors_windows: {
-    title: 'Window Replacement',
-    customerName: 'Sandra Walker',
-    customerEmail: 'sandra.w@email.com',
-    items: [
-      { name: 'Double-Hung Windows', qty: '8', price: 3200 },
-      { name: 'Entry Door (Fiberglass)', qty: '1', price: 850 },
-      { name: 'Trim & Casing', qty: '1', price: 420 },
-      { name: 'Caulk & Insulation', qty: '1', price: 180 },
-      { name: 'Installation Labor', qty: '1', price: 2400 },
-    ],
-    total: 7050
-  },
-  fence: {
-    title: 'Privacy Fence Installation',
-    customerName: 'Paul Robinson',
-    customerEmail: 'paul.r@email.com',
-    items: [
-      { name: 'Cedar Fence Panels (6\')', qty: '150 LF', price: 3000 },
-      { name: 'Posts (4x4)', qty: '25', price: 500 },
-      { name: 'Concrete', qty: '25 bags', price: 175 },
-      { name: 'Hardware', qty: '1', price: 150 },
-      { name: 'Labor', qty: '1', price: 2250 },
-    ],
-    total: 6075
-  },
-  foundation: {
-    title: 'Foundation Repair',
-    customerName: 'Betty Hall',
-    customerEmail: 'betty.h@email.com',
-    items: [
-      { name: 'Helical Piers', qty: '8', price: 4800 },
-      { name: 'Crack Injection', qty: '15 LF', price: 750 },
-      { name: 'Waterproofing', qty: '1', price: 1200 },
-      { name: 'Excavation', qty: '1', price: 800 },
-      { name: 'Labor', qty: '1', price: 3200 },
-    ],
-    total: 10750
-  },
-  gutter: {
-    title: 'Seamless Gutter Installation',
-    customerName: 'Richard Young',
-    customerEmail: 'richard.y@email.com',
-    items: [
-      { name: 'Aluminum Gutters (5")', qty: '180 LF', price: 1260 },
-      { name: 'Downspouts', qty: '6', price: 360 },
-      { name: 'Gutter Guards', qty: '180 LF', price: 900 },
-      { name: 'Fascia Repair', qty: '1', price: 250 },
-      { name: 'Installation Labor', qty: '1', price: 720 },
-    ],
-    total: 3490
-  },
-  junk_removal: {
-    title: 'Estate Cleanout',
-    customerName: 'Dorothy King',
-    customerEmail: 'dorothy.k@email.com',
-    items: [
-      { name: 'Junk Removal (Full Load)', qty: '2 loads', price: 800 },
-      { name: 'Furniture Disposal', qty: '12 items', price: 360 },
-      { name: 'Appliance Removal', qty: '4', price: 200 },
-      { name: 'Donation Drop-off', qty: '1', price: 75 },
-      { name: 'Labor (2 crew)', qty: '4 hours', price: 480 },
-    ],
-    total: 1915
-  },
-  veneer: {
-    title: 'Stone Veneer Installation',
-    customerName: 'George Wright',
-    customerEmail: 'george.w@email.com',
-    items: [
-      { name: 'Natural Stone Veneer', qty: '200 sq ft', price: 2800 },
-      { name: 'Mortar & Adhesive', qty: '1', price: 340 },
-      { name: 'Metal Lath', qty: '200 sq ft', price: 200 },
-      { name: 'Corner Pieces', qty: '20 LF', price: 400 },
-      { name: 'Labor', qty: '1', price: 3000 },
-    ],
-    total: 6740
-  },
-};
-
 const PrePaywallOnboarding: React.FC<PrePaywallOnboardingProps> = ({ onComplete }) => {
   const { user } = useAuthStore();
-  const [step, setStep] = useState(1);
-  const [businessName, setBusinessName] = useState('');
-  const [selectedTrades, setSelectedTrades] = useState<string[]>([]);
-  const [showOtherTrades, setShowOtherTrades] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [emailSending, setEmailSending] = useState(false);
-  const [showGeneratedImage, setShowGeneratedImage] = useState(false);
 
-  // Analytics tracking
+  // Navigation
+  const [currentStep, setCurrentStep] = useState(0);
+
+  // Trade + quiz state (multi-select, first trade pre-fills quiz defaults)
+  const [selectedTrades, setSelectedTrades] = useState<TradePreset[]>([]);
+  const [projectsPerMonth, setProjectsPerMonth] = useState(5);
+  const [estimateHours, setEstimateHours] = useState(1.0);
+  const [avgProjectValue, setAvgProjectValue] = useState(2500);
+
+  // UI state
+  const [showResults, setShowResults] = useState(false);
+  const [currentFeature, setCurrentFeature] = useState(0);
+  const [saving, setSaving] = useState(false);
+
+  // Analytics
   const sessionId = useRef(getSessionId());
   const stepStartTime = useRef(Date.now());
   const trackedSteps = useRef<Set<number>>(new Set());
-  const hasCompleted = useRef(false); // Flag to prevent false "dropped" events
-  const cleanupListeners = useRef<(() => void) | null>(null); // Store cleanup function
+  const hasCompleted = useRef(false);
+  const cleanupListeners = useRef<(() => void) | null>(null);
 
-  // Track analytics event
-  const trackEvent = useCallback(async (
-    stepNumber: number,
-    action: 'viewed' | 'completed' | 'skipped' | 'dropped',
-    timeOnStepMs?: number
-  ) => {
-    try {
-      await supabase.from('onboarding_analytics').insert({
-        user_id: user?.id || null,
-        session_id: sessionId.current,
-        step_number: stepNumber,
-        step_name: STEP_NAMES[stepNumber - 1],
-        action,
-        business_name: businessName || null,
-        selected_trade: selectedTrades.length > 0 ? selectedTrades.join(',') : null,
-        time_on_step_ms: timeOnStepMs || null,
-        device_type: getDeviceType(),
-      });
-    } catch (error) {
-      console.error('[OnboardingAnalytics] Track error:', error);
-    }
-  }, [user?.id, businessName, selectedTrades]);
+  // ─── Calculations (from ViewModel) ──────────────────────────────────────────
 
-  // Track step view on mount and step change
+  const primaryTrade = selectedTrades[0] || null;
+
+  const hoursWastedPerMonth = projectsPerMonth * estimateHours;
+  const hoursSavedPerMonth = hoursWastedPerMonth * 0.8;
+  const hourlyRate = primaryTrade?.hourlyRate ?? 75;
+  const moneySavedPerYear = hoursSavedPerMonth * hourlyRate * 12;
+  const extraProjectsPerYear = Math.floor(
+    (hoursSavedPerMonth * 12) / Math.max(estimateHours * 1.5, 0.5)
+  );
+  const extraRevenuePerYear = extraProjectsPerYear * avgProjectValue;
+  const totalValuePerYear = moneySavedPerYear + extraRevenuePerYear;
+
+  // ─── Analytics ──────────────────────────────────────────────────────────────
+
+  const trackEvent = useCallback(
+    async (
+      stepNumber: number,
+      action: 'viewed' | 'completed' | 'skipped' | 'dropped',
+      timeOnStepMs?: number
+    ) => {
+      try {
+        await supabase.from('onboarding_analytics').insert({
+          user_id: user?.id || null,
+          session_id: sessionId.current,
+          step_number: stepNumber,
+          step_name: STEP_NAMES[stepNumber] || `step_${stepNumber}`,
+          action,
+          selected_trade: selectedTrades.map(t => t.id).join(',') || null,
+          time_on_step_ms: timeOnStepMs || null,
+          device_type: getDeviceType(),
+        });
+      } catch (error) {
+        console.error('[OnboardingAnalytics] Track error:', error);
+      }
+    },
+    [user?.id, selectedTrades]
+  );
+
+  // Track step view
   useEffect(() => {
-    if (!trackedSteps.current.has(step)) {
-      trackedSteps.current.add(step);
-      trackEvent(step, 'viewed');
+    if (!trackedSteps.current.has(currentStep)) {
+      trackedSteps.current.add(currentStep);
+      trackEvent(currentStep, 'viewed');
     }
     stepStartTime.current = Date.now();
-  }, [step, trackEvent]);
+  }, [currentStep, trackEvent]);
 
-  // Track drop-off when user leaves (but not if they completed onboarding)
+  // Track drop-off
   useEffect(() => {
     const handleBeforeUnload = () => {
-      // Don't track as dropped if user completed onboarding
       if (hasCompleted.current) return;
-      // Don't track dropped for step 4 - they either complete or don't
-      if (step === 4) return;
-
       const timeOnStep = Date.now() - stepStartTime.current;
-      // Use sendBeacon for reliable tracking on page close
       const data = JSON.stringify({
         user_id: user?.id || null,
         session_id: sessionId.current,
-        step_number: step,
-        step_name: STEP_NAMES[step - 1],
+        step_number: currentStep,
+        step_name: STEP_NAMES[currentStep] || `step_${currentStep}`,
         action: 'dropped',
-        business_name: businessName || null,
-        selected_trade: selectedTrades.length > 0 ? selectedTrades.join(',') : null,
+        selected_trade: selectedTrades.map(t => t.id).join(',') || null,
         time_on_step_ms: timeOnStep,
         device_type: getDeviceType(),
       });
@@ -439,20 +399,15 @@ const PrePaywallOnboarding: React.FC<PrePaywallOnboardingProps> = ({ onComplete 
     };
 
     const handleVisibilityChange = () => {
-      // Don't track as dropped if user completed onboarding
       if (hasCompleted.current) return;
-      // Don't track dropped for step 4 - they either complete or don't
-      if (step === 4) return;
-
       if (document.visibilityState === 'hidden') {
-        trackEvent(step, 'dropped', Date.now() - stepStartTime.current);
+        trackEvent(currentStep, 'dropped', Date.now() - stepStartTime.current);
       }
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
-    // Store cleanup function so we can call it manually before navigation
     const cleanup = () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
@@ -460,58 +415,81 @@ const PrePaywallOnboarding: React.FC<PrePaywallOnboardingProps> = ({ onComplete 
     cleanupListeners.current = cleanup;
 
     return cleanup;
-  }, [step, user?.id, businessName, selectedTrades, trackEvent]);
+  }, [currentStep, user?.id, selectedTrades, trackEvent]);
 
-  const handleNext = async () => {
-    if (step === 1) {
-      if (!businessName.trim()) {
-        alert('Please enter your business name');
-        return;
-      }
-      if (selectedTrades.length === 0) {
-        alert('Please select at least one trade');
-        return;
-      }
-      // Track step 1 completion
-      trackEvent(1, 'completed', Date.now() - stepStartTime.current);
-      setStep(2);
+  // ─── Navigation ─────────────────────────────────────────────────────────────
+
+  const advance = useCallback(() => {
+    trackEvent(currentStep, 'completed', Date.now() - stepStartTime.current);
+    if (currentStep < 5) {
+      setCurrentStep((s) => s + 1);
     }
-  };
+  }, [currentStep, trackEvent]);
 
-  const handleBack = () => {
-    if (step > 1) {
-      setStep(step - 1);
-      setShowGeneratedImage(false);
+  const goBack = useCallback(() => {
+    if (currentStep > 0) {
+      setCurrentStep((s) => s - 1);
+      if (currentStep === 4) setShowResults(false);
     }
-  };
+  }, [currentStep]);
 
-  const handleSendEmail = () => {
-    setEmailSending(true);
-    // Track step 2 completion
-    trackEvent(2, 'completed', Date.now() - stepStartTime.current);
-    setTimeout(() => {
-      setEmailSending(false);
-      setStep(3);
-    }, 1500);
-  };
+  // ─── Trade Selection (multi-select, first trade pre-fills quiz defaults) ───
 
-  // Handle step 3 -> step 4 transition
-  const handleNextToVisionCam = () => {
-    trackEvent(3, 'completed', Date.now() - stepStartTime.current);
-    setStep(4);
-  };
+  const handleSelectTrade = useCallback(
+    (trade: TradePreset) => {
+      setSelectedTrades((prev) => {
+        const already = prev.find((t) => t.id === trade.id);
+        if (already) {
+          // Deselect
+          const next = prev.filter((t) => t.id !== trade.id);
+          // If we removed the first trade, re-fill defaults from new first
+          if (next.length > 0 && prev[0].id === trade.id) {
+            setProjectsPerMonth(next[0].avgProjectsPerMonth);
+            setEstimateHours(next[0].avgEstimateHours);
+            setAvgProjectValue(next[0].avgProjectValue);
+          }
+          return next;
+        }
+        // Select — if it's the first trade, pre-fill quiz defaults
+        if (prev.length === 0) {
+          setProjectsPerMonth(trade.avgProjectsPerMonth);
+          setEstimateHours(trade.avgEstimateHours);
+          setAvgProjectValue(trade.avgProjectValue);
+        }
+        return [...prev, trade];
+      });
+    },
+    []
+  );
+
+  // ─── Pre-initialize RevenueCat/subscription service during onboarding ─────
+  // This runs in the background so the paywall loads instantly after completion
+
+  useEffect(() => {
+    if (!user?.id) return;
+    const platform = Capacitor.getPlatform();
+    if (platform === 'ios') {
+      revenueCatService.initialize(user.id).catch(() => {});
+    } else {
+      subscriptionService.initialize(user.id).catch(() => {});
+    }
+  }, [user?.id]);
+
+  // ─── Results animation trigger ─────────────────────────────────────────────
+
+  useEffect(() => {
+    if (currentStep === 4) {
+      const timer = setTimeout(() => setShowResults(true), 150);
+      return () => clearTimeout(timer);
+    }
+  }, [currentStep]);
+
+  // ─── Completion ─────────────────────────────────────────────────────────────
 
   const handleComplete = async () => {
-    // IMMEDIATELY remove event listeners to prevent any "dropped" events
-    if (cleanupListeners.current) {
-      cleanupListeners.current();
-    }
-
-    // Mark as completed (belt and suspenders)
+    if (cleanupListeners.current) cleanupListeners.current();
     hasCompleted.current = true;
-
-    // Track step 4 completion (full onboarding completed)
-    trackEvent(4, 'completed', Date.now() - stepStartTime.current);
+    trackEvent(5, 'completed', Date.now() - stepStartTime.current);
 
     if (!user) {
       onComplete();
@@ -520,35 +498,41 @@ const PrePaywallOnboarding: React.FC<PrePaywallOnboardingProps> = ({ onComplete 
 
     setSaving(true);
     try {
-      const { error: profileError } = await supabase
+      // Save trades to profile
+      await supabase
         .from('profiles')
-        .upsert({
-          id: user.id,
-          email: user.email,
-          company_name: businessName.trim(),
-          business_type: selectedTrades.join(','),
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'id'
-        });
+        .upsert(
+          {
+            id: user.id,
+            email: user.email,
+            business_type: selectedTrades.map(t => t.id).join(',') || 'other',
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'id' }
+        );
 
-      if (profileError) {
-        console.error('[PrePaywallOnboarding] Profile save error:', profileError);
-      }
+      // Save quiz data to analytics
+      await supabase.from('onboarding_analytics').insert({
+        user_id: user.id,
+        session_id: sessionId.current,
+        step_number: 99,
+        step_name: 'quiz_summary',
+        action: 'completed',
+        selected_trade: selectedTrades.map(t => t.id).join(',') || null,
+        device_type: getDeviceType(),
+      });
 
-      const { error: onboardingError } = await supabase
+      // Mark pre-paywall completed
+      await supabase
         .from('user_onboarding')
-        .upsert({
-          user_id: user.id,
-          pre_paywall_completed: true,
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'user_id'
-        });
-
-      if (onboardingError) {
-        console.error('[PrePaywallOnboarding] Onboarding save error:', onboardingError);
-      }
+        .upsert(
+          {
+            user_id: user.id,
+            pre_paywall_completed: true,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'user_id' }
+        );
 
       onComplete();
     } catch (error) {
@@ -559,508 +543,736 @@ const PrePaywallOnboarding: React.FC<PrePaywallOnboardingProps> = ({ onComplete 
     }
   };
 
-  const sampleEstimate = selectedTrades.length > 0 ? SAMPLE_ESTIMATES[selectedTrades[0]] || SAMPLE_ESTIMATES.roofing : SAMPLE_ESTIMATES.roofing;
+  // ─── Feature Carousel ──────────────────────────────────────────────────────
 
-  // Step 1: Business Setup
-  const renderBusinessSetup = () => (
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const touchStartX = useRef(0);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const diff = touchStartX.current - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0 && currentFeature < FEATURES.length - 1) {
+        setCurrentFeature((f) => f + 1);
+      } else if (diff < 0 && currentFeature > 0) {
+        setCurrentFeature((f) => f - 1);
+      }
+    }
+  };
+
+  // ─── Screen 0: Hook + Trade Select ──────────────────────────────────────────
+
+  const renderHookAndTradeSelect = () => (
     <div className="flex flex-col h-full">
-      <div className="px-5 pt-4 pb-2">
-        <h1 className="text-xl font-bold text-gray-900">Welcome to OnSite</h1>
-        <p className="text-gray-500 mt-1 text-sm">Let's set up your business profile</p>
+      {/* Hero Header */}
+      <div
+        className="flex-shrink-0 relative overflow-hidden"
+        style={{
+          background: `linear-gradient(135deg, ${C.darkNavy}, ${C.medium})`,
+          paddingTop: 'calc(env(safe-area-inset-top) + 16px)',
+        }}
+      >
+        <div className="flex flex-col items-center py-10 px-6">
+          <div className="w-20 h-20 rounded-full flex items-center justify-center mb-5" style={{ background: 'rgba(255,255,255,0.14)' }}>
+            <Hammer className="w-9 h-9 text-white" />
+          </div>
+          <h1 className="text-[28px] font-bold text-white text-center leading-tight">
+            Stop Leaving Money
+          </h1>
+          <h1 className="text-[28px] font-bold text-center leading-tight" style={{ color: C.lightBG }}>
+            on the Table.
+          </h1>
+          <p className="text-[15px] text-white/75 text-center mt-4 leading-relaxed px-6">
+            The average contractor wastes 12+ hours/week{'\n'}on estimates, invoices, and paperwork.
+          </p>
+        </div>
       </div>
 
-      <div className="flex-1 px-5 overflow-y-auto pb-4">
-        <div className="mb-4">
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-600 mb-2">
-            <Building2 className="w-4 h-4" />
-            Business Name
-          </label>
-          <input
-            type="text"
-            value={businessName}
-            onChange={(e) => setBusinessName(e.target.value)}
-            className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            placeholder="Smith Roofing LLC"
-            autoFocus
-          />
-        </div>
+      {/* Stats Strip */}
+      <div className="flex-shrink-0 flex bg-white border-b" style={{ borderColor: C.gray200 }}>
+        {[
+          { value: '12+', label: 'hrs/week\nwasted', icon: Clock },
+          { value: '$31K', label: 'lost per\nyear avg', icon: DollarSign },
+          { value: '2x', label: 'more jobs\npossible', icon: TrendingUp },
+        ].map((stat, i) => (
+          <div key={i} className="flex-1 flex flex-col items-center py-3.5" style={{ borderRight: i < 2 ? `1px solid ${C.gray200}` : 'none' }}>
+            <stat.icon className="w-[18px] h-[18px] mb-1" style={{ color: C.primary }} />
+            <span className="text-[22px] font-bold" style={{ color: C.gray900 }}>{stat.value}</span>
+            <span className="text-[10px] font-medium text-center whitespace-pre-line" style={{ color: C.gray500 }}>{stat.label}</span>
+          </div>
+        ))}
+      </div>
 
-        <div className="mb-3">
-          <label className="text-sm font-medium text-gray-600 mb-1 block">
-            What type of work do you do?
-          </label>
-          <p className="text-xs text-gray-400 mb-2">Select all that apply</p>
-
-          <div className="grid grid-cols-2 gap-2 mb-2">
-            {TOP_TRADES.map((trade) => {
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-y-auto px-6 pb-4">
+        {/* Trade Grid */}
+        <div className="mt-5 mb-4">
+          <h2 className="text-lg font-bold mb-1" style={{ color: C.gray900 }}>What's Your Trade?</h2>
+          <p className="text-sm mb-4" style={{ color: C.gray500 }}>
+            Select all that apply
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            {TRADES.map((trade) => {
               const Icon = trade.icon;
-              const isSelected = selectedTrades.includes(trade.id);
+              const isSelected = selectedTrades.some((t) => t.id === trade.id);
               return (
                 <button
                   key={trade.id}
-                  onClick={() => {
-                    setSelectedTrades(prev =>
-                      prev.includes(trade.id)
-                        ? prev.filter(t => t !== trade.id)
-                        : [...prev, trade.id]
-                    );
+                  onClick={() => handleSelectTrade(trade)}
+                  className="relative flex flex-col items-center gap-2.5 py-4 px-2 rounded-2xl border transition-all active:scale-[0.97]"
+                  style={{
+                    background: isSelected ? C.lightBG : '#fff',
+                    borderColor: isSelected ? C.primary : C.gray200,
+                    borderWidth: isSelected ? 2 : 1,
+                    boxShadow: isSelected
+                      ? '0 2px 6px rgba(0,0,0,0.08)'
+                      : '0 2px 6px rgba(0,0,0,0.03)',
                   }}
-                  className={`flex items-center gap-2.5 p-3 rounded-xl border transition-all ${
-                    isSelected
-                      ? 'bg-blue-50 border-blue-500 text-blue-700'
-                      : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
-                  }`}
                 >
-                  <Icon className={`w-4 h-4 ${isSelected ? 'text-blue-500' : 'text-gray-400'}`} />
-                  <span className="font-medium text-sm">{trade.name}</span>
+                  {isSelected && (
+                    <div className="absolute top-2 right-2">
+                      <CheckCircle2 className="w-5 h-5" style={{ color: C.primary }} />
+                    </div>
+                  )}
+                  <div
+                    className="w-[52px] h-[52px] rounded-full flex items-center justify-center"
+                    style={{ background: isSelected ? C.primary : C.lightBG }}
+                  >
+                    <Icon
+                      className="w-[22px] h-[22px]"
+                      style={{ color: isSelected ? '#fff' : C.primary }}
+                    />
+                  </div>
+                  <span
+                    className="text-[13px] font-semibold text-center leading-tight"
+                    style={{ color: isSelected ? C.primary : C.gray900 }}
+                  >
+                    {trade.name}
+                  </span>
                 </button>
               );
             })}
           </div>
+        </div>
 
-          <button
-            onClick={() => setShowOtherTrades(!showOtherTrades)}
-            className={`w-full flex items-center justify-center gap-2 p-3 rounded-xl border transition-all ${
-              showOtherTrades || OTHER_TRADES.some(t => selectedTrades.includes(t.id))
-                ? 'bg-gray-100 border-gray-300 text-gray-700'
-                : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'
-            }`}
+        {/* Trade-specific pain point (from first selected trade) */}
+        {primaryTrade && (
+          <div
+            className="flex items-start gap-3 p-4 rounded-xl mb-4"
+            style={{ background: C.lightBG, border: `1px solid ${C.primary}20` }}
           >
-            <MoreHorizontal className="w-5 h-5" />
-            <span>Other Trades</span>
-            <ChevronRight className={`w-4 h-4 transition-transform ${showOtherTrades ? 'rotate-90' : ''}`} />
-          </button>
+            <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: C.amber }} />
+            <p className="text-sm" style={{ color: C.gray900 }}>{primaryTrade.painPoint}</p>
+          </div>
+        )}
 
-          {showOtherTrades && (
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              {OTHER_TRADES.map((trade) => {
-                const isSelected = selectedTrades.includes(trade.id);
-                return (
-                  <button
-                    key={trade.id}
-                    onClick={() => {
-                      setSelectedTrades(prev =>
-                        prev.includes(trade.id)
-                          ? prev.filter(t => t !== trade.id)
-                          : [...prev, trade.id]
-                      );
-                    }}
-                    className={`p-3 rounded-lg border text-sm transition-all ${
-                      isSelected
-                        ? 'bg-blue-50 border-blue-500 text-blue-700'
-                        : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
-                    }`}
-                  >
-                    {trade.name}
-                  </button>
-                );
-              })}
+        {/* Pain Points */}
+        <div className="space-y-3.5 mb-4">
+          {[
+            { icon: FileText, color: C.primary, text: 'Hours spent writing estimates by hand' },
+            { icon: AlertTriangle, color: C.amber, text: 'Missed billable items that slip through' },
+            { icon: Clock, color: C.red, text: 'Chasing clients for unpaid invoices' },
+            { icon: Camera, color: C.violet, text: 'Disorganized project photos & notes' },
+          ].map((item, i) => (
+            <div key={i} className="flex items-center gap-3.5">
+              <div
+                className="w-[38px] h-[38px] rounded-[10px] flex items-center justify-center flex-shrink-0"
+                style={{ background: `${item.color}15` }}
+              >
+                <item.icon className="w-4 h-4" style={{ color: item.color }} />
+              </div>
+              <span className="text-[15px]" style={{ color: C.gray900 }}>{item.text}</span>
             </div>
-          )}
+          ))}
         </div>
       </div>
 
-      <div className="px-5 py-3 bg-white border-t border-gray-200">
+      {/* CTA */}
+      <div className="flex-shrink-0 px-6 pb-10 pt-3 bg-white" style={{ borderTop: `1px solid ${C.gray200}` }}>
         <button
-          onClick={handleNext}
-          disabled={!businessName.trim() || selectedTrades.length === 0}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          onClick={advance}
+          disabled={selectedTrades.length === 0}
+          className="w-full py-4 rounded-[14px] text-white font-semibold text-base active:scale-[0.98] transition-transform disabled:opacity-40"
+          style={{
+            background: `linear-gradient(90deg, ${C.medium}, ${C.primary})`,
+            boxShadow: selectedTrades.length > 0 ? `0 5px 10px ${C.primary}47` : 'none',
+          }}
         >
-          Continue
-          <ChevronRight className="w-5 h-5" />
+          See How Much You're Missing
         </button>
       </div>
     </div>
   );
 
-  // Step 2: Send Email Compose View - Matches real app modal
-  const renderEmailPreview = () => (
+  // ─── Screen 1: Quiz Projects/Month ──────────────────────────────────────────
+
+  const renderQuizProjects = () => (
     <div className="flex flex-col h-full">
-      <div className="px-5 pt-4 pb-2">
-        <h1 className="text-xl font-bold text-gray-900">Send Professional Estimates</h1>
-        <p className="text-gray-500 text-sm mt-1">See how easy it is to send estimates and collect payments</p>
+      {/* Header */}
+      <div className="flex-shrink-0 text-center pt-8 px-6">
+        <span
+          className="inline-block text-xs font-semibold px-3.5 py-1.5 rounded-full mb-3"
+          style={{ background: C.lightBG, color: C.primary }}
+        >
+          Question 1 of 3
+        </span>
+        <h2 className="text-2xl font-bold mb-2" style={{ color: C.gray900 }}>
+          How many projects do{'\n'}you take on each month?
+        </h2>
+        <p className="text-sm" style={{ color: C.gray500 }}>
+          Include estimates, active jobs, and follow-ups
+        </p>
       </div>
 
-      <div className="flex-1 px-4 overflow-y-auto pb-4">
-        {/* Send Email Modal Container */}
-        <div className="bg-white rounded-2xl overflow-hidden shadow-xl">
-          {/* Modal Header */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                <Mail className="w-6 h-6 text-blue-600" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-slate-800 text-lg">Send Email</h3>
-                <p className="text-sm text-slate-500">Compose your message</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <button className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-slate-100">
-                <Copy className="w-5 h-5 text-slate-500" />
-              </button>
-              <button className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-slate-100">
-                <X className="w-5 h-5 text-slate-500" />
-              </button>
-            </div>
-          </div>
+      <div className="flex-1 flex flex-col items-center justify-center px-6">
+        {/* Big Number */}
+        <div className="text-[88px] font-bold leading-none mb-2 transition-all" style={{ color: C.primary }}>
+          {projectsPerMonth}
+        </div>
+        <p className="text-base font-medium mb-7" style={{ color: C.gray500 }}>
+          projects per month
+        </p>
 
-          {/* Recipient */}
-          <div className="px-5 py-4 bg-slate-50 border-b border-slate-200">
-            <p className="text-sm text-slate-500 mb-2">1 recipient</p>
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-2 px-4 py-2 bg-slate-200 rounded-full text-base text-slate-700">
-                Your Customer
-                <X className="w-4 h-4 text-slate-500" />
-              </span>
-            </div>
-          </div>
+        {/* Stepper + Slider */}
+        <div className="flex items-center gap-5 w-full max-w-sm">
+          <button
+            onClick={() => setProjectsPerMonth((p) => Math.max(1, p - 1))}
+            className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ background: C.lightBG, border: `1.5px solid ${C.primary}4D` }}
+          >
+            <Minus className="w-[18px] h-[18px]" style={{ color: C.primary }} />
+          </button>
+          <input
+            type="range"
+            min={1}
+            max={30}
+            step={1}
+            value={projectsPerMonth}
+            onChange={(e) => setProjectsPerMonth(Number(e.target.value))}
+            className="flex-1 accent-[#043d6b]"
+          />
+          <button
+            onClick={() => setProjectsPerMonth((p) => Math.min(30, p + 1))}
+            className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ background: C.lightBG, border: `1.5px solid ${C.primary}4D` }}
+          >
+            <Plus className="w-[18px] h-[18px]" style={{ color: C.primary }} />
+          </button>
+        </div>
 
-          {/* Step Tabs */}
-          <div className="px-5 py-3 border-b border-slate-200">
-            <div className="flex gap-2">
-              <button className="flex-1 py-2.5 px-3 text-base text-slate-500 rounded-lg">1. To</button>
-              <button className="flex-1 py-2.5 px-3 text-base text-white bg-blue-500 rounded-lg font-medium">2. Compose</button>
-              <button className="flex-1 py-2.5 px-3 text-base text-slate-500 rounded-lg">3. Approval</button>
-              <button className="flex-1 py-2.5 px-3 text-base text-slate-500 rounded-lg">4. Send</button>
-            </div>
-          </div>
+        {/* Quick-pick pills */}
+        <div className="flex gap-2.5 mt-7">
+          {[2, 5, 10, 20].map((val) => (
+            <button
+              key={val}
+              onClick={() => setProjectsPerMonth(val)}
+              className="px-[18px] py-2 rounded-full text-sm font-semibold transition-all"
+              style={{
+                background: projectsPerMonth === val ? C.primary : C.lightBG,
+                color: projectsPerMonth === val ? '#fff' : C.primary,
+                border: projectsPerMonth === val ? 'none' : `1px solid ${C.primary}40`,
+              }}
+            >
+              {val}
+            </button>
+          ))}
+        </div>
+      </div>
 
-          {/* Form Fields */}
-          <div className="p-5 space-y-5">
-            {/* Subject */}
-            <div>
-              <label className="text-sm text-slate-500 mb-2 block">Subject</label>
-              <div className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-base">
-                Your {sampleEstimate.title} Estimate
-              </div>
-            </div>
+      {/* Footer */}
+      <div className="flex-shrink-0 px-6 pb-10 pt-3">
+        <button
+          onClick={advance}
+          className="w-full py-4 rounded-[14px] text-white font-semibold text-base active:scale-[0.98] transition-transform"
+          style={{
+            background: `linear-gradient(90deg, ${C.medium}, ${C.primary})`,
+            boxShadow: `0 5px 10px ${C.primary}47`,
+          }}
+        >
+          Continue
+        </button>
+      </div>
+    </div>
+  );
 
-            {/* Message */}
-            <div>
-              <label className="text-sm text-slate-500 mb-2 block">Message</label>
-              <div className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 text-sm leading-relaxed">
-                Hi there,<br /><br />
-                Thank you for requesting an estimate. Please find the details for your {sampleEstimate.title.toLowerCase()} project attached.
-              </div>
-            </div>
+  // ─── Screen 2: Quiz Estimate Time ───────────────────────────────────────────
 
-            {/* Attachments */}
-            <div>
-              <label className="text-sm text-slate-500 mb-2 block">Attachments</label>
-              <div className="flex gap-3">
-                <button className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-slate-100 rounded-xl text-slate-600 text-base">
-                  <Upload className="w-5 h-5" />
-                  Upload
-                </button>
-                <button className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-slate-100 rounded-xl text-slate-600 text-base">
-                  <Image className="w-5 h-5" />
-                  Gallery
-                </button>
-              </div>
-            </div>
+  const renderQuizEstimateTime = () => (
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <div className="flex-shrink-0 text-center pt-8 px-6">
+        <span
+          className="inline-block text-xs font-semibold px-3.5 py-1.5 rounded-full mb-3"
+          style={{ background: C.lightBG, color: C.primary }}
+        >
+          Question 2 of 3
+        </span>
+        <h2 className="text-2xl font-bold mb-2" style={{ color: C.gray900 }}>
+          How long does it take{'\n'}to write one estimate?
+        </h2>
+        <p className="text-sm" style={{ color: C.gray500 }}>
+          Be honest — this is just between us
+        </p>
+      </div>
 
-            {/* Documents */}
-            <div>
-              <label className="text-sm text-slate-500 mb-2 block">Documents</label>
-              <div className="flex gap-3 mb-4">
-                <button className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-slate-100 rounded-xl text-slate-600 text-base">
-                  <Paperclip className="w-5 h-5" />
-                  Attach
-                </button>
-                <button className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-slate-100 rounded-xl text-slate-600 text-base">
-                  <Plus className="w-5 h-5" />
-                  Quick Create
-                </button>
-              </div>
-
-              {/* Attached Estimate */}
-              <div className="flex items-center justify-between px-4 py-4 bg-green-50 border border-green-200 rounded-xl">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                    <CheckCircle2 className="w-5 h-5 text-green-600" />
-                  </div>
-                  <div>
-                    <p className="text-base font-medium text-slate-800">Estimate #{sampleEstimate.title.replace(/\s+/g, '-')}</p>
-                    <p className="text-sm text-green-600">Estimate</p>
-                  </div>
+      <div className="flex-1 flex flex-col justify-center px-6">
+        <div className="space-y-3">
+          {ESTIMATE_TIME_OPTIONS.map((opt) => {
+            const isSelected = estimateHours === opt.hours;
+            const Icon = opt.icon;
+            return (
+              <button
+                key={opt.hours}
+                onClick={() => setEstimateHours(opt.hours)}
+                className="w-full flex items-center gap-4 px-[18px] py-[15px] rounded-[14px] border transition-all text-left"
+                style={{
+                  background: isSelected ? C.lightBG : '#fff',
+                  borderColor: isSelected ? `${C.primary}73` : C.gray200,
+                  borderWidth: isSelected ? 2 : 1,
+                }}
+              >
+                <div
+                  className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{ background: isSelected ? C.primary : C.lightBG }}
+                >
+                  <Icon className="w-[18px] h-[18px]" style={{ color: isSelected ? '#fff' : C.primary }} />
                 </div>
-                <X className="w-5 h-5 text-slate-400" />
-              </div>
-            </div>
+                <span
+                  className="text-base flex-1"
+                  style={{ color: C.gray900, fontWeight: isSelected ? 600 : 400 }}
+                >
+                  {opt.label}
+                </span>
+                {isSelected && (
+                  <CheckCircle2 className="w-[22px] h-[22px] flex-shrink-0" style={{ color: C.primary }} />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="flex-shrink-0 flex gap-3 px-6 pb-10 pt-3">
+        <button
+          onClick={goBack}
+          className="w-[54px] h-[54px] rounded-[14px] flex items-center justify-center flex-shrink-0"
+          style={{ background: C.lightBG }}
+        >
+          <ChevronLeft className="w-4 h-4" style={{ color: C.primary }} />
+        </button>
+        <button
+          onClick={advance}
+          className="flex-1 py-4 rounded-[14px] text-white font-semibold text-base active:scale-[0.98] transition-transform"
+          style={{
+            background: `linear-gradient(90deg, ${C.medium}, ${C.primary})`,
+            boxShadow: `0 5px 10px ${C.primary}47`,
+          }}
+        >
+          Continue
+        </button>
+      </div>
+    </div>
+  );
+
+  // ─── Screen 3: Quiz Project Value ───────────────────────────────────────────
+
+  const renderQuizProjectValue = () => (
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <div className="flex-shrink-0 text-center pt-8 px-6">
+        <span
+          className="inline-block text-xs font-semibold px-3.5 py-1.5 rounded-full mb-3"
+          style={{ background: C.lightBG, color: C.primary }}
+        >
+          Question 3 of 3
+        </span>
+        <h2 className="text-2xl font-bold mb-2" style={{ color: C.gray900 }}>
+          What's your average{'\n'}project value?
+        </h2>
+        <p className="text-sm" style={{ color: C.gray500 }}>
+          A rough number is fine — we'll use this to calculate your potential
+        </p>
+      </div>
+
+      <div className="flex-1 flex flex-col items-center justify-center px-6">
+        {/* Dollar Display */}
+        <div className="text-center mb-7">
+          <div className="text-[54px] font-bold leading-none transition-all" style={{ color: C.primary }}>
+            {formatCurrency(avgProjectValue)}
+          </div>
+          <p className="text-[15px] font-medium mt-1.5" style={{ color: C.gray500 }}>
+            per project
+          </p>
+        </div>
+
+        {/* Preset Grid */}
+        <div className="grid grid-cols-3 gap-2.5 w-full max-w-sm mb-7">
+          {VALUE_PRESETS.map((preset) => {
+            const isSelected = avgProjectValue === preset.value;
+            return (
+              <button
+                key={preset.value}
+                onClick={() => setAvgProjectValue(preset.value)}
+                className="py-3 rounded-[10px] text-[15px] font-semibold transition-all"
+                style={{
+                  background: isSelected ? C.primary : C.lightBG,
+                  color: isSelected ? '#fff' : C.primary,
+                  border: isSelected ? 'none' : `1px solid ${C.primary}33`,
+                }}
+              >
+                {preset.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Fine-tune Slider */}
+        <div className="w-full max-w-sm">
+          <input
+            type="range"
+            min={500}
+            max={50000}
+            step={500}
+            value={avgProjectValue}
+            onChange={(e) => setAvgProjectValue(Number(e.target.value))}
+            className="w-full accent-[#043d6b]"
+          />
+          <div className="flex justify-between mt-1">
+            <span className="text-[11px]" style={{ color: C.gray500 }}>$500</span>
+            <span className="text-[11px]" style={{ color: C.gray500 }}>$50K+</span>
           </div>
         </div>
       </div>
 
       {/* Footer */}
-      <div className="px-5 py-3 bg-white border-t border-gray-200">
-        <div className="flex gap-3">
-          <button
-            onClick={handleBack}
-            className="flex items-center justify-center gap-2 px-4 py-3.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-all"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          <button
-            onClick={handleSendEmail}
-            disabled={emailSending}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-3.5 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold active:scale-[0.98] transition-all disabled:opacity-70"
-          >
-            {emailSending ? (
-              <>
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Sending...
-              </>
-            ) : (
-              <>
-                Next
-                <ChevronRight className="w-5 h-5" />
-              </>
-            )}
-          </button>
-        </div>
+      <div className="flex-shrink-0 flex gap-3 px-6 pb-10 pt-3">
+        <button
+          onClick={goBack}
+          className="w-[54px] h-[54px] rounded-[14px] flex items-center justify-center flex-shrink-0"
+          style={{ background: C.lightBG }}
+        >
+          <ChevronLeft className="w-4 h-4" style={{ color: C.primary }} />
+        </button>
+        <button
+          onClick={advance}
+          className="flex-1 py-4 rounded-[14px] text-white font-semibold text-base active:scale-[0.98] transition-transform"
+          style={{
+            background: `linear-gradient(90deg, ${C.medium}, ${C.primary})`,
+            boxShadow: `0 5px 10px ${C.primary}47`,
+          }}
+        >
+          Calculate My Savings
+        </button>
       </div>
     </div>
   );
 
-  // Step 3: Customer View - Shows the full email preview customers receive
-  const renderCustomerView = () => (
-    <div className="flex flex-col h-full overflow-hidden">
-      <div className="px-5 pt-4 pb-2 flex-shrink-0">
-        <h1 className="text-xl font-bold text-gray-900">Email Sent!</h1>
-        <p className="text-gray-500 text-sm mt-1">Here's what your customer receives</p>
+  // ─── Screen 4: Results ──────────────────────────────────────────────────────
+
+  const renderResults = () => (
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <div
+        className="flex-shrink-0 relative overflow-hidden"
+        style={{
+          background: `linear-gradient(135deg, ${C.darkNavy}, ${C.medium})`,
+          paddingTop: 'calc(env(safe-area-inset-top) + 8px)',
+        }}
+      >
+        <div className="flex flex-col items-center py-9 px-6">
+          <span className="text-[44px] mb-2.5">&#x1F4A1;</span>
+          <h2 className="text-2xl font-bold text-white text-center leading-tight">
+            Here's What{'\n'}You're Missing
+          </h2>
+          <p className="text-[13px] text-white/70 mt-2.5 text-center">
+            Based on {projectsPerMonth} projects/mo at {formatCurrency(avgProjectValue)} avg
+          </p>
+        </div>
       </div>
 
-      <div className="flex-1 px-4 overflow-y-auto pb-4">
-        {/* Full Email Preview - Matches what customer receives */}
-        <div className="bg-white rounded-2xl overflow-hidden shadow-xl">
-          {/* Email Header */}
-          <div className="bg-slate-50 px-5 py-4 border-b border-slate-200">
-            <p className="text-sm text-slate-500">From</p>
-            <p className="text-base font-semibold text-slate-800">{businessName.trim() || 'Your Business'}</p>
+      {/* Results Content */}
+      <div className="flex-1 overflow-y-auto px-6 pb-4">
+        <div className="space-y-3.5 pt-5">
+          {/* Total Value Callout */}
+          <div
+            className="text-center py-5 rounded-2xl border transition-all duration-500"
+            style={{
+              background: '#fff',
+              borderColor: C.gray200,
+              opacity: showResults ? 1 : 0,
+              transform: showResults ? 'scale(1)' : 'scale(0.65)',
+            }}
+          >
+            <p className="text-sm" style={{ color: C.gray500 }}>You're leaving up to</p>
+            <p className="text-[50px] font-bold leading-tight my-1" style={{ color: C.primary }}>
+              {formatCurrency(totalValuePerYear)}
+            </p>
+            <p className="text-sm" style={{ color: C.gray500 }}>on the table every year</p>
           </div>
 
-          {/* Email Content */}
-          <div className="p-5">
-            <h2 className="text-lg font-bold text-slate-800 mb-2">Your {sampleEstimate.title} Estimate</h2>
-            <p className="text-slate-500 text-sm mb-2">Hi there,</p>
-            <p className="text-slate-600 text-sm leading-relaxed mb-4">
-              Thank you for requesting an estimate. Please find the details for your {sampleEstimate.title.toLowerCase()} project below.
-            </p>
-
-            {/* Estimate Card with Line Items */}
-            <div className="bg-slate-50 rounded-xl p-4 mb-4 border border-slate-200">
-              <div className="flex justify-between items-center mb-3">
-                <span className="font-semibold text-slate-800 text-sm flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-blue-500" />
-                  Estimate Details
-                </span>
-                <span className="text-xs text-slate-500">Valid 30 days</span>
-              </div>
-
-              {/* PDF Button */}
-              <button className="w-full py-3 px-4 bg-indigo-100 text-indigo-700 rounded-lg font-semibold text-sm mb-4 flex items-center justify-center gap-2">
-                <FileText className="w-4 h-4" />
-                View Full Estimate PDF
-              </button>
-
-              {/* Line Items */}
-              <div className="space-y-2 mb-3">
-                {sampleEstimate.items.slice(0, 3).map((item, idx) => (
-                  <div key={idx} className="flex justify-between text-sm">
-                    <span className="text-slate-600">{item.name}</span>
-                    <span className="text-slate-800 font-medium">${item.price.toLocaleString()}</span>
-                  </div>
-                ))}
-                {sampleEstimate.items.length > 3 && (
-                  <p className="text-sm text-blue-500">+ {sampleEstimate.items.length - 3} more items</p>
-                )}
-              </div>
-
-              {/* Total */}
-              <div className="flex justify-between items-center pt-3 border-t border-slate-200">
-                <span className="font-semibold text-slate-800">Total</span>
-                <span className="text-xl font-bold text-green-600">${sampleEstimate.total.toLocaleString()}</span>
-              </div>
+          {/* Result Card: Time */}
+          <div
+            className="flex items-start gap-4 p-4 rounded-[14px] border transition-all duration-400"
+            style={{
+              background: '#fff',
+              borderColor: C.gray200,
+              opacity: showResults ? 1 : 0,
+              transform: showResults ? 'translateY(0)' : 'translateY(18px)',
+              transitionDelay: '0.15s',
+            }}
+          >
+            <div
+              className="w-[50px] h-[50px] rounded-full flex items-center justify-center flex-shrink-0"
+              style={{ background: `${C.primary}15` }}
+            >
+              <Clock className="w-[22px] h-[22px]" style={{ color: C.primary }} />
             </div>
-
-            {/* Approve/Decline Section - Green bordered */}
-            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border-2 border-green-300">
-              <p className="text-center font-semibold text-green-700 mb-3">Ready to proceed?</p>
-
-              <button className="w-full py-3 px-4 bg-green-500 text-white rounded-lg font-bold text-sm mb-2 flex items-center justify-center gap-2">
-                ✓ Approve Estimate
-              </button>
-
-              <button className="w-full py-2.5 px-4 bg-slate-800 text-white rounded-lg font-semibold text-sm mb-3 flex items-center justify-center gap-2">
-                ✗ Decline
-              </button>
-
-              <p className="text-center text-xs text-slate-500 flex items-center justify-center gap-1">
-                <CreditCard className="w-3.5 h-3.5" />
-                Approve to receive a secure payment link via Stripe
+            <div>
+              <p className="text-xs font-medium" style={{ color: C.gray500 }}>Estimate Time Wasted</p>
+              <p className="text-[19px] font-bold" style={{ color: C.gray900 }}>
+                {Math.round(hoursWastedPerMonth)} hrs/month
+              </p>
+              <p className="text-xs leading-relaxed" style={{ color: C.gray500 }}>
+                OnSite cuts this by 80% — reclaim {Math.round(hoursSavedPerMonth)} hours every month
               </p>
             </div>
           </div>
 
-          {/* Footer */}
-          <div className="bg-slate-50 px-5 py-3 border-t border-slate-200 text-center">
-            <p className="text-xs text-slate-400">Sent via OnSite • Professional Contractor Software</p>
+          {/* Result Card: Money */}
+          <div
+            className="flex items-start gap-4 p-4 rounded-[14px] border transition-all duration-400"
+            style={{
+              background: '#fff',
+              borderColor: C.gray200,
+              opacity: showResults ? 1 : 0,
+              transform: showResults ? 'translateY(0)' : 'translateY(18px)',
+              transitionDelay: '0.25s',
+            }}
+          >
+            <div
+              className="w-[50px] h-[50px] rounded-full flex items-center justify-center flex-shrink-0"
+              style={{ background: `${C.green}15` }}
+            >
+              <DollarSign className="w-[22px] h-[22px]" style={{ color: C.green }} />
+            </div>
+            <div>
+              <p className="text-xs font-medium" style={{ color: C.gray500 }}>Productivity You're Losing</p>
+              <p className="text-[19px] font-bold" style={{ color: C.gray900 }}>
+                {formatCurrency(moneySavedPerYear)}/year
+              </p>
+              <p className="text-xs leading-relaxed" style={{ color: C.gray500 }}>
+                Your time is worth ${hourlyRate}/hr. Stop spending it on paperwork.
+              </p>
+            </div>
+          </div>
+
+          {/* Result Card: Extra Jobs */}
+          <div
+            className="flex items-start gap-4 p-4 rounded-[14px] border transition-all duration-400"
+            style={{
+              background: '#fff',
+              borderColor: C.gray200,
+              opacity: showResults ? 1 : 0,
+              transform: showResults ? 'translateY(0)' : 'translateY(18px)',
+              transitionDelay: '0.35s',
+            }}
+          >
+            <div
+              className="w-[50px] h-[50px] rounded-full flex items-center justify-center flex-shrink-0"
+              style={{ background: `${C.amber}15` }}
+            >
+              <TrendingUp className="w-[22px] h-[22px]" style={{ color: C.amber }} />
+            </div>
+            <div>
+              <p className="text-xs font-medium" style={{ color: C.gray500 }}>Jobs You Could Be Taking</p>
+              <p className="text-[19px] font-bold" style={{ color: C.gray900 }}>
+                +{extraProjectsPerYear} extra jobs/year
+              </p>
+              <p className="text-xs leading-relaxed" style={{ color: C.gray500 }}>
+                Worth {formatCurrency(extraRevenuePerYear)} in additional revenue
+              </p>
+            </div>
+          </div>
+
+          {/* Solution Teaser */}
+          <div
+            className="flex items-center gap-3.5 p-4 rounded-[14px] transition-all duration-400"
+            style={{
+              background: C.lightBG,
+              border: `1px solid ${C.primary}33`,
+              opacity: showResults ? 1 : 0,
+              transitionDelay: '0.45s',
+            }}
+          >
+            <CheckCircle2 className="w-7 h-7 flex-shrink-0" style={{ color: C.primary }} />
+            <div>
+              <p className="text-[15px] font-semibold" style={{ color: C.gray900 }}>
+                OnSite eliminates all of this
+              </p>
+              <p className="text-[13px]" style={{ color: C.gray500 }}>
+                Estimates in 60 seconds. Auto-invoicing. AI-powered.
+              </p>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="px-5 py-3 bg-white border-t border-gray-200">
-        <div className="flex gap-3">
-          <button
-            onClick={handleBack}
-            className="flex items-center justify-center gap-2 px-4 py-3.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-all"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          <button
-            onClick={handleNextToVisionCam}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-3.5 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold active:scale-[0.98] transition-all"
-          >
-            Next
-            <ChevronRight className="w-5 h-5" />
-          </button>
-        </div>
+      {/* CTA */}
+      <div className="flex-shrink-0 px-6 pb-10 pt-3 bg-white" style={{ borderTop: `1px solid ${C.gray200}` }}>
+        <button
+          onClick={advance}
+          className="w-full py-4 rounded-[14px] text-white font-semibold text-base active:scale-[0.98] transition-transform"
+          style={{
+            background: `linear-gradient(90deg, ${C.medium}, ${C.primary})`,
+            boxShadow: `0 5px 10px ${C.primary}47`,
+          }}
+        >
+          Show Me How &rarr;
+        </button>
       </div>
     </div>
   );
 
-  // Step 4: Vision Cam Preview
-  const renderVisionCam = () => (
-    <div className="flex flex-col h-full bg-white">
-      <div className="px-5 pt-4 pb-2">
-        <div className="flex items-center gap-2 mb-2">
-          <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-600 rounded-lg flex items-center justify-center">
-            <Eye className="w-5 h-5 text-white" />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900">Vision Cam</h1>
-        </div>
-        <p className="text-gray-500 text-base">Show customers what their project will look like with AI-generated images</p>
-      </div>
+  // ─── Screen 5: Features ─────────────────────────────────────────────────────
 
-      <div className="flex-1 px-2 overflow-hidden flex flex-col">
-        {/* Image Container */}
-        <div className="flex-1 relative overflow-hidden rounded-2xl">
-          {/* Before Image */}
-          <div
-            className={`absolute inset-0 flex items-center justify-center transition-transform duration-500 ease-in-out ${
-              showGeneratedImage ? '-translate-x-full' : 'translate-x-0'
-            }`}
-          >
-            <img
-              src="https://ujhgwcurllkkeouzwvgk.supabase.co/storage/v1/object/public/project-photos/vision-cam-demo/bathroom-before.png"
-              alt="Before - Vision Cam Input"
-              className="h-full w-auto max-w-none rounded-2xl shadow-lg border-2 border-black"
-            />
-          </div>
-
-          {/* After Image */}
-          <div
-            className={`absolute inset-0 flex items-center justify-center transition-transform duration-500 ease-in-out ${
-              showGeneratedImage ? 'translate-x-0' : 'translate-x-full'
-            }`}
-          >
-            <img
-              src="https://ujhgwcurllkkeouzwvgk.supabase.co/storage/v1/object/public/project-photos/vision-cam-demo/bathroom-after.png"
-              alt="After - AI Generated Result"
-              className="h-full w-auto max-w-none rounded-2xl shadow-lg border-2 border-black"
-            />
-          </div>
-
-          {/* Carousel Dots */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-            <div className={`w-2.5 h-2.5 rounded-full transition-colors shadow ${!showGeneratedImage ? 'bg-purple-500' : 'bg-white/70'}`} />
-            <div className={`w-2.5 h-2.5 rounded-full transition-colors shadow ${showGeneratedImage ? 'bg-purple-500' : 'bg-white/70'}`} />
-          </div>
-        </div>
-
-        {/* Toggle Button */}
-        <div className="py-3">
-          {!showGeneratedImage ? (
-            <div className="text-center">
-              <button
-                onClick={() => setShowGeneratedImage(true)}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-600 text-white rounded-xl font-semibold active:scale-[0.98] transition-all"
-              >
-                <Sparkles className="w-5 h-5" />
-                See AI Generated Result
-                <ArrowRight className="w-5 h-5" />
-              </button>
-            </div>
-          ) : (
-            <div className="text-center">
-              <button
-                onClick={() => setShowGeneratedImage(false)}
-                className="text-purple-600 text-sm font-medium"
-              >
-                ← View original photo
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Footer */}
-      <div className="px-5 py-3 bg-white border-t border-gray-200">
-        <div className="flex gap-3">
-          <button
-            onClick={handleBack}
-            className="flex items-center justify-center gap-2 px-4 py-3.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-all"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          <button
-            onClick={handleComplete}
-            disabled={saving}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-3.5 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-xl font-semibold active:scale-[0.98] transition-all disabled:opacity-50"
-          >
-            {saving ? (
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : (
-              <>
-                Start Free Trial
-                <ChevronRight className="w-5 h-5" />
-              </>
-            )}
-          </button>
-        </div>
-        <p className="text-xs text-gray-500 text-center mt-3">
-          7-day free trial, cancel anytime
+  const renderFeatures = () => (
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <div className="flex-shrink-0 text-center pt-8 px-6">
+        <h2 className="text-[22px] font-bold mb-1.5" style={{ color: C.gray900 }}>
+          Why Contractors Choose OnSite
+        </h2>
+        <p className="text-[15px]" style={{ color: C.gray500 }}>
+          Everything you need. Nothing you don't.
         </p>
       </div>
+
+      {/* Feature Cards Carousel */}
+      <div
+        className="flex-1 flex flex-col justify-center overflow-hidden"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        ref={carouselRef}
+      >
+        <div className="px-6">
+          <div
+            className="flex transition-transform duration-300 ease-out"
+            style={{ transform: `translateX(-${currentFeature * 100}%)` }}
+          >
+            {FEATURES.map((feature, idx) => {
+              const Icon = feature.icon;
+              return (
+                <div key={idx} className="w-full flex-shrink-0 px-1">
+                  <div
+                    className="flex flex-col items-center text-center p-[26px] rounded-[20px] border"
+                    style={{
+                      background: '#fff',
+                      borderColor: C.gray200,
+                      boxShadow: '0 5px 14px rgba(0,0,0,0.05)',
+                    }}
+                  >
+                    <div
+                      className="w-20 h-20 rounded-full flex items-center justify-center mb-5"
+                      style={{ background: `${feature.color}1E` }}
+                    >
+                      <Icon className="w-[34px] h-[34px]" style={{ color: feature.color }} />
+                    </div>
+                    <h3 className="text-xl font-bold mb-2" style={{ color: C.gray900 }}>
+                      {feature.title}
+                    </h3>
+                    <p className="text-[13px] font-semibold mb-2" style={{ color: feature.color }}>
+                      {feature.tagline}
+                    </p>
+                    <p className="text-sm leading-relaxed" style={{ color: C.gray500 }}>
+                      {feature.detail}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Dot indicators */}
+        <div className="flex justify-center gap-[7px] mt-4">
+          {FEATURES.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrentFeature(i)}
+              className="rounded-full transition-all duration-300"
+              style={{
+                width: i === currentFeature ? 22 : 8,
+                height: 8,
+                background: i === currentFeature ? C.primary : C.gray200,
+              }}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* CTA */}
+      <div className="flex-shrink-0 px-6 pb-10 pt-3">
+        <button
+          onClick={handleComplete}
+          disabled={saving}
+          className="w-full py-4 rounded-[14px] text-white font-semibold text-base active:scale-[0.98] transition-transform disabled:opacity-60"
+          style={{
+            background: `linear-gradient(90deg, ${C.medium}, ${C.primary})`,
+            boxShadow: `0 5px 10px ${C.primary}47`,
+          }}
+        >
+          {saving ? (
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <span>Setting up...</span>
+            </div>
+          ) : (
+            'Get Started Free'
+          )}
+        </button>
+      </div>
     </div>
   );
 
-  return (
-    <div className="fixed inset-0 z-50 bg-gray-50">
-      <div className="h-full w-full flex flex-col" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-        {/* Step Indicator */}
-        <div className="flex items-center justify-between px-6" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 8px)' }}>
-          <div className="flex gap-2">
-            {[1, 2, 3, 4].map((s) => (
-              <div
-                key={s}
-                className={`h-1 rounded-full transition-all ${
-                  s === step ? 'w-8 bg-blue-500' : s < step ? 'w-4 bg-blue-300' : 'w-4 bg-gray-300'
-                }`}
-              />
-            ))}
-          </div>
-          <span className="text-xs text-gray-500">Step {step} of 4</span>
-        </div>
+  // ─── Progress Bar ───────────────────────────────────────────────────────────
 
-        {/* Content */}
+  const progressWidth = currentStep > 0 ? `${(currentStep / 5) * 100}%` : '0%';
+
+  // ─── Render ─────────────────────────────────────────────────────────────────
+
+  return (
+    <div className="fixed inset-0 z-50" style={{ background: C.gray50 }}>
+      <div className="h-full w-full flex flex-col" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+        {/* Progress Bar — hidden on step 0 */}
+        {currentStep > 0 && (
+          <div
+            className="flex-shrink-0 px-6"
+            style={{ paddingTop: 'calc(env(safe-area-inset-top) + 16px)' }}
+          >
+            <div className="h-1 rounded-full" style={{ background: C.gray200 }}>
+              <div
+                className="h-1 rounded-full transition-all duration-350 ease-in-out"
+                style={{
+                  width: progressWidth,
+                  background: `linear-gradient(90deg, ${C.medium}, ${C.primary})`,
+                }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Screen Content */}
         <div className="flex-1 overflow-hidden">
-          {step === 1 && renderBusinessSetup()}
-          {step === 2 && renderEmailPreview()}
-          {step === 3 && renderCustomerView()}
-          {step === 4 && renderVisionCam()}
+          {currentStep === 0 && renderHookAndTradeSelect()}
+          {currentStep === 1 && renderQuizProjects()}
+          {currentStep === 2 && renderQuizEstimateTime()}
+          {currentStep === 3 && renderQuizProjectValue()}
+          {currentStep === 4 && renderResults()}
+          {currentStep === 5 && renderFeatures()}
         </div>
       </div>
     </div>

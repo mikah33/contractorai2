@@ -73,6 +73,7 @@ interface TimeEntry {
 interface ExpandedEmployeeData {
   todayEntries: TimeEntry[];
   weekEntries: TimeEntry[];
+  olderEntries: TimeEntry[];
   todayTotal: number; // minutes
   weekTotal: number; // minutes
   todayEarnings: number;
@@ -202,6 +203,11 @@ const TrackerHub: React.FC = () => {
   const [pendingAutoTrips, setPendingAutoTrips] = useState<AutoTrip[]>([]);
   const [savingTripId, setSavingTripId] = useState<string | null>(null);
 
+  // Time entry edit/delete
+  const [editingTimeEntry, setEditingTimeEntry] = useState<TimeEntry | null>(null);
+  const [editTimeEntryForm, setEditTimeEntryForm] = useState({ date: '', hours: '', minutes: '', notes: '' });
+  const [showDeleteTimeEntryConfirm, setShowDeleteTimeEntryConfirm] = useState<string | null>(null);
+
   // Start timer every second for running timers
   useEffect(() => {
     const hasRunningTimers = timeEntries.some(e => e.status === 'running');
@@ -236,9 +242,44 @@ const TrackerHub: React.FC = () => {
         const status = await AutoMileageTracker.getTrackingStatus();
         setTrackingStatus(status);
 
+        // Auto-save any completed trips from native UserDefaults to Supabase
         const result = await AutoMileageTracker.getCompletedTrips();
         if (result.trips.length > 0) {
-          setPendingAutoTrips(result.trips);
+          console.log(`[AutoMileage] Found ${result.trips.length} completed trips to auto-save`);
+          const { data: { user: u } } = await supabase.auth.getUser();
+          if (u) {
+            for (const trip of result.trips) {
+              const tripData = {
+                user_id: u.id,
+                start_address: trip.startAddress,
+                end_address: trip.endAddress,
+                stops: [],
+                trip_date: trip.startTime.split('T')[0],
+                total_miles: parseFloat(trip.totalMiles.toFixed(1)),
+                calculated_miles: parseFloat(trip.totalMiles.toFixed(1)),
+                purpose: null,
+                notes: 'Auto-detected trip',
+                employee_id: null,
+                project_id: null,
+                is_business: true,
+                irs_rate: IRS_MILEAGE_RATE,
+                source: 'auto',
+                status: 'confirmed'
+              };
+              const { error } = await supabase.from('mileage_trips').insert(tripData);
+              if (!error) {
+                console.log(`[AutoMileage] Auto-saved trip: ${trip.totalMiles} mi`);
+              } else {
+                // Save failed — show in pending UI so user can save manually
+                setPendingAutoTrips(prev => [...prev, trip]);
+              }
+            }
+            await AutoMileageTracker.clearCompletedTrips();
+            fetchMileageTrips();
+          } else {
+            // No user — show as pending
+            setPendingAutoTrips(result.trips);
+          }
         }
       } catch (err) {
         console.error('Error initializing auto tracking:', err);
@@ -248,9 +289,41 @@ const TrackerHub: React.FC = () => {
     initAutoTracking();
 
     let listener: { remove: () => void } | null = null;
-    AutoMileageTracker.addListener('tripCompleted', (trip) => {
-      setPendingAutoTrips(prev => [...prev, trip]);
-      fetchMileageTrips();
+    AutoMileageTracker.addListener('tripCompleted', async (trip) => {
+      // Auto-save trip to Supabase immediately
+      try {
+        const { data: { user: u } } = await supabase.auth.getUser();
+        if (u) {
+          const tripData = {
+            user_id: u.id,
+            start_address: trip.startAddress,
+            end_address: trip.endAddress,
+            stops: [],
+            trip_date: trip.startTime.split('T')[0],
+            total_miles: parseFloat(trip.totalMiles.toFixed(1)),
+            calculated_miles: parseFloat(trip.totalMiles.toFixed(1)),
+            purpose: null,
+            notes: 'Auto-detected trip',
+            employee_id: null,
+            project_id: null,
+            is_business: true,
+            irs_rate: IRS_MILEAGE_RATE,
+            source: 'auto',
+            status: 'confirmed'
+          };
+          const { error } = await supabase.from('mileage_trips').insert(tripData);
+          if (!error) {
+            console.log(`[AutoMileage] Trip auto-saved: ${trip.totalMiles} mi`);
+            await AutoMileageTracker.clearCompletedTrips();
+            fetchMileageTrips();
+          } else {
+            // Keep in pending if save fails
+            setPendingAutoTrips(prev => [...prev, trip]);
+          }
+        }
+      } catch {
+        setPendingAutoTrips(prev => [...prev, trip]);
+      }
     }).then(l => { listener = l; });
 
     return () => { listener?.remove(); };
@@ -684,6 +757,43 @@ const TrackerHub: React.FC = () => {
       return entryDate >= weekStart && entryDate <= weekEnd;
     });
 
+    // Older entries: completed entries not in this week (from local + fetch from DB for last 30 days)
+    const olderFromLocal = employeeEntries.filter(e => {
+      const entryDate = parseISO(e.date);
+      return entryDate < weekStart && e.status === 'completed';
+    });
+
+    // Also fetch older entries from Supabase (last 30 days beyond this week)
+    let olderEntries = olderFromLocal;
+    try {
+      const thirtyDaysAgo = new Date(today);
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const { data: olderData } = await supabase
+        .from('time_entries')
+        .select('*')
+        .eq('employee_id', employeeId)
+        .eq('status', 'completed')
+        .lt('date', format(weekStart, 'yyyy-MM-dd'))
+        .gte('date', format(thirtyDaysAgo, 'yyyy-MM-dd'))
+        .order('date', { ascending: false });
+      if (olderData && olderData.length > 0) {
+        // Merge with local, deduplicate by id
+        const localIds = new Set(olderFromLocal.map(e => e.id));
+        const merged = [...olderFromLocal];
+        for (const entry of olderData) {
+          if (!localIds.has(entry.id)) {
+            merged.push({
+              ...entry,
+              status: entry.status as 'running' | 'completed'
+            });
+          }
+        }
+        olderEntries = merged.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      }
+    } catch (err) {
+      console.error('Error fetching older entries:', err);
+    }
+
     const employee = employees.find(emp => emp.id === employeeId);
     const hourlyRate = employee?.hourly_rate || 0;
 
@@ -709,6 +819,7 @@ const TrackerHub: React.FC = () => {
       [employeeId]: {
         todayEntries,
         weekEntries,
+        olderEntries,
         todayTotal,
         weekTotal,
         todayEarnings,
@@ -1012,8 +1123,8 @@ const TrackerHub: React.FC = () => {
           <div className="px-4 pb-4 pt-4">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-[#043d6b]/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <Briefcase className="w-7 h-7 text-[#043d6b]" />
+                <div className="w-14 h-14 bg-theme/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Briefcase className="w-7 h-7 text-theme" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h1 className={`text-2xl font-bold ${themeClasses.text.primary}`}>Manage</h1>
@@ -1028,7 +1139,7 @@ const TrackerHub: React.FC = () => {
                 onClick={() => setActiveTab('finance')}
                 className={`py-2.5 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-1 ${
                   activeTab === 'finance'
-                    ? 'bg-[#043d6b] text-white shadow-lg'
+                    ? 'bg-theme text-white shadow-lg'
                     : `${themeClasses.text.secondary}`
                 }`}
               >
@@ -1039,7 +1150,7 @@ const TrackerHub: React.FC = () => {
                 onClick={() => setActiveTab('timesheets')}
                 className={`py-2.5 rounded-lg text-sm font-semibold transition-all flex items-center justify-center ${
                   activeTab === 'timesheets'
-                    ? 'bg-[#043d6b] text-white shadow-lg'
+                    ? 'bg-theme text-white shadow-lg'
                     : `${themeClasses.text.secondary}`
                 }`}
               >
@@ -1049,7 +1160,7 @@ const TrackerHub: React.FC = () => {
                 onClick={() => setActiveTab('mileage')}
                 className={`py-2.5 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-1 ${
                   activeTab === 'mileage'
-                    ? 'bg-[#043d6b] text-white shadow-lg'
+                    ? 'bg-theme text-white shadow-lg'
                     : `${themeClasses.text.secondary}`
                 }`}
               >
@@ -1074,12 +1185,12 @@ const TrackerHub: React.FC = () => {
                 placeholder="Search employees..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className={`w-full pl-10 pr-4 py-2.5 ${themeClasses.bg.input} rounded-lg border ${themeClasses.border.input} ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} focus:ring-2 focus:ring-[#043d6b] transition-all`}
+                className={`w-full pl-10 pr-4 py-2.5 ${themeClasses.bg.input} rounded-lg border ${themeClasses.border.input} ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} focus:ring-2 focus:ring-theme transition-all`}
               />
             </div>
             <button
               onClick={() => setShowAddEmployee(true)}
-              className="w-10 h-10 bg-[#043d6b] rounded-xl flex items-center justify-center text-white active:scale-95 transition-transform flex-shrink-0"
+              className="w-10 h-10 bg-theme rounded-xl flex items-center justify-center text-white active:scale-95 transition-transform flex-shrink-0"
             >
               <Plus className="w-5 h-5" />
             </button>
@@ -1098,7 +1209,7 @@ const TrackerHub: React.FC = () => {
                 <p className={`text-sm ${themeClasses.text.muted} mt-1`}>Add your first team member to get started</p>
                 <button
                   onClick={() => setShowAddEmployee(true)}
-                  className="mt-4 px-4 py-2 bg-[#043d6b] text-white rounded-lg font-medium"
+                  className="mt-4 px-4 py-2 bg-theme text-white rounded-lg font-medium"
                 >
                   <Plus className="w-4 h-4 inline mr-1" />
                   Add Team Member
@@ -1119,7 +1230,7 @@ const TrackerHub: React.FC = () => {
                     <div className="p-4">
                       <div className="flex items-center gap-3">
                         {/* Avatar */}
-                        <div className="w-12 h-12 bg-[#043d6b]/20 rounded-xl flex items-center justify-center text-[#043d6b] font-bold text-sm">
+                        <div className="w-12 h-12 bg-theme/20 rounded-xl flex items-center justify-center text-theme font-bold text-sm">
                           {getInitials(employee.name || 'NA')}
                         </div>
 
@@ -1218,9 +1329,9 @@ const TrackerHub: React.FC = () => {
                       <div className={`border-t ${themeClasses.border.primary} p-4 space-y-4`}>
                         {/* Week Summary */}
                         <div className={`grid grid-cols-2 gap-3`}>
-                          <div className={`p-3 rounded-xl ${theme === 'light' ? 'bg-[#043d6b]/10' : 'bg-[#043d6b]/10'}`}>
+                          <div className={`p-3 rounded-xl ${theme === 'light' ? 'bg-theme/10' : 'bg-theme/10'}`}>
                             <p className={`text-xs ${themeClasses.text.muted} mb-1`}>This Week</p>
-                            <p className={`text-lg font-bold ${theme === 'light' ? 'text-[#043d6b]' : 'text-[#043d6b]'}`}>
+                            <p className={`text-lg font-bold ${theme === 'light' ? 'text-theme' : 'text-theme'}`}>
                               {formatHoursMinutes(data.weekTotal)}
                             </p>
                           </div>
@@ -1235,18 +1346,18 @@ const TrackerHub: React.FC = () => {
                         {/* Today's Entries */}
                         {data.todayEntries.length > 0 && (
                           <div>
-                            <p className={`text-xs font-medium ${themeClasses.text.muted} mb-2`}>Today's Entries</p>
+                            <p className={`text-xs font-medium ${themeClasses.text.muted} mb-2`}>Today</p>
                             <div className="space-y-2">
                               {data.todayEntries.map(entry => (
                                 <div
                                   key={entry.id}
-                                  className={`flex items-center justify-between p-2 rounded-lg ${themeClasses.bg.tertiary}`}
+                                  className={`flex items-center justify-between p-2.5 rounded-lg ${themeClasses.bg.tertiary}`}
                                 >
-                                  <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-2 flex-1 min-w-0">
                                     {entry.status === 'running' ? (
-                                      <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                                      <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse flex-shrink-0" />
                                     ) : (
-                                      <div className={`w-2 h-2 rounded-full ${theme === 'light' ? 'bg-gray-300' : 'bg-zinc-600'}`} />
+                                      <div className={`w-2 h-2 rounded-full flex-shrink-0 ${theme === 'light' ? 'bg-gray-300' : 'bg-zinc-600'}`} />
                                     )}
                                     <span className={`text-sm ${themeClasses.text.secondary}`}>
                                       {entry.status === 'running'
@@ -1254,13 +1365,132 @@ const TrackerHub: React.FC = () => {
                                         : formatHoursMinutes(entry.duration_minutes || 0)
                                       }
                                     </span>
+                                    {entry.notes && (
+                                      <span className={`text-xs ${themeClasses.text.muted} truncate`}>— {entry.notes}</span>
+                                    )}
                                   </div>
-                                  <span className={`text-sm font-medium ${entry.status === 'running' ? 'text-red-500' : 'text-emerald-500'}`}>
-                                    {entry.status === 'running'
-                                      ? `$${((calculateRunningDuration(entry) / 3600) * entry.hourly_rate).toFixed(2)}`
-                                      : `$${(entry.total_pay || 0).toFixed(2)}`
-                                    }
-                                  </span>
+                                  <div className="flex items-center gap-2 flex-shrink-0">
+                                    <span className={`text-sm font-medium ${entry.status === 'running' ? 'text-red-500' : 'text-emerald-500'}`}>
+                                      {entry.status === 'running'
+                                        ? `$${((calculateRunningDuration(entry) / 3600) * entry.hourly_rate).toFixed(2)}`
+                                        : `$${(entry.total_pay || 0).toFixed(2)}`
+                                      }
+                                    </span>
+                                    {entry.status === 'completed' && (
+                                      <>
+                                        <button
+                                          onClick={() => {
+                                            const hrs = Math.floor((entry.duration_minutes || 0) / 60);
+                                            const mins = (entry.duration_minutes || 0) % 60;
+                                            setEditingTimeEntry(entry);
+                                            setEditTimeEntryForm({ date: entry.date, hours: String(hrs), minutes: String(mins), notes: entry.notes || '' });
+                                          }}
+                                          className={`w-7 h-7 rounded-md flex items-center justify-center ${themeClasses.bg.input} active:scale-95`}
+                                        >
+                                          <Pencil className={`w-3.5 h-3.5 ${themeClasses.text.secondary}`} />
+                                        </button>
+                                        <button
+                                          onClick={() => setShowDeleteTimeEntryConfirm(entry.id)}
+                                          className="w-7 h-7 rounded-md flex items-center justify-center bg-red-500/10 active:scale-95"
+                                        >
+                                          <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                                        </button>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* This Week's Entries (excluding today) */}
+                        {(() => {
+                          const todayStr = format(new Date(), 'yyyy-MM-dd');
+                          const weekOnly = data.weekEntries.filter(e => e.date !== todayStr && e.status === 'completed');
+                          if (weekOnly.length === 0) return null;
+                          return (
+                            <div>
+                              <p className={`text-xs font-medium ${themeClasses.text.muted} mb-2`}>This Week</p>
+                              <div className="space-y-2">
+                                {weekOnly.map(entry => (
+                                  <div
+                                    key={entry.id}
+                                    className={`flex items-center justify-between p-2.5 rounded-lg ${themeClasses.bg.tertiary}`}
+                                  >
+                                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                                      <div className={`w-2 h-2 rounded-full flex-shrink-0 ${theme === 'light' ? 'bg-gray-300' : 'bg-zinc-600'}`} />
+                                      <span className={`text-xs ${themeClasses.text.muted}`}>{format(parseISO(entry.date), 'EEE')}</span>
+                                      <span className={`text-sm ${themeClasses.text.secondary}`}>{formatHoursMinutes(entry.duration_minutes || 0)}</span>
+                                      {entry.notes && (
+                                        <span className={`text-xs ${themeClasses.text.muted} truncate`}>— {entry.notes}</span>
+                                      )}
+                                    </div>
+                                    <div className="flex items-center gap-2 flex-shrink-0">
+                                      <span className="text-sm font-medium text-emerald-500">${(entry.total_pay || 0).toFixed(2)}</span>
+                                      <button
+                                        onClick={() => {
+                                          const hrs = Math.floor((entry.duration_minutes || 0) / 60);
+                                          const mins = (entry.duration_minutes || 0) % 60;
+                                          setEditingTimeEntry(entry);
+                                          setEditTimeEntryForm({ date: entry.date, hours: String(hrs), minutes: String(mins), notes: entry.notes || '' });
+                                        }}
+                                        className={`w-7 h-7 rounded-md flex items-center justify-center ${themeClasses.bg.input} active:scale-95`}
+                                      >
+                                        <Pencil className={`w-3.5 h-3.5 ${themeClasses.text.secondary}`} />
+                                      </button>
+                                      <button
+                                        onClick={() => setShowDeleteTimeEntryConfirm(entry.id)}
+                                        className="w-7 h-7 rounded-md flex items-center justify-center bg-red-500/10 active:scale-95"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })()}
+
+                        {/* Previous Entries (older than this week) */}
+                        {data.olderEntries && data.olderEntries.length > 0 && (
+                          <div>
+                            <p className={`text-xs font-medium ${themeClasses.text.muted} mb-2`}>Previous (Last 30 Days)</p>
+                            <div className="space-y-2">
+                              {data.olderEntries.slice(0, 10).map(entry => (
+                                <div
+                                  key={entry.id}
+                                  className={`flex items-center justify-between p-2.5 rounded-lg ${themeClasses.bg.tertiary}`}
+                                >
+                                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${theme === 'light' ? 'bg-gray-300' : 'bg-zinc-600'}`} />
+                                    <span className={`text-xs ${themeClasses.text.muted}`}>{format(parseISO(entry.date), 'MMM d')}</span>
+                                    <span className={`text-sm ${themeClasses.text.secondary}`}>{formatHoursMinutes(entry.duration_minutes || 0)}</span>
+                                    {entry.notes && (
+                                      <span className={`text-xs ${themeClasses.text.muted} truncate`}>— {entry.notes}</span>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-2 flex-shrink-0">
+                                    <span className="text-sm font-medium text-emerald-500">${(entry.total_pay || 0).toFixed(2)}</span>
+                                    <button
+                                      onClick={() => {
+                                        const hrs = Math.floor((entry.duration_minutes || 0) / 60);
+                                        const mins = (entry.duration_minutes || 0) % 60;
+                                        setEditingTimeEntry(entry);
+                                        setEditTimeEntryForm({ date: entry.date, hours: String(hrs), minutes: String(mins), notes: entry.notes || '' });
+                                      }}
+                                      className={`w-7 h-7 rounded-md flex items-center justify-center ${themeClasses.bg.input} active:scale-95`}
+                                    >
+                                      <Pencil className={`w-3.5 h-3.5 ${themeClasses.text.secondary}`} />
+                                    </button>
+                                    <button
+                                      onClick={() => setShowDeleteTimeEntryConfirm(entry.id)}
+                                      className="w-7 h-7 rounded-md flex items-center justify-center bg-red-500/10 active:scale-95"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                                    </button>
+                                  </div>
                                 </div>
                               ))}
                             </div>
@@ -1300,9 +1530,9 @@ const TrackerHub: React.FC = () => {
             const stats = getMileageStats();
             return (
               <div className="grid grid-cols-3 gap-3">
-                <div className={`p-3 rounded-xl ${theme === 'light' ? 'bg-[#043d6b]/30' : 'bg-[#043d6b]/10'}`}>
-                  <p className={`text-xs ${theme === 'light' ? 'text-[#043d6b]' : themeClasses.text.muted} mb-1`}>This Month</p>
-                  <p className={`text-lg font-bold ${theme === 'light' ? 'text-[#035291]' : 'text-[#043d6b]'}`}>
+                <div className={`p-3 rounded-xl ${theme === 'light' ? 'bg-theme/30' : 'bg-theme/10'}`}>
+                  <p className={`text-xs ${theme === 'light' ? 'text-theme' : themeClasses.text.muted} mb-1`}>This Month</p>
+                  <p className={`text-lg font-bold ${theme === 'light' ? 'text-[#035291]' : 'text-theme'}`}>
                     {stats.monthMiles.toFixed(1)} mi
                   </p>
                 </div>
@@ -1325,8 +1555,8 @@ const TrackerHub: React.FC = () => {
           {/* Auto Track Toggle */}
           <div className={`flex items-center justify-between p-4 rounded-xl ${themeClasses.bg.card} border ${themeClasses.border.secondary}`}>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-[#043d6b]/20 rounded-lg flex items-center justify-center">
-                  <Navigation className="w-5 h-5 text-[#043d6b]" />
+                <div className="w-10 h-10 bg-theme/20 rounded-lg flex items-center justify-center">
+                  <Navigation className="w-5 h-5 text-theme" />
                 </div>
                 <div>
                   <p className={`font-semibold ${themeClasses.text.primary}`}>Auto Track</p>
@@ -1342,7 +1572,7 @@ const TrackerHub: React.FC = () => {
               <button
                 onClick={toggleAutoTracking}
                 className={`relative w-12 h-7 rounded-full transition-colors ${
-                  autoTrackEnabled ? 'bg-[#043d6b]' : theme === 'light' ? 'bg-gray-300' : 'bg-zinc-600'
+                  autoTrackEnabled ? 'bg-theme' : theme === 'light' ? 'bg-gray-300' : 'bg-zinc-600'
                 }`}
               >
                 <div className={`absolute top-0.5 w-6 h-6 bg-white rounded-full shadow transition-transform ${
@@ -1359,9 +1589,9 @@ const TrackerHub: React.FC = () => {
               </h3>
               <div className="space-y-2">
                 {pendingAutoTrips.map((trip) => (
-                  <div key={trip.id} className={`p-3 rounded-xl border-2 border-[#043d6b]/30 ${themeClasses.bg.card}`}>
+                  <div key={trip.id} className={`p-3 rounded-xl border-2 border-theme/30 ${themeClasses.bg.card}`}>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="px-2 py-0.5 bg-[#043d6b]/20 text-[#043d6b] text-xs font-semibold rounded-full">
+                      <span className="px-2 py-0.5 bg-theme/20 text-theme text-xs font-semibold rounded-full">
                         Auto-Detected
                       </span>
                       <span className={`text-lg font-bold ${themeClasses.text.primary}`}>
@@ -1399,7 +1629,7 @@ const TrackerHub: React.FC = () => {
                 resetTripForm();
                 setShowAddTrip(true);
               }}
-              className="flex-1 flex items-center justify-center gap-2 py-3 bg-[#043d6b] text-white rounded-xl font-semibold shadow-lg shadow-[#043d6b]/30 active:scale-[0.98] transition-transform"
+              className="flex-1 flex items-center justify-center gap-2 py-3 bg-theme text-white rounded-xl font-semibold shadow-lg shadow-theme/30 active:scale-[0.98] transition-transform"
             >
               <Plus className="w-5 h-5" />
               Add Trip
@@ -1439,7 +1669,7 @@ const TrackerHub: React.FC = () => {
                             {format(parseISO(trip.trip_date), 'MMM d, yyyy')}
                           </span>
                           {trip.is_business && (
-                            <span className="px-2 py-0.5 bg-[#043d6b]/20 text-[#043d6b] text-xs font-medium rounded-full">
+                            <span className="px-2 py-0.5 bg-theme/20 text-theme text-xs font-medium rounded-full">
                               Business
                             </span>
                           )}
@@ -1564,7 +1794,7 @@ const TrackerHub: React.FC = () => {
                 value={stopNotes}
                 onChange={(e) => setStopNotes(e.target.value)}
                 rows={2}
-                className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none resize-none`}
+                className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none resize-none`}
                 placeholder="What was worked on?"
               />
             </div>
@@ -1605,7 +1835,7 @@ const TrackerHub: React.FC = () => {
               <h2 className={`text-lg font-semibold ${themeClasses.text.primary}`}>Manual Entry</h2>
               <button
                 onClick={submitManualEntry}
-                className="text-[#043d6b] text-base font-semibold active:text-[#035291]"
+                className="text-theme text-base font-semibold active:text-[#035291]"
               >
                 Save
               </button>
@@ -1625,7 +1855,7 @@ const TrackerHub: React.FC = () => {
                   type="date"
                   value={manualEntryForm.date}
                   onChange={(e) => setManualEntryForm({ ...manualEntryForm, date: e.target.value })}
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none`}
                 />
               </div>
 
@@ -1637,7 +1867,7 @@ const TrackerHub: React.FC = () => {
                     type="number"
                     value={manualEntryForm.hours}
                     onChange={(e) => setManualEntryForm({ ...manualEntryForm, hours: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none`}
                     placeholder="0"
                     min="0"
                   />
@@ -1648,7 +1878,7 @@ const TrackerHub: React.FC = () => {
                     type="number"
                     value={manualEntryForm.minutes}
                     onChange={(e) => setManualEntryForm({ ...manualEntryForm, minutes: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none`}
                     placeholder="0"
                     min="0"
                     max="59"
@@ -1663,7 +1893,7 @@ const TrackerHub: React.FC = () => {
                   value={manualEntryForm.notes}
                   onChange={(e) => setManualEntryForm({ ...manualEntryForm, notes: e.target.value })}
                   rows={2}
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none resize-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none resize-none`}
                   placeholder="What was worked on?"
                 />
               </div>
@@ -1708,7 +1938,7 @@ const TrackerHub: React.FC = () => {
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => handleEditEmployee(selectedEmployee)}
-                    className="p-2 text-[#043d6b] active:text-[#035291] active:bg-[#043d6b]/10 rounded-xl"
+                    className="p-2 text-theme active:text-[#035291] active:bg-theme/10 rounded-xl"
                   >
                     <Pencil className="w-5 h-5" />
                   </button>
@@ -1727,7 +1957,7 @@ const TrackerHub: React.FC = () => {
 
               {/* Employee Title */}
               <div className="mt-3 flex items-center gap-3">
-                <div className="w-14 h-14 bg-gradient-to-br from-[#043d6b] to-[#035291] rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-[#043d6b]/20">
+                <div className="w-14 h-14 bg-gradient-to-br from-theme to-[#035291] rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-theme/20">
                   {getInitials(selectedEmployee.name || 'NA')}
                 </div>
                 <div>
@@ -1756,9 +1986,9 @@ const TrackerHub: React.FC = () => {
                 <label className={`text-xs ${themeClasses.text.muted} mb-3 block`}>Contact Information</label>
                 <div className="space-y-3">
                   {selectedEmployee.email && (
-                    <a href={`mailto:${selectedEmployee.email}`} className={`flex items-center gap-3 ${themeClasses.text.secondary} active:text-[#043d6b]`}>
-                      <div className="w-10 h-10 bg-[#043d6b]/30 rounded-xl flex items-center justify-center">
-                        <Mail className="w-5 h-5 text-[#043d6b]" />
+                    <a href={`mailto:${selectedEmployee.email}`} className={`flex items-center gap-3 ${themeClasses.text.secondary} active:text-theme`}>
+                      <div className="w-10 h-10 bg-theme/30 rounded-xl flex items-center justify-center">
+                        <Mail className="w-5 h-5 text-theme" />
                       </div>
                       <div>
                         <p className={`text-xs ${themeClasses.text.muted}`}>Email</p>
@@ -1767,9 +1997,9 @@ const TrackerHub: React.FC = () => {
                     </a>
                   )}
                   {selectedEmployee.phone && (
-                    <a href={`tel:${selectedEmployee.phone}`} className={`flex items-center gap-3 ${themeClasses.text.secondary} active:text-[#043d6b]`}>
-                      <div className="w-10 h-10 bg-[#043d6b]/30 rounded-xl flex items-center justify-center">
-                        <Phone className="w-5 h-5 text-[#043d6b]" />
+                    <a href={`tel:${selectedEmployee.phone}`} className={`flex items-center gap-3 ${themeClasses.text.secondary} active:text-theme`}>
+                      <div className="w-10 h-10 bg-theme/30 rounded-xl flex items-center justify-center">
+                        <Phone className="w-5 h-5 text-theme" />
                       </div>
                       <div>
                         <p className={`text-xs ${themeClasses.text.muted}`}>Phone</p>
@@ -1790,8 +2020,8 @@ const TrackerHub: React.FC = () => {
                     </p>
                     <p className={`text-xs ${themeClasses.text.muted} mt-1`}>Hourly Rate</p>
                   </div>
-                  <div className={`flex-1 text-center p-3 rounded-xl ${theme === 'light' ? 'bg-[#043d6b]/20' : 'bg-[#043d6b]/20'}`}>
-                    <p className={`text-2xl font-bold ${theme === 'light' ? 'text-[#043d6b]' : 'text-[#043d6b]'}`}>
+                  <div className={`flex-1 text-center p-3 rounded-xl ${theme === 'light' ? 'bg-theme/20' : 'bg-theme/20'}`}>
+                    <p className={`text-2xl font-bold ${theme === 'light' ? 'text-theme' : 'text-theme'}`}>
                       {getEmployeeProjects(selectedEmployee.name).length}
                     </p>
                     <p className={`text-xs ${themeClasses.text.muted} mt-1`}>Active Projects</p>
@@ -1808,7 +2038,7 @@ const TrackerHub: React.FC = () => {
                       setSelectedEmployee(null);
                       navigate('/projects-hub');
                     }}
-                    className="text-xs text-[#043d6b] font-medium"
+                    className="text-xs text-theme font-medium"
                   >
                     View All
                   </button>
@@ -1834,8 +2064,8 @@ const TrackerHub: React.FC = () => {
                           }}
                           className={`flex items-center gap-3 p-3 ${themeClasses.bg.tertiary} rounded-xl ${themeClasses.hover.bg}`}
                         >
-                          <div className="w-10 h-10 bg-[#043d6b]/30 rounded-xl flex items-center justify-center">
-                            <Briefcase className="w-5 h-5 text-[#043d6b]" />
+                          <div className="w-10 h-10 bg-theme/30 rounded-xl flex items-center justify-center">
+                            <Briefcase className="w-5 h-5 text-theme" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className={`font-medium ${themeClasses.text.primary} truncate`}>{project.name}</p>
@@ -1907,16 +2137,16 @@ const TrackerHub: React.FC = () => {
                   <div key={step} className="flex-1 flex items-center">
                     <div className={`flex-1 h-1 rounded-full transition-colors ${
                       step <= tripWizardStep
-                        ? 'bg-[#043d6b]'
+                        ? 'bg-theme'
                         : theme === 'light' ? 'bg-gray-200' : 'bg-zinc-700'
                     }`} />
                   </div>
                 ))}
               </div>
               <div className="flex justify-between mt-2">
-                <span className={`text-xs ${tripWizardStep >= 1 ? 'text-[#043d6b]' : themeClasses.text.muted}`}>Addresses</span>
-                <span className={`text-xs ${tripWizardStep >= 2 ? 'text-[#043d6b]' : themeClasses.text.muted}`}>Details</span>
-                <span className={`text-xs ${tripWizardStep >= 3 ? 'text-[#043d6b]' : themeClasses.text.muted}`}>Confirm</span>
+                <span className={`text-xs ${tripWizardStep >= 1 ? 'text-theme' : themeClasses.text.muted}`}>Addresses</span>
+                <span className={`text-xs ${tripWizardStep >= 2 ? 'text-theme' : themeClasses.text.muted}`}>Details</span>
+                <span className={`text-xs ${tripWizardStep >= 3 ? 'text-theme' : themeClasses.text.muted}`}>Confirm</span>
               </div>
             </div>
 
@@ -1932,7 +2162,7 @@ const TrackerHub: React.FC = () => {
                       </label>
                       <button
                         onClick={() => setShowProjectPicker(showProjectPicker === 'start' ? null : 'start')}
-                        className="text-xs text-[#043d6b] font-medium"
+                        className="text-xs text-theme font-medium"
                       >
                         Use Project Address
                       </button>
@@ -1943,7 +2173,7 @@ const TrackerHub: React.FC = () => {
                         type="text"
                         value={tripForm.startAddress}
                         onChange={(e) => setTripForm({ ...tripForm, startAddress: e.target.value })}
-                        className={`w-full pl-10 pr-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                        className={`w-full pl-10 pr-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none`}
                         placeholder="123 Main St, City, State"
                       />
                     </div>
@@ -1974,7 +2204,7 @@ const TrackerHub: React.FC = () => {
                       </label>
                       <button
                         onClick={() => setShowProjectPicker(showProjectPicker === 'stop' ? null : 'stop')}
-                        className="text-xs text-[#043d6b] font-medium"
+                        className="text-xs text-theme font-medium"
                       >
                         Add from Project
                       </button>
@@ -2001,13 +2231,13 @@ const TrackerHub: React.FC = () => {
                         value={newStop}
                         onChange={(e) => setNewStop(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && addStop()}
-                        className={`flex-1 px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                        className={`flex-1 px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none`}
                         placeholder="Add a stop address"
                       />
                       <button
                         onClick={addStop}
                         disabled={!newStop.trim()}
-                        className="px-4 py-3 bg-[#043d6b] text-white rounded-xl font-medium disabled:opacity-50"
+                        className="px-4 py-3 bg-theme text-white rounded-xl font-medium disabled:opacity-50"
                       >
                         <Plus className="w-5 h-5" />
                       </button>
@@ -2036,7 +2266,7 @@ const TrackerHub: React.FC = () => {
                       </label>
                       <button
                         onClick={() => setShowProjectPicker(showProjectPicker === 'end' ? null : 'end')}
-                        className="text-xs text-[#043d6b] font-medium"
+                        className="text-xs text-theme font-medium"
                       >
                         Use Project Address
                       </button>
@@ -2047,7 +2277,7 @@ const TrackerHub: React.FC = () => {
                         type="text"
                         value={tripForm.endAddress}
                         onChange={(e) => setTripForm({ ...tripForm, endAddress: e.target.value })}
-                        className={`w-full pl-10 pr-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                        className={`w-full pl-10 pr-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none`}
                         placeholder="456 Oak Ave, City, State"
                       />
                     </div>
@@ -2071,7 +2301,7 @@ const TrackerHub: React.FC = () => {
                   <button
                     onClick={() => setTripWizardStep(2)}
                     disabled={!tripForm.startAddress.trim() || !tripForm.endAddress.trim()}
-                    className="w-full py-4 bg-[#043d6b] text-white rounded-xl font-semibold disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="w-full py-4 bg-theme text-white rounded-xl font-semibold disabled:opacity-50 flex items-center justify-center gap-2"
                   >
                     Continue
                     <ChevronRight className="w-5 h-5" />
@@ -2091,7 +2321,7 @@ const TrackerHub: React.FC = () => {
                       type="date"
                       value={tripForm.date}
                       onChange={(e) => setTripForm({ ...tripForm, date: e.target.value })}
-                      className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                      className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none`}
                     />
                   </div>
 
@@ -2106,7 +2336,7 @@ const TrackerHub: React.FC = () => {
                         type="number"
                         value={tripForm.totalMiles}
                         onChange={(e) => setTripForm({ ...tripForm, totalMiles: e.target.value })}
-                        className={`w-full pl-10 pr-16 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                        className={`w-full pl-10 pr-16 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none`}
                         placeholder="0.0"
                         step="0.1"
                         min="0"
@@ -2129,7 +2359,7 @@ const TrackerHub: React.FC = () => {
                     <button
                       onClick={() => setTripForm({ ...tripForm, isBusiness: !tripForm.isBusiness })}
                       className={`w-14 h-8 rounded-full transition-colors ${
-                        tripForm.isBusiness ? 'bg-[#043d6b]' : theme === 'light' ? 'bg-gray-200' : 'bg-zinc-700'
+                        tripForm.isBusiness ? 'bg-theme' : theme === 'light' ? 'bg-gray-200' : 'bg-zinc-700'
                       }`}
                     >
                       <div className={`w-6 h-6 rounded-full bg-white shadow-md transition-transform ${
@@ -2147,7 +2377,7 @@ const TrackerHub: React.FC = () => {
                       type="text"
                       value={tripForm.purpose}
                       onChange={(e) => setTripForm({ ...tripForm, purpose: e.target.value })}
-                      className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                      className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none`}
                       placeholder="e.g., Client meeting, Site inspection"
                     />
                   </div>
@@ -2159,7 +2389,7 @@ const TrackerHub: React.FC = () => {
                       <select
                         value={tripForm.employeeId}
                         onChange={(e) => setTripForm({ ...tripForm, employeeId: e.target.value })}
-                        className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                        className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none`}
                       >
                         <option value="">None</option>
                         {employees.map(emp => (
@@ -2172,7 +2402,7 @@ const TrackerHub: React.FC = () => {
                       <select
                         value={tripForm.projectId}
                         onChange={(e) => setTripForm({ ...tripForm, projectId: e.target.value })}
-                        className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                        className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none`}
                       >
                         <option value="">None</option>
                         {projects.map(p => (
@@ -2189,7 +2419,7 @@ const TrackerHub: React.FC = () => {
                       value={tripForm.notes}
                       onChange={(e) => setTripForm({ ...tripForm, notes: e.target.value })}
                       rows={2}
-                      className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none resize-none`}
+                      className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none resize-none`}
                       placeholder="Additional details..."
                     />
                   </div>
@@ -2198,7 +2428,7 @@ const TrackerHub: React.FC = () => {
                   <button
                     onClick={() => setTripWizardStep(3)}
                     disabled={!tripForm.totalMiles || parseFloat(tripForm.totalMiles) <= 0}
-                    className="w-full py-4 bg-[#043d6b] text-white rounded-xl font-semibold disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="w-full py-4 bg-theme text-white rounded-xl font-semibold disabled:opacity-50 flex items-center justify-center gap-2"
                   >
                     Review Trip
                     <ChevronRight className="w-5 h-5" />
@@ -2298,7 +2528,7 @@ const TrackerHub: React.FC = () => {
                   <div className={`flex justify-center`}>
                     <span className={`px-4 py-2 rounded-full text-sm font-medium ${
                       tripForm.isBusiness
-                        ? 'bg-[#043d6b]/20 text-[#043d6b]'
+                        ? 'bg-theme/20 text-theme'
                         : theme === 'light' ? 'bg-gray-200 text-gray-600' : 'bg-zinc-700 text-zinc-300'
                     }`}>
                       {tripForm.isBusiness ? '💼 Business Trip' : '🏠 Personal Trip'}
@@ -2339,7 +2569,7 @@ const TrackerHub: React.FC = () => {
               <button
                 onClick={handleUpdateEmployee}
                 disabled={!editForm.name.trim() || isUpdating}
-                className={`text-[#043d6b] text-base font-semibold active:text-[#035291] disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={`text-theme text-base font-semibold active:text-[#035291] disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 {isUpdating ? 'Saving...' : 'Save'}
               </button>
@@ -2355,7 +2585,7 @@ const TrackerHub: React.FC = () => {
                   type="text"
                   value={editForm.name}
                   onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none`}
                   placeholder="Full name"
                 />
               </div>
@@ -2367,7 +2597,7 @@ const TrackerHub: React.FC = () => {
                   type="text"
                   value={editForm.job_title}
                   onChange={(e) => setEditForm({ ...editForm, job_title: e.target.value })}
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none`}
                   placeholder="e.g., Foreman, Carpenter, Electrician"
                 />
               </div>
@@ -2380,7 +2610,7 @@ const TrackerHub: React.FC = () => {
                     type="email"
                     value={editForm.email}
                     onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none`}
                     placeholder="email@example.com"
                   />
                 </div>
@@ -2390,7 +2620,7 @@ const TrackerHub: React.FC = () => {
                     type="tel"
                     value={editForm.phone}
                     onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none`}
                     placeholder="(555) 123-4567"
                   />
                 </div>
@@ -2406,7 +2636,7 @@ const TrackerHub: React.FC = () => {
                       type="number"
                       value={editForm.hourly_rate}
                       onChange={(e) => setEditForm({ ...editForm, hourly_rate: parseFloat(e.target.value) || 0 })}
-                      className={`w-full pl-8 pr-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                      className={`w-full pl-8 pr-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none`}
                       placeholder="25"
                       min="0"
                       step="0.50"
@@ -2418,7 +2648,7 @@ const TrackerHub: React.FC = () => {
                   <select
                     value={editForm.status}
                     onChange={(e) => setEditForm({ ...editForm, status: e.target.value as 'active' | 'inactive' })}
-                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none`}
                   >
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
@@ -2433,7 +2663,7 @@ const TrackerHub: React.FC = () => {
                   value={editForm.notes}
                   onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
                   rows={3}
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none resize-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none resize-none`}
                   placeholder="Additional notes..."
                 />
               </div>
@@ -2461,7 +2691,7 @@ const TrackerHub: React.FC = () => {
               <button
                 onClick={handleCreateEmployee}
                 disabled={!newEmployeeForm.name.trim() || isCreatingEmployee}
-                className="text-[#043d6b] text-base font-semibold active:text-[#035291] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="text-theme text-base font-semibold active:text-[#035291] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isCreatingEmployee ? 'Saving...' : 'Save'}
               </button>
@@ -2475,7 +2705,7 @@ const TrackerHub: React.FC = () => {
                   type="text"
                   value={newEmployeeForm.name}
                   onChange={(e) => setNewEmployeeForm({ ...newEmployeeForm, name: e.target.value })}
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none`}
                   placeholder="Full name"
                   autoFocus
                 />
@@ -2488,7 +2718,7 @@ const TrackerHub: React.FC = () => {
                   type="text"
                   value={newEmployeeForm.job_title}
                   onChange={(e) => setNewEmployeeForm({ ...newEmployeeForm, job_title: e.target.value })}
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none`}
                   placeholder="e.g., Foreman, Carpenter, Electrician"
                 />
               </div>
@@ -2501,7 +2731,7 @@ const TrackerHub: React.FC = () => {
                     type="email"
                     value={newEmployeeForm.email}
                     onChange={(e) => setNewEmployeeForm({ ...newEmployeeForm, email: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none`}
                     placeholder="email@example.com"
                   />
                 </div>
@@ -2511,7 +2741,7 @@ const TrackerHub: React.FC = () => {
                     type="tel"
                     value={newEmployeeForm.phone}
                     onChange={(e) => setNewEmployeeForm({ ...newEmployeeForm, phone: e.target.value })}
-                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none`}
                     placeholder="(555) 123-4567"
                   />
                 </div>
@@ -2527,7 +2757,7 @@ const TrackerHub: React.FC = () => {
                       type="number"
                       value={newEmployeeForm.hourly_rate}
                       onChange={(e) => setNewEmployeeForm({ ...newEmployeeForm, hourly_rate: parseFloat(e.target.value) || 0 })}
-                      className={`w-full pl-8 pr-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                      className={`w-full pl-8 pr-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none`}
                       placeholder="25"
                     />
                   </div>
@@ -2537,7 +2767,7 @@ const TrackerHub: React.FC = () => {
                   <select
                     value={newEmployeeForm.status}
                     onChange={(e) => setNewEmployeeForm({ ...newEmployeeForm, status: e.target.value as 'active' | 'inactive' })}
-                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none`}
                   >
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
@@ -2552,10 +2782,182 @@ const TrackerHub: React.FC = () => {
                   value={newEmployeeForm.notes}
                   onChange={(e) => setNewEmployeeForm({ ...newEmployeeForm, notes: e.target.value })}
                   rows={3}
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none resize-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none resize-none`}
                   placeholder="Additional notes..."
                 />
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Time Entry Modal */}
+      {editingTimeEntry && (
+        <div className="fixed inset-0 z-[200] flex items-end justify-center">
+          <div className="absolute inset-0 bg-black/70" onClick={() => setEditingTimeEntry(null)} />
+          <div className={`relative ${themeClasses.bg.secondary} rounded-t-3xl w-full max-h-[90vh] overflow-y-auto animate-slide-up`}>
+            <div className={`sticky top-0 ${themeClasses.bg.secondary} px-4 py-4 border-b ${themeClasses.border.secondary} flex items-center justify-between z-10`}>
+              <button
+                onClick={() => setEditingTimeEntry(null)}
+                className={`${themeClasses.text.secondary} text-base font-medium active:opacity-70`}
+              >
+                Cancel
+              </button>
+              <h2 className={`text-lg font-semibold ${themeClasses.text.primary}`}>Edit Entry</h2>
+              <button
+                onClick={async () => {
+                  if (!editingTimeEntry) return;
+                  const hours = parseInt(editTimeEntryForm.hours) || 0;
+                  const minutes = parseInt(editTimeEntryForm.minutes) || 0;
+                  const totalMinutes = hours * 60 + minutes;
+                  if (totalMinutes <= 0) { alert('Please enter a valid time'); return; }
+                  const totalPay = (totalMinutes / 60) * editingTimeEntry.hourly_rate;
+                  try {
+                    await supabase
+                      .from('time_entries')
+                      .update({
+                        date: editTimeEntryForm.date,
+                        duration_minutes: totalMinutes,
+                        total_pay: totalPay,
+                        notes: editTimeEntryForm.notes || null
+                      })
+                      .eq('id', editingTimeEntry.id);
+                    // Update local state
+                    setTimeEntries(prev => prev.map(e =>
+                      e.id === editingTimeEntry.id
+                        ? { ...e, date: editTimeEntryForm.date, duration_minutes: totalMinutes, total_pay: totalPay, notes: editTimeEntryForm.notes || undefined }
+                        : e
+                    ));
+                    // Also update the associated labor expense
+                    const employee = employees.find(emp => emp.id === editingTimeEntry.employee_id);
+                    if (employee) {
+                      await supabase
+                        .from('finance_expenses')
+                        .update({
+                          amount: totalPay,
+                          date: editTimeEntryForm.date,
+                          notes: `${formatHoursMinutes(totalMinutes)} worked at $${editingTimeEntry.hourly_rate}/hr${editTimeEntryForm.notes ? ` - ${editTimeEntryForm.notes}` : ''}`
+                        })
+                        .eq('vendor', `Labor - ${employee.name}`)
+                        .eq('date', editingTimeEntry.date);
+                    }
+                    setEditingTimeEntry(null);
+                    if (expandedEmployeeId) loadExpandedData(expandedEmployeeId);
+                  } catch (error) {
+                    console.error('Error updating entry:', error);
+                    alert('Failed to update entry');
+                  }
+                }}
+                className="text-theme text-base font-semibold active:text-[#035291]"
+              >
+                Save
+              </button>
+            </div>
+            <div className="p-4 space-y-4">
+              <div>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Date</label>
+                <input
+                  type="date"
+                  value={editTimeEntryForm.date}
+                  onChange={(e) => setEditTimeEntryForm(prev => ({ ...prev, date: e.target.value }))}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none`}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Hours</label>
+                  <input
+                    type="number"
+                    value={editTimeEntryForm.hours}
+                    onChange={(e) => setEditTimeEntryForm(prev => ({ ...prev, hours: e.target.value }))}
+                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none`}
+                    placeholder="0"
+                    min="0"
+                  />
+                </div>
+                <div>
+                  <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Minutes</label>
+                  <input
+                    type="number"
+                    value={editTimeEntryForm.minutes}
+                    onChange={(e) => setEditTimeEntryForm(prev => ({ ...prev, minutes: e.target.value }))}
+                    className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none`}
+                    placeholder="0"
+                    min="0"
+                    max="59"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Notes</label>
+                <textarea
+                  value={editTimeEntryForm.notes}
+                  onChange={(e) => setEditTimeEntryForm(prev => ({ ...prev, notes: e.target.value }))}
+                  rows={2}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.tertiary} border ${themeClasses.border.primary} ${themeClasses.text.primary} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none resize-none`}
+                  placeholder="What was worked on?"
+                />
+              </div>
+              {(parseInt(editTimeEntryForm.hours) > 0 || parseInt(editTimeEntryForm.minutes) > 0) && (
+                <div className={`p-4 rounded-xl ${theme === 'light' ? 'bg-emerald-50' : 'bg-emerald-500/10'}`}>
+                  <div className="flex items-center justify-between">
+                    <span className={themeClasses.text.secondary}>Total Pay</span>
+                    <span className="text-xl font-bold text-emerald-500">
+                      ${(((parseInt(editTimeEntryForm.hours) || 0) * 60 + (parseInt(editTimeEntryForm.minutes) || 0)) / 60 * editingTimeEntry.hourly_rate).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Time Entry Confirmation */}
+      {showDeleteTimeEntryConfirm && (
+        <div className="fixed inset-0 z-[210] flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setShowDeleteTimeEntryConfirm(null)} />
+          <div className={`relative ${themeClasses.bg.secondary} rounded-2xl p-6 max-w-sm w-full`}>
+            <h3 className={`font-bold text-lg ${themeClasses.text.primary} mb-2`}>Delete Entry?</h3>
+            <p className={`${themeClasses.text.secondary} text-sm mb-6`}>This will also remove the associated labor expense. This cannot be undone.</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteTimeEntryConfirm(null)}
+                className={`flex-1 py-3 rounded-xl font-semibold border ${themeClasses.border.primary} ${themeClasses.text.primary} active:scale-[0.98]`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  const entryId = showDeleteTimeEntryConfirm;
+                  const entry = timeEntries.find(e => e.id === entryId);
+                  try {
+                    // Delete the time entry
+                    await supabase.from('time_entries').delete().eq('id', entryId);
+                    // Delete associated labor expense
+                    if (entry) {
+                      const employee = employees.find(emp => emp.id === entry.employee_id);
+                      if (employee) {
+                        await supabase
+                          .from('finance_expenses')
+                          .delete()
+                          .eq('vendor', `Labor - ${employee.name}`)
+                          .eq('date', entry.date)
+                          .eq('amount', entry.total_pay || 0);
+                      }
+                    }
+                    setTimeEntries(prev => prev.filter(e => e.id !== entryId));
+                    setShowDeleteTimeEntryConfirm(null);
+                    if (expandedEmployeeId) loadExpandedData(expandedEmployeeId);
+                  } catch (error) {
+                    console.error('Error deleting entry:', error);
+                    alert('Failed to delete entry');
+                  }
+                }}
+                className="flex-1 py-3 rounded-xl font-semibold bg-red-500 text-white active:scale-[0.98]"
+              >
+                Delete
+              </button>
             </div>
           </div>
         </div>

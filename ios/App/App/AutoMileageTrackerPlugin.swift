@@ -77,7 +77,8 @@ public class AutoMileageTrackerPlugin: CAPPlugin, CAPBridgedPlugin, CLLocationMa
     private let stationaryTimeout: TimeInterval = 120  // 2 minutes
     private let minTripDistanceKm: Double = 0.8047     // 0.5 miles
     private let minTripDuration: TimeInterval = 60     // 1 minute
-    private let gpsDistanceFilter: Double = 25.0       // meters
+    private let gpsDistanceFilter: Double = 25.0       // meters (during active trip)
+    private let monitoringDistanceFilter: Double = 100.0 // meters (waiting for trip — saves battery)
     private let lowSpeedThreshold: Double = 1.0        // m/s (~2 mph)
 
     // UserDefaults keys
@@ -132,9 +133,11 @@ public class AutoMileageTrackerPlugin: CAPPlugin, CAPBridgedPlugin, CLLocationMa
         // Resume tracking if it was active
         if isTracking {
             if currentTrip != nil {
+                locationManager.distanceFilter = gpsDistanceFilter
+                locationManager.desiredAccuracy = kCLLocationAccuracyBest
                 locationManager.startUpdatingLocation()
             } else {
-                locationManager.startMonitoringSignificantLocationChanges()
+                switchToMonitoringMode()
             }
         }
     }
@@ -196,9 +199,13 @@ public class AutoMileageTrackerPlugin: CAPPlugin, CAPBridgedPlugin, CLLocationMa
         lastMovingTime = nil
 
         if currentTrip != nil {
+            // Active trip — high-accuracy GPS
+            locationManager.distanceFilter = gpsDistanceFilter
+            locationManager.desiredAccuracy = kCLLocationAccuracyBest
             locationManager.startUpdatingLocation()
         } else {
-            locationManager.startMonitoringSignificantLocationChanges()
+            // Monitoring for trips — wide filter, lower accuracy to save battery
+            switchToMonitoringMode()
         }
     }
 
@@ -376,14 +383,17 @@ public class AutoMileageTrackerPlugin: CAPPlugin, CAPBridgedPlugin, CLLocationMa
     // MARK: - Trip Detection
 
     private func handleTripDetection(location: CLLocation, speed: Double) {
+        // We're in monitoring mode with continuous GPS (100m filter)
+        // Speed data is available — check if user is driving
         if speed >= speedThreshold {
             highSpeedSampleCount += 1
+            print("[AutoMileageTracker] High speed sample \(highSpeedSampleCount)/\(speedSamplesToConfirm): \(String(format: "%.1f", speed * 2.237)) mph")
 
             if highSpeedSampleCount >= speedSamplesToConfirm {
                 startTrip(at: location)
             }
         } else {
-            // Reset counter if speed drops below threshold
+            // Reset counter if speed drops well below threshold
             if speed < speedThreshold / 2 {
                 highSpeedSampleCount = 0
             }
@@ -411,8 +421,10 @@ public class AutoMileageTrackerPlugin: CAPPlugin, CAPBridgedPlugin, CLLocationMa
         lastMovingTime = Date()
         persistCurrentTrip()
 
-        // Switch to continuous GPS for better accuracy during the trip
-        locationManager.stopMonitoringSignificantLocationChanges()
+        // Switch to high-accuracy GPS for the active trip
+        locationManager.stopUpdatingLocation()
+        locationManager.distanceFilter = gpsDistanceFilter
+        locationManager.desiredAccuracy = kCLLocationAccuracyBest
         locationManager.startUpdatingLocation()
 
         print("[AutoMileageTracker] Trip started at \(location.coordinate)")
@@ -475,7 +487,7 @@ public class AutoMileageTrackerPlugin: CAPPlugin, CAPBridgedPlugin, CLLocationMa
             print("[AutoMileageTracker] Trip discarded: \(String(format: "%.2f", miles)) mi, \(Int(duration))s (below thresholds)")
             currentTrip = nil
             persistCurrentTrip()
-            switchToSignificantLocationChanges()
+            switchToMonitoringMode()
             return
         }
 
@@ -521,14 +533,23 @@ public class AutoMileageTrackerPlugin: CAPPlugin, CAPBridgedPlugin, CLLocationMa
 
         currentTrip = nil
         persistCurrentTrip()
-        switchToSignificantLocationChanges()
+        switchToMonitoringMode()
     }
 
-    private func switchToSignificantLocationChanges() {
+    private func switchToMonitoringMode() {
         guard isTracking else { return }
         locationManager.stopUpdatingLocation()
+        // Always keep significantLocationChanges on — it's the ONLY API that
+        // relaunches the app after iOS terminates it. This ensures tracking
+        // survives even when the app is completely closed.
         locationManager.startMonitoringSignificantLocationChanges()
+        // ALSO run continuous GPS with wide filter for fast trip detection
+        // while the app is alive (background or foreground)
+        locationManager.distanceFilter = monitoringDistanceFilter
+        locationManager.desiredAccuracy = kCLLocationAccuracyHundredMeters
+        locationManager.startUpdatingLocation()
         highSpeedSampleCount = 0
+        print("[AutoMileageTracker] Monitoring mode: significantChanges + 100m continuous GPS")
     }
 
     // MARK: - Reverse Geocoding

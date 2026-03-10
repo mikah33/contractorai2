@@ -15,6 +15,7 @@ const MetaOAuthCallback: React.FC = () => {
       try {
         const params = new URLSearchParams(window.location.search);
         const code = params.get('code');
+        const fbToken = params.get('fb_token');
         const error = params.get('error');
         const errorDescription = params.get('error_description');
         const state = params.get('state') || '';
@@ -26,27 +27,15 @@ const MetaOAuthCallback: React.FC = () => {
           return;
         }
 
-        if (!code) {
-          setStatus('error');
-          setMessage('No authorization code received.');
-          setTimeout(() => navigate('/settings'), 5000);
+        // FB Lead Ads web flow — token already exchanged by edge function
+        if (fbToken && (state === 'fb_leads_web' || state.includes('fb_leads'))) {
+          setFbAccessToken(fbToken);
+          setStatus('selectPage');
           return;
         }
 
-        // If from iOS app, bounce the code back via deep link
-        if (state === 'fb_leads_app') {
-          setMessage('Redirecting back to app...');
-          window.location.href = `contractorai://fb-callback?code=${encodeURIComponent(code)}`;
-          // Fallback if deep link doesn't work after 3 seconds
-          setTimeout(() => {
-            setStatus('error');
-            setMessage('Could not redirect back to the app. Please open the OnSite app.');
-          }, 3000);
-          return;
-        }
-
-        // Web flow: exchange token and show page selector
-        if (state === 'fb_leads_web' || state === 'fb_leads') {
+        // FB Lead Ads web flow — code needs exchange (fallback)
+        if (code && (state === 'fb_leads_web' || state === 'fb_leads')) {
           setMessage('Exchanging authorization code...');
 
           const { data: tokenData, error: tokenError } = await supabase.functions.invoke(
@@ -55,7 +44,7 @@ const MetaOAuthCallback: React.FC = () => {
               body: {
                 action: 'exchange_token',
                 code,
-                redirectUri: 'https://contractorai.tools/meta-oauth-callback',
+                redirectUri: `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/fb-oauth-callback`,
               },
             }
           );
@@ -66,6 +55,13 @@ const MetaOAuthCallback: React.FC = () => {
 
           setFbAccessToken(tokenData.access_token);
           setStatus('selectPage');
+          return;
+        }
+
+        if (!code) {
+          setStatus('error');
+          setMessage('No authorization code received.');
+          setTimeout(() => navigate('/settings'), 5000);
           return;
         }
 

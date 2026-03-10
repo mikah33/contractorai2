@@ -2,10 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { Mail, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../stores/authStore';
+import { Capacitor } from '@capacitor/core';
+import { Browser } from '@capacitor/browser';
+import { App } from '@capacitor/app';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || import.meta.env.NEXT_PUBLIC_SUPABASE_URL;
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-const redirectUri = import.meta.env.VITE_GMAIL_REDIRECT_URI || `${window.location.origin}/gmail-oauth-callback`;
+
+// Web: redirect to the app's callback page
+// Native: redirect to the Edge Function directly (it handles code exchange + redirects back to app)
+const webRedirectUri = `${window.location.origin}/gmail-oauth-callback`;
+const nativeRedirectUri = `${supabaseUrl}/functions/v1/gmail-oauth-callback`;
 
 export const GmailConnection: React.FC = () => {
   const { session } = useAuthStore();
@@ -17,6 +24,34 @@ export const GmailConnection: React.FC = () => {
 
   useEffect(() => {
     checkGmailConnection();
+  }, []);
+
+  // Listen for app URL scheme callback (native only)
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    const listener = App.addListener('appUrlOpen', async ({ url }) => {
+      if (!url.includes('gmail-callback')) return;
+
+      const params = new URL(url).searchParams;
+      const success = params.get('success');
+      const email = params.get('email');
+      const errorMsg = params.get('error');
+
+      // Close the in-app browser
+      try { await Browser.close(); } catch {}
+
+      if (success === 'true' && email) {
+        setIsConnected(true);
+        setGmailEmail(email);
+        setError(null);
+      } else {
+        setError(errorMsg || 'Failed to connect Gmail');
+      }
+      setIsConnecting(false);
+    });
+
+    return () => { listener.then(l => l.remove()); };
   }, []);
 
   const checkGmailConnection = async () => {
@@ -41,60 +76,75 @@ export const GmailConnection: React.FC = () => {
     }
   };
 
-  const handleConnectGmail = () => {
+  const handleConnectGmail = async () => {
     setIsConnecting(true);
     setError(null);
 
+    const isNative = Capacitor.isNativePlatform();
+    const redirectUri = isNative ? nativeRedirectUri : webRedirectUri;
     const scope = 'https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/userinfo.email';
-    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${new URLSearchParams({
+
+    const authParams: Record<string, string> = {
       client_id: googleClientId,
       redirect_uri: redirectUri,
       response_type: 'code',
       scope,
       access_type: 'offline',
       prompt: 'consent',
-    })}`;
-
-    // Open OAuth popup
-    const width = 600;
-    const height = 700;
-    const left = window.screenX + (window.outerWidth - width) / 2;
-    const top = window.screenY + (window.outerHeight - height) / 2;
-
-    const popup = window.open(
-      authUrl,
-      'Google OAuth',
-      `width=${width},height=${height},left=${left},top=${top}`
-    );
-
-    // Listen for OAuth callback
-    const handleMessage = async (event: MessageEvent) => {
-      if (event.origin !== window.location.origin) return;
-
-      if (event.data.type === 'GMAIL_OAUTH_SUCCESS') {
-        setIsConnected(true);
-        setGmailEmail(event.data.email);
-        setIsConnecting(false);
-        popup?.close();
-        window.removeEventListener('message', handleMessage);
-      } else if (event.data.type === 'GMAIL_OAUTH_ERROR') {
-        setError(event.data.error || 'Failed to connect Gmail');
-        setIsConnecting(false);
-        popup?.close();
-        window.removeEventListener('message', handleMessage);
-      }
     };
 
-    window.addEventListener('message', handleMessage);
+    // On native, pass user ID in state param so the Edge Function knows who to store tokens for
+    if (isNative && session?.user.id) {
+      authParams.state = session.user.id;
+    }
 
-    // Cleanup if popup is closed manually
-    const checkPopup = setInterval(() => {
-      if (popup?.closed) {
-        clearInterval(checkPopup);
-        setIsConnecting(false);
-        window.removeEventListener('message', handleMessage);
-      }
-    }, 500);
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${new URLSearchParams(authParams)}`;
+
+    if (isNative) {
+      // Open in-app browser (SFSafariViewController on iOS)
+      // Google redirects to Edge Function → exchanges code → redirects to contractorai://gmail-callback
+      await Browser.open({ url: authUrl });
+    } else {
+      // Web: open popup
+      const width = 600;
+      const height = 700;
+      const left = window.screenX + (window.outerWidth - width) / 2;
+      const top = window.screenY + (window.outerHeight - height) / 2;
+
+      const popup = window.open(
+        authUrl,
+        'Google OAuth',
+        `width=${width},height=${height},left=${left},top=${top}`
+      );
+
+      // Listen for OAuth callback via postMessage
+      const handleMessage = async (event: MessageEvent) => {
+        if (event.origin !== window.location.origin) return;
+
+        if (event.data.type === 'GMAIL_OAUTH_SUCCESS') {
+          setIsConnected(true);
+          setGmailEmail(event.data.email);
+          setIsConnecting(false);
+          popup?.close();
+          window.removeEventListener('message', handleMessage);
+        } else if (event.data.type === 'GMAIL_OAUTH_ERROR') {
+          setError(event.data.error || 'Failed to connect Gmail');
+          setIsConnecting(false);
+          popup?.close();
+          window.removeEventListener('message', handleMessage);
+        }
+      };
+
+      window.addEventListener('message', handleMessage);
+
+      const checkPopup = setInterval(() => {
+        if (popup?.closed) {
+          clearInterval(checkPopup);
+          setIsConnecting(false);
+          window.removeEventListener('message', handleMessage);
+        }
+      }, 500);
+    }
   };
 
   const handleDisconnectGmail = async () => {

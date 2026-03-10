@@ -30,22 +30,8 @@ const MapLink = ({
     return <span className="text-gray-400 text-sm">No location specified</span>;
   }
 
-  /**
-   * Generate the appropriate map URL based on the platform
-   */
   const getMapUrl = (location: string): string => {
-    const encodedAddress = encodeURIComponent(location);
-
-    // Detect if user is on iOS or macOS
-    const isAppleDevice = /iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent);
-
-    if (isAppleDevice) {
-      // Apple Maps URL scheme
-      return `maps://maps.apple.com/?q=${encodedAddress}`;
-    } else {
-      // Google Maps URL (works on Android and web)
-      return `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
-    }
+    return `maps://maps.apple.com/?q=${encodeURIComponent(location)}`;
   };
 
   const handleClick = (e: React.MouseEvent) => {

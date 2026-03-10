@@ -45,7 +45,7 @@ const EstimatePreview: React.FC<EstimatePreviewProps> = ({ estimate, clients, pr
 
         <div className="text-left sm:text-right w-full sm:w-auto">
           {!hideStatus && (
-            <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-[#043d6b]/20 text-[#5a9fd4] mb-2">
+            <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-theme/20 text-[#5a9fd4] mb-2">
               {estimate.status.toUpperCase()}
             </div>
           )}
@@ -206,8 +206,8 @@ const EstimatePreview: React.FC<EstimatePreviewProps> = ({ estimate, clients, pr
 
         {/* Mobile Card View */}
         <div className="sm:hidden space-y-3">
-          <div className="bg-[#043d6b]/10 border-2 border-[#043d6b]/30 rounded-lg p-3 mb-4">
-            <h3 className="text-xs font-bold uppercase text-[#043d6b] mb-1">Line Items</h3>
+          <div className="bg-theme/10 border-2 border-theme/30 rounded-lg p-3 mb-4">
+            <h3 className="text-xs font-bold uppercase text-theme mb-1">Line Items</h3>
           </div>
 
           {estimate.items.length === 0 ? (
@@ -258,7 +258,7 @@ const EstimatePreview: React.FC<EstimatePreviewProps> = ({ estimate, clients, pr
               <span className="text-xs font-semibold text-gray-700">Tax ({estimate.taxRate ?? 0}%)</span>
               <span className="text-sm font-bold text-gray-900">${(estimate.taxAmount ?? 0).toFixed(2)}</span>
             </div>
-            <div className="bg-[#043d6b]/10 px-3 py-3 flex justify-between items-center">
+            <div className="bg-theme/10 px-3 py-3 flex justify-between items-center">
               <span className="text-sm font-extrabold text-gray-900">TOTAL</span>
               <span className="text-xl font-extrabold" style={{ color: estimate.branding?.primaryColor || '#043d6b' }}>
                 ${(estimate.total ?? 0).toFixed(2)}

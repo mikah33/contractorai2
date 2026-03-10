@@ -3,9 +3,14 @@ import { Mail, CheckCircle, XCircle, AlertCircle, Loader2, Send, RefreshCw } fro
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../stores/authStore';
 import { useTheme, getThemeClasses } from '../../contexts/ThemeContext';
+import { Capacitor } from '@capacitor/core';
+import { Browser } from '@capacitor/browser';
+import { App } from '@capacitor/app';
 
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || import.meta.env.NEXT_PUBLIC_SUPABASE_URL;
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-const redirectUri = import.meta.env.VITE_GMAIL_REDIRECT_URI || `${window.location.origin}/gmail-oauth-callback`;
+const webRedirectUri = import.meta.env.VITE_GMAIL_REDIRECT_URI || `${window.location.origin}/gmail-oauth-callback`;
+const nativeRedirectUri = `${supabaseUrl}/functions/v1/gmail-oauth-callback`;
 
 export const BusinessEmailSetup: React.FC = () => {
   const { user, session } = useAuthStore();
@@ -25,6 +30,34 @@ export const BusinessEmailSetup: React.FC = () => {
       checkGmailConnection();
     }
   }, [session?.user?.id]);
+
+  // Listen for app URL scheme callback (native only)
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    const listener = App.addListener('appUrlOpen', async ({ url }) => {
+      if (!url.includes('gmail-callback')) return;
+
+      const params = new URL(url).searchParams;
+      const success = params.get('success');
+      const email = params.get('email');
+      const errorMsg = params.get('error');
+
+      try { await Browser.close(); } catch {}
+
+      if (success === 'true' && email) {
+        setIsConnected(true);
+        setGmailEmail(email);
+        setError(null);
+        setSuccessMessage('Google account connected successfully!');
+      } else {
+        setError(errorMsg || 'Failed to connect Google account');
+      }
+      setIsConnecting(false);
+    });
+
+    return () => { listener.then(l => l.remove()); };
+  }, []);
 
   const checkGmailConnection = async () => {
     try {
@@ -51,61 +84,74 @@ export const BusinessEmailSetup: React.FC = () => {
     }
   };
 
-  const handleConnectGoogle = () => {
+  const handleConnectGoogle = async () => {
     setIsConnecting(true);
     setError(null);
 
+    const isNative = Capacitor.isNativePlatform();
+    const redirectUri = isNative ? nativeRedirectUri : webRedirectUri;
     const scope = 'https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/userinfo.email';
-    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${new URLSearchParams({
+
+    const authParams: Record<string, string> = {
       client_id: googleClientId,
       redirect_uri: redirectUri,
       response_type: 'code',
       scope,
       access_type: 'offline',
       prompt: 'consent',
-    })}`;
-
-    // Open OAuth popup
-    const width = 600;
-    const height = 700;
-    const left = window.screenX + (window.outerWidth - width) / 2;
-    const top = window.screenY + (window.outerHeight - height) / 2;
-
-    const popup = window.open(
-      authUrl,
-      'Google OAuth',
-      `width=${width},height=${height},left=${left},top=${top}`
-    );
-
-    // Listen for OAuth callback
-    const handleMessage = async (event: MessageEvent) => {
-      if (event.origin !== window.location.origin) return;
-
-      if (event.data.type === 'GMAIL_OAUTH_SUCCESS') {
-        setIsConnected(true);
-        setGmailEmail(event.data.email);
-        setIsConnecting(false);
-        setSuccessMessage('Google account connected successfully!');
-        popup?.close();
-        window.removeEventListener('message', handleMessage);
-      } else if (event.data.type === 'GMAIL_OAUTH_ERROR') {
-        setError(event.data.error || 'Failed to connect Google account');
-        setIsConnecting(false);
-        popup?.close();
-        window.removeEventListener('message', handleMessage);
-      }
     };
 
-    window.addEventListener('message', handleMessage);
+    // On native, pass user ID in state so Edge Function knows who to store tokens for
+    if (isNative && session?.user?.id) {
+      authParams.state = session.user.id;
+    }
 
-    // Cleanup if popup is closed manually
-    const checkPopup = setInterval(() => {
-      if (popup?.closed) {
-        clearInterval(checkPopup);
-        setIsConnecting(false);
-        window.removeEventListener('message', handleMessage);
-      }
-    }, 500);
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${new URLSearchParams(authParams)}`;
+
+    if (isNative) {
+      // Open in-app browser — Google redirects to Edge Function → back to app
+      await Browser.open({ url: authUrl });
+    } else {
+      // Web: open popup
+      const width = 600;
+      const height = 700;
+      const left = window.screenX + (window.outerWidth - width) / 2;
+      const top = window.screenY + (window.outerHeight - height) / 2;
+
+      const popup = window.open(
+        authUrl,
+        'Google OAuth',
+        `width=${width},height=${height},left=${left},top=${top}`
+      );
+
+      const handleMessage = async (event: MessageEvent) => {
+        if (event.origin !== window.location.origin) return;
+
+        if (event.data.type === 'GMAIL_OAUTH_SUCCESS') {
+          setIsConnected(true);
+          setGmailEmail(event.data.email);
+          setIsConnecting(false);
+          setSuccessMessage('Google account connected successfully!');
+          popup?.close();
+          window.removeEventListener('message', handleMessage);
+        } else if (event.data.type === 'GMAIL_OAUTH_ERROR') {
+          setError(event.data.error || 'Failed to connect Google account');
+          setIsConnecting(false);
+          popup?.close();
+          window.removeEventListener('message', handleMessage);
+        }
+      };
+
+      window.addEventListener('message', handleMessage);
+
+      const checkPopup = setInterval(() => {
+        if (popup?.closed) {
+          clearInterval(checkPopup);
+          setIsConnecting(false);
+          window.removeEventListener('message', handleMessage);
+        }
+      }, 500);
+    }
   };
 
   const handleDisconnect = async () => {
@@ -179,7 +225,7 @@ export const BusinessEmailSetup: React.FC = () => {
     return (
       <div className={`${themeClasses.bg.secondary} rounded-lg border ${themeClasses.border.primary} p-6`}>
         <div className="flex items-center justify-center">
-          <Loader2 className="w-8 h-8 text-[#043d6b] animate-spin" />
+          <Loader2 className="w-8 h-8 text-theme animate-spin" />
         </div>
       </div>
     );
@@ -188,11 +234,11 @@ export const BusinessEmailSetup: React.FC = () => {
   return (
     <div className="space-y-4">
       {/* Header Card */}
-      <div className={`${themeClasses.bg.secondary} rounded-lg border border-[#043d6b]/30 p-4`}>
+      <div className={`${themeClasses.bg.secondary} rounded-lg border border-theme/30 p-4`}>
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-[#043d6b]/20 rounded-lg flex items-center justify-center">
-              <Mail className="w-6 h-6 text-[#043d6b]" />
+            <div className="w-12 h-12 bg-theme/20 rounded-lg flex items-center justify-center">
+              <Mail className="w-6 h-6 text-theme" />
             </div>
             <div>
               <h3 className={`text-lg font-semibold ${themeClasses.text.primary}`}>Business Email</h3>
@@ -259,7 +305,7 @@ export const BusinessEmailSetup: React.FC = () => {
             <button
               onClick={handleSendTestEmail}
               disabled={isSendingTest}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-[#043d6b]/20 text-[#043d6b] rounded-lg font-medium hover:bg-[#043d6b]/30 transition-colors disabled:opacity-50"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-theme/20 text-theme rounded-lg font-medium hover:bg-theme/30 transition-colors disabled:opacity-50"
             >
               {isSendingTest ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -296,7 +342,7 @@ export const BusinessEmailSetup: React.FC = () => {
                 'Secure OAuth - we never see your password'
               ].map((item, i) => (
                 <li key={i} className={`flex items-center gap-2 text-sm ${themeClasses.text.muted}`}>
-                  <CheckCircle className="w-4 h-4 text-[#043d6b] flex-shrink-0" />
+                  <CheckCircle className="w-4 h-4 text-theme flex-shrink-0" />
                   {item}
                 </li>
               ))}
@@ -316,7 +362,7 @@ export const BusinessEmailSetup: React.FC = () => {
           <button
             onClick={handleConnectGoogle}
             disabled={isConnecting}
-            className="w-full flex items-center justify-center gap-2 px-4 py-4 bg-[#043d6b] text-white rounded-lg font-semibold disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 px-4 py-4 bg-theme text-white rounded-lg font-semibold disabled:opacity-50"
           >
             {isConnecting ? (
               <>

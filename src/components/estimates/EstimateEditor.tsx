@@ -306,7 +306,7 @@ const EstimateEditor: React.FC<EstimateEditorProps> = ({
             onClick={() => setActiveSection('details')}
             className={`px-3 py-2 text-xs font-medium rounded-lg whitespace-nowrap transition-all ${
               activeSection === 'details'
-                ? 'bg-[#043d6b] text-white shadow-sm'
+                ? 'bg-theme text-white shadow-sm'
                 : theme === 'light' ? 'bg-gray-100 text-gray-600 active:bg-gray-200' : 'bg-gray-800 text-gray-300 active:bg-gray-700'
             }`}
           >
@@ -316,7 +316,7 @@ const EstimateEditor: React.FC<EstimateEditorProps> = ({
             onClick={() => setActiveSection('items')}
             className={`px-3 py-2 text-xs font-medium rounded-lg whitespace-nowrap transition-all ${
               activeSection === 'items'
-                ? 'bg-[#043d6b] text-white shadow-sm'
+                ? 'bg-theme text-white shadow-sm'
                 : theme === 'light' ? 'bg-gray-100 text-gray-600 active:bg-gray-200' : 'bg-gray-800 text-gray-300 active:bg-gray-700'
             }`}
           >
@@ -326,7 +326,7 @@ const EstimateEditor: React.FC<EstimateEditorProps> = ({
             onClick={() => setActiveSection('branding')}
             className={`px-3 py-2 text-xs font-medium rounded-lg whitespace-nowrap transition-all ${
               activeSection === 'branding'
-                ? 'bg-[#043d6b] text-white shadow-sm'
+                ? 'bg-theme text-white shadow-sm'
                 : theme === 'light' ? 'bg-gray-100 text-gray-600 active:bg-gray-200' : 'bg-gray-800 text-gray-300 active:bg-gray-700'
             }`}
           >
@@ -336,7 +336,7 @@ const EstimateEditor: React.FC<EstimateEditorProps> = ({
             onClick={() => setActiveSection('terms')}
             className={`px-3 py-2 text-xs font-medium rounded-lg whitespace-nowrap transition-all ${
               activeSection === 'terms'
-                ? 'bg-[#043d6b] text-white shadow-sm'
+                ? 'bg-theme text-white shadow-sm'
                 : theme === 'light' ? 'bg-gray-100 text-gray-600 active:bg-gray-200' : 'bg-gray-800 text-gray-300 active:bg-gray-700'
             }`}
           >
@@ -357,7 +357,7 @@ const EstimateEditor: React.FC<EstimateEditorProps> = ({
                   type="text"
                   value={safeEstimate.title || ''}
                   onChange={(e) => handleUpdateField('title', e.target.value)}
-                  className={`block w-full pl-9 pr-3 py-2.5 text-sm border rounded-xl ${theme === 'light' ? 'text-gray-900 border-gray-300 bg-white' : 'text-white border-gray-600 bg-[#252542]'} focus:ring-2 focus:ring-[#043d6b] focus:border-transparent transition-all placeholder-gray-500`}
+                  className={`block w-full pl-9 pr-3 py-2.5 text-sm border rounded-xl ${theme === 'light' ? 'text-gray-900 border-gray-300 bg-white' : 'text-white border-gray-600 bg-[#252542]'} focus:ring-2 focus:ring-theme focus:border-transparent transition-all placeholder-gray-500`}
                   placeholder="Enter estimate title"
                 />
               </div>
@@ -372,7 +372,7 @@ const EstimateEditor: React.FC<EstimateEditorProps> = ({
                   <select
                     value={showQuickClientForm ? '__CREATE_NEW__' : (safeEstimate.clientName || '')}
                     onChange={(e) => handleClientChange(e.target.value)}
-                    className={`block w-full pl-9 pr-3 py-2.5 text-sm border rounded-xl ${theme === 'light' ? 'text-gray-900 border-gray-300 bg-white' : 'text-white border-gray-600 bg-[#252542]'} focus:ring-2 focus:ring-[#043d6b] focus:border-transparent transition-all appearance-none`}
+                    className={`block w-full pl-9 pr-3 py-2.5 text-sm border rounded-xl ${theme === 'light' ? 'text-gray-900 border-gray-300 bg-white' : 'text-white border-gray-600 bg-[#252542]'} focus:ring-2 focus:ring-theme focus:border-transparent transition-all appearance-none`}
                   >
                     <option value="">Select</option>
                     <option value="__CREATE_NEW__">+ New</option>
@@ -390,7 +390,7 @@ const EstimateEditor: React.FC<EstimateEditorProps> = ({
                   <select
                     value={showQuickProjectForm ? '__CREATE_NEW__' : (safeEstimate.projectId || '')}
                     onChange={(e) => handleProjectChange(e.target.value)}
-                    className={`block w-full pl-9 pr-3 py-2.5 text-sm border rounded-xl ${theme === 'light' ? 'text-gray-900 border-gray-300 bg-white' : 'text-white border-gray-600 bg-[#252542]'} focus:ring-2 focus:ring-[#043d6b] focus:border-transparent transition-all appearance-none disabled:opacity-50`}
+                    className={`block w-full pl-9 pr-3 py-2.5 text-sm border rounded-xl ${theme === 'light' ? 'text-gray-900 border-gray-300 bg-white' : 'text-white border-gray-600 bg-[#252542]'} focus:ring-2 focus:ring-theme focus:border-transparent transition-all appearance-none disabled:opacity-50`}
                     disabled={!safeEstimate.clientName}
                   >
                     <option value="">Select</option>
@@ -408,10 +408,10 @@ const EstimateEditor: React.FC<EstimateEditorProps> = ({
 
             {/* Quick Create Client Form */}
             {showQuickClientForm && (
-              <div className="p-3 bg-[#043d6b]/30 border border-[#043d6b]/50 rounded-xl">
+              <div className="p-3 bg-theme/30 border border-theme/50 rounded-xl">
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="text-xs font-semibold text-[#5a9fd4]">New Client</h4>
-                  <button onClick={() => { setShowQuickClientForm(false); setQuickClientData({ name: '', email: '', phone: '', company: '' }); }} className="text-[#043d6b]">
+                  <button onClick={() => { setShowQuickClientForm(false); setQuickClientData({ name: '', email: '', phone: '', company: '' }); }} className="text-theme">
                     <X className="h-4 w-4" />
                   </button>
                 </div>
@@ -419,24 +419,24 @@ const EstimateEditor: React.FC<EstimateEditorProps> = ({
                   <input type="text" placeholder="Name *" value={quickClientData.name} onChange={(e) => setQuickClientData({ ...quickClientData, name: e.target.value })} className={`block w-full px-3 py-2 text-sm border rounded-lg ${theme === 'light' ? 'text-gray-900 bg-white border-gray-300' : 'text-white bg-[#252542] border-gray-600'} placeholder-gray-500`} />
                   <input type="email" placeholder="Email *" value={quickClientData.email} onChange={(e) => setQuickClientData({ ...quickClientData, email: e.target.value })} className={`block w-full px-3 py-2 text-sm border rounded-lg ${theme === 'light' ? 'text-gray-900 bg-white border-gray-300' : 'text-white bg-[#252542] border-gray-600'} placeholder-gray-500`} />
                   <input type="tel" placeholder="Phone *" value={quickClientData.phone} onChange={(e) => setQuickClientData({ ...quickClientData, phone: e.target.value })} className={`block w-full px-3 py-2 text-sm border rounded-lg ${theme === 'light' ? 'text-gray-900 bg-white border-gray-300' : 'text-white bg-[#252542] border-gray-600'} placeholder-gray-500`} />
-                  <button onClick={handleQuickCreateClient} disabled={!quickClientData.name.trim() || !quickClientData.email.trim() || !quickClientData.phone.trim()} className="w-full px-3 py-2 text-sm font-medium text-white bg-[#043d6b] hover:bg-[#035291] rounded-lg disabled:bg-gray-600 disabled:text-gray-400">Create</button>
+                  <button onClick={handleQuickCreateClient} disabled={!quickClientData.name.trim() || !quickClientData.email.trim() || !quickClientData.phone.trim()} className="w-full px-3 py-2 text-sm font-medium text-white bg-theme hover:bg-[#035291] rounded-lg disabled:bg-gray-600 disabled:text-gray-400">Create</button>
                 </div>
               </div>
             )}
 
             {/* Quick Create Project Form */}
             {showQuickProjectForm && (
-              <div className="p-3 bg-[#043d6b]/30 border border-[#043d6b]/50 rounded-xl">
+              <div className="p-3 bg-theme/30 border border-theme/50 rounded-xl">
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="text-xs font-semibold text-[#5a9fd4]">New Project</h4>
-                  <button onClick={() => { setShowQuickProjectForm(false); setQuickProjectData({ name: '', description: '' }); }} className="text-[#043d6b]">
+                  <button onClick={() => { setShowQuickProjectForm(false); setQuickProjectData({ name: '', description: '' }); }} className="text-theme">
                     <X className="h-4 w-4" />
                   </button>
                 </div>
                 <div className="space-y-2">
                   <input type="text" placeholder="Project Name *" value={quickProjectData.name} onChange={(e) => setQuickProjectData({ ...quickProjectData, name: e.target.value })} className={`block w-full px-3 py-2 text-sm border rounded-lg ${theme === 'light' ? 'text-gray-900 bg-white border-gray-300' : 'text-white bg-[#252542] border-gray-600'} placeholder-gray-500`} />
-                  <p className="text-xs text-[#043d6b]">For: <strong>{safeEstimate.clientName}</strong></p>
-                  <button onClick={handleQuickCreateProject} disabled={!quickProjectData.name.trim()} className="w-full px-3 py-2 text-sm font-medium text-white bg-[#043d6b] hover:bg-[#035291] rounded-lg disabled:bg-gray-600 disabled:text-gray-400">Create</button>
+                  <p className="text-xs text-theme">For: <strong>{safeEstimate.clientName}</strong></p>
+                  <button onClick={handleQuickCreateProject} disabled={!quickProjectData.name.trim()} className="w-full px-3 py-2 text-sm font-medium text-white bg-theme hover:bg-[#035291] rounded-lg disabled:bg-gray-600 disabled:text-gray-400">Create</button>
                 </div>
               </div>
             )}
@@ -486,7 +486,7 @@ const EstimateEditor: React.FC<EstimateEditorProps> = ({
                   max="100"
                   value={safeEstimate.taxRate}
                   onChange={(e) => handleUpdateField('taxRate', parseFloat(e.target.value) || 0)}
-                  className={`block w-full pl-9 pr-8 py-2.5 text-sm border rounded-xl focus:ring-2 focus:ring-[#043d6b] focus:border-transparent transition-all ${
+                  className={`block w-full pl-9 pr-8 py-2.5 text-sm border rounded-xl focus:ring-2 focus:ring-theme focus:border-transparent transition-all ${
                     theme === 'light'
                       ? 'text-gray-900 border-gray-300 bg-white'
                       : 'text-white border-gray-600 bg-[#252542]'
@@ -512,12 +512,12 @@ const EstimateEditor: React.FC<EstimateEditorProps> = ({
                       value={item.description || ''}
                       onChange={(e) => handleItemChange(index, 'description', e.target.value)}
                       placeholder="Description"
-                      className={`flex-1 min-w-0 px-4 py-3 text-base border rounded-xl ${theme === 'light' ? 'text-gray-900 border-gray-300 bg-white' : 'text-white border-gray-600 bg-[#1a1a2e]'} focus:ring-2 focus:ring-[#043d6b] focus:border-transparent placeholder-gray-500`}
+                      className={`flex-1 min-w-0 px-4 py-3 text-base border rounded-xl ${theme === 'light' ? 'text-gray-900 border-gray-300 bg-white' : 'text-white border-gray-600 bg-[#1a1a2e]'} focus:ring-2 focus:ring-theme focus:border-transparent placeholder-gray-500`}
                     />
                     <select
                       value={item.type || 'material'}
                       onChange={(e) => handleItemChange(index, 'type', e.target.value)}
-                      className={`px-3 py-3 text-sm border rounded-xl focus:ring-2 focus:ring-[#043d6b] focus:border-transparent ${theme === 'light' ? 'text-gray-900 border-gray-300 bg-white' : 'text-white border-gray-600 bg-[#1a1a2e]'}`}
+                      className={`px-3 py-3 text-sm border rounded-xl focus:ring-2 focus:ring-theme focus:border-transparent ${theme === 'light' ? 'text-gray-900 border-gray-300 bg-white' : 'text-white border-gray-600 bg-[#1a1a2e]'}`}
                     >
                       <option value="material">Material</option>
                       <option value="labor">Labor</option>
@@ -536,7 +536,7 @@ const EstimateEditor: React.FC<EstimateEditorProps> = ({
                         step="0.01"
                         value={item.quantity || 0}
                         onChange={(e) => handleItemChange(index, 'quantity', parseFloat(e.target.value) || 0)}
-                        className={`w-full px-3 py-2.5 text-base border rounded-xl ${theme === 'light' ? 'text-gray-900 border-gray-300 bg-white' : 'text-white border-gray-600 bg-[#1a1a2e]'} focus:ring-2 focus:ring-[#043d6b] focus:border-transparent`}
+                        className={`w-full px-3 py-2.5 text-base border rounded-xl ${theme === 'light' ? 'text-gray-900 border-gray-300 bg-white' : 'text-white border-gray-600 bg-[#1a1a2e]'} focus:ring-2 focus:ring-theme focus:border-transparent`}
                       />
                     </div>
                     <div>
@@ -546,7 +546,7 @@ const EstimateEditor: React.FC<EstimateEditorProps> = ({
                         value={item.unit || ''}
                         onChange={(e) => handleItemChange(index, 'unit', e.target.value)}
                         placeholder="each"
-                        className={`w-full px-3 py-2.5 text-base border rounded-xl ${theme === 'light' ? 'text-gray-900 border-gray-300 bg-white' : 'text-white border-gray-600 bg-[#1a1a2e]'} focus:ring-2 focus:ring-[#043d6b] focus:border-transparent placeholder-gray-500`}
+                        className={`w-full px-3 py-2.5 text-base border rounded-xl ${theme === 'light' ? 'text-gray-900 border-gray-300 bg-white' : 'text-white border-gray-600 bg-[#1a1a2e]'} focus:ring-2 focus:ring-theme focus:border-transparent placeholder-gray-500`}
                       />
                     </div>
                     <div>
@@ -559,7 +559,7 @@ const EstimateEditor: React.FC<EstimateEditorProps> = ({
                           step="0.01"
                           value={item.unitPrice || 0}
                           onChange={(e) => handleItemChange(index, 'unitPrice', parseFloat(e.target.value) || 0)}
-                          className={`w-full pl-7 pr-3 py-2.5 text-base border rounded-xl ${theme === 'light' ? 'text-gray-900 border-gray-300 bg-white' : 'text-white border-gray-600 bg-[#1a1a2e]'} focus:ring-2 focus:ring-[#043d6b] focus:border-transparent`}
+                          className={`w-full pl-7 pr-3 py-2.5 text-base border rounded-xl ${theme === 'light' ? 'text-gray-900 border-gray-300 bg-white' : 'text-white border-gray-600 bg-[#1a1a2e]'} focus:ring-2 focus:ring-theme focus:border-transparent`}
                         />
                       </div>
                     </div>
@@ -601,7 +601,7 @@ const EstimateEditor: React.FC<EstimateEditorProps> = ({
               <div className="grid grid-cols-4 gap-2">
                 <button
                   onClick={() => handleQuickAddItem('material')}
-                  className={`flex flex-col items-center justify-center p-3 border-2 rounded-xl ${theme === 'light' ? 'border-blue-400 text-blue-700 bg-blue-100 active:bg-blue-200' : 'border-[#043d6b] text-[#5a9fd4] bg-[#043d6b]/40 active:bg-[#043d6b]/60'}`}
+                  className={`flex flex-col items-center justify-center p-3 border-2 rounded-xl ${theme === 'light' ? 'border-blue-400 text-blue-700 bg-blue-100 active:bg-blue-200' : 'border-theme text-[#5a9fd4] bg-theme/40 active:bg-theme/60'}`}
                 >
                   <Package className="h-5 w-5 mb-1" />
                   <span className="text-xs font-medium">Material</span>
@@ -711,7 +711,7 @@ const EstimateEditor: React.FC<EstimateEditorProps> = ({
               <select
                 value={safeEstimate.branding.fontFamily || 'Inter, sans-serif'}
                 onChange={(e) => handleBrandingChange('fontFamily', e.target.value)}
-                className={`w-full px-4 py-3 text-base border rounded-xl ${theme === 'light' ? 'text-gray-900 border-gray-300 bg-white' : 'text-white border-gray-600 bg-[#1a1a2e]'} focus:ring-2 focus:ring-[#043d6b] focus:border-transparent`}
+                className={`w-full px-4 py-3 text-base border rounded-xl ${theme === 'light' ? 'text-gray-900 border-gray-300 bg-white' : 'text-white border-gray-600 bg-[#1a1a2e]'} focus:ring-2 focus:ring-theme focus:border-transparent`}
               >
                 <option value="Inter, sans-serif">Inter</option>
                 <option value="Roboto, sans-serif">Roboto</option>
@@ -736,7 +736,7 @@ const EstimateEditor: React.FC<EstimateEditorProps> = ({
                   <select
                     value={safeEstimate.branding.primaryColor || '#3b82f6'}
                     onChange={(e) => handleBrandingChange('primaryColor', e.target.value)}
-                    className={`w-full px-3 py-2.5 text-base border rounded-xl ${theme === 'light' ? 'text-gray-900 border-gray-300 bg-white' : 'text-white border-gray-600 bg-[#1a1a2e]'} focus:ring-2 focus:ring-[#043d6b] focus:border-transparent`}
+                    className={`w-full px-3 py-2.5 text-base border rounded-xl ${theme === 'light' ? 'text-gray-900 border-gray-300 bg-white' : 'text-white border-gray-600 bg-[#1a1a2e]'} focus:ring-2 focus:ring-theme focus:border-transparent`}
                   >
                     <option value="#3b82f6">Blue</option>
                     <option value="#ef4444">Red</option>
@@ -763,7 +763,7 @@ const EstimateEditor: React.FC<EstimateEditorProps> = ({
                   <select
                     value={safeEstimate.branding.secondaryColor || '#1e40af'}
                     onChange={(e) => handleBrandingChange('secondaryColor', e.target.value)}
-                    className={`w-full px-3 py-2.5 text-base border rounded-xl ${theme === 'light' ? 'text-gray-900 border-gray-300 bg-white' : 'text-white border-gray-600 bg-[#1a1a2e]'} focus:ring-2 focus:ring-[#043d6b] focus:border-transparent`}
+                    className={`w-full px-3 py-2.5 text-base border rounded-xl ${theme === 'light' ? 'text-gray-900 border-gray-300 bg-white' : 'text-white border-gray-600 bg-[#1a1a2e]'} focus:ring-2 focus:ring-theme focus:border-transparent`}
                   >
                     <option value="#1e40af">Dark Blue</option>
                     <option value="#b91c1c">Dark Red</option>
@@ -780,7 +780,7 @@ const EstimateEditor: React.FC<EstimateEditorProps> = ({
             </div>
 
             {/* Branding Tips */}
-            <div className={`rounded-2xl p-4 ${theme === 'light' ? 'bg-blue-100 border-2 border-blue-300' : 'bg-[#043d6b]/30 border border-[#043d6b]/50'}`}>
+            <div className={`rounded-2xl p-4 ${theme === 'light' ? 'bg-blue-100 border-2 border-blue-300' : 'bg-theme/30 border border-theme/50'}`}>
               <div className="flex items-start gap-3">
                 <Info className={`h-5 w-5 flex-shrink-0 mt-0.5 ${theme === 'light' ? 'text-blue-700' : 'text-[#5a9fd4]'}`} />
                 <div>
@@ -801,7 +801,7 @@ const EstimateEditor: React.FC<EstimateEditorProps> = ({
                 rows={5}
                 value={safeEstimate.terms || ''}
                 onChange={(e) => handleUpdateField('terms', e.target.value)}
-                className={`w-full px-4 py-3 text-base border rounded-xl ${theme === 'light' ? 'text-gray-900 border-gray-300 bg-white' : 'text-white border-gray-600 bg-[#1a1a2e]'} focus:ring-2 focus:ring-[#043d6b] focus:border-transparent resize-none placeholder-gray-500`}
+                className={`w-full px-4 py-3 text-base border rounded-xl ${theme === 'light' ? 'text-gray-900 border-gray-300 bg-white' : 'text-white border-gray-600 bg-[#1a1a2e]'} focus:ring-2 focus:ring-theme focus:border-transparent resize-none placeholder-gray-500`}
                 placeholder="Enter terms and conditions..."
               />
             </div>
@@ -813,13 +813,13 @@ const EstimateEditor: React.FC<EstimateEditorProps> = ({
                 rows={5}
                 value={safeEstimate.notes || ''}
                 onChange={(e) => handleUpdateField('notes', e.target.value)}
-                className={`w-full px-4 py-3 text-base border rounded-xl ${theme === 'light' ? 'text-gray-900 border-gray-300 bg-white' : 'text-white border-gray-600 bg-[#1a1a2e]'} focus:ring-2 focus:ring-[#043d6b] focus:border-transparent resize-none placeholder-gray-500`}
+                className={`w-full px-4 py-3 text-base border rounded-xl ${theme === 'light' ? 'text-gray-900 border-gray-300 bg-white' : 'text-white border-gray-600 bg-[#1a1a2e]'} focus:ring-2 focus:ring-theme focus:border-transparent resize-none placeholder-gray-500`}
                 placeholder="Enter additional notes for the customer..."
               />
             </div>
 
             {/* Info Card */}
-            <div className={`rounded-2xl p-4 ${theme === 'light' ? 'bg-blue-100 border-2 border-blue-300' : 'bg-[#043d6b]/30 border border-[#043d6b]/50'}`}>
+            <div className={`rounded-2xl p-4 ${theme === 'light' ? 'bg-blue-100 border-2 border-blue-300' : 'bg-theme/30 border border-theme/50'}`}>
               <div className="flex items-start gap-3">
                 <Info className={`h-5 w-5 flex-shrink-0 mt-0.5 ${theme === 'light' ? 'text-blue-700' : 'text-[#5a9fd4]'}`} />
                 <div>

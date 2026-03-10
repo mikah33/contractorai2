@@ -199,7 +199,7 @@ const ViewEstimatePage = () => {
       <div className="max-w-lg mx-auto space-y-4 py-6">
         {/* Header */}
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-          <div className="bg-[#043d6b] px-6 py-4">
+          <div className="bg-theme px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <FileText className="w-5 h-5 text-white" />
@@ -214,7 +214,7 @@ const ViewEstimatePage = () => {
             {clientName && (
               <p className="text-sm text-gray-500 mb-4">Prepared for {clientName}</p>
             )}
-            <p className="text-3xl font-bold text-[#043d6b]">{formatCurrency(total)}</p>
+            <p className="text-3xl font-bold text-theme">{formatCurrency(total)}</p>
             <p className="text-sm text-gray-500 mt-1">{items.length} line items</p>
           </div>
         </div>
@@ -256,7 +256,7 @@ const ViewEstimatePage = () => {
             )}
             <div className="border-t pt-2 flex justify-between">
               <span className="text-base font-bold text-gray-900">Total</span>
-              <span className="text-lg font-bold text-[#043d6b]">{formatCurrency(total)}</span>
+              <span className="text-lg font-bold text-theme">{formatCurrency(total)}</span>
             </div>
           </div>
         </div>
@@ -264,7 +264,7 @@ const ViewEstimatePage = () => {
         {/* Notes */}
         {notes && (
           <div className="bg-white rounded-2xl shadow-xl p-6">
-            <h3 className="text-xs font-semibold text-[#043d6b] mb-1">Notes</h3>
+            <h3 className="text-xs font-semibold text-theme mb-1">Notes</h3>
             <p className="text-sm text-gray-600">{notes}</p>
           </div>
         )}

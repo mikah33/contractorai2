@@ -128,7 +128,7 @@ const WebsiteLeadSetup: React.FC = () => {
     return (
       <div className={`p-6 rounded-2xl border ${themeClasses.border.primary} ${themeClasses.bg.card}`}>
         <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-6 h-6 text-[#043d6b] animate-spin" />
+          <Loader2 className="w-6 h-6 text-theme animate-spin" />
         </div>
       </div>
     );
@@ -147,8 +147,8 @@ const WebsiteLeadSetup: React.FC = () => {
       {/* API Key Section */}
       <div className={`p-4 rounded-2xl border ${themeClasses.border.primary} ${themeClasses.bg.card}`}>
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 bg-[#043d6b]/10 rounded-xl flex items-center justify-center">
-            <Key className="w-5 h-5 text-[#043d6b]" />
+          <div className="w-10 h-10 bg-theme/10 rounded-xl flex items-center justify-center">
+            <Key className="w-5 h-5 text-theme" />
           </div>
           <div className="flex-1">
             <h3 className={`font-bold ${themeClasses.text.primary}`}>API Key</h3>
@@ -167,7 +167,7 @@ const WebsiteLeadSetup: React.FC = () => {
                 {copiedField === 'apiKey' ? (
                   <Check className="w-4 h-4 text-green-500" />
                 ) : (
-                  <Copy className="w-4 h-4 text-[#043d6b]" />
+                  <Copy className="w-4 h-4 text-theme" />
                 )}
               </button>
             </div>
@@ -186,8 +186,8 @@ const WebsiteLeadSetup: React.FC = () => {
       {/* Embed Snippet Section */}
       <div className={`p-4 rounded-2xl border ${themeClasses.border.primary} ${themeClasses.bg.card}`}>
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 bg-[#043d6b]/10 rounded-xl flex items-center justify-center">
-            <Code className="w-5 h-5 text-[#043d6b]" />
+          <div className="w-10 h-10 bg-theme/10 rounded-xl flex items-center justify-center">
+            <Code className="w-5 h-5 text-theme" />
           </div>
           <div className="flex-1">
             <h3 className={`font-bold ${themeClasses.text.primary}`}>Embed Snippet</h3>
@@ -205,7 +205,7 @@ const WebsiteLeadSetup: React.FC = () => {
               className={`mt-2 flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                 copiedField === 'embed'
                   ? 'bg-green-500 text-white'
-                  : 'bg-[#043d6b] text-white hover:bg-[#035291]'
+                  : 'bg-theme text-white hover:bg-[#035291]'
               }`}
             >
               {copiedField === 'embed' ? (
@@ -227,8 +227,8 @@ const WebsiteLeadSetup: React.FC = () => {
       {/* Hosted Lead Page Section */}
       <div className={`p-4 rounded-2xl border ${themeClasses.border.primary} ${themeClasses.bg.card}`}>
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 bg-[#043d6b]/10 rounded-xl flex items-center justify-center">
-            <Globe className="w-5 h-5 text-[#043d6b]" />
+          <div className="w-10 h-10 bg-theme/10 rounded-xl flex items-center justify-center">
+            <Globe className="w-5 h-5 text-theme" />
           </div>
           <div className="flex-1">
             <h3 className={`font-bold ${themeClasses.text.primary}`}>Hosted Lead Page</h3>
@@ -238,7 +238,7 @@ const WebsiteLeadSetup: React.FC = () => {
 
         {hostedUrl && (
           <div className="space-y-2">
-            <div className={`flex items-center gap-2 p-3 rounded-xl text-sm ${theme === 'light' ? 'bg-gray-100 text-[#043d6b]' : 'bg-zinc-800 text-[#5b9bd5]'} break-all`}>
+            <div className={`flex items-center gap-2 p-3 rounded-xl text-sm ${theme === 'light' ? 'bg-gray-100 text-theme' : 'bg-zinc-800 text-[#5b9bd5]'} break-all`}>
               <span className="flex-1 font-medium">{hostedUrl}</span>
               <button
                 onClick={() => copyToClipboard(hostedUrl, 'url')}
@@ -247,7 +247,7 @@ const WebsiteLeadSetup: React.FC = () => {
                 {copiedField === 'url' ? (
                   <Check className="w-4 h-4 text-green-500" />
                 ) : (
-                  <Copy className="w-4 h-4 text-[#043d6b]" />
+                  <Copy className="w-4 h-4 text-theme" />
                 )}
               </button>
             </div>

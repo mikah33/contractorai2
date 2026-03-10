@@ -19,9 +19,22 @@
    - Glassmorphism and ambient lighting
    ============================================ */
 
+/* Light mode brand blue */
+html.light {
+  --color-theme: #043d6b;
+  --color-theme-rgb: 4 61 107;
+}
+
+/* Dark mode brand blue - lighter for legibility */
+html.dark {
+  --color-theme: #5b9bd5;
+  --color-theme-rgb: 91 155 213;
+}
+
 :root {
   /* ========== THEME COLOR ========== */
   --color-theme: #043d6b;
+  --color-theme-rgb: 4 61 107;
   --color-theme-light: #035291;
   --color-theme-dark: #022a4a;
 

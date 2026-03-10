@@ -7,6 +7,9 @@ export interface RecentLead {
   calculatorType?: string;
   estimatedValue?: number;
   createdAt: string;
+  outreachCount?: number;
+  totalOutreach?: number;
+  actionLabel?: string;
 }
 
 export interface TimesheetEntry {

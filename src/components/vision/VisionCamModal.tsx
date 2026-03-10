@@ -414,7 +414,7 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose, initia
           {step === 'result' ? <ChevronLeft className="w-6 h-6" /> : <X className="w-6 h-6" />}
         </button>
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-[#043d6b] rounded-lg flex items-center justify-center">
+          <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-theme rounded-lg flex items-center justify-center">
             <Eye className="w-5 h-5 text-white" />
           </div>
           <span className="font-bold text-gray-900">Vision Cam</span>
@@ -456,14 +456,14 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose, initia
             {tutorialStep < tutorialSteps.length - 1 ? (
               <button
                 onClick={() => setTutorialStep(prev => prev + 1)}
-                className="w-full py-3.5 bg-gradient-to-r from-purple-500 to-[#043d6b] text-white rounded-xl font-semibold active:scale-[0.98] transition-transform"
+                className="w-full py-3.5 bg-gradient-to-r from-purple-500 to-theme text-white rounded-xl font-semibold active:scale-[0.98] transition-transform"
               >
                 Next
               </button>
             ) : (
               <button
                 onClick={handleTutorialComplete}
-                className="w-full py-3.5 bg-gradient-to-r from-purple-500 to-[#043d6b] text-white rounded-xl font-semibold active:scale-[0.98] transition-transform"
+                className="w-full py-3.5 bg-gradient-to-r from-purple-500 to-theme text-white rounded-xl font-semibold active:scale-[0.98] transition-transform"
               >
                 Get Started
               </button>
@@ -644,7 +644,7 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose, initia
             <button
               onClick={handleGenerate}
               disabled={!prompt.trim() || isGenerating}
-              className="w-full py-3.5 bg-gradient-to-r from-purple-500 to-[#043d6b] text-white rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.98] transition-transform"
+              className="w-full py-3.5 bg-gradient-to-r from-purple-500 to-theme text-white rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.98] transition-transform"
             >
               <Sparkles className="w-5 h-5" />
               Generate Vision
@@ -810,7 +810,7 @@ const VisionCamModal: React.FC<VisionCamModalProps> = ({ isOpen, onClose, initia
           {generationProgress?.progress && (
             <div className="w-48 h-2 bg-gray-200 rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-purple-500 to-[#043d6b] transition-all duration-300"
+                className="h-full bg-gradient-to-r from-purple-500 to-theme transition-all duration-300"
                 style={{ width: `${generationProgress.progress}%` }}
               />
             </div>

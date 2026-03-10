@@ -45,7 +45,12 @@ import { useTheme, getThemeClasses } from '../contexts/ThemeContext';
 import { useLeadsStore } from '../stores/leadsStore';
 import { supabase } from '../lib/supabase';
 import { format, parseISO, isToday, isTomorrow } from 'date-fns';
+import { Capacitor } from '@capacitor/core';
+import { LocalNotifications } from '@capacitor/local-notifications';
 
+
+// Module-level geocode cache — survives component unmount/remount
+const _geocodeCache: Record<string, {lat: number, lng: number}> = {};
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -64,7 +69,8 @@ const Dashboard: React.FC = () => {
   const [todayTasks, setTodayTasks] = useState<any[]>([]);
   const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
   const [businessLocation, setBusinessLocation] = useState<{lat: number, lng: number, address: string} | null>(null);
-  const [taskLocations, setTaskLocations] = useState<{lat: number, lng: number, name: string, address: string}[]>([]);
+  const [taskLocations, setTaskLocations] = useState<{lat: number, lng: number, name: string, address: string, taskName?: string, projectId?: string}[]>([]);
+  const [projectLocations, setProjectLocations] = useState<{lat: number, lng: number, name: string, address: string, id: string}[]>([]);
   const [approvedEstimates, setApprovedEstimates] = useState<any[]>([]);
   const [declinedEstimates, setDeclinedEstimates] = useState<any[]>([]);
   const [dismissedNotifications, setDismissedNotifications] = useState<Set<string>>(new Set());
@@ -136,25 +142,26 @@ const Dashboard: React.FC = () => {
     return Object.values(setupTasksStatus).filter(Boolean).length;
   }, [setupTasksStatus]);
 
-  // Create custom clipboard marker icon with label
-  const createMarkerIcon = (label: string) => new L.DivIcon({
+  // Create custom clipboard marker icon with label and optional subtitle
+  const createMarkerIcon = (label: string, subtitle?: string) => new L.DivIcon({
     className: 'custom-marker',
     html: `
       <div style="display: flex; flex-direction: column; align-items: center;">
         <div style="
           background: white;
-          padding: 6px 12px;
+          padding: ${subtitle ? '5px 10px 4px' : '6px 12px'};
           border-radius: 8px;
           box-shadow: 0 2px 10px rgba(0,0,0,0.2);
           margin-bottom: 8px;
           white-space: nowrap;
-          font-weight: 700;
-          font-size: 14px;
-          color: #1f2937;
-          border: 2px solid #043d6b;
-        ">${label}</div>
+          text-align: center;
+          border: 2px solid var(--color-theme);
+        ">
+          <div style="font-weight: 700; font-size: 14px; color: #1f2937; line-height: 1.2;">${label}</div>
+          ${subtitle ? `<div style="font-weight: 500; font-size: 11px; color: #6b7280; line-height: 1.2; margin-top: 2px; max-width: 140px; overflow: hidden; text-overflow: ellipsis;">${subtitle}</div>` : ''}
+        </div>
         <div style="
-          background: #043d6b;
+          background: var(--color-theme);
           width: 44px;
           height: 44px;
           border-radius: 50% 50% 50% 0;
@@ -215,6 +222,9 @@ const Dashboard: React.FC = () => {
     iconAnchor: [60, 90],
     popupAnchor: [0, -90]
   });
+  // Create project marker icon - same style as task marker
+  const createProjectMarkerIcon = (label: string) => createMarkerIcon(label);
+
   const [taskCardIndex, setTaskCardIndex] = useState(0);
   const taskCarouselRef = useRef<HTMLDivElement>(null);
   const taskTouchStartX = useRef(0);
@@ -223,6 +233,89 @@ const Dashboard: React.FC = () => {
 
   // Get display name from profile (company name or full name)
   const displayName = profile?.company || profile?.full_name || 'there';
+
+  // Schedule outreach notifications when leads load
+  const outreachScheduledRef = useRef(false);
+  useEffect(() => {
+    if (Capacitor.getPlatform() === 'web') return;
+    if (outreachScheduledRef.current) return;
+    if (leads.length === 0) return;
+    outreachScheduledRef.current = true;
+
+    const scheduleOutreach = async () => {
+      try {
+        console.log(`[Outreach-Dashboard] ${leads.length} leads loaded, scheduling...`);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        let scheduled = 0;
+
+        for (const lead of leads) {
+          if (['converted', 'lost', 'dead'].includes(lead.status)) continue;
+
+          let scheduleDate: Date;
+          if (lead.nextOutreachDate) {
+            const nd = new Date(lead.nextOutreachDate);
+            const ndDay = new Date(nd);
+            ndDay.setHours(0, 0, 0, 0);
+            if (ndDay < today) continue;
+            scheduleDate = nd;
+          } else if (lead.status === 'new' && lead.outreachCount === 0) {
+            scheduleDate = new Date();
+          } else {
+            continue;
+          }
+
+          // Time based on priority
+          if (lead.outreachCount >= 3 || lead.status === 'cold') {
+            scheduleDate.setHours(9, 0, 0, 0);
+          } else if (lead.outreachCount >= 1) {
+            scheduleDate.setHours(12, 0, 0, 0);
+          } else {
+            scheduleDate.setHours(15, 0, 0, 0);
+          }
+
+          // Bump if time passed
+          if (scheduleDate <= new Date()) {
+            const now = new Date();
+            if (now.getHours() < 12) scheduleDate.setHours(12, 0, 0, 0);
+            else if (now.getHours() < 15) scheduleDate.setHours(15, 0, 0, 0);
+            else {
+              scheduleDate.setDate(scheduleDate.getDate() + 1);
+              scheduleDate.setHours(9, 0, 0, 0);
+            }
+          }
+          if (scheduleDate <= new Date()) continue;
+
+          const totalAttempts = lead.outreachCount >= 5 ? 7 : 5;
+          let title: string, body: string;
+          if (lead.outreachCount >= 5) {
+            title = `Last chance — Follow up with ${lead.name}`;
+            body = 'Cold lead — this may be your last shot';
+          } else if (lead.outreachCount >= 3) {
+            title = `Call ${lead.name} today — going cold soon`;
+            body = `Attempt ${lead.outreachCount + 1}/${totalAttempts}`;
+          } else if (lead.outreachCount >= 1) {
+            title = `Call ${lead.name} today`;
+            body = `Attempt ${lead.outreachCount + 1}/${totalAttempts} — don't let this one slip`;
+          } else {
+            title = `New lead — Call ${lead.name} today`;
+            body = 'First contact — strike while the iron is hot';
+          }
+
+          const notifId = Math.floor(Math.random() * 900000) + 100000;
+          console.log(`[Outreach-Dashboard] Scheduling: "${title}" at ${scheduleDate.toLocaleString()}`);
+          await LocalNotifications.schedule({
+            notifications: [{ id: notifId, title, body, schedule: { at: scheduleDate }, sound: 'default' }],
+          });
+          scheduled++;
+        }
+        console.log(`[Outreach-Dashboard] Done: ${scheduled} notifications scheduled`);
+      } catch (e) {
+        console.error('[Outreach-Dashboard] Error:', e);
+      }
+    };
+    scheduleOutreach();
+  }, [leads]);
 
   useEffect(() => {
     fetchProjects();
@@ -331,8 +424,10 @@ const Dashboard: React.FC = () => {
         setTaskLocations([{
           lat: result.lat,
           lng: result.lng,
-          name: nextTask.projects.name || nextTask.title,
-          address: addr
+          name: nextTask.projects.name || 'Project',
+          address: addr,
+          taskName: nextTask.title,
+          projectId: nextTask.project_id
         }]);
       }
     };
@@ -341,6 +436,74 @@ const Dashboard: React.FC = () => {
       geocodeAddress();
     }
   }, [tasks]);
+
+  // Geocode project addresses for map markers — uses module-level cache to survive re-mounts
+  useEffect(() => {
+    if (projects.length === 0) return;
+    const withAddress = projects.filter(p => p.address && p.address.trim() !== '');
+    if (withAddress.length === 0) {
+      setProjectLocations([]);
+      return;
+    }
+
+    const fallbackLat = businessLocation?.lat ?? userLocation?.lat ?? null;
+    const fallbackLng = businessLocation?.lng ?? userLocation?.lng ?? null;
+
+    // Immediately restore cached results so markers appear instantly on re-mount
+    const cached: {lat: number, lng: number, name: string, address: string, id: string}[] = [];
+    const uncached: typeof withAddress = [];
+    for (const project of withAddress) {
+      const key = project.address!;
+      if (_geocodeCache[key]) {
+        cached.push({ ..._geocodeCache[key], name: project.name, address: key, id: project.id });
+      } else {
+        uncached.push(project);
+      }
+    }
+    if (cached.length > 0) {
+      setProjectLocations(prev => {
+        // Only update if different to avoid loops
+        if (prev.length === cached.length && prev.every((p, i) => p.id === cached[i].id)) return prev;
+        return cached;
+      });
+    }
+    if (uncached.length === 0) return;
+
+    const geocodeProjects = async () => {
+      const results = [...cached];
+
+      for (let i = 0; i < uncached.length; i++) {
+        const project = uncached[i];
+        try {
+          if (i > 0) await new Promise(r => setTimeout(r, 1100));
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(project.address!)}&limit=1`,
+            { headers: { 'User-Agent': 'ContractorAI-App' } }
+          );
+          const data = await response.json();
+          if (data && data[0]) {
+            const coords = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+            _geocodeCache[project.address!] = coords;
+            results.push({ ...coords, name: project.name, address: project.address!, id: project.id });
+          } else if (fallbackLat && fallbackLng) {
+            const coords = { lat: fallbackLat + (results.length * 0.002), lng: fallbackLng + (results.length * 0.002) };
+            _geocodeCache[project.address!] = coords;
+            results.push({ ...coords, name: project.name, address: project.address!, id: project.id });
+          }
+        } catch (error) {
+          console.error('Project geocoding error:', error);
+          if (fallbackLat && fallbackLng) {
+            const coords = { lat: fallbackLat + (results.length * 0.002), lng: fallbackLng + (results.length * 0.002) };
+            _geocodeCache[project.address!] = coords;
+            results.push({ ...coords, name: project.name, address: project.address!, id: project.id });
+          }
+        }
+      }
+
+      setProjectLocations(results);
+    };
+    geocodeProjects();
+  }, [projects, businessLocation, userLocation]);
 
   // Fetch approved and declined estimates for notifications
   useEffect(() => {
@@ -437,10 +600,10 @@ const Dashboard: React.FC = () => {
   };
 
   const quickActions = [
-    { id: 'finance', label: 'Finance', icon: DollarSign, bgColor: 'bg-[#043d6b]/20', iconColor: 'text-[#043d6b]', href: '/finance-hub' },
-    { id: 'projects', label: 'Projects', icon: Briefcase, bgColor: 'bg-[#043d6b]/20', iconColor: 'text-[#043d6b]', href: '/projects-hub' },
-    { id: 'jobs', label: 'Jobs', icon: Calendar, bgColor: 'bg-[#043d6b]/20', iconColor: 'text-[#043d6b]', href: '/jobs-hub' },
-    { id: 'goals', label: 'Goals', icon: Target, bgColor: 'bg-[#043d6b]/20', iconColor: 'text-[#043d6b]', href: '/business-hub' },
+    { id: 'finance', label: 'Finance', icon: DollarSign, bgColor: 'bg-theme/20', iconColor: 'text-theme', href: '/finance-hub' },
+    { id: 'projects', label: 'Projects', icon: Briefcase, bgColor: 'bg-theme/20', iconColor: 'text-theme', href: '/projects-hub' },
+    { id: 'jobs', label: 'Jobs', icon: Calendar, bgColor: 'bg-theme/20', iconColor: 'text-theme', href: '/jobs-hub' },
+    { id: 'goals', label: 'Goals', icon: Target, bgColor: 'bg-theme/20', iconColor: 'text-theme', href: '/business-hub' },
   ];
 
   // Get active projects count
@@ -579,7 +742,7 @@ const Dashboard: React.FC = () => {
                                 section.scrollIntoView({ behavior: 'smooth', block: 'start' });
                               }
                             }}
-                            className="w-full py-3 bg-[#043d6b] text-white rounded-xl text-base font-semibold hover:bg-[#035291] transition-colors"
+                            className="w-full py-3 bg-theme text-white rounded-xl text-base font-semibold hover:bg-[#035291] transition-colors"
                           >
                             View All Setup Tasks
                           </button>
@@ -602,11 +765,13 @@ const Dashboard: React.FC = () => {
           {(() => {
             const mapCenter = taskLocations.length > 0
               ? [taskLocations[0].lat, taskLocations[0].lng] as [number, number]
-              : businessLocation
-                ? [businessLocation.lat, businessLocation.lng] as [number, number]
-                : userLocation
-                  ? [userLocation.lat, userLocation.lng] as [number, number]
-                  : null;
+              : projectLocations.length > 0
+                ? [projectLocations[0].lat, projectLocations[0].lng] as [number, number]
+                : businessLocation
+                  ? [businessLocation.lat, businessLocation.lng] as [number, number]
+                  : userLocation
+                    ? [userLocation.lat, userLocation.lng] as [number, number]
+                    : null;
 
             if (!mapCenter) {
               return (
@@ -621,9 +786,9 @@ const Dashboard: React.FC = () => {
 
             return (
               <MapContainer
-                key={`map-${taskLocations.length}-${mapCenter[0]}-${mapCenter[1]}`}
+                key={`map-${taskLocations.length}-${projectLocations.length}-${mapCenter[0]}-${mapCenter[1]}`}
                 center={mapCenter}
-                zoom={taskLocations.length > 0 ? 13 : 12}
+                zoom={(taskLocations.length > 0 || projectLocations.length > 0) ? 13 : 12}
                 style={{ height: '100%', width: '100%' }}
                 zoomControl={false}
                 attributionControl={false}
@@ -655,15 +820,25 @@ const Dashboard: React.FC = () => {
                   <Marker
                     key={index}
                     position={[location.lat, location.lng]}
-                    icon={createMarkerIcon(location.name)}
-                  >
-                    <Popup>
-                      <div className="text-center p-1">
-                        <p className="font-bold text-gray-900 text-base">{location.name}</p>
-                        <p className="text-gray-600 text-sm mt-1">{location.address}</p>
-                      </div>
-                    </Popup>
-                  </Marker>
+                    icon={createMarkerIcon(location.name, location.taskName)}
+                    eventHandlers={{
+                      click: () => {
+                        if (location.projectId) {
+                          navigate('/projects-hub', { state: { selectedProjectId: location.projectId } });
+                        }
+                      }
+                    }}
+                  />
+                ))}
+                {projectLocations.map((location) => (
+                  <Marker
+                    key={location.id}
+                    position={[location.lat, location.lng]}
+                    icon={createProjectMarkerIcon(location.name)}
+                    eventHandlers={{
+                      click: () => navigate('/projects-hub', { state: { selectedProjectId: location.id } })
+                    }}
+                  />
                 ))}
               </MapContainer>
             );
@@ -725,13 +900,13 @@ const Dashboard: React.FC = () => {
                 style={{ boxShadow: theme === 'light' ? '0 4px 20px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.08)' : '0 4px 20px rgba(0,0,0,0.4)' }}
               >
                 <div className="p-4 flex items-start gap-3">
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 bg-[#043d6b]/20`}>
-                    <ClipboardList className="w-6 h-6 text-[#043d6b]" />
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 bg-theme/20`}>
+                    <ClipboardList className="w-6 h-6 text-theme" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className={`text-lg font-bold ${themeClasses.text.primary} line-clamp-1`}>{nextTask.title}</p>
                     {nextTask.due_date && (
-                      <p className={`text-sm ${theme === 'light' ? 'text-[#043d6b]' : 'text-[#5b9bd5]'} font-medium mt-0.5`}>
+                      <p className={`text-sm ${theme === 'light' ? 'text-theme' : 'text-[#5b9bd5]'} font-medium mt-0.5`}>
                         {new Date(nextTask.due_date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                         {nextTask.due_time && ` at ${new Date('2000-01-01T' + nextTask.due_time).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`}
                       </p>
@@ -742,7 +917,7 @@ const Dashboard: React.FC = () => {
                   </div>
                 </div>
                 {nextTask.projects?.address && (
-                  <div className={`flex items-center gap-1.5 px-4 pb-4 -mt-2 text-sm ${theme === 'light' ? 'text-[#043d6b]' : 'text-[#043d6b]'}`}>
+                  <div className={`flex items-center gap-1.5 px-4 pb-4 -mt-2 text-sm ${theme === 'light' ? 'text-theme' : 'text-theme'}`}>
                     <MapPin className="w-4 h-4 flex-shrink-0" />
                     <span className="truncate underline">{nextTask.projects.address}</span>
                   </div>
@@ -762,9 +937,9 @@ const Dashboard: React.FC = () => {
             style={{ boxShadow: theme === 'light' ? '0 4px 20px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.08)' : '0 4px 20px rgba(0,0,0,0.4)' }}
           >
             <div className="p-4 flex items-start gap-3">
-              <div className="relative w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 bg-[#043d6b]/20">
-                <UserPlus className="w-6 h-6 text-[#043d6b]" />
-                <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 bg-[#043d6b] text-white text-xs font-bold rounded-full flex items-center justify-center">
+              <div className="relative w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 bg-theme/20">
+                <UserPlus className="w-6 h-6 text-theme" />
+                <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 bg-theme text-white text-xs font-bold rounded-full flex items-center justify-center">
                   {newLeadsCount}
                 </span>
               </div>
@@ -805,8 +980,8 @@ const Dashboard: React.FC = () => {
                 className="w-full p-4 flex items-center justify-between"
               >
                 <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${theme === 'light' ? 'bg-[#043d6b]/10' : 'bg-[#043d6b]/30'}`}>
-                    <FileCheck className="w-5 h-5 text-[#043d6b]" />
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${theme === 'light' ? 'bg-theme/10' : 'bg-theme/30'}`}>
+                    <FileCheck className="w-5 h-5 text-theme" />
                   </div>
                   <div className="text-left">
                     <h3 className={`font-bold ${themeClasses.text.primary}`}>Approvals & Denials</h3>
@@ -925,7 +1100,7 @@ const Dashboard: React.FC = () => {
             <div className="flex gap-3">
               <button
                 onClick={() => navigate('/ad-analyzer')}
-                className={`flex-1 bg-gradient-to-br from-[#043d6b] to-[#022a4a] rounded-xl p-4 text-left active:scale-[0.98] transition-all shadow-lg`}
+                className={`flex-1 bg-gradient-to-br from-theme to-[#022a4a] rounded-xl p-4 text-left active:scale-[0.98] transition-all shadow-lg`}
               >
                 <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mb-3">
                   <Briefcase className="w-5 h-5 text-white" />
@@ -935,7 +1110,7 @@ const Dashboard: React.FC = () => {
               </button>
               <button
                 onClick={() => navigate('/ad-analyzer')}
-                className={`flex-1 bg-gradient-to-br from-[#035291] to-[#043d6b] rounded-xl p-4 text-left active:scale-[0.98] transition-all shadow-lg`}
+                className={`flex-1 bg-gradient-to-br from-[#035291] to-theme rounded-xl p-4 text-left active:scale-[0.98] transition-all shadow-lg`}
               >
                 <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mb-3">
                   <Target className="w-5 h-5 text-white" />
@@ -983,7 +1158,7 @@ const Dashboard: React.FC = () => {
           >
             <div className="flex items-start justify-between mb-6">
               <div className="flex items-center gap-4">
-                <div className="w-20 h-20 bg-gradient-to-br from-[#022a4a] to-[#043d6b] rounded-2xl flex items-center justify-center shadow-lg">
+                <div className="w-20 h-20 bg-gradient-to-br from-[#022a4a] to-theme rounded-2xl flex items-center justify-center shadow-lg">
                   <Calculator className="w-10 h-10 text-white" />
                 </div>
                 <div>
@@ -1004,23 +1179,23 @@ const Dashboard: React.FC = () => {
                 Use as many details as possible to get the best quote. The more you describe, the more accurate your estimate will be.
               </p>
 
-              <div className={`p-6 rounded-2xl ${theme === 'light' ? 'bg-[#e8f0f8] border-2 border-[#043d6b]/20' : 'bg-[#043d6b]/30 border-2 border-[#043d6b]/50'}`}>
+              <div className={`p-6 rounded-2xl ${theme === 'light' ? 'bg-[#e8f0f8] border-2 border-theme/20' : 'bg-theme/30 border-2 border-theme/50'}`}>
                 <p className={`font-bold text-xl ${theme === 'light' ? 'text-[#022a4a]' : 'text-blue-200'} mb-5`}>What you can do:</p>
-                <ul className={`space-y-5 text-lg ${theme === 'light' ? 'text-[#043d6b]' : 'text-blue-300'}`}>
+                <ul className={`space-y-5 text-lg ${theme === 'light' ? 'text-theme' : 'text-blue-300'}`}>
                   <li className="flex items-start gap-4">
-                    <div className={`w-9 h-9 rounded-full ${theme === 'light' ? 'bg-[#043d6b]' : 'bg-[#065a9e]'} flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                    <div className={`w-9 h-9 rounded-full ${theme === 'light' ? 'bg-theme' : 'bg-[#065a9e]'} flex items-center justify-center flex-shrink-0 mt-0.5`}>
                       <span className="text-white font-bold">1</span>
                     </div>
                     <span><strong className={theme === 'light' ? 'text-[#022a4a]' : 'text-white'}>Remove or add line items</strong> after the AI generates your estimate</span>
                   </li>
                   <li className="flex items-start gap-4">
-                    <div className={`w-9 h-9 rounded-full ${theme === 'light' ? 'bg-[#043d6b]' : 'bg-[#065a9e]'} flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                    <div className={`w-9 h-9 rounded-full ${theme === 'light' ? 'bg-theme' : 'bg-[#065a9e]'} flex items-center justify-center flex-shrink-0 mt-0.5`}>
                       <span className="text-white font-bold">2</span>
                     </div>
                     <span><strong className={theme === 'light' ? 'text-[#022a4a]' : 'text-white'}>Paste links from Lowe's or Home Depot</strong> to use specific products and their exact prices</span>
                   </li>
                   <li className="flex items-start gap-4">
-                    <div className={`w-9 h-9 rounded-full ${theme === 'light' ? 'bg-[#043d6b]' : 'bg-[#065a9e]'} flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                    <div className={`w-9 h-9 rounded-full ${theme === 'light' ? 'bg-theme' : 'bg-[#065a9e]'} flex items-center justify-center flex-shrink-0 mt-0.5`}>
                       <span className="text-white font-bold">3</span>
                     </div>
                     <span><strong className={theme === 'light' ? 'text-[#022a4a]' : 'text-white'}>Review & edit everything</strong> before sending to your customer</span>
@@ -1037,7 +1212,7 @@ const Dashboard: React.FC = () => {
 
             <button
               onClick={() => setShowEstimateTutorial(false)}
-              className="w-full mt-8 py-4 bg-gradient-to-r from-[#043d6b] to-[#065a9e] text-white font-bold text-xl rounded-2xl hover:from-[#035291] hover:to-[#054a7a] active:scale-[0.98] transition-all shadow-lg"
+              className="w-full mt-8 py-4 bg-gradient-to-r from-theme to-[#065a9e] text-white font-bold text-xl rounded-2xl hover:from-[#035291] hover:to-[#054a7a] active:scale-[0.98] transition-all shadow-lg"
             >
               Got it, let's build an estimate!
             </button>
@@ -1055,7 +1230,7 @@ const Dashboard: React.FC = () => {
           >
             <div className="flex items-start justify-between mb-6">
               <div className="flex items-center gap-4">
-                <div className="w-20 h-20 bg-gradient-to-br from-[#022a4a] to-[#043d6b] rounded-2xl flex items-center justify-center shadow-lg">
+                <div className="w-20 h-20 bg-gradient-to-br from-[#022a4a] to-theme rounded-2xl flex items-center justify-center shadow-lg">
                   <BarChart3 className="w-10 h-10 text-white" />
                 </div>
                 <div>
@@ -1076,29 +1251,29 @@ const Dashboard: React.FC = () => {
                 The Manage tab helps you stay on top of your business finances. Track everything in one place and send invoices directly to customers.
               </p>
 
-              <div className={`p-6 rounded-2xl ${theme === 'light' ? 'bg-[#e8f0f8] border-2 border-[#043d6b]/20' : 'bg-[#043d6b]/30 border-2 border-[#043d6b]/50'}`}>
+              <div className={`p-6 rounded-2xl ${theme === 'light' ? 'bg-[#e8f0f8] border-2 border-theme/20' : 'bg-theme/30 border-2 border-theme/50'}`}>
                 <p className={`font-bold text-xl ${theme === 'light' ? 'text-[#022a4a]' : 'text-blue-200'} mb-5`}>What you can do:</p>
-                <ul className={`space-y-5 text-lg ${theme === 'light' ? 'text-[#043d6b]' : 'text-blue-300'}`}>
+                <ul className={`space-y-5 text-lg ${theme === 'light' ? 'text-theme' : 'text-blue-300'}`}>
                   <li className="flex items-start gap-4">
-                    <div className={`w-9 h-9 rounded-full ${theme === 'light' ? 'bg-[#043d6b]' : 'bg-[#065a9e]'} flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                    <div className={`w-9 h-9 rounded-full ${theme === 'light' ? 'bg-theme' : 'bg-[#065a9e]'} flex items-center justify-center flex-shrink-0 mt-0.5`}>
                       <span className="text-white font-bold">1</span>
                     </div>
                     <span><strong className={theme === 'light' ? 'text-[#022a4a]' : 'text-white'}>Track employee payroll</strong> - log hours and calculate wages</span>
                   </li>
                   <li className="flex items-start gap-4">
-                    <div className={`w-9 h-9 rounded-full ${theme === 'light' ? 'bg-[#043d6b]' : 'bg-[#065a9e]'} flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                    <div className={`w-9 h-9 rounded-full ${theme === 'light' ? 'bg-theme' : 'bg-[#065a9e]'} flex items-center justify-center flex-shrink-0 mt-0.5`}>
                       <span className="text-white font-bold">2</span>
                     </div>
                     <span><strong className={theme === 'light' ? 'text-[#022a4a]' : 'text-white'}>Log miles & expenses</strong> - keep records for tax time</span>
                   </li>
                   <li className="flex items-start gap-4">
-                    <div className={`w-9 h-9 rounded-full ${theme === 'light' ? 'bg-[#043d6b]' : 'bg-[#065a9e]'} flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                    <div className={`w-9 h-9 rounded-full ${theme === 'light' ? 'bg-theme' : 'bg-[#065a9e]'} flex items-center justify-center flex-shrink-0 mt-0.5`}>
                       <span className="text-white font-bold">3</span>
                     </div>
                     <span><strong className={theme === 'light' ? 'text-[#022a4a]' : 'text-white'}>Track revenue</strong> - see your income at a glance</span>
                   </li>
                   <li className="flex items-start gap-4">
-                    <div className={`w-9 h-9 rounded-full ${theme === 'light' ? 'bg-[#043d6b]' : 'bg-[#065a9e]'} flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                    <div className={`w-9 h-9 rounded-full ${theme === 'light' ? 'bg-theme' : 'bg-[#065a9e]'} flex items-center justify-center flex-shrink-0 mt-0.5`}>
                       <span className="text-white font-bold">4</span>
                     </div>
                     <span><strong className={theme === 'light' ? 'text-[#022a4a]' : 'text-white'}>Send invoices</strong> - bill customers and get paid faster</span>
@@ -1119,7 +1294,7 @@ const Dashboard: React.FC = () => {
                 setShowManageTutorial(false);
                 navigate('/tracker');
               }}
-              className="w-full mt-8 py-4 bg-gradient-to-r from-[#043d6b] to-[#065a9e] text-white font-bold text-xl rounded-2xl hover:from-[#035291] hover:to-[#054a7a] active:scale-[0.98] transition-all shadow-lg"
+              className="w-full mt-8 py-4 bg-gradient-to-r from-theme to-[#065a9e] text-white font-bold text-xl rounded-2xl hover:from-[#035291] hover:to-[#054a7a] active:scale-[0.98] transition-all shadow-lg"
             >
               Got it, let's check it out!
             </button>

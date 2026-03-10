@@ -303,7 +303,7 @@ const CameraHub: React.FC<CameraHubProps> = ({ isOpen, onClose }) => {
 
         <div className="flex items-center gap-2">
           {mode === 'project' && selectedProjectName && (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-[#043d6b] rounded-full">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-theme rounded-full">
               <Briefcase className="w-4 h-4 text-white" />
               <span className="text-sm font-medium text-white">{selectedProjectName}</span>
             </div>
@@ -389,7 +389,7 @@ const CameraHub: React.FC<CameraHubProps> = ({ isOpen, onClose }) => {
             <button
               onClick={handleUploadPhoto}
               disabled={isUploading}
-              className="flex-1 py-3 bg-[#043d6b] text-white rounded-xl font-semibold flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-50"
+              className="flex-1 py-3 bg-theme text-white rounded-xl font-semibold flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-50"
             >
               {isUploading ? (
                 <>
@@ -412,7 +412,7 @@ const CameraHub: React.FC<CameraHubProps> = ({ isOpen, onClose }) => {
               onClick={() => setShowVisionCam(true)}
               className="flex flex-col items-center gap-1.5 p-3 active:scale-95 transition-transform"
             >
-              <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-[#043d6b] rounded-xl flex items-center justify-center">
+              <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-theme rounded-xl flex items-center justify-center">
                 <Eye className="w-7 h-7 text-white" />
               </div>
               <span className="text-xs text-white/70 font-medium">Vision</span>
@@ -435,7 +435,7 @@ const CameraHub: React.FC<CameraHubProps> = ({ isOpen, onClose }) => {
             >
               <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${
                 mode === 'project'
-                  ? 'bg-[#043d6b]'
+                  ? 'bg-theme'
                   : 'bg-zinc-800 border-2 border-zinc-600'
               }`}>
                 <Briefcase className="w-7 h-7 text-white" />
@@ -536,17 +536,17 @@ const CameraHub: React.FC<CameraHubProps> = ({ isOpen, onClose }) => {
                       onClick={() => handleProjectSelect(project.id, project.name)}
                       className={`w-full flex items-center gap-3 p-3 rounded-xl active:scale-[0.98] transition-all ${
                         selectedProjectId === project.id
-                          ? 'bg-[#043d6b] border-2 border-[#043d6b]'
+                          ? 'bg-theme border-2 border-theme'
                           : 'bg-[#2C2C2E] hover:bg-[#3C3C3E]'
                       }`}
                     >
                       <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
                         selectedProjectId === project.id
                           ? 'bg-white/20'
-                          : 'bg-[#043d6b]/20'
+                          : 'bg-theme/20'
                       }`}>
                         <Briefcase className={`w-5 h-5 ${
-                          selectedProjectId === project.id ? 'text-white' : 'text-[#043d6b]'
+                          selectedProjectId === project.id ? 'text-white' : 'text-theme'
                         }`} />
                       </div>
                       <div className="flex-1 text-left">

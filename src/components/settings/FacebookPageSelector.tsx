@@ -93,9 +93,9 @@ const FacebookPageSelector: React.FC<FacebookPageSelectorProps> = ({ accessToken
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
+    <div className="fixed inset-0 z-[9999] flex items-end md:items-center justify-center">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className={`relative w-full max-w-lg ${themeClasses.bg.modal || (theme === 'light' ? 'bg-white' : 'bg-zinc-900')} rounded-t-2xl md:rounded-2xl max-h-[85vh] overflow-y-auto`}>
+      <div className={`relative w-full max-w-lg ${themeClasses.bg.modal || (theme === 'light' ? 'bg-white' : 'bg-zinc-900')} rounded-t-2xl md:rounded-2xl max-h-[80vh] overflow-y-auto mb-0 md:mb-0`} style={{ marginBottom: 'env(safe-area-inset-bottom, 0px)' }}>
         {/* Header */}
         <div className={`sticky top-0 ${theme === 'light' ? 'bg-white' : 'bg-zinc-900'} px-5 pt-5 pb-3 border-b ${themeClasses.border.primary} z-10`}>
           <div className="flex items-center justify-between">
@@ -118,7 +118,7 @@ const FacebookPageSelector: React.FC<FacebookPageSelectorProps> = ({ accessToken
         </div>
 
         {/* Content */}
-        <div className="p-5 space-y-3">
+        <div className="p-5 pb-10 space-y-3">
           {/* Success State */}
           {success && (
             <div className={`flex items-center gap-3 p-4 rounded-xl ${theme === 'light' ? 'bg-green-50 border border-green-200' : 'bg-green-900/20 border border-green-800'}`}>
@@ -139,7 +139,7 @@ const FacebookPageSelector: React.FC<FacebookPageSelectorProps> = ({ accessToken
           {isLoading && (
             <div className="flex items-center justify-center py-12">
               <div className="flex items-center gap-3">
-                <Loader2 className="w-5 h-5 text-[#043d6b] animate-spin" />
+                <Loader2 className="w-5 h-5 text-theme animate-spin" />
                 <span className={themeClasses.text.muted}>Loading your pages...</span>
               </div>
             </div>
@@ -153,7 +153,7 @@ const FacebookPageSelector: React.FC<FacebookPageSelectorProps> = ({ accessToken
               disabled={isConnecting}
               className={`w-full text-left p-4 rounded-xl border transition-all ${
                 selectedPageId === page.id
-                  ? 'border-[#043d6b] bg-[#043d6b]/5'
+                  ? 'border-theme bg-theme/5'
                   : `${themeClasses.border.primary} ${themeClasses.bg.card} ${themeClasses.hover?.bg || ''}`
               } ${isConnecting && selectedPageId !== page.id ? 'opacity-50' : ''} active:scale-[0.99]`}
             >
@@ -166,7 +166,7 @@ const FacebookPageSelector: React.FC<FacebookPageSelectorProps> = ({ accessToken
                   <p className={`text-sm ${themeClasses.text.muted}`}>{page.category}</p>
                 </div>
                 {isConnecting && selectedPageId === page.id && (
-                  <Loader2 className="w-5 h-5 text-[#043d6b] animate-spin flex-shrink-0" />
+                  <Loader2 className="w-5 h-5 text-theme animate-spin flex-shrink-0" />
                 )}
               </div>
             </button>

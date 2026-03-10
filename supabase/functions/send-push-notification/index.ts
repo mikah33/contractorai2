@@ -5,7 +5,10 @@ const APNS_KEY_ID = Deno.env.get("APNS_KEY_ID")!;
 const APNS_TEAM_ID = Deno.env.get("APNS_TEAM_ID")!;
 const APNS_PRIVATE_KEY_BASE64 = Deno.env.get("APNS_PRIVATE_KEY")!;
 const APNS_BUNDLE_ID = Deno.env.get("APNS_BUNDLE_ID") || "com.elevated.contractorai";
-const APNS_HOST = "https://api.push.apple.com";
+// Use sandbox for development builds, production for App Store builds
+const APNS_HOST = Deno.env.get("APNS_USE_PRODUCTION") === "true"
+  ? "https://api.push.apple.com"
+  : "https://api.sandbox.push.apple.com";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -163,8 +166,9 @@ Deno.serve(async (req) => {
     );
   } catch (error) {
     console.error("send-push-notification error:", error);
+    const msg = error instanceof Error ? error.message : String(error);
     return new Response(
-      JSON.stringify({ error: "Internal server error" }),
+      JSON.stringify({ error: msg }),
       { status: 500, headers: { ...corsHeaders, "content-type": "application/json" } }
     );
   }

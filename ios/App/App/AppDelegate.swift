@@ -1,14 +1,38 @@
 import UIKit
 import Capacitor
+import CoreLocation
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
+    /// Standalone location manager that survives app relaunch from terminated state.
+    /// When iOS kills the app and a significant location change occurs, iOS relaunches
+    /// the app with launchOptions containing .location. This manager restarts immediately
+    /// so trips are never missed — even when the app was completely closed.
+    private var backgroundLocationManager: CLLocationManager?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Migrate keychain entries to App Group for iMessage extension access
         KeychainHelper.migrateToAppGroup()
+
+        // If launched due to a location event, restart location tracking immediately
+        // This happens when the app was terminated but significantLocationChanges detected movement
+        if launchOptions?[.location] != nil {
+            print("[AutoMileageTracker] App relaunched by location event — restarting tracking")
+            let wasTracking = UserDefaults.standard.bool(forKey: "autoMileage_isTracking")
+            if wasTracking {
+                backgroundLocationManager = CLLocationManager()
+                backgroundLocationManager?.allowsBackgroundLocationUpdates = true
+                backgroundLocationManager?.pausesLocationUpdatesAutomatically = false
+                backgroundLocationManager?.desiredAccuracy = kCLLocationAccuracyHundredMeters
+                backgroundLocationManager?.distanceFilter = 100
+                backgroundLocationManager?.startMonitoringSignificantLocationChanges()
+                backgroundLocationManager?.startUpdatingLocation()
+                print("[AutoMileageTracker] Background location manager started from AppDelegate")
+            }
+        }
+
         return true
     }
 

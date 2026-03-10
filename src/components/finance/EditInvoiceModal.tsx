@@ -110,7 +110,7 @@ const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({ invoice, onClose })
                 type="text"
                 value={editedInvoice.invoiceNumber || ''}
                 onChange={(e) => setEditedInvoice({ ...editedInvoice, invoiceNumber: e.target.value })}
-                className={`w-full px-3 py-2 border rounded-md focus:ring-[#043d6b] focus:border-[#043d6b] ${isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                className={`w-full px-3 py-2 border rounded-md focus:ring-theme focus:border-theme ${isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
               />
             </div>
 
@@ -120,7 +120,7 @@ const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({ invoice, onClose })
                 type="date"
                 value={editedInvoice.dueDate?.split('T')[0] || ''}
                 onChange={(e) => setEditedInvoice({ ...editedInvoice, dueDate: e.target.value })}
-                className={`w-full px-3 py-2 border rounded-md focus:ring-[#043d6b] focus:border-[#043d6b] ${isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                className={`w-full px-3 py-2 border rounded-md focus:ring-theme focus:border-theme ${isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
               />
             </div>
 
@@ -129,7 +129,7 @@ const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({ invoice, onClose })
               <select
                 value={editedInvoice.status}
                 onChange={(e) => setEditedInvoice({ ...editedInvoice, status: e.target.value as Invoice['status'] })}
-                className={`w-full px-3 py-2 border rounded-md focus:ring-[#043d6b] focus:border-[#043d6b] ${isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                className={`w-full px-3 py-2 border rounded-md focus:ring-theme focus:border-theme ${isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
               >
                 <option value="draft">Draft</option>
                 <option value="sent">Sent</option>
@@ -148,7 +148,7 @@ const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({ invoice, onClose })
               <button
                 onClick={addLineItem}
                 className="inline-flex items-center text-sm font-medium hover:opacity-80"
-                style={{ color: '#043d6b' }}
+                style={{ color: 'var(--color-theme)' }}
               >
                 <Plus className="h-4 w-4 mr-1" />
                 Add Item
@@ -178,7 +178,7 @@ const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({ invoice, onClose })
                         value={item.description}
                         onChange={(e) => updateLineItem(index, 'description', e.target.value)}
                         placeholder="Description"
-                        className={`w-full px-3 py-2 border rounded-md text-sm focus:ring-[#043d6b] focus:border-[#043d6b] ${isDark ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900'}`}
+                        className={`w-full px-3 py-2 border rounded-md text-sm focus:ring-theme focus:border-theme ${isDark ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900'}`}
                       />
                     </div>
                     <div className="col-span-4 md:col-span-2">
@@ -188,7 +188,7 @@ const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({ invoice, onClose })
                         onChange={(e) => updateLineItem(index, 'quantity', e.target.value)}
                         placeholder="Qty"
                         min="0"
-                        className={`w-full px-3 py-2 border rounded-md text-sm focus:ring-[#043d6b] focus:border-[#043d6b] ${isDark ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900'}`}
+                        className={`w-full px-3 py-2 border rounded-md text-sm focus:ring-theme focus:border-theme ${isDark ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900'}`}
                       />
                     </div>
                     <div className="col-span-4 md:col-span-2">
@@ -199,7 +199,7 @@ const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({ invoice, onClose })
                         onChange={(e) => updateLineItem(index, 'unitPrice', e.target.value)}
                         placeholder="Rate"
                         min="0"
-                        className={`w-full px-3 py-2 border rounded-md text-sm focus:ring-[#043d6b] focus:border-[#043d6b] ${isDark ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900'}`}
+                        className={`w-full px-3 py-2 border rounded-md text-sm focus:ring-theme focus:border-theme ${isDark ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900'}`}
                       />
                     </div>
                     <div className="col-span-3 md:col-span-2">
@@ -243,7 +243,7 @@ const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({ invoice, onClose })
               value={editedInvoice.notes || ''}
               onChange={(e) => setEditedInvoice({ ...editedInvoice, notes: e.target.value })}
               rows={3}
-              className={`w-full px-3 py-2 border rounded-md focus:ring-[#043d6b] focus:border-[#043d6b] ${isDark ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900'}`}
+              className={`w-full px-3 py-2 border rounded-md focus:ring-theme focus:border-theme ${isDark ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900'}`}
               placeholder="Additional notes..."
             />
           </div>
@@ -253,15 +253,15 @@ const EditInvoiceModal: React.FC<EditInvoiceModalProps> = ({ invoice, onClose })
         <div className={`sticky bottom-0 border-t px-6 py-4 flex justify-end space-x-3 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
           <button
             onClick={onClose}
-            className={`px-4 py-2 border rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#043d6b] ${isDark ? 'border-gray-600 text-gray-300 bg-gray-700 hover:bg-gray-600' : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'}`}
+            className={`px-4 py-2 border rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-theme ${isDark ? 'border-gray-600 text-gray-300 bg-gray-700 hover:bg-gray-600' : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'}`}
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={isSaving}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#043d6b] disabled:opacity-50"
-            style={{ backgroundColor: '#043d6b' }}
+            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-theme disabled:opacity-50"
+            style={{ backgroundColor: 'var(--color-theme)' }}
           >
             <Save className="h-4 w-4 mr-2" />
             {isSaving ? 'Saving...' : 'Save Changes'}

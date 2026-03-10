@@ -6,7 +6,7 @@ export default {
       colors: {
         // Theme color - Deep Blue
         theme: {
-          DEFAULT: '#043d6b',
+          DEFAULT: 'rgb(var(--color-theme-rgb) / <alpha-value>)',
           50: '#e6f0f7',
           100: '#c2d9eb',
           200: '#9ac0de',

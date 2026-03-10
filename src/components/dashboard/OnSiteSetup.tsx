@@ -324,7 +324,7 @@ export const OnSiteSetup: React.FC<OnSiteSetupProps> = ({ profile, userId, onSho
       <div className="mb-6">
         <div className={`h-3 ${theme === 'light' ? 'bg-gray-200' : 'bg-zinc-700'} rounded-full overflow-hidden`}>
           <div
-            className={`h-full ${allComplete ? 'bg-green-500' : 'bg-gradient-to-r from-[#043d6b] to-green-500'} rounded-full transition-all duration-500`}
+            className={`h-full ${allComplete ? 'bg-green-500' : 'bg-gradient-to-r from-theme to-green-500'} rounded-full transition-all duration-500`}
             style={{ width: `${progressPercent}%` }}
           />
         </div>
@@ -445,7 +445,7 @@ export const OnSiteSetup: React.FC<OnSiteSetupProps> = ({ profile, userId, onSho
             {/* Header */}
             <div className="p-6 pb-4">
               <div className="flex items-start gap-4">
-                <div className="w-14 h-14 bg-[#043d6b] rounded-xl flex items-center justify-center flex-shrink-0">
+                <div className="w-14 h-14 bg-theme rounded-xl flex items-center justify-center flex-shrink-0">
                   <Mic className="w-7 h-7 text-white" />
                 </div>
                 <div>
@@ -466,15 +466,15 @@ export const OnSiteSetup: React.FC<OnSiteSetupProps> = ({ profile, userId, onSho
                 <h3 className="font-semibold text-gray-900 mb-3">What you can do:</h3>
                 <div className="space-y-3">
                   <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 bg-[#043d6b] rounded-full flex items-center justify-center flex-shrink-0 text-white text-xs font-bold">1</div>
+                    <div className="w-6 h-6 bg-theme rounded-full flex items-center justify-center flex-shrink-0 text-white text-xs font-bold">1</div>
                     <p className="text-gray-700 text-sm"><span className="font-semibold">Tap the mic icon</span> on the bottom bar to start talking</p>
                   </div>
                   <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 bg-[#043d6b] rounded-full flex items-center justify-center flex-shrink-0 text-white text-xs font-bold">2</div>
+                    <div className="w-6 h-6 bg-theme rounded-full flex items-center justify-center flex-shrink-0 text-white text-xs font-bold">2</div>
                     <p className="text-gray-700 text-sm"><span className="font-semibold">Ask anything</span> - create estimates, add clients, schedule tasks</p>
                   </div>
                   <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 bg-[#043d6b] rounded-full flex items-center justify-center flex-shrink-0 text-white text-xs font-bold">3</div>
+                    <div className="w-6 h-6 bg-theme rounded-full flex items-center justify-center flex-shrink-0 text-white text-xs font-bold">3</div>
                     <p className="text-gray-700 text-sm"><span className="font-semibold">Get instant help</span> with any question about your business</p>
                   </div>
                 </div>
@@ -498,7 +498,7 @@ export const OnSiteSetup: React.FC<OnSiteSetupProps> = ({ profile, userId, onSho
                   // Open AI chat
                   window.dispatchEvent(new CustomEvent('openAIChat'));
                 }}
-                className="w-full py-3.5 bg-[#043d6b] hover:bg-[#035291] text-white rounded-xl font-semibold active:scale-[0.98] transition-all"
+                className="w-full py-3.5 bg-theme hover:bg-[#035291] text-white rounded-xl font-semibold active:scale-[0.98] transition-all"
               >
                 Got it, let's try it!
               </button>
@@ -529,7 +529,7 @@ export const OnSiteSetup: React.FC<OnSiteSetupProps> = ({ profile, userId, onSho
             {/* Header */}
             <div className="p-6 pb-4">
               <div className="flex items-start gap-4">
-                <div className="w-14 h-14 bg-[#043d6b] rounded-xl flex items-center justify-center flex-shrink-0">
+                <div className="w-14 h-14 bg-theme rounded-xl flex items-center justify-center flex-shrink-0">
                   <Camera className="w-7 h-7 text-white" />
                 </div>
                 <div>
@@ -550,15 +550,15 @@ export const OnSiteSetup: React.FC<OnSiteSetupProps> = ({ profile, userId, onSho
                 <h3 className="font-semibold text-gray-900 mb-3">What you can do:</h3>
                 <div className="space-y-3">
                   <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 bg-[#043d6b] rounded-full flex items-center justify-center flex-shrink-0 text-white text-xs font-bold">1</div>
+                    <div className="w-6 h-6 bg-theme rounded-full flex items-center justify-center flex-shrink-0 text-white text-xs font-bold">1</div>
                     <p className="text-gray-700 text-sm"><span className="font-semibold">Tap Camera</span> in the bottom navigation bar</p>
                   </div>
                   <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 bg-[#043d6b] rounded-full flex items-center justify-center flex-shrink-0 text-white text-xs font-bold">2</div>
+                    <div className="w-6 h-6 bg-theme rounded-full flex items-center justify-center flex-shrink-0 text-white text-xs font-bold">2</div>
                     <p className="text-gray-700 text-sm"><span className="font-semibold">Select Vision Cam</span> to activate AI material detection</p>
                   </div>
                   <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 bg-[#043d6b] rounded-full flex items-center justify-center flex-shrink-0 text-white text-xs font-bold">3</div>
+                    <div className="w-6 h-6 bg-theme rounded-full flex items-center justify-center flex-shrink-0 text-white text-xs font-bold">3</div>
                     <p className="text-gray-700 text-sm"><span className="font-semibold">Point & scan</span> any material to get instant pricing</p>
                   </div>
                 </div>
@@ -582,7 +582,7 @@ export const OnSiteSetup: React.FC<OnSiteSetupProps> = ({ profile, userId, onSho
                   // Open Vision Cam so they can try it
                   window.dispatchEvent(new CustomEvent('openVisionCam'));
                 }}
-                className="w-full py-3.5 bg-[#043d6b] hover:bg-[#035291] text-white rounded-xl font-semibold active:scale-[0.98] transition-all"
+                className="w-full py-3.5 bg-theme hover:bg-[#035291] text-white rounded-xl font-semibold active:scale-[0.98] transition-all"
               >
                 Got it, let's try it!
               </button>

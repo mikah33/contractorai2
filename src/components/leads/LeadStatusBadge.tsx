@@ -12,6 +12,8 @@ const statusConfig: Record<Lead['status'], { label: string; bg: string; text: st
   quoted: { label: 'Quoted', bg: 'bg-purple-100', text: 'text-purple-800' },
   converted: { label: 'Converted', bg: 'bg-green-100', text: 'text-green-800' },
   lost: { label: 'Lost', bg: 'bg-red-100', text: 'text-red-800' },
+  cold: { label: 'Cold', bg: 'bg-slate-100', text: 'text-slate-600' },
+  dead: { label: 'Dead', bg: 'bg-gray-200', text: 'text-gray-500' },
 };
 
 const LeadStatusBadge: React.FC<LeadStatusBadgeProps> = ({ status, size = 'sm' }) => {

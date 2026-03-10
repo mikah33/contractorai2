@@ -12,6 +12,7 @@ import {
   Briefcase,
   X,
   ChevronLeft,
+  ArrowLeft,
   Filter,
   Bell,
   BellOff,
@@ -208,13 +209,21 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
   useEffect(() => {
     const state = location.state as {
       openCreateTask?: boolean;
+      selectedTaskId?: string;
       preselectedProjectId?: string;
       preselectedProjectName?: string;
       returnTo?: string;
       returnProjectId?: string;
     } | null;
 
-    if (state?.openCreateTask) {
+    if (state?.selectedTaskId && tasks.length > 0) {
+      const task = tasks.find(t => t.id === state.selectedTaskId);
+      if (task) {
+        handleOpenEditTask(task);
+        // Clear the navigation state so refreshing doesn't re-open
+        window.history.replaceState({}, document.title);
+      }
+    } else if (state?.openCreateTask) {
       // Open the create task form
       setShowAddTask(true);
 
@@ -229,7 +238,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
       // Clear the navigation state so refreshing doesn't re-open
       window.history.replaceState({}, document.title);
     }
-  }, [location.state]);
+  }, [location.state, tasks]);
 
   const handleAIChat = () => {
     setShowAIChat(true);
@@ -682,7 +691,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
       case 'done':
         return <Check className="w-5 h-5 text-green-500" />;
       case 'in-progress':
-        return <Clock className="w-5 h-5 text-[#043d6b]" />;
+        return <Clock className="w-5 h-5 text-theme" />;
       default:
         return <Circle className="w-5 h-5 text-gray-300" />;
     }
@@ -720,9 +729,12 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
             <div className="pt-[env(safe-area-inset-top)]">
               <div className="px-4 pb-5 pt-4">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 bg-[#043d6b]/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <ClipboardList className="w-7 h-7 text-[#043d6b]" />
+                  <div className="flex items-center gap-3">
+                    <button onClick={() => navigate('/search')} className={`w-9 h-9 rounded-lg flex items-center justify-center ${themeClasses.bg.input} active:scale-95 transition-transform`}>
+                      <ArrowLeft className={`w-5 h-5 ${themeClasses.text.primary}`} />
+                    </button>
+                    <div className="w-12 h-12 bg-theme/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <ClipboardList className="w-6 h-6 text-theme" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h1 className={`text-2xl font-bold ${themeClasses.text.primary}`}>Tasks & Calendar</h1>
@@ -731,7 +743,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                   </div>
                   <button
                     onClick={() => setShowAddTask(true)}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-[#043d6b] text-white rounded-lg font-medium hover:bg-[#035291] active:scale-95 transition-all"
+                    className="flex items-center gap-2 px-4 py-2.5 bg-theme text-white rounded-lg font-medium hover:bg-[#035291] active:scale-95 transition-all"
                   >
                     <Plus className="w-5 h-5" />
                     <span>Add</span>
@@ -743,7 +755,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
               <button
                 onClick={() => { setFilter('all'); setSelectedDate(null); }}
                 className={`flex-shrink-0 px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
-                  filter === 'all' && !selectedDate ? 'bg-[#043d6b]/20 text-[#043d6b]' : `${themeClasses.bg.tertiary} ${themeClasses.text.secondary}`
+                  filter === 'all' && !selectedDate ? 'bg-theme/20 text-theme' : `${themeClasses.bg.tertiary} ${themeClasses.text.secondary}`
                 }`}
               >
                 All ({tasks.length})
@@ -751,7 +763,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
               <button
                 onClick={() => { setFilter('today'); setSelectedDate(null); }}
                 className={`flex-shrink-0 px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
-                  filter === 'today' && !selectedDate ? 'bg-[#043d6b]/20 text-[#043d6b]' : `${themeClasses.bg.tertiary} ${themeClasses.text.secondary}`
+                  filter === 'today' && !selectedDate ? 'bg-theme/20 text-theme' : `${themeClasses.bg.tertiary} ${themeClasses.text.secondary}`
                 }`}
               >
                 Today ({tasks.filter(t => t.due_date && isToday(parseISO(t.due_date))).length})
@@ -760,7 +772,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                 <button
                   onClick={() => { setFilter('overdue'); setSelectedDate(null); }}
                   className={`flex-shrink-0 px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
-                    filter === 'overdue' && !selectedDate ? 'bg-[#043d6b]/20 text-[#043d6b]' : `${themeClasses.bg.tertiary} ${themeClasses.text.secondary}`
+                    filter === 'overdue' && !selectedDate ? 'bg-theme/20 text-theme' : `${themeClasses.bg.tertiary} ${themeClasses.text.secondary}`
                   }`}
                 >
                   Overdue ({overdueCount})
@@ -777,46 +789,13 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
 
       {/* Content */}
       <div className={`px-4 pb-4 space-y-4 ${embedded ? '-mt-1' : 'pt-4'}`}>
-        {/* Add Task Card */}
-        <div className={`${themeClasses.bg.card} rounded-2xl border-2 ${theme === 'light' ? 'border-gray-300' : 'border-zinc-600'} p-6 relative overflow-hidden`}>
-          {/* Background decorations */}
-          <div className="absolute -right-6 -top-6 w-44 h-44 bg-[#043d6b]/10 rounded-full" />
-          <div className="absolute right-16 top-20 w-28 h-28 bg-[#043d6b]/5 rounded-full" />
-
-          <div className="relative min-h-[240px] flex flex-col">
-            <div className="flex items-center gap-4 mb-5">
-              <div className="w-16 h-16 bg-[#043d6b]/20 rounded-2xl flex items-center justify-center">
-                <ClipboardList className="w-8 h-8 text-[#043d6b]" />
-              </div>
-              <div>
-                <h3 className={`font-bold ${themeClasses.text.primary} text-xl`}>Add Task</h3>
-                <p className={`${themeClasses.text.secondary} text-base`}>Stay organized & on schedule</p>
-              </div>
-            </div>
-
-            <p className={`${themeClasses.text.secondary} italic text-base flex-1`}>
-              Create tasks with due dates, priorities, and project assignments to keep your work on track.
-            </p>
-
-            <div className="mt-auto">
-              <button
-                onClick={() => setShowAddTask(true)}
-                className="w-full flex items-center justify-center gap-2 px-5 py-4 bg-[#043d6b] text-white rounded-2xl font-medium text-base hover:bg-[#035291] active:scale-[0.98] transition-all"
-              >
-                <Plus className="w-5 h-5" />
-                Add Task
-              </button>
-            </div>
-          </div>
-        </div>
-
         {/* Today's Events */}
         {todayEvents.length > 0 && !selectedDate && filter === 'all' && (
           <div className={`${themeClasses.bg.card} rounded-2xl border-2 ${theme === 'light' ? 'border-gray-300' : 'border-zinc-600'} overflow-hidden`}>
             <div className={`flex items-center justify-between p-4 border-b ${themeClasses.border.primary}`}>
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-[#043d6b]/20 rounded-lg flex items-center justify-center">
-                  <CalendarIcon className="w-4 h-4 text-[#043d6b]" />
+                <div className="w-8 h-8 bg-theme/20 rounded-lg flex items-center justify-center">
+                  <CalendarIcon className="w-4 h-4 text-theme" />
                 </div>
                 <div>
                   <h2 className={`font-semibold ${themeClasses.text.primary}`}>Today's Events</h2>
@@ -833,8 +812,8 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
             <div className={`divide-y ${themeClasses.border.primary}`}>
               {todayEvents.slice(0, 3).map((event) => (
                 <div key={event.id} className="p-4 flex items-center gap-3">
-                  <div className="w-10 h-10 bg-[#043d6b]/20 rounded-lg flex items-center justify-center">
-                    <CalendarIcon className="w-5 h-5 text-[#043d6b]" />
+                  <div className="w-10 h-10 bg-theme/20 rounded-lg flex items-center justify-center">
+                    <CalendarIcon className="w-5 h-5 text-theme" />
                   </div>
                   <div className="flex-1">
                     <p className={`font-medium ${themeClasses.text.primary}`}>{event.title}</p>
@@ -854,8 +833,8 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
         <div className={`${themeClasses.bg.card} rounded-2xl border-2 ${theme === 'light' ? 'border-gray-300' : 'border-zinc-600'} overflow-hidden`}>
           <div className={`flex items-center justify-between p-4 border-b ${themeClasses.border.primary}`}>
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-[#043d6b]/20 rounded-lg flex items-center justify-center">
-                <ClipboardList className="w-4 h-4 text-[#043d6b]" />
+              <div className="w-8 h-8 bg-theme/20 rounded-lg flex items-center justify-center">
+                <ClipboardList className="w-4 h-4 text-theme" />
               </div>
               <div>
                 <h2 className={`font-semibold ${themeClasses.text.primary}`}>
@@ -925,13 +904,9 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                         onClick={(e) => {
                           e.stopPropagation();
                           const encodedAddress = encodeURIComponent(task.project_address || '');
-                          const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-                          const mapsUrl = isIOS
-                            ? `maps://maps.apple.com/?q=${encodedAddress}`
-                            : `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
-                          window.open(mapsUrl, '_blank');
+                          window.open(`maps://maps.apple.com/?q=${encodedAddress}`, '_blank');
                         }}
-                        className={`mt-2 flex items-center gap-2 text-xs px-3 py-2 rounded-lg ${theme === 'light' ? 'bg-[#043d6b]/10 text-[#043d6b] border border-[#043d6b]/20' : 'bg-[#043d6b]/15 text-[#043d6b] border border-[#043d6b]/30'} active:scale-[0.98] transition-transform`}
+                        className={`mt-2 flex items-center gap-2 text-xs px-3 py-2 rounded-lg ${theme === 'light' ? 'bg-theme/10 text-theme border border-theme/20' : 'bg-theme/15 text-theme border border-theme/30'} active:scale-[0.98] transition-transform`}
                       >
                         <MapPin className="w-4 h-4" />
                         <span>{task.project_address}</span>
@@ -989,9 +964,9 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                   onClick={() => setSelectedDate(isSelected ? null : day)}
                   className={`relative aspect-square flex flex-col items-center justify-center rounded-lg text-sm transition-colors ${
                     isSelected
-                      ? 'bg-[#043d6b] text-white'
+                      ? 'bg-theme text-white'
                       : isToday(day)
-                      ? 'bg-[#043d6b]/20 text-[#043d6b] font-semibold'
+                      ? 'bg-theme/20 text-theme font-semibold'
                       : isCurrentMonth
                       ? `${themeClasses.text.primary} ${themeClasses.hover.bg}`
                       : themeClasses.text.muted
@@ -1000,7 +975,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                   {format(day, 'd')}
                   {hasItems && !isSelected && (
                     <div className="absolute bottom-1 flex gap-0.5">
-                      {taskCount > 0 && <div className="w-1 h-1 rounded-full bg-[#043d6b]" />}
+                      {taskCount > 0 && <div className="w-1 h-1 rounded-full bg-theme" />}
                       {eventCount > 0 && <div className={`w-1 h-1 rounded-full ${theme === 'light' ? 'bg-gray-400' : 'bg-zinc-400'}`} />}
                     </div>
                   )}
@@ -1047,7 +1022,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
               <button
                 onClick={handleAddTask}
                 disabled={!newTask.title.trim()}
-                className={`text-[#043d6b] text-base font-semibold active:text-[#035291] disabled:${themeClasses.text.muted}`}
+                className={`text-theme text-base font-semibold active:text-[#035291] disabled:${themeClasses.text.muted}`}
               >
                 Save
               </button>
@@ -1062,7 +1037,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                   type="text"
                   value={newTask.title}
                   onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-                  className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                  className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none`}
                   placeholder="What needs to be done?"
                 />
               </div>
@@ -1076,7 +1051,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                   className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} flex items-center justify-between`}
                 >
                   <div className="flex items-center gap-2">
-                    <CalendarIcon className="w-5 h-5 text-[#043d6b]" />
+                    <CalendarIcon className="w-5 h-5 text-theme" />
                     <span className={newTask.due_date ? themeClasses.text.primary : themeClasses.text.muted}>
                       {newTask.due_date
                         ? `${format(parseISO(newTask.due_date), 'MMM d, yyyy')} at ${newTask.due_time}`
@@ -1144,7 +1119,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                               }}
                               className={`aspect-square flex items-center justify-center text-sm rounded-lg transition-colors ${
                                 isSelected
-                                  ? 'bg-[#043d6b] text-white font-semibold'
+                                  ? 'bg-theme text-white font-semibold'
                                   : isTodays
                                     ? `${themeClasses.bg.tertiary} ${themeClasses.text.primary} font-semibold`
                                     : isCurrentMonth
@@ -1168,7 +1143,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                         onClick={() => setNewTask(prev => ({ ...prev, due_date: format(new Date(), 'yyyy-MM-dd') }))}
                         className={`flex-1 py-2 text-xs font-medium rounded-lg ${
                           newTask.due_date === format(new Date(), 'yyyy-MM-dd')
-                            ? 'bg-[#043d6b] text-white'
+                            ? 'bg-theme text-white'
                             : `${themeClasses.bg.tertiary} ${themeClasses.text.secondary}`
                         }`}
                       >
@@ -1179,7 +1154,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                         onClick={() => setNewTask(prev => ({ ...prev, due_date: format(addDays(new Date(), 1), 'yyyy-MM-dd') }))}
                         className={`flex-1 py-2 text-xs font-medium rounded-lg ${
                           newTask.due_date === format(addDays(new Date(), 1), 'yyyy-MM-dd')
-                            ? 'bg-[#043d6b] text-white'
+                            ? 'bg-theme text-white'
                             : `${themeClasses.bg.tertiary} ${themeClasses.text.secondary}`
                         }`}
                       >
@@ -1190,7 +1165,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                         onClick={() => setNewTask(prev => ({ ...prev, due_date: format(addDays(new Date(), 7), 'yyyy-MM-dd') }))}
                         className={`flex-1 py-2 text-xs font-medium rounded-lg ${
                           newTask.due_date === format(addDays(new Date(), 7), 'yyyy-MM-dd')
-                            ? 'bg-[#043d6b] text-white'
+                            ? 'bg-theme text-white'
                             : `${themeClasses.bg.tertiary} ${themeClasses.text.secondary}`
                         }`}
                       >
@@ -1210,7 +1185,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                               onClick={() => setNewTask(prev => ({ ...prev, due_time: time }))}
                               className={`py-2 text-xs font-medium rounded-lg transition-colors ${
                                 newTask.due_time === time
-                                  ? 'bg-[#043d6b] text-white'
+                                  ? 'bg-theme text-white'
                                   : `${themeClasses.bg.tertiary} ${themeClasses.text.secondary} ${themeClasses.hover.bg}`
                               }`}
                             >
@@ -1261,7 +1236,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                         if (newEnabled) setShowReminderOptions(true);
                       }}
                       className={`w-12 h-7 rounded-full transition-colors ${
-                        newTask.reminder_enabled ? 'bg-[#043d6b]' : theme === 'light' ? 'bg-gray-300' : 'bg-zinc-600'
+                        newTask.reminder_enabled ? 'bg-theme' : theme === 'light' ? 'bg-gray-300' : 'bg-zinc-600'
                       }`}
                     >
                       <div
@@ -1291,7 +1266,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                               onClick={() => setNewTask({ ...newTask, reminder_minutes: opt.value })}
                               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                                 newTask.reminder_minutes === opt.value
-                                  ? 'bg-[#043d6b] text-white'
+                                  ? 'bg-theme text-white'
                                   : `${themeClasses.bg.secondary} ${themeClasses.text.secondary}`
                               }`}
                             >
@@ -1320,7 +1295,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                                 opt.disabled
                                   ? `${themeClasses.bg.secondary} ${themeClasses.text.muted} opacity-50 cursor-not-allowed`
                                   : newTask.reminder_recipients === opt.value
-                                    ? 'bg-[#043d6b] text-white'
+                                    ? 'bg-theme text-white'
                                     : `${themeClasses.bg.secondary} ${themeClasses.text.secondary}`
                               }`}
                             >
@@ -1342,7 +1317,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                             onClick={() => setNewTask({ ...newTask, reminder_push: !newTask.reminder_push })}
                             className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                               newTask.reminder_push
-                                ? 'bg-[#043d6b]/20 text-[#043d6b] border border-[#043d6b]/50'
+                                ? 'bg-theme/20 text-theme border border-theme/50'
                                 : `${themeClasses.bg.secondary} ${themeClasses.text.secondary} border ${themeClasses.border.input}`
                             }`}
                           >
@@ -1355,7 +1330,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                             onClick={() => setNewTask({ ...newTask, reminder_email: !newTask.reminder_email })}
                             className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                               newTask.reminder_email
-                                ? 'bg-[#043d6b]/20 text-[#043d6b] border border-[#043d6b]/50'
+                                ? 'bg-theme/20 text-theme border border-theme/50'
                                 : `${themeClasses.bg.secondary} ${themeClasses.text.secondary} border ${themeClasses.border.input}`
                             }`}
                           >
@@ -1397,7 +1372,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                               setNewTask({ ...newTask, project_id: p.id });
                               setShowProjectSelect(false);
                             }}
-                            className={`w-full px-4 py-3 text-left ${themeClasses.text.primary} ${themeClasses.hover.bg} ${newTask.project_id === p.id ? 'bg-[#043d6b]/20' : ''}`}
+                            className={`w-full px-4 py-3 text-left ${themeClasses.text.primary} ${themeClasses.hover.bg} ${newTask.project_id === p.id ? 'bg-theme/20' : ''}`}
                           >
                             {p.name}
                           </button>
@@ -1411,7 +1386,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                     <button
                       type="button"
                       onClick={() => setShowNewProjectModal(true)}
-                      className="flex items-center gap-2 text-[#043d6b] text-sm font-medium"
+                      className="flex items-center gap-2 text-theme text-sm font-medium"
                     >
                       <Plus className="w-4 h-4" />
                       Add New Project
@@ -1424,7 +1399,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                         type="text"
                         value={quickProjectName}
                         onChange={(e) => setQuickProjectName(e.target.value)}
-                        className={`flex-1 px-4 py-3 ${themeClasses.bg.input} border ${themeClasses.border.input} rounded-xl ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} focus:ring-2 focus:ring-[#043d6b] focus:border-transparent`}
+                        className={`flex-1 px-4 py-3 ${themeClasses.bg.input} border ${themeClasses.border.input} rounded-xl ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} focus:ring-2 focus:ring-theme focus:border-transparent`}
                         placeholder="Enter project name..."
                         autoFocus
                       />
@@ -1458,7 +1433,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                             }
                           }
                         }}
-                        className="px-4 py-3 bg-[#043d6b] text-white rounded-xl font-medium active:bg-[#035291]"
+                        className="px-4 py-3 bg-theme text-white rounded-xl font-medium active:bg-[#035291]"
                       >
                         <Check className="w-5 h-5" />
                       </button>
@@ -1492,27 +1467,26 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                         <button
                           type="button"
                           onClick={() => {
-                            const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedProject.address)}`;
-                            window.open(url, '_blank');
+                            window.open(`maps://maps.apple.com/?q=${encodeURIComponent(selectedProject.address)}`, '_blank');
                           }}
-                          className="flex items-center gap-1 px-2 py-1 bg-[#043d6b]/20 text-[#043d6b] rounded-lg text-xs font-medium"
+                          className="flex items-center gap-1 px-2 py-1 bg-theme/20 text-theme rounded-lg text-xs font-medium"
                         >
                           <ExternalLink className="w-3 h-3" />
-                          Open
+                          Open in Maps
                         </button>
                       </div>
-                      <p className={`px-3 py-2 text-xs ${themeClasses.text.muted}`}>{selectedProject.address}</p>
-                      <div className="h-32 bg-gray-100 overflow-hidden">
-                        <iframe
-                          src={`https://www.google.com/maps?q=${encodeURIComponent(selectedProject.address)}&output=embed&z=15`}
-                          width="100%"
-                          height="100%"
-                          style={{ border: 0, maxWidth: '100%' }}
-                          allowFullScreen
-                          loading="lazy"
-                          referrerPolicy="no-referrer-when-downgrade"
-                        />
-                      </div>
+                      <button
+                        onClick={() => window.open(`maps://maps.apple.com/?q=${encodeURIComponent(selectedProject.address)}`, '_blank')}
+                        className="w-full text-left"
+                      >
+                        <p className={`px-3 py-2 text-xs ${themeClasses.text.muted}`}>{selectedProject.address}</p>
+                        <div className={`h-32 flex items-center justify-center ${theme === 'light' ? 'bg-gray-100' : 'bg-zinc-700'}`}>
+                          <div className="text-center">
+                            <MapPin className={`w-8 h-8 mx-auto mb-2 ${theme === 'light' ? 'text-red-500' : 'text-red-400'}`} />
+                            <p className={`text-xs font-medium ${themeClasses.text.muted}`}>Tap to open in Apple Maps</p>
+                          </div>
+                        </div>
+                      </button>
                     </div>
                   );
                 }
@@ -1551,7 +1525,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                             setNewTask({ ...newTask, client_id: '' });
                             setShowClientSelect(false);
                           }}
-                          className={`w-full px-4 py-4 text-left text-base ${themeClasses.text.muted} ${themeClasses.hover.bg} ${!newTask.client_id ? 'bg-[#043d6b]/20' : ''}`}
+                          className={`w-full px-4 py-4 text-left text-base ${themeClasses.text.muted} ${themeClasses.hover.bg} ${!newTask.client_id ? 'bg-theme/20' : ''}`}
                         >
                           No client selected
                         </button>
@@ -1567,7 +1541,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                                 setNewTask({ ...newTask, client_id: c.id });
                                 setShowClientSelect(false);
                               }}
-                              className={`w-full px-4 py-4 text-left ${themeClasses.text.primary} ${themeClasses.hover.bg} ${newTask.client_id === c.id ? 'bg-[#043d6b]/20' : ''}`}
+                              className={`w-full px-4 py-4 text-left ${themeClasses.text.primary} ${themeClasses.hover.bg} ${newTask.client_id === c.id ? 'bg-theme/20' : ''}`}
                             >
                               <span className="text-base font-medium">{displayName}</span>
                               {displayName !== c.email && c.email && (
@@ -1585,7 +1559,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                     <button
                       type="button"
                       onClick={() => setShowAddClient(true)}
-                      className="flex items-center gap-2 text-[#043d6b] text-sm font-medium"
+                      className="flex items-center gap-2 text-theme text-sm font-medium"
                     >
                       <Plus className="w-4 h-4" />
                       Add New Client
@@ -1663,7 +1637,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                             }
                           }
                         }}
-                        className="flex-1 py-2 bg-[#043d6b] text-white rounded-lg font-medium text-sm"
+                        className="flex-1 py-2 bg-theme text-white rounded-lg font-medium text-sm"
                       >
                         Create Client
                       </button>
@@ -1715,7 +1689,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                                 setNewTask(prev => ({ ...prev, assigned_employees: prev.assigned_employees.filter(n => n !== emp.name) }));
                               }
                             }}
-                            className="w-4 h-4 rounded border-gray-300 text-[#043d6b] focus:ring-[#043d6b]"
+                            className="w-4 h-4 rounded border-gray-300 text-theme focus:ring-theme"
                           />
                           <span className={`text-sm ${themeClasses.text.primary}`}>{emp.name}</span>
                           {emp.job_title && <span className={`text-xs ${themeClasses.text.muted}`}>({emp.job_title})</span>}
@@ -1729,12 +1703,12 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                 {newTask.assigned_employees.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-2">
                     {newTask.assigned_employees.map((name) => (
-                      <span key={name} className="inline-flex items-center gap-1 px-3 py-1 bg-[#043d6b]/20 text-[#043d6b] rounded-full text-sm">
+                      <span key={name} className="inline-flex items-center gap-1 px-3 py-1 bg-theme/20 text-theme rounded-full text-sm">
                         {name}
                         <button
                           type="button"
                           onClick={() => setNewTask(prev => ({ ...prev, assigned_employees: prev.assigned_employees.filter(n => n !== name) }))}
-                          className="hover:text-[#043d6b]"
+                          className="hover:text-theme"
                         >
                           <X className="w-3 h-3" />
                         </button>
@@ -1752,10 +1726,10 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                   className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} flex items-center justify-between`}
                 >
                   <div className="flex items-center gap-2">
-                    <FileText className="w-5 h-5 text-[#043d6b]" />
+                    <FileText className="w-5 h-5 text-theme" />
                     <span>Estimate & Line Items</span>
                     {newTask.line_items.length > 0 && (
-                      <span className="px-2 py-0.5 bg-[#043d6b] text-white rounded-full text-xs">{newTask.line_items.length}</span>
+                      <span className="px-2 py-0.5 bg-theme text-white rounded-full text-xs">{newTask.line_items.length}</span>
                     )}
                   </div>
                   {showLineItems ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
@@ -1768,7 +1742,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                       <button
                         type="button"
                         onClick={() => setShowInlineAI(false)}
-                        className={`flex-1 py-2 px-3 ${!showInlineAI ? 'bg-[#043d6b] text-white' : `${themeClasses.bg.tertiary} ${themeClasses.text.primary}`} rounded-lg text-sm font-medium flex items-center justify-center gap-2`}
+                        className={`flex-1 py-2 px-3 ${!showInlineAI ? 'bg-theme text-white' : `${themeClasses.bg.tertiary} ${themeClasses.text.primary}`} rounded-lg text-sm font-medium flex items-center justify-center gap-2`}
                       >
                         <Calculator className="w-4 h-4" />
                         Line Items
@@ -1776,7 +1750,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                       <button
                         type="button"
                         onClick={() => setShowInlineAI(true)}
-                        className={`flex-1 py-2 px-3 ${showInlineAI ? 'bg-[#043d6b] text-white' : `${themeClasses.bg.tertiary} ${themeClasses.text.primary}`} rounded-lg text-sm font-medium flex items-center justify-center gap-2`}
+                        className={`flex-1 py-2 px-3 ${showInlineAI ? 'bg-theme text-white' : `${themeClasses.bg.tertiary} ${themeClasses.text.primary}`} rounded-lg text-sm font-medium flex items-center justify-center gap-2`}
                       >
                         <Sparkles className="w-4 h-4" />
                         AI Estimate
@@ -1849,7 +1823,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                                 setAiLoading(false);
                               }
                             }}
-                            className={`mt-2 w-full py-2.5 px-4 bg-[#043d6b] text-white rounded-lg text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+                            className={`mt-2 w-full py-2.5 px-4 bg-theme text-white rounded-lg text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed`}
                           >
                             {aiLoading ? (
                               <>
@@ -1940,7 +1914,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                         };
                         setNewTask(prev => ({ ...prev, line_items: [...prev.line_items, newItem] }));
                       }}
-                      className="flex items-center gap-2 text-[#043d6b] text-sm font-medium"
+                      className="flex items-center gap-2 text-theme text-sm font-medium"
                     >
                       <Plus className="w-4 h-4" />
                       Add Line Item
@@ -1965,7 +1939,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                         </div>
                         <div className={`flex justify-between font-semibold mt-2 pt-2 border-t ${themeClasses.border.primary}`}>
                           <span className={themeClasses.text.primary}>Total</span>
-                          <span className="text-[#043d6b]">
+                          <span className="text-theme">
                             ${(newTask.line_items.reduce((sum, item) => sum + item.total, 0) * 1.08).toFixed(2)}
                           </span>
                         </div>
@@ -2035,7 +2009,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                 <button
                   onClick={handleUpdateTask}
                   disabled={!editTask.title.trim()}
-                  className={`text-[#043d6b] text-base font-semibold active:text-[#035291] disabled:${themeClasses.text.muted}`}
+                  className={`text-theme text-base font-semibold active:text-[#035291] disabled:${themeClasses.text.muted}`}
                 >
                   Save
                 </button>
@@ -2052,7 +2026,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                   type="text"
                   value={editTask.title}
                   onChange={(e) => setEditTask({ ...editTask, title: e.target.value })}
-                  className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                  className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none`}
                   placeholder="What needs to be done?"
                 />
               </div>
@@ -2068,7 +2042,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                       className={`flex-1 py-2 rounded-xl font-medium text-sm transition-colors ${
                         editTask.status === s
                           ? s === 'done' ? 'bg-green-500 text-white'
-                            : s === 'in-progress' ? 'bg-[#043d6b] text-white'
+                            : s === 'in-progress' ? 'bg-theme text-white'
                             : 'bg-zinc-500 text-white'
                           : `${themeClasses.bg.input} ${themeClasses.text.secondary}`
                       }`}
@@ -2088,7 +2062,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                   className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} flex items-center justify-between`}
                 >
                   <div className="flex items-center gap-2">
-                    <CalendarIcon className="w-5 h-5 text-[#043d6b]" />
+                    <CalendarIcon className="w-5 h-5 text-theme" />
                     <span className={editTask.due_date ? themeClasses.text.primary : themeClasses.text.muted}>
                       {editTask.due_date
                         ? `${format(parseISO(editTask.due_date), 'MMM d, yyyy')} at ${editTask.due_time || '09:00'}`
@@ -2126,7 +2100,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                           const ds = format(cd, 'yyyy-MM-dd');
                           days.push(
                             <button key={ds} type="button" onClick={() => setEditTask(prev => ({ ...prev, due_date: ds }))}
-                              className={`aspect-square flex items-center justify-center text-sm rounded-lg transition-colors ${isSel ? 'bg-[#043d6b] text-white font-semibold' : isTod ? `${themeClasses.bg.tertiary} ${themeClasses.text.primary} font-semibold` : isCur ? `${themeClasses.text.primary} ${themeClasses.hover.bg}` : `${themeClasses.text.muted} opacity-50`}`}
+                              className={`aspect-square flex items-center justify-center text-sm rounded-lg transition-colors ${isSel ? 'bg-theme text-white font-semibold' : isTod ? `${themeClasses.bg.tertiary} ${themeClasses.text.primary} font-semibold` : isCur ? `${themeClasses.text.primary} ${themeClasses.hover.bg}` : `${themeClasses.text.muted} opacity-50`}`}
                             >{format(cd, 'd')}</button>
                           );
                           d = addDays(d, 1);
@@ -2136,11 +2110,11 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                     </div>
                     <div className="flex gap-2 mt-4 pt-3 border-t border-dashed" style={{ borderColor: theme === 'light' ? '#e5e7eb' : '#3f3f46' }}>
                       <button type="button" onClick={() => setEditTask(prev => ({ ...prev, due_date: format(new Date(), 'yyyy-MM-dd') }))}
-                        className={`flex-1 py-2 text-xs font-medium rounded-lg ${editTask.due_date === format(new Date(), 'yyyy-MM-dd') ? 'bg-[#043d6b] text-white' : `${themeClasses.bg.tertiary} ${themeClasses.text.secondary}`}`}>Today</button>
+                        className={`flex-1 py-2 text-xs font-medium rounded-lg ${editTask.due_date === format(new Date(), 'yyyy-MM-dd') ? 'bg-theme text-white' : `${themeClasses.bg.tertiary} ${themeClasses.text.secondary}`}`}>Today</button>
                       <button type="button" onClick={() => setEditTask(prev => ({ ...prev, due_date: format(addDays(new Date(), 1), 'yyyy-MM-dd') }))}
-                        className={`flex-1 py-2 text-xs font-medium rounded-lg ${editTask.due_date === format(addDays(new Date(), 1), 'yyyy-MM-dd') ? 'bg-[#043d6b] text-white' : `${themeClasses.bg.tertiary} ${themeClasses.text.secondary}`}`}>Tomorrow</button>
+                        className={`flex-1 py-2 text-xs font-medium rounded-lg ${editTask.due_date === format(addDays(new Date(), 1), 'yyyy-MM-dd') ? 'bg-theme text-white' : `${themeClasses.bg.tertiary} ${themeClasses.text.secondary}`}`}>Tomorrow</button>
                       <button type="button" onClick={() => setEditTask(prev => ({ ...prev, due_date: format(addDays(new Date(), 7), 'yyyy-MM-dd') }))}
-                        className={`flex-1 py-2 text-xs font-medium rounded-lg ${editTask.due_date === format(addDays(new Date(), 7), 'yyyy-MM-dd') ? 'bg-[#043d6b] text-white' : `${themeClasses.bg.tertiary} ${themeClasses.text.secondary}`}`}>Next Week</button>
+                        className={`flex-1 py-2 text-xs font-medium rounded-lg ${editTask.due_date === format(addDays(new Date(), 7), 'yyyy-MM-dd') ? 'bg-theme text-white' : `${themeClasses.bg.tertiary} ${themeClasses.text.secondary}`}`}>Next Week</button>
                     </div>
                     {editTask.due_date && (
                       <div className="mt-4 pt-3 border-t border-dashed" style={{ borderColor: theme === 'light' ? '#e5e7eb' : '#3f3f46' }}>
@@ -2148,7 +2122,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                         <div className="grid grid-cols-4 gap-2">
                           {['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00'].map((time) => (
                             <button key={time} type="button" onClick={() => setEditTask(prev => ({ ...prev, due_time: time }))}
-                              className={`py-2 text-xs font-medium rounded-lg transition-colors ${editTask.due_time === time ? 'bg-[#043d6b] text-white' : `${themeClasses.bg.tertiary} ${themeClasses.text.secondary} ${themeClasses.hover.bg}`}`}
+                              className={`py-2 text-xs font-medium rounded-lg transition-colors ${editTask.due_time === time ? 'bg-theme text-white' : `${themeClasses.bg.tertiary} ${themeClasses.text.secondary} ${themeClasses.hover.bg}`}`}
                             >{format(new Date(`2000-01-01T${time}`), 'h:mm a')}</button>
                           ))}
                         </div>
@@ -2164,7 +2138,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                 <select
                   value={editTask.project_id}
                   onChange={(e) => setEditTask({ ...editTask, project_id: e.target.value })}
-                  className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                  className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none`}
                 >
                   <option value="">Select a project...</option>
                   {projects.map((p) => (
@@ -2187,27 +2161,26 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                         <button
                           type="button"
                           onClick={() => {
-                            const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedProject.address)}`;
-                            window.open(url, '_blank');
+                            window.open(`maps://maps.apple.com/?q=${encodeURIComponent(selectedProject.address)}`, '_blank');
                           }}
-                          className="flex items-center gap-1 px-2 py-1 bg-[#043d6b]/20 text-[#043d6b] rounded-lg text-xs font-medium"
+                          className="flex items-center gap-1 px-2 py-1 bg-theme/20 text-theme rounded-lg text-xs font-medium"
                         >
                           <ExternalLink className="w-3 h-3" />
-                          Open
+                          Open in Maps
                         </button>
                       </div>
-                      <p className={`px-3 py-2 text-xs ${themeClasses.text.muted}`}>{selectedProject.address}</p>
-                      <div className="h-32 bg-gray-100 overflow-hidden">
-                        <iframe
-                          src={`https://www.google.com/maps?q=${encodeURIComponent(selectedProject.address)}&output=embed&z=15`}
-                          width="100%"
-                          height="100%"
-                          style={{ border: 0, maxWidth: '100%' }}
-                          allowFullScreen
-                          loading="lazy"
-                          referrerPolicy="no-referrer-when-downgrade"
-                        />
-                      </div>
+                      <button
+                        onClick={() => window.open(`maps://maps.apple.com/?q=${encodeURIComponent(selectedProject.address)}`, '_blank')}
+                        className="w-full text-left"
+                      >
+                        <p className={`px-3 py-2 text-xs ${themeClasses.text.muted}`}>{selectedProject.address}</p>
+                        <div className={`h-32 flex items-center justify-center ${theme === 'light' ? 'bg-gray-100' : 'bg-zinc-700'}`}>
+                          <div className="text-center">
+                            <MapPin className={`w-8 h-8 mx-auto mb-2 ${theme === 'light' ? 'text-red-500' : 'text-red-400'}`} />
+                            <p className={`text-xs font-medium ${themeClasses.text.muted}`}>Tap to open in Apple Maps</p>
+                          </div>
+                        </div>
+                      </button>
                     </div>
                   );
                 }
@@ -2220,7 +2193,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                 <select
                   value={editTask.client_id}
                   onChange={(e) => setEditTask({ ...editTask, client_id: e.target.value })}
-                  className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                  className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none`}
                 >
                   <option value="">Select a client (optional)...</option>
                   {clients.map((c) => {
@@ -2247,7 +2220,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                       });
                     }
                   }}
-                  className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                  className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none`}
                 >
                   <option value="">Select employees...</option>
                   {employees.map((emp) => (
@@ -2259,7 +2232,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                 {editTask.assigned_employees && editTask.assigned_employees.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-2">
                     {editTask.assigned_employees.map((name) => (
-                      <span key={name} className="inline-flex items-center gap-1 px-3 py-1 bg-[#043d6b]/20 text-[#043d6b] rounded-full text-sm">
+                      <span key={name} className="inline-flex items-center gap-1 px-3 py-1 bg-theme/20 text-theme rounded-full text-sm">
                         {name}
                         <button
                           type="button"
@@ -2267,7 +2240,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                             ...editTask,
                             assigned_employees: editTask.assigned_employees?.filter(n => n !== name) || []
                           })}
-                          className="hover:text-[#043d6b]"
+                          className="hover:text-theme"
                         >
                           <X className="w-3 h-3" />
                         </button>
@@ -2300,7 +2273,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                       type="button"
                       onClick={() => setEditTask({ ...editTask, reminder_enabled: !editTask.reminder_enabled })}
                       className={`w-12 h-7 rounded-full transition-colors ${
-                        editTask.reminder_enabled ? 'bg-[#043d6b]' : theme === 'light' ? 'bg-gray-300' : 'bg-zinc-600'
+                        editTask.reminder_enabled ? 'bg-theme' : theme === 'light' ? 'bg-gray-300' : 'bg-zinc-600'
                       }`}
                     >
                       <div className={`w-5 h-5 rounded-full shadow transition-transform ${
@@ -2327,7 +2300,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                               onClick={() => setEditTask({ ...editTask, reminder_minutes: opt.value })}
                               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                                 editTask.reminder_minutes === opt.value
-                                  ? 'bg-[#043d6b] text-white'
+                                  ? 'bg-theme text-white'
                                   : `${themeClasses.bg.secondary} ${themeClasses.text.secondary}`
                               }`}
                             >
@@ -2356,7 +2329,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                                 opt.disabled
                                   ? `${themeClasses.bg.secondary} ${themeClasses.text.muted} opacity-50 cursor-not-allowed`
                                   : editTask.reminder_recipients === opt.value
-                                    ? 'bg-[#043d6b] text-white'
+                                    ? 'bg-theme text-white'
                                     : `${themeClasses.bg.secondary} ${themeClasses.text.secondary}`
                               }`}
                             >
@@ -2375,7 +2348,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                             onClick={() => setEditTask({ ...editTask, reminder_push: !editTask.reminder_push })}
                             className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                               editTask.reminder_push
-                                ? 'bg-[#043d6b]/20 text-[#043d6b] border border-[#043d6b]/50'
+                                ? 'bg-theme/20 text-theme border border-theme/50'
                                 : `${themeClasses.bg.secondary} ${themeClasses.text.secondary} border ${themeClasses.border.input}`
                             }`}
                           >
@@ -2388,7 +2361,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                             onClick={() => setEditTask({ ...editTask, reminder_email: !editTask.reminder_email })}
                             className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                               editTask.reminder_email
-                                ? 'bg-[#043d6b]/20 text-[#043d6b] border border-[#043d6b]/50'
+                                ? 'bg-theme/20 text-theme border border-theme/50'
                                 : `${themeClasses.bg.secondary} ${themeClasses.text.secondary} border ${themeClasses.border.input}`
                             }`}
                           >
@@ -2411,10 +2384,10 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                   className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} flex items-center justify-between`}
                 >
                   <div className="flex items-center gap-2">
-                    <FileText className="w-5 h-5 text-[#043d6b]" />
+                    <FileText className="w-5 h-5 text-theme" />
                     <span>Estimate & Line Items</span>
                     {editTask.line_items && editTask.line_items.length > 0 && (
-                      <span className="px-2 py-0.5 bg-[#043d6b] text-white rounded-full text-xs">{editTask.line_items.length}</span>
+                      <span className="px-2 py-0.5 bg-theme text-white rounded-full text-xs">{editTask.line_items.length}</span>
                     )}
                   </div>
                   {showEditLineItems ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
@@ -2427,7 +2400,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                       <button
                         type="button"
                         onClick={() => setShowEditInlineAI(false)}
-                        className={`flex-1 py-2 px-3 ${!showEditInlineAI ? 'bg-[#043d6b] text-white' : `${themeClasses.bg.tertiary} ${themeClasses.text.primary}`} rounded-lg text-sm font-medium flex items-center justify-center gap-2`}
+                        className={`flex-1 py-2 px-3 ${!showEditInlineAI ? 'bg-theme text-white' : `${themeClasses.bg.tertiary} ${themeClasses.text.primary}`} rounded-lg text-sm font-medium flex items-center justify-center gap-2`}
                       >
                         <Calculator className="w-4 h-4" />
                         Line Items
@@ -2435,7 +2408,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                       <button
                         type="button"
                         onClick={() => setShowEditInlineAI(true)}
-                        className={`flex-1 py-2 px-3 ${showEditInlineAI ? 'bg-[#043d6b] text-white' : `${themeClasses.bg.tertiary} ${themeClasses.text.primary}`} rounded-lg text-sm font-medium flex items-center justify-center gap-2`}
+                        className={`flex-1 py-2 px-3 ${showEditInlineAI ? 'bg-theme text-white' : `${themeClasses.bg.tertiary} ${themeClasses.text.primary}`} rounded-lg text-sm font-medium flex items-center justify-center gap-2`}
                       >
                         <Sparkles className="w-4 h-4" />
                         AI Estimate
@@ -2507,7 +2480,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                                 setEditAiLoading(false);
                               }
                             }}
-                            className={`mt-2 w-full py-2.5 px-4 bg-[#043d6b] text-white rounded-lg text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+                            className={`mt-2 w-full py-2.5 px-4 bg-theme text-white rounded-lg text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed`}
                           >
                             {editAiLoading ? (
                               <>
@@ -2598,7 +2571,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                         };
                         setEditTask(prev => ({ ...prev, line_items: [...(prev.line_items || []), newItem] }));
                       }}
-                      className="flex items-center gap-2 text-[#043d6b] text-sm font-medium"
+                      className="flex items-center gap-2 text-theme text-sm font-medium"
                     >
                       <Plus className="w-4 h-4" />
                       Add Line Item
@@ -2623,7 +2596,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                         </div>
                         <div className={`flex justify-between font-semibold mt-2 pt-2 border-t ${themeClasses.border.primary}`}>
                           <span className={themeClasses.text.primary}>Total</span>
-                          <span className="text-[#043d6b]">
+                          <span className="text-theme">
                             ${(editTask.line_items.reduce((sum, item) => sum + item.total, 0) * 1.08).toFixed(2)}
                           </span>
                         </div>
@@ -2675,7 +2648,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
             onClick={() => setShowNewProjectModal(false)}
           />
           <div className={`relative ${themeClasses.bg.modal} rounded-t-3xl w-full max-h-[90vh] overflow-y-auto animate-slide-up pb-safe`}>
-            <div className={`sticky top-0 ${themeClasses.bg.modal} px-4 py-4 border-b border-[#043d6b]/30 flex items-center justify-between z-10`}>
+            <div className={`sticky top-0 ${themeClasses.bg.modal} px-4 py-4 border-b border-theme/30 flex items-center justify-between z-10`}>
               <button
                 onClick={() => setShowNewProjectModal(false)}
                 className={`${themeClasses.text.secondary} text-base font-medium ${themeClasses.hover.text}`}
@@ -2693,7 +2666,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                   value={newProjectFormData.name}
                   onChange={(e) => setNewProjectFormData({ ...newProjectFormData, name: e.target.value })}
                   placeholder="e.g., Kitchen Renovation"
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${themeClasses.focus.border} focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${themeClasses.focus.border} focus:ring-2 focus:ring-theme/20 outline-none`}
                 />
               </div>
 
@@ -2712,7 +2685,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                           client: selectedClient?.name || selectedClient?.email || ''
                         });
                       }}
-                      className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${themeClasses.focus.border} focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                      className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${themeClasses.focus.border} focus:ring-2 focus:ring-theme/20 outline-none`}
                     >
                       <option value="">Select a client (optional)...</option>
                       {clients.map((c) => (
@@ -2722,7 +2695,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                     <button
                       type="button"
                       onClick={() => setShowNpAddClient(true)}
-                      className="flex items-center gap-2 text-[#043d6b] text-sm font-medium"
+                      className="flex items-center gap-2 text-theme text-sm font-medium"
                     >
                       <Plus className="w-4 h-4" />
                       Add New Client
@@ -2803,7 +2776,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                             }
                           }
                         }}
-                        className="flex-1 py-2 bg-[#043d6b] text-white rounded-lg font-medium text-sm"
+                        className="flex-1 py-2 bg-theme text-white rounded-lg font-medium text-sm"
                       >
                         Create Client
                       </button>
@@ -2829,7 +2802,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                   value={newProjectFormData.address}
                   onChange={(e) => setNewProjectFormData({ ...newProjectFormData, address: e.target.value })}
                   placeholder="e.g., 123 Main St, City, State 12345"
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${themeClasses.focus.border} focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${themeClasses.focus.border} focus:ring-2 focus:ring-theme/20 outline-none`}
                 />
               </div>
 
@@ -2840,7 +2813,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                   onChange={(e) => setNewProjectFormData({ ...newProjectFormData, description: e.target.value })}
                   placeholder="Brief description of the project..."
                   rows={3}
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${themeClasses.focus.border} focus:ring-2 focus:ring-[#043d6b]/20 outline-none resize-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${themeClasses.focus.border} focus:ring-2 focus:ring-theme/20 outline-none resize-none`}
                 />
               </div>
 
@@ -2853,7 +2826,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                     value={newProjectFormData.budget}
                     onChange={(e) => setNewProjectFormData({ ...newProjectFormData, budget: e.target.value })}
                     placeholder="0"
-                    className={`w-full pl-8 pr-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${themeClasses.focus.border} focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                    className={`w-full pl-8 pr-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${themeClasses.focus.border} focus:ring-2 focus:ring-theme/20 outline-none`}
                   />
                 </div>
               </div>
@@ -2867,7 +2840,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                   className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} flex items-center justify-between`}
                 >
                   <div className="flex items-center gap-2">
-                    <CalendarIcon className="w-5 h-5 text-[#043d6b]" />
+                    <CalendarIcon className="w-5 h-5 text-theme" />
                     <span className={newProjectFormData.startDate ? themeClasses.text.primary : themeClasses.text.muted}>
                       {newProjectFormData.startDate
                         ? format(parseISO(newProjectFormData.startDate), 'MMM d, yyyy')
@@ -2904,7 +2877,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                           const ds = format(cd, 'yyyy-MM-dd');
                           days.push(
                             <button key={ds} type="button" onClick={() => { setNewProjectFormData(prev => ({ ...prev, startDate: ds })); setNpStartDatePicker(false); }}
-                              className={`aspect-square flex items-center justify-center text-sm rounded-lg transition-colors ${isSel ? 'bg-[#043d6b] text-white font-semibold' : isTod ? `${themeClasses.bg.tertiary} ${themeClasses.text.primary} font-semibold` : isCur ? `${themeClasses.text.primary} ${themeClasses.hover.bg}` : `${themeClasses.text.muted} opacity-50`}`}
+                              className={`aspect-square flex items-center justify-center text-sm rounded-lg transition-colors ${isSel ? 'bg-theme text-white font-semibold' : isTod ? `${themeClasses.bg.tertiary} ${themeClasses.text.primary} font-semibold` : isCur ? `${themeClasses.text.primary} ${themeClasses.hover.bg}` : `${themeClasses.text.muted} opacity-50`}`}
                             >{format(cd, 'd')}</button>
                           );
                           d = addDays(d, 1);
@@ -2989,7 +2962,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                 <select
                   value={newProjectFormData.status}
                   onChange={(e) => setNewProjectFormData({ ...newProjectFormData, status: e.target.value as 'active' | 'completed' | 'on-hold' })}
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${themeClasses.focus.border} focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${themeClasses.focus.border} focus:ring-2 focus:ring-theme/20 outline-none`}
                 >
                   <option value="active">Active</option>
                   <option value="on-hold">On Hold</option>
@@ -3032,7 +3005,7 @@ const TodoHub: React.FC<TodoHubProps> = ({ embedded = false, searchQuery: extern
                     }
                   }}
                   disabled={!newProjectFormData.name.trim() || isCreatingProject}
-                  className="w-full py-4 text-base font-medium rounded-2xl text-white bg-[#043d6b] hover:bg-[#035291] disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2"
+                  className="w-full py-4 text-base font-medium rounded-2xl text-white bg-theme hover:bg-[#035291] disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2"
                 >
                   <Plus className="w-5 h-5" />
                   {isCreatingProject ? 'Saving...' : 'Add Project'}

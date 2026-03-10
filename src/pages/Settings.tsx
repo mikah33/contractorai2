@@ -651,32 +651,32 @@ const Settings = () => {
     {
       title: 'Account',
       items: [
-        { id: 'profile' as SettingsSection, icon: User, label: 'Profile & Business', description: 'Name, company, logo, terms', iconColor: 'text-[#043d6b]' },
-        { id: 'security' as SettingsSection, icon: Lock, label: 'Security', description: 'Password, authentication', iconColor: 'text-[#043d6b]' },
-        { id: 'team' as SettingsSection, icon: Users, label: 'Team', description: 'Manage your employees', iconColor: 'text-[#043d6b]', navigateTo: '/employees-hub' },
+        { id: 'profile' as SettingsSection, icon: User, label: 'Profile & Business', description: 'Name, company, logo, terms', iconColor: 'text-theme' },
+        { id: 'security' as SettingsSection, icon: Lock, label: 'Security', description: 'Password, authentication', iconColor: 'text-theme' },
+        { id: 'team' as SettingsSection, icon: Users, label: 'Team', description: 'Manage your employees', iconColor: 'text-theme', navigateTo: '/employees-hub' },
       ]
     },
     {
       title: 'Integrations',
       items: [
-        { id: 'payments' as SettingsSection, icon: CreditCard, label: 'Payments', description: stripeStatus.connected ? 'Stripe connected' : 'Connect Stripe', iconColor: 'text-[#043d6b]' },
-        { id: 'email' as SettingsSection, icon: Mail, label: 'Business Email', description: 'Professional email address', iconColor: 'text-[#043d6b]' },
+        { id: 'payments' as SettingsSection, icon: CreditCard, label: 'Payments', description: stripeStatus.connected ? 'Stripe connected' : 'Connect Stripe', iconColor: 'text-theme' },
+        { id: 'email' as SettingsSection, icon: Mail, label: 'Business Email', description: 'Professional email address', iconColor: 'text-theme' },
         { id: 'facebookLeads' as SettingsSection, icon: Facebook, label: 'Facebook Lead Ads', description: 'Capture leads from Facebook', iconColor: 'text-[#1877F2]' },
-        { id: 'websiteLeads' as SettingsSection, icon: Globe, label: 'Website Leads', description: 'Capture leads from your website', iconColor: 'text-[#043d6b]' },
+        { id: 'websiteLeads' as SettingsSection, icon: Globe, label: 'Website Leads', description: 'Capture leads from your website', iconColor: 'text-theme' },
       ]
     },
     {
       title: 'Preferences',
       items: [
-        { id: 'notifications' as SettingsSection, icon: Bell, label: 'Notifications', description: 'Calendar reminders, alerts', iconColor: 'text-[#043d6b]' },
-        { id: 'theme' as SettingsSection, icon: Moon, label: 'Appearance', description: theme === 'light' ? 'Light mode' : 'Dark mode', iconColor: 'text-[#043d6b]', hasToggle: true },
+        { id: 'notifications' as SettingsSection, icon: Bell, label: 'Notifications', description: 'Calendar reminders, alerts', iconColor: 'text-theme' },
+        { id: 'theme' as SettingsSection, icon: Moon, label: 'Appearance', description: theme === 'light' ? 'Light mode' : 'Dark mode', iconColor: 'text-theme', hasToggle: true },
       ]
     },
     {
       title: 'More',
       items: [
-        { id: 'marketing' as SettingsSection, icon: Megaphone, label: 'Marketing', description: 'Grow your business', iconColor: 'text-[#043d6b]', navigateTo: '/ad-analyzer' },
-        { id: 'chatHistory' as SettingsSection, icon: History, label: 'AI Chat History', description: 'View past conversations', iconColor: 'text-[#043d6b]' },
+        { id: 'marketing' as SettingsSection, icon: Megaphone, label: 'Marketing', description: 'Grow your business', iconColor: 'text-theme', navigateTo: '/ad-analyzer' },
+        { id: 'chatHistory' as SettingsSection, icon: History, label: 'AI Chat History', description: 'View past conversations', iconColor: 'text-theme' },
       ]
     },
   ];
@@ -775,7 +775,7 @@ const Settings = () => {
                   </div>
                 )}
                 <label className="flex-1 cursor-pointer">
-                  <div className="px-4 py-2.5 bg-[#043d6b]/20 rounded-lg text-center font-medium text-[#043d6b] hover:bg-[#035291]/20 active:scale-95 transition-transform">
+                  <div className="px-4 py-2.5 bg-theme/20 rounded-lg text-center font-medium text-theme hover:bg-[#035291]/20 active:scale-95 transition-transform">
                     {uploadingLogo ? 'Uploading...' : logoUrl ? 'Change' : 'Upload'}
                   </div>
                   <input
@@ -821,8 +821,8 @@ const Settings = () => {
             <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-[#043d6b]/20 rounded-lg flex items-center justify-center">
-                    <Calendar className="w-5 h-5 text-[#043d6b]" />
+                  <div className="w-10 h-10 bg-theme/20 rounded-lg flex items-center justify-center">
+                    <Calendar className="w-5 h-5 text-theme" />
                   </div>
                   <div>
                     <p className={`font-semibold ${themeClasses.text.primary}`}>Calendar Reminders</p>
@@ -832,7 +832,7 @@ const Settings = () => {
                 <button
                   onClick={() => handleNotificationChange('calendarReminders')}
                   className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
-                    notifications.calendarReminders ? 'bg-[#043d6b] hover:bg-[#035291]' : 'bg-zinc-700'
+                    notifications.calendarReminders ? 'bg-theme hover:bg-[#035291]' : 'bg-zinc-700'
                   }`}
                 >
                   <span
@@ -848,8 +848,8 @@ const Settings = () => {
             <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-[#043d6b]/20 rounded-lg flex items-center justify-center">
-                    <AlertTriangle className="w-5 h-5 text-[#043d6b]" />
+                  <div className="w-10 h-10 bg-theme/20 rounded-lg flex items-center justify-center">
+                    <AlertTriangle className="w-5 h-5 text-theme" />
                   </div>
                   <div>
                     <p className={`font-semibold ${themeClasses.text.primary}`}>Security Alerts</p>
@@ -859,7 +859,7 @@ const Settings = () => {
                 <button
                   onClick={() => handleNotificationChange('securityAlerts')}
                   className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
-                    notifications.securityAlerts ? 'bg-[#043d6b] hover:bg-[#035291]' : 'bg-zinc-700'
+                    notifications.securityAlerts ? 'bg-theme hover:bg-[#035291]' : 'bg-zinc-700'
                   }`}
                 >
                   <span
@@ -899,7 +899,7 @@ const Settings = () => {
                 <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <CheckCircle className="w-5 h-5 text-[#043d6b]" />
+                      <CheckCircle className="w-5 h-5 text-theme" />
                       <span className={`font-semibold ${themeClasses.text.primary}`}>Stripe Connected</span>
                     </div>
                     <button
@@ -920,13 +920,13 @@ const Settings = () => {
 
                   <div className="flex gap-3">
                     <span className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${
-                      stripeStatus.chargesEnabled ? 'bg-[#043d6b]/20 text-[#043d6b]' : `${themeClasses.bg.secondary} ${themeClasses.text.secondary}`
+                      stripeStatus.chargesEnabled ? 'bg-theme/20 text-theme' : `${themeClasses.bg.secondary} ${themeClasses.text.secondary}`
                     }`}>
                       {stripeStatus.chargesEnabled ? <CheckCircle className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
                       {stripeStatus.chargesEnabled ? 'Charges Active' : 'Charges Pending'}
                     </span>
                     <span className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${
-                      stripeStatus.payoutsEnabled ? 'bg-[#043d6b]/20 text-[#043d6b]' : `${themeClasses.bg.secondary} ${themeClasses.text.secondary}`
+                      stripeStatus.payoutsEnabled ? 'bg-theme/20 text-theme' : `${themeClasses.bg.secondary} ${themeClasses.text.secondary}`
                     }`}>
                       {stripeStatus.payoutsEnabled ? <CheckCircle className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
                       {stripeStatus.payoutsEnabled ? 'Payouts Active' : 'Payouts Pending'}
@@ -958,8 +958,8 @@ const Settings = () => {
                 {/* Not Connected Info */}
                 <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-5`}>
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 bg-[#043d6b]/20 rounded-lg flex items-center justify-center">
-                      <CreditCard className="w-6 h-6 text-[#043d6b]" />
+                    <div className="w-12 h-12 bg-theme/20 rounded-lg flex items-center justify-center">
+                      <CreditCard className="w-6 h-6 text-theme" />
                     </div>
                     <div>
                       <p className={`font-semibold ${themeClasses.text.primary}`}>Accept Payments Online</p>
@@ -970,7 +970,7 @@ const Settings = () => {
                   <ul className="space-y-2 mb-4">
                     {['Accept credit card payments', 'Send payment links to customers', 'Get paid faster online', 'Track payments in one place'].map((item, i) => (
                       <li key={i} className={`flex items-center gap-2 text-sm ${themeClasses.text.secondary}`}>
-                        <CheckCircle className="w-4 h-4 text-[#043d6b]" />
+                        <CheckCircle className="w-4 h-4 text-theme" />
                         {item}
                       </li>
                     ))}
@@ -1007,8 +1007,8 @@ const Settings = () => {
               className={`w-full ${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4 active:scale-[0.98] transition-transform`}
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-[#043d6b]/20 rounded-lg flex items-center justify-center">
-                  <Lock className="w-5 h-5 text-[#043d6b]" />
+                <div className="w-10 h-10 bg-theme/20 rounded-lg flex items-center justify-center">
+                  <Lock className="w-5 h-5 text-theme" />
                 </div>
                 <div className="flex-1 text-left">
                   <p className={`font-semibold ${themeClasses.text.primary}`}>Change Password</p>
@@ -1020,8 +1020,8 @@ const Settings = () => {
 
             <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-[#043d6b]/20 rounded-lg flex items-center justify-center">
-                  <CheckCircle className="w-5 h-5 text-[#043d6b]" />
+                <div className="w-10 h-10 bg-theme/20 rounded-lg flex items-center justify-center">
+                  <CheckCircle className="w-5 h-5 text-theme" />
                 </div>
                 <div className="flex-1">
                   <p className={`font-semibold ${themeClasses.text.primary}`}>Email Verified</p>
@@ -1053,13 +1053,13 @@ const Settings = () => {
                     }
                   }}
                   className={`w-full flex items-center gap-3 p-4 border-b ${themeClasses.border.secondary} last:border-0 ${themeClasses.button.secondaryHover} transition-colors ${
-                    i18n.language === lang.code ? 'bg-[#043d6b]/10' : ''
+                    i18n.language === lang.code ? 'bg-theme/10' : ''
                   }`}
                 >
                   <span className="text-2xl">{lang.flag}</span>
                   <span className={`flex-1 text-left font-medium ${themeClasses.text.primary}`}>{lang.label}</span>
                   {i18n.language === lang.code && (
-                    <CheckCircle className="w-5 h-5 text-[#043d6b]" />
+                    <CheckCircle className="w-5 h-5 text-theme" />
                   )}
                 </button>
               ))}
@@ -1073,8 +1073,8 @@ const Settings = () => {
             {/* Theme Description */}
             <div className={`${themeClasses.bg.card} rounded-lg border ${themeClasses.border.secondary} p-4`}>
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 bg-[#043d6b]/20 rounded-lg flex items-center justify-center">
-                  <Moon className="w-5 h-5 text-[#043d6b]" />
+                <div className="w-10 h-10 bg-theme/20 rounded-lg flex items-center justify-center">
+                  <Moon className="w-5 h-5 text-theme" />
                 </div>
                 <div>
                   <h3 className={`font-semibold ${themeClasses.text.primary}`}>App Appearance</h3>
@@ -1138,8 +1138,8 @@ const Settings = () => {
                   className={`${themeClasses.bg.card} rounded-xl border ${themeClasses.border.secondary} p-4`}
                 >
                   <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 bg-[#043d6b]/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <MessageSquare className="w-5 h-5 text-[#043d6b]" />
+                    <div className="w-10 h-10 bg-theme/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <MessageSquare className="w-5 h-5 text-theme" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className={`font-medium ${themeClasses.text.primary} truncate`}>
@@ -1222,8 +1222,9 @@ const Settings = () => {
                   <button
                     onClick={() => {
                       const appId = import.meta.env.VITE_META_APP_ID;
-                      const redirectUri = 'https://contractorai.tools/meta-oauth-callback';
-                      const scope = 'pages_manage_metadata,leads_retrieval,pages_show_list';
+                      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+                      const redirectUri = `${supabaseUrl}/functions/v1/fb-oauth-callback`;
+                      const scope = 'pages_manage_metadata,leads_retrieval,pages_show_list,ads_read';
                       const isNative = typeof (window as any).Capacitor !== 'undefined' && (window as any).Capacitor.isNativePlatform();
                       const state = isNative ? 'fb_leads_app' : 'fb_leads_web';
                       const oauthUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${appId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&state=${state}&response_type=code`;
@@ -1301,7 +1302,7 @@ const Settings = () => {
                       setShowDeleteConfirm(false);
                       setDeleteConfirmText('');
                     }}
-                    className="flex-1 px-4 py-3 bg-[#043d6b]/20 text-[#043d6b] rounded-lg font-medium hover:bg-[#035291]/20 active:scale-[0.98] transition-transform"
+                    className="flex-1 px-4 py-3 bg-theme/20 text-theme rounded-lg font-medium hover:bg-[#035291]/20 active:scale-[0.98] transition-transform"
                   >
                     Cancel
                   </button>
@@ -1345,7 +1346,7 @@ const Settings = () => {
                   <ChevronRight className={`w-7 h-7 ${themeClasses.text.secondary} rotate-180`} />
                 </button>
               ) : (
-                <SettingsIcon className="w-8 h-8 text-[#043d6b]" />
+                <SettingsIcon className="w-8 h-8 text-theme" />
               )}
               <div className="flex-1 min-w-0">
                 <h1 className={`text-2xl font-bold ${themeClasses.text.primary}`}>
@@ -1408,7 +1409,7 @@ const Settings = () => {
                               toggleTheme();
                             }}
                             className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out ${
-                              theme === 'dark' ? 'bg-[#043d6b] hover:bg-[#035291]' : 'bg-zinc-300'
+                              theme === 'dark' ? 'bg-theme hover:bg-[#035291]' : 'bg-zinc-300'
                             }`}
                           >
                             <span

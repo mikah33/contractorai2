@@ -309,7 +309,7 @@ const EstimateApprovalPage = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 py-8">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
-        <div className="bg-[#043d6b] rounded-t-2xl p-6 text-center">
+        <div className="bg-theme rounded-t-2xl p-6 text-center">
           <h1 className="text-2xl font-bold text-white mb-1">OnSite</h1>
           <p className="text-blue-200 text-sm">Estimate Review</p>
         </div>

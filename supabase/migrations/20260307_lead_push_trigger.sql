@@ -7,7 +7,18 @@ RETURNS TRIGGER AS $$
 DECLARE
   supabase_url TEXT;
   service_key TEXT;
+  source_label TEXT;
 BEGIN
+  -- Map source enum to readable name
+  source_label := CASE NEW.source
+    WHEN 'facebook_lead_ad' THEN 'Facebook'
+    WHEN 'website_widget' THEN 'Website'
+    WHEN 'website' THEN 'Website'
+    WHEN 'manual' THEN 'Manual'
+    WHEN 'referral' THEN 'Referral'
+    ELSE COALESCE(NEW.source, 'Unknown')
+  END;
+
   -- Get Supabase URL and service key from app settings
   supabase_url := current_setting('app.settings.supabase_url', true);
   service_key := current_setting('app.settings.service_role_key', true);
@@ -23,10 +34,7 @@ BEGIN
       body := jsonb_build_object(
         'user_id', NEW.contractor_id::text,
         'title', 'New Lead: ' || COALESCE(NEW.name, 'Unknown'),
-        'body', 'From ' || COALESCE(NEW.source, 'website') || CASE
-          WHEN NEW.calculator_type IS NOT NULL THEN ' - ' || NEW.calculator_type
-          ELSE ''
-        END,
+        'body', 'From ' || source_label,
         'data', jsonb_build_object(
           'type', 'new_lead',
           'lead_id', NEW.id::text,

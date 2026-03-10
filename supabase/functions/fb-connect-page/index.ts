@@ -129,6 +129,7 @@ serve(async (req) => {
         page_id: pageId,
         page_name: pageName || null,
         page_access_token: pageAccessToken,
+        user_access_token: userAccessToken || null,
         is_active: true,
         updated_at: new Date().toISOString()
       }, { onConflict: 'page_id' })
@@ -143,8 +144,121 @@ serve(async (req) => {
       })
     }
 
+    // Sync existing leads from this page's lead forms
+    let syncedCount = 0
+    try {
+      // Fetch all lead forms for this page
+      const formsRes = await fetch(
+        `https://graph.facebook.com/v18.0/${pageId}/leadgen_forms?access_token=${encodeURIComponent(pageAccessToken)}`
+      )
+      const formsData = await formsRes.json()
+
+      if (formsData.data && formsData.data.length > 0) {
+        for (const form of formsData.data) {
+          // Fetch leads from each form with ad attribution + platform status
+          let leadsUrl = `https://graph.facebook.com/v18.0/${form.id}/leads?limit=500&fields=id,created_time,field_data,ad_id,ad_name,adset_id,adset_name,campaign_id,campaign_name,platform&access_token=${encodeURIComponent(pageAccessToken)}`
+
+          while (leadsUrl) {
+            const leadsRes = await fetch(leadsUrl)
+            const leadsData = await leadsRes.json()
+
+            if (leadsData.data && leadsData.data.length > 0) {
+              for (const lead of leadsData.data) {
+                // Parse field_data into a usable format
+                const fields: Record<string, string> = {}
+                if (lead.field_data) {
+                  lead.field_data.forEach((f: any) => {
+                    fields[f.name] = f.values?.[0] || ''
+                  })
+                }
+
+                // Build name from available fields
+                let leadName = 'Facebook Lead'
+                if (fields.full_name) {
+                  leadName = fields.full_name
+                } else if (fields.first_name) {
+                  leadName = `${fields.first_name} ${fields.last_name || ''}`.trim()
+                }
+
+                // Build address from available fields
+                let leadAddress: string | null = null
+                if (fields.street_address || fields.city) {
+                  leadAddress = [fields.street_address, fields.city, fields.state, fields.zip_code].filter(Boolean).join(', ')
+                }
+
+                const projectDetails = {
+                  fb_lead_id: lead.id,
+                  fb_form_id: form.id,
+                  fb_form_name: form.name || null,
+                  fb_page_id: pageId,
+                  fb_ad_id: lead.ad_id || null,
+                  fb_ad_name: lead.ad_name || null,
+                  fb_adset_id: lead.adset_id || null,
+                  fb_adset_name: lead.adset_name || null,
+                  fb_campaign_id: lead.campaign_id || null,
+                  fb_campaign_name: lead.campaign_name || null,
+                  fb_platform: lead.platform || null,
+                  raw_fields: fields,
+                }
+
+                const leadRow = {
+                  contractor_id: user.id,
+                  source: 'facebook_lead_ad',
+                  name: leadName,
+                  email: fields.email || null,
+                  phone: fields.phone_number || fields.phone || null,
+                  address: leadAddress,
+                  status: 'new' as const,
+                  project_details: projectDetails,
+                  notes: fields.message || fields.comments || null,
+                  created_at: lead.created_time || new Date().toISOString(),
+                }
+
+                // Check if this lead already exists by fb_lead_id
+                const { data: existing } = await supabase
+                  .from('leads')
+                  .select('id')
+                  .eq('contractor_id', user.id)
+                  .contains('project_details', { fb_lead_id: lead.id })
+                  .maybeSingle()
+
+                if (existing) {
+                  // Update existing lead with corrected name, ad data, etc.
+                  await supabase
+                    .from('leads')
+                    .update({
+                      name: leadName,
+                      email: fields.email || null,
+                      phone: fields.phone_number || fields.phone || null,
+                      address: leadAddress,
+                      project_details: projectDetails,
+                      updated_at: new Date().toISOString(),
+                    })
+                    .eq('id', existing.id)
+                  syncedCount++
+                } else {
+                  // Insert new lead
+                  const { error: insertErr } = await supabase
+                    .from('leads')
+                    .insert(leadRow)
+                  if (!insertErr) syncedCount++
+                }
+              }
+            }
+
+            // Pagination
+            leadsUrl = leadsData.paging?.next || null
+          }
+        }
+      }
+    } catch (syncErr) {
+      // Don't fail the connection if sync fails
+      console.error('Failed to sync existing leads:', syncErr)
+    }
+
     return new Response(JSON.stringify({
       success: true,
+      syncedLeads: syncedCount,
       subscription: {
         id: sub.id,
         page_id: sub.page_id,

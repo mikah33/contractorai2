@@ -100,43 +100,29 @@ export const useDeepLinks = () => {
         }
       }
 
-      // Handle Facebook OAuth callback: contractorai://fb-callback?code=XXX
-      if (url.host === 'fb-callback' || url.pathname === '/fb-callback') {
-        const code = url.searchParams.get('code');
-        console.log('[DeepLink] Facebook callback with code:', code ? 'present' : 'missing');
-        if (code) {
-          try {
-            // Exchange code for access token via edge function
-            const { data: tokenData, error: tokenError } = await supabase.functions.invoke(
-              'fb-connect-page',
-              {
-                body: {
-                  action: 'exchange_token',
-                  code,
-                  redirectUri: 'https://contractorai.tools/meta-oauth-callback',
-                },
-              }
-            );
-
-            if (tokenError || tokenData?.error) {
-              console.error('[DeepLink] Token exchange failed:', tokenData?.error || tokenError);
-              navigate('/settings', { state: { section: 'facebookLeads' } });
-              return;
+      // Handle Facebook OAuth success: contractorai://fb-connected?token=XXX
+      if (url.host === 'fb-connected' || url.pathname === '/fb-connected') {
+        const token = url.searchParams.get('token');
+        console.log('[DeepLink] Facebook connected with token:', token ? 'present' : 'missing');
+        if (token) {
+          navigate('/settings', {
+            state: {
+              section: 'facebookLeads',
+              fbAccessToken: token,
+              showPageSelector: true,
             }
-
-            // Navigate to settings with the access token to show page selector
-            navigate('/settings', {
-              state: {
-                section: 'facebookLeads',
-                fbAccessToken: tokenData.access_token,
-                showPageSelector: true,
-              }
-            });
-          } catch (e) {
-            console.error('[DeepLink] FB callback error:', e);
-            navigate('/settings', { state: { section: 'facebookLeads' } });
-          }
+          });
+        } else {
+          navigate('/settings', { state: { section: 'facebookLeads' } });
         }
+        return;
+      }
+
+      // Handle Facebook OAuth error: contractorai://fb-error?error=XXX
+      if (url.host === 'fb-error' || url.pathname === '/fb-error') {
+        const errorMsg = url.searchParams.get('error') || 'Connection failed';
+        console.error('[DeepLink] Facebook error:', errorMsg);
+        navigate('/settings', { state: { section: 'facebookLeads' } });
         return;
       }
 

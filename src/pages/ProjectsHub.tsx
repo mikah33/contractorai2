@@ -24,7 +24,15 @@ import {
   ChevronDown,
   ChevronUp,
   MapPin,
-  ExternalLink
+  ExternalLink,
+  Mail,
+  Navigation,
+  Receipt,
+  Wallet,
+  TrendingUp,
+  TrendingDown,
+  ImagePlus,
+  Loader2
 } from 'lucide-react';
 import { format, addDays, isSameDay, parseISO, isToday, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek } from 'date-fns';
 import useProjectStore from '../stores/projectStore';
@@ -33,10 +41,12 @@ import { useClientsStore } from '../stores/clientsStore';
 import usePhotosStore from '../stores/photosStore';
 import AIChatPopup from '../components/ai/AIChatPopup';
 import AddChoiceModal from '../components/common/AddChoiceModal';
+// Address is handled with simple street/city/state/zip fields
 import PhotoGallery from '../components/photos/PhotoGallery';
 import { useTheme, getThemeClasses } from '../contexts/ThemeContext';
 import VisionCamModal from '../components/vision/VisionCamModal';
 import { estimateService } from '../services/estimateService';
+import { useFinanceStore } from '../stores/financeStoreSupabase';
 import { supabase } from '../lib/supabase';
 
 interface ProjectsHubProps {
@@ -65,7 +75,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
     fetchProgressUpdates,
     addProgressUpdate
   } = useProjectStore();
-  const { photos: projectPhotos, fetchPhotos: fetchProjectPhotos } = usePhotosStore();
+  const { photos: projectPhotos, fetchPhotos: fetchProjectPhotos, addPhoto } = usePhotosStore();
   const [showAddChoice, setShowAddChoice] = useState(false);
   const [showAIChat, setShowAIChat] = useState(false);
   const [showVisionCam, setShowVisionCam] = useState(false);
@@ -77,6 +87,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
   const [userId, setUserId] = useState<string | null>(null);
   const [showPhotoGallery, setShowPhotoGallery] = useState(false);
   const [selectedProject, setSelectedProject] = useState<any>(null);
+  const [openedFromNavigation, setOpenedFromNavigation] = useState(false);
   const [projectEstimates, setProjectEstimates] = useState<any[]>([]);
   const [newComment, setNewComment] = useState('');
   const [showTaskModal, setShowTaskModal] = useState(false);
@@ -86,6 +97,9 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
   const [uploadImages, setUploadImages] = useState<File[]>([]);
   const [uploadPreviewUrls, setUploadPreviewUrls] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const projectCameraRef = useRef<HTMLInputElement>(null);
+  const projectGalleryRef = useRef<HTMLInputElement>(null);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [newTask, setNewTask] = useState({
     title: '',
     assignee: [] as string[],
@@ -139,15 +153,50 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
   // Clients store
   const { clients, fetchClients } = useClientsStore();
 
+  // Finance store
+  const {
+    receipts: allReceipts,
+    payments: allPayments,
+    invoices: allInvoices,
+    fetchReceipts,
+    fetchPayments,
+    fetchInvoices: fetchFinanceInvoices,
+    addReceipt,
+    addPayment,
+    addInvoice
+  } = useFinanceStore();
+
+  // Finance modal states
+  const [showAddExpenseModal, setShowAddExpenseModal] = useState(false);
+  const [showAddRevenueModal, setShowAddRevenueModal] = useState(false);
+  const [showCreateInvoiceModal, setShowCreateInvoiceModal] = useState(false);
+  const [expenseForm, setExpenseForm] = useState({
+    vendor: '', amount: '', date: new Date().toISOString().split('T')[0],
+    category: 'Materials', notes: ''
+  });
+  const [revenueForm, setRevenueForm] = useState({
+    amount: '', date: new Date().toISOString().split('T')[0],
+    method: 'bank_transfer' as 'cash' | 'check' | 'credit_card' | 'bank_transfer' | 'other',
+    reference: '', notes: ''
+  });
+  const [invoiceForm, setInvoiceForm] = useState({
+    description: '', amount: '',
+    dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  });
+  const expenseCategories = ['Materials', 'Equipment', 'Labor', 'Fuel', 'Permits', 'Subcontractor', 'Other'];
+
   useEffect(() => {
     fetchProjects();
     fetchEmployees();
     fetchClients();
+    fetchReceipts();
+    fetchPayments();
+    fetchFinanceInvoices();
   }, [fetchProjects, fetchEmployees, fetchClients]);
 
   // Hide navbar when any modal is open
   useEffect(() => {
-    const isModalOpen = showManualForm || showEditProjectModal || showAddChoice || showPhotoGallery;
+    const isModalOpen = showManualForm || showEditProjectModal || showAddChoice || showPhotoGallery || !!selectedProject || showAddExpenseModal || showAddRevenueModal || showCreateInvoiceModal;
     if (isModalOpen) {
       document.body.classList.add('modal-active');
     } else {
@@ -156,7 +205,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
     return () => {
       document.body.classList.remove('modal-active');
     };
-  }, [showManualForm, showEditProjectModal, showAddChoice, showPhotoGallery]);
+  }, [showManualForm, showEditProjectModal, showAddChoice, showPhotoGallery, showAddExpenseModal, showAddRevenueModal, showCreateInvoiceModal]);
 
   // Get user ID for project operations
   useEffect(() => {
@@ -179,6 +228,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
       const project = projects.find(p => p.id === projectId);
       if (project) {
         setSelectedProject(project);
+        setOpenedFromNavigation(true);
         setSearchParams({}, { replace: true });
         return;
       }
@@ -193,6 +243,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
       const project = projects.find(p => p.id === state.selectedProjectId);
       if (project) {
         setSelectedProject(project);
+        setOpenedFromNavigation(true);
       }
       // Clear the navigation state so refreshing doesn't re-select
       window.history.replaceState({}, document.title);
@@ -241,7 +292,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
       case 'completed':
         return theme === 'light' ? 'bg-green-100 text-green-700' : 'bg-green-500/20 text-green-400';
       case 'in_progress':
-        return theme === 'light' ? 'bg-[#043d6b]/20 text-[#4d565a]' : 'bg-[#043d6b]/20 text-[#043d6b]';
+        return theme === 'light' ? 'bg-theme/20 text-[#4d565a]' : 'bg-theme/20 text-theme';
       case 'on_hold':
         return theme === 'light' ? 'bg-yellow-100 text-yellow-700' : 'bg-yellow-500/20 text-yellow-400';
       case 'cancelled':
@@ -440,6 +491,142 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
     }
   };
 
+  // Computed finance data for the selected project
+  const projectReceipts = selectedProject
+    ? allReceipts.filter(r => r.projectId === selectedProject.id) : [];
+  const projectPayments = selectedProject
+    ? allPayments.filter(p => p.projectId === selectedProject.id) : [];
+  const projectInvoices = selectedProject
+    ? allInvoices.filter(i => i.projectId === selectedProject.id) : [];
+
+  const projectExpensesTotal = projectReceipts.reduce((sum, r) => sum + (r.amount || 0), 0);
+  const projectRevenueTotal = projectPayments
+    .filter(p => p.status === 'completed')
+    .reduce((sum, p) => sum + (p.amount || 0), 0);
+  const projectInvoicesOutstanding = projectInvoices
+    .filter(i => i.status !== 'paid' && i.status !== 'draft')
+    .reduce((sum, i) => sum + (i.balance || 0), 0);
+  const projectProfit = projectRevenueTotal - projectExpensesTotal;
+
+  const projectFinanceActivity = selectedProject ? [
+    ...projectReceipts.map(r => ({
+      id: r.id, type: 'expense' as const, description: r.vendor,
+      amount: r.amount, date: r.date, category: r.category
+    })),
+    ...projectPayments.map(p => ({
+      id: p.id, type: 'revenue' as const, description: 'Payment received',
+      amount: p.amount, date: p.date, category: p.method
+    })),
+    ...projectInvoices.map(i => ({
+      id: i.id, type: 'invoice' as const,
+      description: `Invoice ${i.invoiceNumber || '#' + i.id.slice(0, 6)}`,
+      amount: i.totalAmount, date: i.issuedDate || i.dueDate, category: i.status
+    }))
+  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5) : [];
+
+  const handleProjectPhotoInput = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !selectedProject) return;
+    if (e.target) e.target.value = '';
+
+    setIsUploadingPhoto(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const userId = user?.id || '';
+      const fileName = `${userId}/${selectedProject.id}/${Date.now()}.jpg`;
+
+      let bucketName = 'project-photos';
+      let { error: uploadError } = await supabase.storage.from(bucketName).upload(fileName, file);
+
+      if (uploadError?.message?.includes('not found')) {
+        bucketName = 'receipt-images';
+        const result = await supabase.storage.from(bucketName).upload(fileName, file);
+        uploadError = result.error;
+      }
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage.from(bucketName).getPublicUrl(fileName);
+
+      await addPhoto({
+        userId,
+        projectId: selectedProject.id,
+        imageUrl: publicUrl,
+        caption: undefined,
+        category: 'project',
+        isProgressPhoto: true,
+        metadata: { originalFileName: file.name, size: file.size }
+      });
+
+      await fetchProjectPhotos(selectedProject.id);
+    } catch (error) {
+      console.error('Error uploading project photo:', error);
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  };
+
+  const handleCloseProject = () => {
+    if (openedFromNavigation) {
+      setOpenedFromNavigation(false);
+      setSelectedProject(null);
+      navigate(-1);
+    } else {
+      setSelectedProject(null);
+    }
+  };
+
+  const handleSubmitProjectExpense = async () => {
+    if (!expenseForm.vendor || !expenseForm.amount || !selectedProject) return;
+    await addReceipt({
+      vendor: expenseForm.vendor,
+      amount: parseFloat(expenseForm.amount),
+      date: expenseForm.date,
+      category: expenseForm.category,
+      notes: expenseForm.notes,
+      projectId: selectedProject.id,
+      status: 'processed'
+    });
+    setExpenseForm({ vendor: '', amount: '', date: new Date().toISOString().split('T')[0], category: 'Materials', notes: '' });
+    setShowAddExpenseModal(false);
+  };
+
+  const handleSubmitProjectRevenue = async () => {
+    if (!revenueForm.amount || !selectedProject) return;
+    await addPayment({
+      clientId: selectedProject.clientId || selectedProject.client || 'Direct Payment',
+      projectId: selectedProject.id,
+      amount: parseFloat(revenueForm.amount),
+      date: revenueForm.date,
+      method: revenueForm.method,
+      reference: revenueForm.reference,
+      notes: revenueForm.notes,
+      status: 'completed'
+    });
+    setRevenueForm({ amount: '', date: new Date().toISOString().split('T')[0], method: 'bank_transfer', reference: '', notes: '' });
+    setShowAddRevenueModal(false);
+  };
+
+  const handleSubmitProjectInvoice = async () => {
+    if (!invoiceForm.amount || !selectedProject) return;
+    const amount = parseFloat(invoiceForm.amount);
+    await addInvoice({
+      projectId: selectedProject.id,
+      clientId: selectedProject.clientId || '',
+      invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
+      totalAmount: amount,
+      paidAmount: 0,
+      balance: amount,
+      dueDate: invoiceForm.dueDate,
+      issuedDate: new Date().toISOString().split('T')[0],
+      status: 'sent',
+      lineItems: [{ description: invoiceForm.description || 'Services', quantity: 1, unitPrice: amount, totalAmount: amount }],
+      notes: ''
+    });
+    setInvoiceForm({ description: '', amount: '', dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] });
+    setShowCreateInvoiceModal(false);
+  };
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -458,9 +645,12 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
             <div className="pt-[env(safe-area-inset-top)]">
               <div className="px-4 pb-5 pt-4">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 bg-[#043d6b]/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <Briefcase className="w-7 h-7 text-[#043d6b]" />
+                  <div className="flex items-center gap-3">
+                    <button onClick={() => navigate('/search')} className={`w-9 h-9 rounded-lg flex items-center justify-center ${themeClasses.bg.input} active:scale-95 transition-transform`}>
+                      <ArrowLeft className={`w-5 h-5 ${themeClasses.text.primary}`} />
+                    </button>
+                    <div className="w-12 h-12 bg-theme/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <Briefcase className="w-6 h-6 text-theme" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h1 className={`text-2xl font-bold ${themeClasses.text.primary}`}>Projects</h1>
@@ -469,7 +659,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                   </div>
                   <button
                     onClick={() => setShowManualForm(true)}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-[#043d6b] text-white rounded-lg font-medium hover:bg-[#035291] active:scale-95 transition-all"
+                    className="flex items-center gap-2 px-4 py-2.5 bg-theme text-white rounded-lg font-medium hover:bg-[#035291] active:scale-95 transition-all"
                   >
                     <Plus className="w-5 h-5" />
                     <span>Add</span>
@@ -494,41 +684,6 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
           <div className="pt-[calc(env(safe-area-inset-top)+135px)]" />
         </>
       )}
-
-      {/* Add Project Card */}
-      <div className="px-4 pb-4 -mt-1">
-        <div className={`${themeClasses.bg.card} rounded-2xl border-2 ${theme === 'light' ? 'border-gray-300' : 'border-zinc-600'} p-6 relative overflow-hidden`}>
-          {/* Background decorations */}
-          <div className="absolute -right-6 -top-6 w-44 h-44 bg-[#043d6b]/10 rounded-full" />
-          <div className="absolute right-16 top-20 w-28 h-28 bg-[#043d6b]/5 rounded-full" />
-
-          <div className="relative min-h-[240px] flex flex-col">
-            <div className="flex items-center gap-4 mb-5">
-              <div className="w-16 h-16 bg-[#043d6b]/20 rounded-2xl flex items-center justify-center">
-                <Briefcase className="w-8 h-8 text-[#043d6b]" />
-              </div>
-              <div>
-                <h3 className={`font-bold ${themeClasses.text.primary} text-xl`}>Add Project</h3>
-                <p className={`${themeClasses.text.secondary} text-base`}>Manage your work</p>
-              </div>
-            </div>
-
-            <p className={`${themeClasses.text.secondary} italic text-base flex-1`}>
-              Add new projects manually or use AI to check availability, assign teams, and manage schedules.
-            </p>
-
-            <div className="space-y-3 mt-auto">
-              <button
-                onClick={() => setShowManualForm(true)}
-                className="w-full flex items-center justify-center gap-2 px-5 py-4 bg-[#043d6b] text-white rounded-xl font-semibold text-lg hover:bg-[#035291] active:scale-[0.98] transition-all"
-              >
-                <Plus className="w-6 h-6" />
-                Add Project
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Projects List */}
       <div className="px-4 space-y-4">
@@ -582,7 +737,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                     </div>
                     <div className={`h-3 ${theme === 'light' ? 'bg-gray-200' : 'bg-zinc-800'} rounded-full overflow-hidden`}>
                       <div
-                        className="h-full bg-[#043d6b] rounded-full transition-all"
+                        className="h-full bg-theme rounded-full transition-all"
                         style={{ width: `${project.progress}%` }}
                       />
                     </div>
@@ -610,7 +765,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                     </div>
                   )}
                   <div className="flex-1" />
-                  <ChevronRight className={`w-6 h-6 text-[#043d6b]`} />
+                  <ChevronRight className={`w-6 h-6 text-theme`} />
                 </div>
               </div>
             </button>
@@ -661,20 +816,20 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
 
       {/* Project Details Modal - Slide Up */}
       {selectedProject && (
-        <div className="fixed inset-0 z-50 overflow-hidden pb-16">
+        <div className="fixed inset-0 z-50 overflow-hidden">
           {/* Backdrop */}
           <div
             className="absolute inset-0 bg-black/50 transition-opacity"
-            onClick={() => setSelectedProject(null)}
+            onClick={handleCloseProject}
           />
 
-          {/* Slide-up Modal */}
-          <div className="absolute inset-x-0 bottom-16 top-12 bg-gray-50 rounded-t-3xl shadow-2xl flex flex-col animate-slide-up overflow-hidden">
+          {/* Slide-up Modal - Full screen */}
+          <div className="absolute inset-x-0 bottom-0 top-0 bg-gray-50 shadow-2xl flex flex-col animate-slide-up overflow-hidden" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
             {/* Header */}
             <div className="bg-white px-4 py-4 border-b border-gray-200 flex-shrink-0">
               <div className="flex items-center justify-between">
                 <button
-                  onClick={() => setSelectedProject(null)}
+                  onClick={handleCloseProject}
                   className="flex items-center gap-2 text-gray-600 active:text-gray-900"
                 >
                   <ArrowLeft className="w-5 h-5" />
@@ -683,7 +838,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                 <div className="flex items-center gap-1">
                   <button
                     onClick={openEditProjectModal}
-                    className="p-2 text-[#043d6b] active:text-[#035291] active:bg-[#043d6b]/10 rounded-xl"
+                    className="p-2 text-theme active:text-[#035291] active:bg-theme/10 rounded-xl"
                   >
                     <Pencil className="w-5 h-5" />
                   </button>
@@ -692,7 +847,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                       if (window.confirm(`Delete "${selectedProject.name}"? This cannot be undone.`)) {
                         try {
                           await deleteProject(selectedProject.id);
-                          setSelectedProject(null);
+                          handleCloseProject();
                         } catch (error) {
                           console.error('Error deleting project:', error);
                           alert('Failed to delete project.');
@@ -724,24 +879,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
             {/* Scrollable Content */}
             <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 pb-24">
 
-              {/* Vision Cam Card */}
-              <div className="bg-gradient-to-r from-[#043d6b] to-amber-50 border-2 border-[#043d6b] rounded-3xl p-8 shadow-md">
-                <button
-                  onClick={() => setShowVisionCam(true)}
-                  className="w-full flex items-center gap-6 active:scale-[0.98] transition-transform"
-                >
-                  <div className="w-20 h-20 bg-gradient-to-r from-[#043d6b] to-amber-500 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg">
-                    <Camera className="w-10 h-10 text-white" />
-                  </div>
-                  <div className="flex-1 text-left">
-                    <p className="font-bold text-2xl text-gray-900">Vision Cam</p>
-                    <p className="text-lg text-gray-600 mt-1">Show your customer their vision before you build it</p>
-                  </div>
-                  <ChevronRight className="w-8 h-8 text-[#043d6b]" />
-                </button>
-              </div>
-
-              {/* Location Map Card - Only show if address exists */}
+              {/* 1. Map Card */}
               {selectedProject.address && (
                 <div className="bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-sm">
                   <div className="p-4 border-b border-gray-100">
@@ -757,65 +895,240 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                       </div>
                       <button
                         onClick={() => {
-                          const encodedAddress = encodeURIComponent(selectedProject.address);
-                          const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-                          const mapsUrl = isIOS
-                            ? `maps://maps.apple.com/?q=${encodedAddress}`
-                            : `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
-                          window.open(mapsUrl, '_blank');
+                          window.open(`maps://maps.apple.com/?q=${encodeURIComponent(selectedProject.address)}`, '_blank');
                         }}
-                        className="flex items-center gap-1 px-3 py-1.5 bg-[#043d6b]/10 text-[#035291] rounded-lg text-sm font-medium active:bg-[#043d6b]/20"
+                        className="flex items-center gap-1 px-3 py-1.5 bg-theme/10 text-[#035291] rounded-lg text-sm font-medium active:bg-theme/20"
                       >
                         <ExternalLink className="w-4 h-4" />
-                        Open
+                        Open in Maps
                       </button>
                     </div>
                   </div>
-                  {/* Map Preview using Google Maps Embed */}
-                  <div
-                    className="h-48 bg-gray-100 relative cursor-pointer overflow-hidden"
+                  <button
+                    className="w-full h-48 bg-gray-100 relative cursor-pointer overflow-hidden flex items-center justify-center"
                     onClick={() => {
-                      const encodedAddress = encodeURIComponent(selectedProject.address);
-                      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-                      const mapsUrl = isIOS
-                        ? `maps://maps.apple.com/?q=${encodedAddress}`
-                        : `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
-                      window.open(mapsUrl, '_blank');
+                      window.open(`maps://maps.apple.com/?q=${encodeURIComponent(selectedProject.address)}`, '_blank');
                     }}
                   >
-                    <iframe
-                      title="Project Location Map"
-                      width="100%"
-                      height="100%"
-                      style={{ border: 0, maxWidth: '100%' }}
-                      loading="lazy"
-                      referrerPolicy="no-referrer-when-downgrade"
-                      src={`https://www.google.com/maps?q=${encodeURIComponent(selectedProject.address)}&output=embed&z=15`}
-                    />
-                    {/* Transparent overlay to capture clicks */}
-                    <div className="absolute inset-0 bg-transparent" />
-                  </div>
+                    <div className="text-center">
+                      <MapPin className="w-10 h-10 mx-auto mb-2 text-red-500" />
+                      <p className="text-sm font-medium text-gray-500">Tap to open in Apple Maps</p>
+                      <p className="text-xs text-gray-400 mt-1">{selectedProject.address}</p>
+                    </div>
+                  </button>
                 </div>
               )}
 
-              {/* Budget Card */}
+              {/* 2. Project Photos Card (with Vision Cam) */}
+              <div className="bg-white border border-gray-200 rounded-3xl p-8 shadow-sm">
+                <input ref={projectCameraRef} type="file" accept="image/*" capture="environment" onChange={handleProjectPhotoInput} className="hidden" />
+                <input ref={projectGalleryRef} type="file" accept="image/*" onChange={handleProjectPhotoInput} className="hidden" />
+
+                <div className="flex items-center justify-between mb-6">
+                  <label className="text-lg font-semibold text-gray-600">Project Photos ({projectPhotos.length})</label>
+                  {projectPhotos.length > 0 && (
+                    <button
+                      onClick={() => setShowPhotoGallery(true)}
+                      className="text-lg text-theme font-bold"
+                    >
+                      View All
+                    </button>
+                  )}
+                </div>
+                {projectPhotos.length === 0 ? (
+                  <div className="text-center py-6">
+                    <Camera className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                    <p className="text-lg text-gray-400">No photos yet</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-3 gap-4 mb-6">
+                    {projectPhotos.slice(0, 6).map((photo) => (
+                      <img
+                        key={photo.id}
+                        src={photo.imageUrl}
+                        alt={photo.caption || 'Project photo'}
+                        className="w-full aspect-square object-cover rounded-2xl cursor-pointer hover:opacity-90"
+                        onClick={() => setShowPhotoGallery(true)}
+                      />
+                    ))}
+                  </div>
+                )}
+                {isUploadingPhoto ? (
+                  <div className="flex items-center justify-center gap-2 py-4">
+                    <Loader2 className="w-5 h-5 animate-spin text-theme" />
+                    <span className="text-sm text-gray-500">Uploading...</span>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-3 gap-3">
+                    <button
+                      onClick={() => projectCameraRef.current?.click()}
+                      className="flex flex-col items-center gap-2 p-3 bg-gray-50 rounded-2xl active:scale-[0.96] transition-transform"
+                    >
+                      <Camera className="w-5 h-5 text-theme" />
+                      <span className="text-xs font-semibold text-gray-700">Take Photo</span>
+                    </button>
+                    <button
+                      onClick={() => projectGalleryRef.current?.click()}
+                      className="flex flex-col items-center gap-2 p-3 bg-gray-50 rounded-2xl active:scale-[0.96] transition-transform"
+                    >
+                      <ImagePlus className="w-5 h-5 text-theme" />
+                      <span className="text-xs font-semibold text-gray-700">Gallery</span>
+                    </button>
+                    <button
+                      onClick={() => setShowVisionCam(true)}
+                      className="flex flex-col items-center gap-2 p-3 bg-gray-50 rounded-2xl active:scale-[0.96] transition-transform"
+                    >
+                      <Sparkles className="w-5 h-5 text-theme" />
+                      <span className="text-xs font-semibold text-gray-700">Vision Cam</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* 3. Tasks Card */}
+              <div className="bg-white border border-gray-200 rounded-3xl p-8 shadow-sm">
+                <div className="flex items-center justify-between mb-6">
+                  <label className="text-lg font-semibold text-gray-600">Tasks</label>
+                  <button
+                    onClick={() => {
+                      navigate('/todo-hub', {
+                        state: {
+                          openCreateTask: true,
+                          preselectedProjectId: selectedProject.id,
+                          preselectedProjectName: selectedProject.name,
+                          returnTo: '/projects',
+                          returnProjectId: selectedProject.id
+                        }
+                      });
+                    }}
+                    className="text-lg text-theme font-bold"
+                  >
+                    + Add Task
+                  </button>
+                </div>
+                {(selectedProject.tasks || []).length === 0 ? (
+                  <div className="text-center py-8">
+                    <CheckCircle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                    <p className="text-base text-gray-400">No tasks yet</p>
+                    <button
+                      onClick={() => {
+                        navigate('/todo-hub', {
+                          state: {
+                            openCreateTask: true,
+                            preselectedProjectId: selectedProject.id,
+                            preselectedProjectName: selectedProject.name,
+                            returnTo: '/projects',
+                            returnProjectId: selectedProject.id
+                          }
+                        });
+                      }}
+                      className="mt-3 text-sm text-theme font-medium"
+                    >
+                      Create your first task
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {(selectedProject.tasks || []).slice(0, 5).map((task: any) => (
+                      <button
+                        key={task.id}
+                        onClick={() => navigate('/todo-hub', {
+                          state: {
+                            selectedTaskId: task.id,
+                            preselectedProjectId: selectedProject.id,
+                            preselectedProjectName: selectedProject.name,
+                            returnTo: '/projects-hub',
+                            returnProjectId: selectedProject.id
+                          }
+                        })}
+                        className="w-full flex items-center gap-4 p-4 bg-gray-50 rounded-xl active:scale-[0.98] transition-transform"
+                      >
+                        <div className={`w-5 h-5 rounded-full flex-shrink-0 ${
+                          task.status === 'completed' ? 'bg-green-500' :
+                          task.status === 'in-progress' ? 'bg-yellow-500' : 'bg-gray-300'
+                        }`} />
+                        <div className="flex-1 min-w-0 text-left">
+                          <p className={`text-base font-medium truncate ${task.status === 'completed' ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
+                            {task.title}
+                          </p>
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-gray-400" />
+                      </button>
+                    ))}
+                    {(selectedProject.tasks || []).length > 5 && (
+                      <button
+                        onClick={() => navigate('/todo-hub')}
+                        className="w-full text-sm text-theme font-medium text-center pt-2"
+                      >
+                        View all {(selectedProject.tasks || []).length} tasks →
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* 4. Estimates Card */}
+              <div className="bg-white border border-gray-200 rounded-3xl p-8 shadow-sm">
+                <div className="flex items-center justify-between mb-6">
+                  <label className="text-lg font-semibold text-gray-600">Estimates</label>
+                  <button
+                    onClick={() => navigate('/pricing')}
+                    className="text-lg text-theme font-bold"
+                  >
+                    Create New
+                  </button>
+                </div>
+                {projectEstimates.length === 0 ? (
+                  <div className="text-center py-10">
+                    <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <p className="text-xl text-gray-400">No estimates yet</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {projectEstimates.slice(0, 3).map((estimate) => (
+                      <button
+                        key={estimate.id}
+                        onClick={() => navigate('/estimates', { state: { editEstimateId: estimate.id, returnTo: '/projects-hub', returnProjectId: selectedProject.id } })}
+                        className="w-full flex items-center justify-between p-5 bg-gray-50 rounded-2xl active:bg-gray-100 text-left"
+                      >
+                        <div className="min-w-0">
+                          <p className="text-xl font-bold text-gray-900 truncate">{estimate.title}</p>
+                          <p className="text-base text-gray-500 mt-1">{new Date(estimate.createdAt).toLocaleDateString()}</p>
+                        </div>
+                        <div className="text-right flex-shrink-0 ml-5">
+                          <p className="text-2xl font-bold text-green-600">${estimate.total?.toFixed(2) || '0.00'}</p>
+                          <span className={`text-base px-4 py-1.5 rounded-full ${
+                            estimate.status === 'approved' ? 'bg-green-100 text-green-700' :
+                            estimate.status === 'sent' ? 'bg-theme/20 text-[#4d565a]' :
+                            'bg-gray-100 text-gray-600'
+                          }`}>
+                            {estimate.status}
+                          </span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* 5. Budget Card (with Recent Activity) */}
               <div className="bg-white border border-gray-200 rounded-3xl p-8 shadow-sm">
                 <div className="flex items-center justify-between mb-6">
                   <label className="text-lg font-semibold text-gray-600">Budget</label>
                   <button
                     onClick={() => {
-                      setEditBudget({ budget: selectedProject.budget || 0, spent: selectedProject.spent || 0 });
+                      setEditBudget({ budget: selectedProject.budget || 0, spent: 0 });
                       setShowEditBudgetModal(true);
                     }}
-                    className="text-lg text-[#043d6b] font-bold"
+                    className="text-lg text-theme font-bold"
                   >
                     Edit
                   </button>
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-base text-gray-500 mb-1">Spent</p>
-                    <p className="text-3xl font-bold text-gray-900">{formatCurrency(selectedProject.spent || 0)}</p>
+                    <p className="text-base text-gray-500 mb-1">Expenses</p>
+                    <p className="text-3xl font-bold text-red-500">{formatCurrency(projectExpensesTotal)}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-base text-gray-500 mb-1">Budget</p>
@@ -823,21 +1136,98 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                   </div>
                 </div>
                 {selectedProject.budget > 0 && (
-                  <div className="mt-6">
+                  <div className="mt-4">
                     <div className="h-4 bg-gray-100 rounded-full overflow-hidden">
                       <div
                         className={`h-full rounded-full transition-all ${
-                          ((selectedProject.spent || 0) / selectedProject.budget) > 0.9 ? 'bg-red-500' :
-                          ((selectedProject.spent || 0) / selectedProject.budget) > 0.7 ? 'bg-yellow-500' : 'bg-green-500'
+                          (projectExpensesTotal / selectedProject.budget) > 0.9 ? 'bg-red-500' :
+                          (projectExpensesTotal / selectedProject.budget) > 0.7 ? 'bg-yellow-500' : 'bg-green-500'
                         }`}
-                        style={{ width: `${Math.min(((selectedProject.spent || 0) / selectedProject.budget) * 100, 100)}%` }}
+                        style={{ width: `${Math.min((projectExpensesTotal / selectedProject.budget) * 100, 100)}%` }}
                       />
+                    </div>
+                  </div>
+                )}
+                <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-gray-100">
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">Revenue</p>
+                    <p className="text-xl font-bold text-green-600">{formatCurrency(projectRevenueTotal)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">Invoices Due</p>
+                    <p className="text-xl font-bold text-yellow-600">{formatCurrency(projectInvoicesOutstanding)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">Profit</p>
+                    <p className={`text-xl font-bold ${projectProfit >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                      {formatCurrency(projectProfit)}
+                    </p>
+                  </div>
+                </div>
+                {/* Finance CTAs */}
+                <div className="grid grid-cols-3 gap-3 mt-6 pt-6 border-t border-gray-100">
+                  <button
+                    onClick={() => setShowAddExpenseModal(true)}
+                    className="flex flex-col items-center gap-2 p-3 bg-gray-50 rounded-2xl active:scale-[0.96] transition-transform"
+                  >
+                    <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
+                      <Receipt className="w-5 h-5 text-red-500" />
+                    </div>
+                    <span className="text-xs font-semibold text-gray-700">Expense</span>
+                  </button>
+                  <button
+                    onClick={() => setShowAddRevenueModal(true)}
+                    className="flex flex-col items-center gap-2 p-3 bg-gray-50 rounded-2xl active:scale-[0.96] transition-transform"
+                  >
+                    <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+                      <Wallet className="w-5 h-5 text-green-500" />
+                    </div>
+                    <span className="text-xs font-semibold text-gray-700">Payment</span>
+                  </button>
+                  <button
+                    onClick={() => setShowCreateInvoiceModal(true)}
+                    className="flex flex-col items-center gap-2 p-3 bg-gray-50 rounded-2xl active:scale-[0.96] transition-transform"
+                  >
+                    <div className="w-10 h-10 bg-theme/15 rounded-xl flex items-center justify-center">
+                      <FileText className="w-5 h-5 text-theme" />
+                    </div>
+                    <span className="text-xs font-semibold text-gray-700">Invoice</span>
+                  </button>
+                </div>
+                {/* Recent Activity */}
+                {projectFinanceActivity.length > 0 && (
+                  <div className="mt-6 pt-6 border-t border-gray-100">
+                    <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3 block">Recent Activity</label>
+                    <div className="space-y-3">
+                      {projectFinanceActivity.map((item) => (
+                        <div key={item.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                            item.type === 'expense' ? 'bg-red-100' :
+                            item.type === 'revenue' ? 'bg-green-100' : 'bg-blue-100'
+                          }`}>
+                            {item.type === 'expense' ? <TrendingDown className="w-4 h-4 text-red-500" /> :
+                             item.type === 'revenue' ? <TrendingUp className="w-4 h-4 text-green-500" /> :
+                             <FileText className="w-4 h-4 text-blue-500" />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 truncate">{item.description}</p>
+                            <p className="text-xs text-gray-500">{new Date(item.date).toLocaleDateString()}</p>
+                          </div>
+                          <p className={`text-sm font-bold flex-shrink-0 ${
+                            item.type === 'expense' ? 'text-red-500' :
+                            item.type === 'revenue' ? 'text-green-600' : 'text-gray-900'
+                          }`}>
+                            {item.type === 'expense' ? '-' : item.type === 'revenue' ? '+' : ''}
+                            {formatCurrency(item.amount)}
+                          </p>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* Team Card */}
+              {/* 6. Team Card */}
               <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
                 <div className="flex items-center justify-between mb-4">
                   <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Team</label>
@@ -846,7 +1236,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                       setSelectedEmployeeIds([]);
                       setShowEditTeamModal(true);
                     }}
-                    className="text-sm text-[#043d6b] font-semibold"
+                    className="text-sm text-theme font-semibold"
                   >
                     + Add
                   </button>
@@ -857,7 +1247,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                   <div className="grid grid-cols-2 gap-3">
                     {(selectedProject.team_members || selectedProject.team || []).map((member: any, index: number) => (
                       <div key={index} className="flex items-center gap-2.5 bg-gray-100 rounded-full pl-1.5 pr-3 py-1.5">
-                        <div className="w-8 h-8 bg-[#043d6b] rounded-full flex items-center justify-center text-xs text-white font-bold flex-shrink-0">
+                        <div className="w-8 h-8 bg-theme rounded-full flex items-center justify-center text-xs text-white font-bold flex-shrink-0">
                           {(typeof member === 'string' ? member : member.name || '').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
                         </div>
                         <span className="text-sm text-gray-700 font-medium truncate flex-1">{typeof member === 'string' ? member : member.name}</span>
@@ -880,77 +1270,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                 )}
               </div>
 
-              {/* Tasks Card */}
-              <div className="bg-white border border-gray-200 rounded-3xl p-8 shadow-sm">
-                <div className="flex items-center justify-between mb-6">
-                  <label className="text-lg font-semibold text-gray-600">Tasks</label>
-                  <button
-                    onClick={() => {
-                      navigate('/todo-hub', {
-                        state: {
-                          openCreateTask: true,
-                          preselectedProjectId: selectedProject.id,
-                          preselectedProjectName: selectedProject.name,
-                          returnTo: '/projects',
-                          returnProjectId: selectedProject.id
-                        }
-                      });
-                    }}
-                    className="text-lg text-[#043d6b] font-bold"
-                  >
-                    + Add Task
-                  </button>
-                </div>
-                {(selectedProject.tasks || []).length === 0 ? (
-                  <div className="text-center py-8">
-                    <CheckCircle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                    <p className="text-base text-gray-400">No tasks yet</p>
-                    <button
-                      onClick={() => {
-                        navigate('/todo-hub', {
-                          state: {
-                            openCreateTask: true,
-                            preselectedProjectId: selectedProject.id,
-                            preselectedProjectName: selectedProject.name,
-                            returnTo: '/projects',
-                            returnProjectId: selectedProject.id
-                          }
-                        });
-                      }}
-                      className="mt-3 text-sm text-[#043d6b] font-medium"
-                    >
-                      Create your first task
-                    </button>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {(selectedProject.tasks || []).slice(0, 5).map((task: any) => (
-                      <div key={task.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
-                        <div className={`w-5 h-5 rounded-full flex-shrink-0 ${
-                          task.status === 'completed' ? 'bg-green-500' :
-                          task.status === 'in-progress' ? 'bg-yellow-500' : 'bg-gray-300'
-                        }`} />
-                        <div className="flex-1 min-w-0">
-                          <p className={`text-base font-medium truncate ${task.status === 'completed' ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
-                            {task.title}
-                          </p>
-                        </div>
-                        <ChevronRight className="w-5 h-5 text-gray-400" />
-                      </div>
-                    ))}
-                    {(selectedProject.tasks || []).length > 5 && (
-                      <button
-                        onClick={() => navigate('/todo-hub')}
-                        className="w-full text-sm text-[#043d6b] font-medium text-center pt-2"
-                      >
-                        View all {(selectedProject.tasks || []).length} tasks →
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Comments Card */}
+              {/* 7. Comments Card */}
               <div className="bg-white border border-gray-200 rounded-3xl p-8 shadow-sm">
                 <label className="block text-lg font-semibold text-gray-600 mb-6">Comments</label>
 
@@ -981,94 +1301,49 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                     placeholder="Add a comment..."
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
-                    className="flex-1 px-6 py-4 text-lg border border-gray-200 rounded-2xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#043d6b] focus:border-transparent"
+                    className="flex-1 px-6 py-4 text-lg border border-gray-200 rounded-2xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-theme focus:border-transparent"
                     onKeyPress={(e) => e.key === 'Enter' && handleAddComment()}
                   />
                   <button
                     onClick={handleAddComment}
-                    className="px-6 py-4 bg-[#043d6b] text-white rounded-2xl active:bg-[#035291]"
+                    className="px-6 py-4 bg-theme text-white rounded-2xl active:bg-[#035291]"
                   >
                     <Send className="w-6 h-6" />
                   </button>
                 </div>
               </div>
 
-              {/* Estimates Card */}
-              <div className="bg-white border border-gray-200 rounded-3xl p-8 shadow-sm">
-                <div className="flex items-center justify-between mb-6">
-                  <label className="text-lg font-semibold text-gray-600">Estimates</label>
-                  <button
-                    onClick={() => navigate('/pricing')}
-                    className="text-lg text-[#043d6b] font-bold"
-                  >
-                    Create New
-                  </button>
-                </div>
-                {projectEstimates.length === 0 ? (
-                  <div className="text-center py-10">
-                    <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <p className="text-xl text-gray-400">No estimates yet</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {projectEstimates.slice(0, 3).map((estimate) => (
-                      <button
-                        key={estimate.id}
-                        onClick={() => navigate('/estimates', { state: { editEstimateId: estimate.id, returnTo: '/projects-hub', returnProjectId: selectedProject.id } })}
-                        className="w-full flex items-center justify-between p-5 bg-gray-50 rounded-2xl active:bg-gray-100 text-left"
-                      >
-                        <div className="min-w-0">
-                          <p className="text-xl font-bold text-gray-900 truncate">{estimate.title}</p>
-                          <p className="text-base text-gray-500 mt-1">{new Date(estimate.createdAt).toLocaleDateString()}</p>
-                        </div>
-                        <div className="text-right flex-shrink-0 ml-5">
-                          <p className="text-2xl font-bold text-green-600">${estimate.total?.toFixed(2) || '0.00'}</p>
-                          <span className={`text-base px-4 py-1.5 rounded-full ${
-                            estimate.status === 'approved' ? 'bg-green-100 text-green-700' :
-                            estimate.status === 'sent' ? 'bg-[#043d6b]/20 text-[#4d565a]' :
-                            'bg-gray-100 text-gray-600'
-                          }`}>
-                            {estimate.status}
-                          </span>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+            </div>
 
-              {/* Progress Photos Card */}
-              <div className="bg-white border border-gray-200 rounded-3xl p-8 shadow-sm">
-                <div className="flex items-center justify-between mb-6">
-                  <label className="text-lg font-semibold text-gray-600">Project Photos ({projectPhotos.length})</label>
-                  <button
-                    onClick={() => setShowPhotoGallery(true)}
-                    className="text-lg text-[#043d6b] font-bold"
-                  >
-                    View All
-                  </button>
-                </div>
-                {projectPhotos.length === 0 ? (
-                  <div className="text-center py-10">
-                    <Camera className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <p className="text-xl text-gray-400">No photos yet</p>
-                    <p className="text-base text-gray-400 mt-2">Use the + button to add photos</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-3 gap-4">
-                    {projectPhotos.slice(0, 6).map((photo) => (
-                      <img
-                        key={photo.id}
-                        src={photo.imageUrl}
-                        alt={photo.caption || 'Project photo'}
-                        className="w-full aspect-square object-cover rounded-2xl cursor-pointer hover:opacity-90"
-                        onClick={() => setShowPhotoGallery(true)}
-                      />
-                    ))}
-                  </div>
-                )}
+            {/* Bottom CTA Bar */}
+            <div className="flex-shrink-0 bg-white border-t border-gray-200 px-4 py-3" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)' }}>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    const client = clients.find((c: any) => c.id === selectedProject.clientId);
+                    if (client?.email) {
+                      window.open(`mailto:${client.email}?subject=${encodeURIComponent(selectedProject.name)}`, '_blank');
+                    } else {
+                      alert('No client email found for this project.');
+                    }
+                  }}
+                  className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-theme text-white rounded-xl font-semibold active:scale-[0.98] transition-transform"
+                >
+                  <Mail className="w-5 h-5" />
+                  <span>Send Email</span>
+                </button>
+                <button
+                  onClick={() => {
+                    if (!selectedProject.address) return;
+                    window.open(`maps://maps.apple.com/?q=${encodeURIComponent(selectedProject.address)}`, '_blank');
+                  }}
+                  disabled={!selectedProject.address}
+                  className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-green-600 text-white rounded-xl font-semibold active:scale-[0.98] transition-transform disabled:opacity-40"
+                >
+                  <Navigation className="w-5 h-5" />
+                  <span>Go To Address</span>
+                </button>
               </div>
-
             </div>
           </div>
         </div>
@@ -1094,7 +1369,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                   type="text"
                   value={newTask.title}
                   onChange={(e) => setNewTask({...newTask, title: e.target.value})}
-                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#043d6b] focus:border-transparent"
+                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-theme focus:border-transparent"
                   placeholder="Enter task title"
                 />
               </div>
@@ -1104,7 +1379,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                   type="date"
                   value={newTask.dueDate}
                   onChange={(e) => setNewTask({...newTask, dueDate: e.target.value})}
-                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#043d6b] focus:border-transparent"
+                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-theme focus:border-transparent"
                 />
               </div>
               <div>
@@ -1112,7 +1387,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                 <select
                   value={newTask.priority}
                   onChange={(e) => setNewTask({...newTask, priority: e.target.value as 'low' | 'medium' | 'high'})}
-                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#043d6b] focus:border-transparent"
+                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-theme focus:border-transparent"
                 >
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
@@ -1147,7 +1422,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                     }
                   }
                 }}
-                className="flex-1 px-4 py-2.5 bg-[#043d6b] text-white rounded-xl active:bg-[#035291]"
+                className="flex-1 px-4 py-2.5 bg-theme text-white rounded-xl active:bg-[#035291]"
               >
                 Add Task
               </button>
@@ -1175,7 +1450,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                 <textarea
                   value={uploadDescription}
                   onChange={(e) => setUploadDescription(e.target.value)}
-                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#043d6b] focus:border-transparent"
+                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-theme focus:border-transparent"
                   rows={3}
                   placeholder="Describe the progress update"
                 ></textarea>
@@ -1266,7 +1541,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                   setUploadImages([]);
                   setUploadPreviewUrls([]);
                 }}
-                className="flex-1 px-4 py-2.5 bg-[#043d6b] text-white rounded-xl active:bg-[#035291]"
+                className="flex-1 px-4 py-2.5 bg-theme text-white rounded-xl active:bg-[#035291]"
               >
                 Upload
               </button>
@@ -1280,7 +1555,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
         <div className="fixed inset-0 z-[60] overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-md w-full">
             <div className="flex justify-between items-center p-4 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900">Edit Budget</h2>
+              <h2 className="text-lg font-semibold text-gray-900">Set Budget Target</h2>
               <button
                 onClick={() => setShowEditBudgetModal(false)}
                 className="text-gray-400 active:text-gray-500 p-1 rounded-full active:bg-gray-100"
@@ -1288,33 +1563,19 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="p-4 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Budget</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
-                  <input
-                    type="number"
-                    value={editBudget.budget || ''}
-                    onChange={(e) => setEditBudget({...editBudget, budget: parseFloat(e.target.value) || 0})}
-                    className="w-full pl-8 pr-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#043d6b] focus:border-transparent"
-                    placeholder="0"
-                  />
-                </div>
+            <div className="p-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Budget Amount</label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                <input
+                  type="number"
+                  value={editBudget.budget || ''}
+                  onChange={(e) => setEditBudget({...editBudget, budget: parseFloat(e.target.value) || 0})}
+                  className="w-full pl-8 pr-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-theme focus:border-transparent"
+                  placeholder="0"
+                />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Amount Spent</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
-                  <input
-                    type="number"
-                    value={editBudget.spent || ''}
-                    onChange={(e) => setEditBudget({...editBudget, spent: parseFloat(e.target.value) || 0})}
-                    className="w-full pl-8 pr-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#043d6b] focus:border-transparent"
-                    placeholder="0"
-                  />
-                </div>
-              </div>
+              <p className="text-xs text-gray-400 mt-2">Expenses are tracked automatically from receipts and expenses added to this project.</p>
             </div>
             <div className="flex gap-3 p-4 border-t border-gray-200">
               <button
@@ -1327,23 +1588,192 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                 onClick={async () => {
                   if (selectedProject) {
                     try {
-                      await updateProject(selectedProject.id, {
-                        budget: editBudget.budget,
-                        spent: editBudget.spent
-                      });
+                      await updateProject(selectedProject.id, { budget: editBudget.budget });
                       setShowEditBudgetModal(false);
                       await fetchProjects();
                       const updated = projects.find(p => p.id === selectedProject.id);
-                      if (updated) setSelectedProject({...updated, budget: editBudget.budget, spent: editBudget.spent});
+                      if (updated) setSelectedProject({...updated, budget: editBudget.budget});
                     } catch (error) {
                       console.error('Error updating budget:', error);
                     }
                   }
                 }}
-                className="flex-1 px-4 py-2.5 bg-[#043d6b] text-white rounded-xl active:bg-[#035291]"
+                className="flex-1 px-4 py-2.5 bg-theme text-white rounded-xl active:bg-[#035291]"
               >
                 Save
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Expense Modal */}
+      {showAddExpenseModal && (
+        <div className="fixed inset-0 z-[60] overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full">
+            <div className="flex justify-between items-center p-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900">Add Expense</h2>
+              <button onClick={() => setShowAddExpenseModal(false)} className="text-gray-400 p-1 rounded-full active:bg-gray-100">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-4 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Vendor / Description</label>
+                <input type="text" value={expenseForm.vendor}
+                  onChange={(e) => setExpenseForm(prev => ({...prev, vendor: e.target.value}))}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-theme focus:border-transparent"
+                  placeholder="Home Depot, Gas Station..." />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                  <input type="number" step="0.01" value={expenseForm.amount}
+                    onChange={(e) => setExpenseForm(prev => ({...prev, amount: e.target.value}))}
+                    className="w-full pl-8 pr-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-theme focus:border-transparent"
+                    placeholder="0.00" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                <input type="date" value={expenseForm.date}
+                  onChange={(e) => setExpenseForm(prev => ({...prev, date: e.target.value}))}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-theme focus:border-transparent" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                <select value={expenseForm.category}
+                  onChange={(e) => setExpenseForm(prev => ({...prev, category: e.target.value}))}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-theme focus:border-transparent">
+                  {expenseCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Notes (Optional)</label>
+                <textarea value={expenseForm.notes}
+                  onChange={(e) => setExpenseForm(prev => ({...prev, notes: e.target.value}))}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-theme focus:border-transparent"
+                  rows={2} placeholder="Additional details..." />
+              </div>
+            </div>
+            <div className="flex gap-3 p-4 border-t border-gray-200">
+              <button onClick={() => setShowAddExpenseModal(false)}
+                className="flex-1 px-4 py-2.5 border border-gray-300 rounded-xl text-gray-700 bg-white active:bg-gray-50">Cancel</button>
+              <button onClick={handleSubmitProjectExpense}
+                className="flex-1 px-4 py-2.5 bg-theme text-white rounded-xl active:bg-[#035291]">Save Expense</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Record Payment Modal */}
+      {showAddRevenueModal && (
+        <div className="fixed inset-0 z-[60] overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full">
+            <div className="flex justify-between items-center p-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900">Record Payment</h2>
+              <button onClick={() => setShowAddRevenueModal(false)} className="text-gray-400 p-1 rounded-full active:bg-gray-100">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-4 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                  <input type="number" step="0.01" value={revenueForm.amount}
+                    onChange={(e) => setRevenueForm(prev => ({...prev, amount: e.target.value}))}
+                    className="w-full pl-8 pr-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-theme focus:border-transparent"
+                    placeholder="0.00" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                <input type="date" value={revenueForm.date}
+                  onChange={(e) => setRevenueForm(prev => ({...prev, date: e.target.value}))}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-theme focus:border-transparent" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
+                <select value={revenueForm.method}
+                  onChange={(e) => setRevenueForm(prev => ({...prev, method: e.target.value as any}))}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-theme focus:border-transparent">
+                  <option value="cash">Cash</option>
+                  <option value="check">Check</option>
+                  <option value="credit_card">Credit Card</option>
+                  <option value="bank_transfer">Bank Transfer</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Reference # (Optional)</label>
+                <input type="text" value={revenueForm.reference}
+                  onChange={(e) => setRevenueForm(prev => ({...prev, reference: e.target.value}))}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-theme focus:border-transparent"
+                  placeholder="Check #, transaction ID..." />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Notes (Optional)</label>
+                <textarea value={revenueForm.notes}
+                  onChange={(e) => setRevenueForm(prev => ({...prev, notes: e.target.value}))}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-theme focus:border-transparent"
+                  rows={2} placeholder="Payment details..." />
+              </div>
+            </div>
+            <div className="flex gap-3 p-4 border-t border-gray-200">
+              <button onClick={() => setShowAddRevenueModal(false)}
+                className="flex-1 px-4 py-2.5 border border-gray-300 rounded-xl text-gray-700 bg-white active:bg-gray-50">Cancel</button>
+              <button onClick={handleSubmitProjectRevenue}
+                className="flex-1 px-4 py-2.5 bg-theme text-white rounded-xl active:bg-[#035291]">Save Payment</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Invoice Modal */}
+      {showCreateInvoiceModal && (
+        <div className="fixed inset-0 z-[60] overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full">
+            <div className="flex justify-between items-center p-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900">Create Invoice</h2>
+              <button onClick={() => setShowCreateInvoiceModal(false)} className="text-gray-400 p-1 rounded-full active:bg-gray-100">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-4 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <input type="text" value={invoiceForm.description}
+                  onChange={(e) => setInvoiceForm(prev => ({...prev, description: e.target.value}))}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-theme focus:border-transparent"
+                  placeholder="Services rendered..." />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                  <input type="number" step="0.01" value={invoiceForm.amount}
+                    onChange={(e) => setInvoiceForm(prev => ({...prev, amount: e.target.value}))}
+                    className="w-full pl-8 pr-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-theme focus:border-transparent"
+                    placeholder="0.00" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+                <input type="date" value={invoiceForm.dueDate}
+                  onChange={(e) => setInvoiceForm(prev => ({...prev, dueDate: e.target.value}))}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-theme focus:border-transparent" />
+              </div>
+              {selectedProject?.client && (
+                <p className="text-sm text-gray-500">Client: <span className="font-medium text-gray-900">{selectedProject.client}</span></p>
+              )}
+            </div>
+            <div className="flex gap-3 p-4 border-t border-gray-200">
+              <button onClick={() => setShowCreateInvoiceModal(false)}
+                className="flex-1 px-4 py-2.5 border border-gray-300 rounded-xl text-gray-700 bg-white active:bg-gray-50">Cancel</button>
+              <button onClick={handleSubmitProjectInvoice}
+                className="flex-1 px-4 py-2.5 bg-theme text-white rounded-xl active:bg-[#035291]">Create Invoice</button>
             </div>
           </div>
         </div>
@@ -1390,7 +1820,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                               setShowEditTeamModal(false);
                               navigate('/employees');
                             }}
-                            className="text-sm text-[#043d6b] font-medium"
+                            className="text-sm text-theme font-medium"
                           >
                             Add Employees
                           </button>
@@ -1406,7 +1836,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                           key={emp.id}
                           className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors ${
                             selectedEmployeeIds.includes(emp.id)
-                              ? 'bg-[#043d6b]/10 border-2 border-[#043d6b]'
+                              ? 'bg-theme/10 border-2 border-theme'
                               : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100'
                           }`}
                         >
@@ -1420,9 +1850,9 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                                 setSelectedEmployeeIds(selectedEmployeeIds.filter(id => id !== emp.id));
                               }
                             }}
-                            className="w-5 h-5 rounded border-gray-300 text-[#043d6b] focus:ring-[#043d6b]"
+                            className="w-5 h-5 rounded border-gray-300 text-theme focus:ring-theme"
                           />
-                          <div className="w-10 h-10 bg-[#043d6b] rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                          <div className="w-10 h-10 bg-theme rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
                             {emp.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                           </div>
                           <div className="flex-1 min-w-0">
@@ -1482,7 +1912,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                 disabled={selectedEmployeeIds.length === 0}
                 className={`flex-1 px-4 py-2.5 rounded-xl ${
                   selectedEmployeeIds.length > 0
-                    ? 'bg-[#043d6b] text-white active:bg-[#035291]'
+                    ? 'bg-theme text-white active:bg-[#035291]'
                     : 'bg-gray-200 text-gray-400'
                 }`}
               >
@@ -1501,7 +1931,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
             onClick={() => setShowManualForm(false)}
           />
           <div className={`relative ${themeClasses.bg.modal} rounded-t-3xl w-full max-h-[90vh] overflow-y-auto animate-slide-up pb-safe`}>
-            <div className={`sticky top-0 ${themeClasses.bg.modal} px-4 py-4 border-b border-[#043d6b]/30 flex items-center justify-between z-10`}>
+            <div className={`sticky top-0 ${themeClasses.bg.modal} px-4 py-4 border-b border-theme/30 flex items-center justify-between z-10`}>
               <button
                 onClick={() => setShowManualForm(false)}
                 className={`${themeClasses.text.secondary} text-base font-medium ${themeClasses.hover.text}`}
@@ -1520,7 +1950,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                   value={newProjectForm.name}
                   onChange={(e) => setNewProjectForm({ ...newProjectForm, name: e.target.value })}
                   placeholder="e.g., Kitchen Renovation"
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} ${themeClasses.focus.border} focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} ${themeClasses.focus.border} focus:ring-2 focus:ring-theme/20 outline-none`}
                 />
               </div>
 
@@ -1543,7 +1973,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                       });
                     }
                   }}
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${themeClasses.focus.border} focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${themeClasses.focus.border} focus:ring-2 focus:ring-theme/20 outline-none`}
                 >
                   <option value="">Select a client (optional)...</option>
                   {clients.map((c) => {
@@ -1561,11 +1991,55 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                 <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Project Address</label>
                 <input
                   type="text"
-                  value={newProjectForm.address}
-                  onChange={(e) => setNewProjectForm({ ...newProjectForm, address: e.target.value })}
-                  placeholder="e.g., 123 Main St, City, State 12345"
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} ${themeClasses.focus.border} focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                  value={(() => { const parts = newProjectForm.address.split(', '); return parts[0] || ''; })()}
+                  onChange={(e) => {
+                    const parts = newProjectForm.address.split(', ');
+                    parts[0] = e.target.value;
+                    setNewProjectForm({ ...newProjectForm, address: parts.filter(Boolean).join(', ') });
+                  }}
+                  placeholder="Street address"
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none mb-2`}
                 />
+                <div className="grid grid-cols-6 gap-2">
+                  <input
+                    type="text"
+                    value={(() => { const parts = newProjectForm.address.split(', '); return parts[1] || ''; })()}
+                    onChange={(e) => {
+                      const parts = newProjectForm.address.split(', ');
+                      while (parts.length < 4) parts.push('');
+                      parts[1] = e.target.value;
+                      setNewProjectForm({ ...newProjectForm, address: parts.filter(Boolean).join(', ') });
+                    }}
+                    placeholder="City"
+                    className={`col-span-3 px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none`}
+                  />
+                  <input
+                    type="text"
+                    value={(() => { const parts = newProjectForm.address.split(', '); return parts[2] || ''; })()}
+                    onChange={(e) => {
+                      const parts = newProjectForm.address.split(', ');
+                      while (parts.length < 4) parts.push('');
+                      parts[2] = e.target.value;
+                      setNewProjectForm({ ...newProjectForm, address: parts.filter(Boolean).join(', ') });
+                    }}
+                    placeholder="State"
+                    maxLength={2}
+                    className={`col-span-1 px-3 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none text-center uppercase`}
+                  />
+                  <input
+                    type="text"
+                    value={(() => { const parts = newProjectForm.address.split(', '); return parts[3] || ''; })()}
+                    onChange={(e) => {
+                      const parts = newProjectForm.address.split(', ');
+                      while (parts.length < 4) parts.push('');
+                      parts[3] = e.target.value;
+                      setNewProjectForm({ ...newProjectForm, address: parts.filter(Boolean).join(', ') });
+                    }}
+                    placeholder="Zip"
+                    maxLength={10}
+                    className={`col-span-2 px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none`}
+                  />
+                </div>
               </div>
 
               {/* Description */}
@@ -1576,7 +2050,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                   onChange={(e) => setNewProjectForm({ ...newProjectForm, description: e.target.value })}
                   placeholder="Brief description of the project..."
                   rows={3}
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} ${themeClasses.focus.border} focus:ring-2 focus:ring-[#043d6b]/20 outline-none resize-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} ${themeClasses.focus.border} focus:ring-2 focus:ring-theme/20 outline-none resize-none`}
                 />
               </div>
 
@@ -1590,7 +2064,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                     value={newProjectForm.budget}
                     onChange={(e) => setNewProjectForm({ ...newProjectForm, budget: e.target.value })}
                     placeholder="0"
-                    className={`w-full pl-8 pr-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} ${themeClasses.focus.border} focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                    className={`w-full pl-8 pr-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} placeholder-${theme === 'light' ? 'gray-400' : 'zinc-500'} ${themeClasses.focus.border} focus:ring-2 focus:ring-theme/20 outline-none`}
                   />
                 </div>
               </div>
@@ -1604,7 +2078,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                   className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} flex items-center justify-between`}
                 >
                   <div className="flex items-center gap-2">
-                    <CalendarIcon className="w-5 h-5 text-[#043d6b]" />
+                    <CalendarIcon className="w-5 h-5 text-theme" />
                     <span className={newProjectForm.startDate ? themeClasses.text.primary : themeClasses.text.muted}>
                       {newProjectForm.startDate
                         ? format(parseISO(newProjectForm.startDate), 'MMM d, yyyy')
@@ -1673,7 +2147,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                               }}
                               className={`aspect-square flex items-center justify-center text-sm rounded-lg transition-colors ${
                                 isSelected
-                                  ? 'bg-[#043d6b] text-white font-semibold'
+                                  ? 'bg-theme text-white font-semibold'
                                   : isTodays
                                     ? `${themeClasses.bg.tertiary} ${themeClasses.text.primary} font-semibold`
                                     : isCurrentMonth
@@ -1855,7 +2329,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                 <select
                   value={newProjectForm.status}
                   onChange={(e) => setNewProjectForm({ ...newProjectForm, status: e.target.value as 'active' | 'completed' | 'on-hold' })}
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${themeClasses.focus.border} focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${themeClasses.focus.border} focus:ring-2 focus:ring-theme/20 outline-none`}
                 >
                   <option value="active">Active</option>
                   <option value="on-hold">On Hold</option>
@@ -1868,7 +2342,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                 <button
                   onClick={handleCreateProject}
                   disabled={!newProjectForm.name.trim() || isCreatingProject}
-                  className="w-full py-4 text-base font-medium rounded-2xl text-white bg-[#043d6b] hover:bg-[#035291] disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2"
+                  className="w-full py-4 text-base font-medium rounded-2xl text-white bg-theme hover:bg-[#035291] disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2"
                 >
                   <Plus className="w-5 h-5" />
                   {isCreatingProject ? 'Saving...' : 'Add Project'}
@@ -1887,7 +2361,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
             onClick={() => setShowEditProjectModal(false)}
           />
           <div className={`relative ${themeClasses.bg.secondary} rounded-t-3xl w-full max-h-[90vh] overflow-y-auto animate-slide-up pb-safe`}>
-            <div className={`sticky top-0 ${themeClasses.bg.secondary} px-4 py-4 border-b border-[#043d6b]/30 flex items-center justify-between z-10`}>
+            <div className={`sticky top-0 ${themeClasses.bg.secondary} px-4 py-4 border-b border-theme/30 flex items-center justify-between z-10`}>
               <button
                 onClick={() => setShowEditProjectModal(false)}
                 className={`${themeClasses.text.secondary} text-base font-medium active:opacity-70`}
@@ -1906,7 +2380,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                   value={editProjectForm.name}
                   onChange={(e) => setEditProjectForm({ ...editProjectForm, name: e.target.value })}
                   placeholder="e.g., Kitchen Renovation"
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none`}
                 />
               </div>
 
@@ -1928,7 +2402,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                       });
                     }
                   }}
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none`}
                 >
                   <option value="">Select a client (optional)...</option>
                   {clients.map((c) => {
@@ -1946,11 +2420,56 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                 <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-1`}>Project Address</label>
                 <input
                   type="text"
-                  value={editProjectForm.address}
-                  onChange={(e) => setEditProjectForm({ ...editProjectForm, address: e.target.value })}
-                  placeholder="e.g., 123 Main St, City, State 12345"
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                  value={(() => { const parts = editProjectForm.address.split(', '); return parts[0] || ''; })()}
+                  onChange={(e) => {
+                    const parts = editProjectForm.address.split(', ');
+                    while (parts.length < 4) parts.push('');
+                    parts[0] = e.target.value;
+                    setEditProjectForm({ ...editProjectForm, address: parts.filter(Boolean).join(', ') });
+                  }}
+                  placeholder="Street address"
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none mb-2`}
                 />
+                <div className="grid grid-cols-6 gap-2">
+                  <input
+                    type="text"
+                    value={(() => { const parts = editProjectForm.address.split(', '); return parts[1] || ''; })()}
+                    onChange={(e) => {
+                      const parts = editProjectForm.address.split(', ');
+                      while (parts.length < 4) parts.push('');
+                      parts[1] = e.target.value;
+                      setEditProjectForm({ ...editProjectForm, address: parts.filter(Boolean).join(', ') });
+                    }}
+                    placeholder="City"
+                    className={`col-span-3 px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none`}
+                  />
+                  <input
+                    type="text"
+                    value={(() => { const parts = editProjectForm.address.split(', '); return parts[2] || ''; })()}
+                    onChange={(e) => {
+                      const parts = editProjectForm.address.split(', ');
+                      while (parts.length < 4) parts.push('');
+                      parts[2] = e.target.value;
+                      setEditProjectForm({ ...editProjectForm, address: parts.filter(Boolean).join(', ') });
+                    }}
+                    placeholder="State"
+                    maxLength={2}
+                    className={`col-span-1 px-3 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none text-center uppercase`}
+                  />
+                  <input
+                    type="text"
+                    value={(() => { const parts = editProjectForm.address.split(', '); return parts[3] || ''; })()}
+                    onChange={(e) => {
+                      const parts = editProjectForm.address.split(', ');
+                      while (parts.length < 4) parts.push('');
+                      parts[3] = e.target.value;
+                      setEditProjectForm({ ...editProjectForm, address: parts.filter(Boolean).join(', ') });
+                    }}
+                    placeholder="Zip"
+                    maxLength={10}
+                    className={`col-span-2 px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none`}
+                  />
+                </div>
               </div>
 
               {/* Description */}
@@ -1961,7 +2480,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                   onChange={(e) => setEditProjectForm({ ...editProjectForm, description: e.target.value })}
                   placeholder="Brief description of the project..."
                   rows={3}
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none resize-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none resize-none`}
                 />
               </div>
 
@@ -1975,7 +2494,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                     value={editProjectForm.budget}
                     onChange={(e) => setEditProjectForm({ ...editProjectForm, budget: e.target.value })}
                     placeholder="0"
-                    className={`w-full pl-8 pr-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                    className={`w-full pl-8 pr-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} ${theme === 'light' ? 'placeholder-gray-400' : 'placeholder-zinc-500'} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none`}
                   />
                 </div>
               </div>
@@ -1989,7 +2508,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                   className={`w-full px-4 py-3 rounded-xl border ${themeClasses.border.input} ${themeClasses.bg.input} ${themeClasses.text.primary} flex items-center justify-between`}
                 >
                   <div className="flex items-center gap-2">
-                    <CalendarIcon className="w-5 h-5 text-[#043d6b]" />
+                    <CalendarIcon className="w-5 h-5 text-theme" />
                     <span className={editProjectForm.startDate ? themeClasses.text.primary : themeClasses.text.muted}>
                       {editProjectForm.startDate
                         ? format(parseISO(editProjectForm.startDate), 'MMM d, yyyy')
@@ -2058,7 +2577,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                               }}
                               className={`aspect-square flex items-center justify-center text-sm rounded-lg transition-colors ${
                                 isSelected
-                                  ? 'bg-[#043d6b] text-white font-semibold'
+                                  ? 'bg-theme text-white font-semibold'
                                   : isTodays
                                     ? `${themeClasses.bg.tertiary} ${themeClasses.text.primary} font-semibold`
                                     : isCurrentMonth
@@ -2240,7 +2759,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                 <select
                   value={editProjectForm.status}
                   onChange={(e) => setEditProjectForm({ ...editProjectForm, status: e.target.value as 'active' | 'completed' | 'on-hold' })}
-                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} focus:border-[#043d6b] focus:ring-2 focus:ring-[#043d6b]/20 outline-none`}
+                  className={`w-full px-4 py-3 rounded-xl ${themeClasses.bg.input} border ${themeClasses.border.input} ${themeClasses.text.primary} focus:border-theme focus:ring-2 focus:ring-theme/20 outline-none`}
                 >
                   <option value="active">Active</option>
                   <option value="on-hold">On Hold</option>
@@ -2253,7 +2772,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
                 <button
                   onClick={handleUpdateProject}
                   disabled={!editProjectForm.name.trim()}
-                  className="w-full py-4 text-base font-semibold rounded-xl text-white bg-[#043d6b] hover:bg-[#035291] disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed shadow-lg transition-all duration-200"
+                  className="w-full py-4 text-base font-semibold rounded-xl text-white bg-theme hover:bg-[#035291] disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed shadow-lg transition-all duration-200"
                 >
                   Save Changes
                 </button>
@@ -2267,7 +2786,7 @@ const ProjectsHub: React.FC<ProjectsHubProps> = ({ embedded = false, searchQuery
       {showPhotoGallery && selectedProject && (
         <div className="fixed inset-0 z-50 bg-[#0F0F0F] overflow-y-auto">
           {/* Header */}
-          <div className="sticky top-0 z-10 bg-[#1C1C1E] border-b border-[#043d6b]/30 px-4 py-4 flex items-center gap-3">
+          <div className="sticky top-0 z-10 bg-[#1C1C1E] border-b border-theme/30 px-4 py-4 flex items-center gap-3">
             <button
               onClick={() => setShowPhotoGallery(false)}
               className="p-2 text-white hover:bg-white/10 rounded-lg"
